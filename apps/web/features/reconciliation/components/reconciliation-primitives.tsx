@@ -261,6 +261,7 @@ export function SheetMoneySummary({
       </p>
       <MoneyValue
         amount={amount}
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
         variant="fullDynamic"
         prefix={type === "INFLOW" ? "+" : "-"}
         tone={type === "INFLOW" ? "primary" : "danger"}

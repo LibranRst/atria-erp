@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useCan } from "@/components/auth/permissions-provider";
-import { ProjectComparisonTable, type ProjectComparisonSort } from "./project-comparison-table";
+import { ProjectDesktopPortfolio } from "./project-desktop-portfolio";
 import { ProjectDrawer } from "../drawers/project-drawer";
 import { type SearchFilterMode } from "@/components/ui";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
@@ -31,23 +31,32 @@ interface ProjectListClientProps {
 }
 
 export function ProjectListClient({
-  projects,
-  clients,
-  users,
-  isAllowedToCreate,
+  projects: incomingProjects,
+  clients: incomingClients,
+  users: incomingUsers,
+  isAllowedToCreate: incomingCanCreate,
 }: ProjectListClientProps): React.JSX.Element {
+  const incoming = React.useMemo(
+    () => ({
+      projects: incomingProjects,
+      clients: incomingClients,
+      users: incomingUsers,
+      isAllowedToCreate: incomingCanCreate,
+    }),
+    [incomingProjects, incomingClients, incomingUsers, incomingCanCreate],
+  );
+  const [snapshot, setSnapshot] = React.useState(incoming);
+  const { projects, clients, users, isAllowedToCreate } = snapshot;
   const desktop = useWorkspacePresentation() === "desktop";
   const can = useCan();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [comparisonSort, setComparisonSort] = useState<ProjectComparisonSort>({
-    column: "project",
-    direction: "ascending",
-  });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [controlMode, setControlMode] = useState<SearchFilterMode>("filter");
   const activeFilter = toFilterId(useUrlSearchParam("filter"));
+  const creating = useUrlSearchParam("new-project") === "true";
+  if (!isDrawerOpen && !creating && snapshot !== incoming) setSnapshot(incoming);
   const {
     containerRef: resultsRef,
     containerStyle: resultsStyle,
@@ -110,48 +119,35 @@ export function ProjectListClient({
   }
 
   return (
-    <div className="space-y-sm pb-10 max-[430px]:pb-8">
-      <ProjectListHeader summary={summary} />
-      <ProjectSearchAndFilters
-        activeFilter={activeFilter}
-        filterCounts={filterCounts}
-        mode={controlMode}
-        searchQuery={searchQuery}
-        onFilterChange={changeFilter}
-        onModeChange={changeControlMode}
-        onSearchChange={setSearchQuery}
-      />
+    <div className={desktop ? "min-w-0 space-y-4 pb-10" : "space-y-sm pb-10 max-[430px]:pb-8"}>
+      <div hidden={desktop} inert={desktop} className={desktop ? "hidden" : "space-y-sm"}>
+        <ProjectListHeader summary={summary} />
+        <ProjectSearchAndFilters
+          activeFilter={activeFilter}
+          filterCounts={filterCounts}
+          mode={controlMode}
+          searchQuery={searchQuery}
+          onFilterChange={changeFilter}
+          onModeChange={changeControlMode}
+          onSearchChange={setSearchQuery}
+        />
 
-      <div ref={resultsRef} style={resultsStyle}>
-        {filteredProjects.length === 0 ? (
-          <ProjectListEmptyState
-            mode={controlMode}
-            onReset={() => {
-              setSearchQuery("");
-              if (controlMode === "search") {
-                setControlMode("filter");
-              } else {
-                changeFilter("ALL");
-              }
-            }}
-          />
-        ) : (
-          <section aria-labelledby="project-list-title">
-            <ProjectListSectionHeader count={filteredProjects.length} />
-            {desktop ? (
-              <ProjectComparisonTable
-                projects={filteredProjects}
-                selectedProjectId={selectedProjectId}
-                sort={comparisonSort}
-                canEdit={can("update:budget")}
-                onSelect={setSelectedProjectId}
-                onSort={setComparisonSort}
-                onEdit={(project) => {
-                  setEditingProject(project);
-                  setIsDrawerOpen(true);
-                }}
-              />
-            ) : (
+        <div ref={resultsRef} style={resultsStyle}>
+          {filteredProjects.length === 0 ? (
+            <ProjectListEmptyState
+              mode={controlMode}
+              onReset={() => {
+                setSearchQuery("");
+                if (controlMode === "search") {
+                  setControlMode("filter");
+                } else {
+                  changeFilter("ALL");
+                }
+              }}
+            />
+          ) : (
+            <section aria-labelledby="project-list-title">
+              <ProjectListSectionHeader count={filteredProjects.length} />
               <div className="mt-2.5 space-y-3">
                 {filteredProjects.map((project) => (
                   <ProjectListCard
@@ -165,9 +161,23 @@ export function ProjectListClient({
                   />
                 ))}
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
+        </div>
+      </div>
+      <div hidden={!desktop} inert={!desktop} className={desktop ? "min-w-0" : "hidden"}>
+        <ProjectDesktopPortfolio
+          projects={projects}
+          selectedProjectId={selectedProjectId}
+          onSelect={setSelectedProjectId}
+          canCreate={isAllowedToCreate && can("create:project")}
+          canEdit={can("update:budget")}
+          onCreate={() => updateUrlSearchParam("new-project", "true", "replace")}
+          onEdit={(project) => {
+            setEditingProject(project);
+            setIsDrawerOpen(true);
+          }}
+        />
       </div>
 
       {editingProject ? (

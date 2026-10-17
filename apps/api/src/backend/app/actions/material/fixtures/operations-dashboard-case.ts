@@ -52,6 +52,20 @@ try {
   if (!emptyInventory.success) throw new Error(emptyInventory.error.message);
   assert.equal(emptyInventory.success, true);
   assert.deepEqual(emptyInventory.data.inventory, []);
+  assert.equal(emptyInventory.data.capabilities.canCreateLocation, false);
+  assert.equal(
+    emptyInventory.data.shortagesSource?.status,
+    "restricted",
+    "Inventory-only access does not report missing RAP permission as healthy zero",
+  );
+  assert.deepEqual(emptyInventory.data.activitySummary, {
+    movements: 0,
+    receipts: 0,
+    transfers: 0,
+    counts: 0,
+    pendingCounts: 0,
+    pendingReversals: 0,
+  });
   assert.deepEqual(
     emptyInventory.data.locations,
     [alpha, utama],
@@ -139,6 +153,31 @@ try {
   assert.equal(forbidden.success, false);
   if (forbidden.success) throw new Error("Inventory read authorization was bypassed");
   assert.equal(forbidden.error.code, "FORBIDDEN");
+  sessionUser = reader;
+  const readProjects = database.query.project.findMany;
+  database.query.project.findMany = (): never => {
+    throw new Error("Database read unavailable");
+  };
+  const unavailable = await load();
+  database.query.project.findMany = readProjects;
+  assert.equal(unavailable.success, false);
+  if (unavailable.success) throw new Error("Failed query became healthy data");
+  assert.equal(
+    unavailable.error.code,
+    "INTERNAL_SERVER_ERROR",
+    "a source outage is not classified as revoked permission",
+  );
+  assert.equal(unavailable.error.message, "Data material belum dapat dimuat. Coba lagi.");
+  await database
+    .insert(schema.rolePermission)
+    .values({ roleId, permissionKey: "manage:material_settings" });
+  const manager = await load();
+  if (!manager.success) throw new Error(manager.error.message);
+  assert.equal(
+    manager.data.capabilities.canCreateLocation,
+    true,
+    "warehouse creation capability uses the writer's existing permission",
+  );
   sessionUser = null;
   const anonymous = await load();
   assert.equal(anonymous.success, false);

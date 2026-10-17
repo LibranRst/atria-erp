@@ -46,6 +46,7 @@ import { ConversationHistoryWorkspace } from "./conversation-history-workspace";
 import { useChatScroll } from "../hooks/use-chat-scroll";
 import { groupChatTurns } from "../utils/chat-turns";
 import { finishChatReply } from "../utils/finish-chat-reply";
+import { hasCompletedAssistantResult } from "../utils/assistant-result";
 import { readActiveInputRequest } from "../utils/input-request-reader";
 import { isSupportedAttachment, validateAttachmentBatch } from "../utils/attachment-validation";
 
@@ -105,6 +106,7 @@ export function AiChatView(): React.JSX.Element {
   const [pendingTurn, setPendingTurn] = React.useState<ChatDraft["pending"]>(null);
   const [attachments, setAttachments] = React.useState<readonly ChatAttachment[]>([]);
   const [conversationId, setConversationId] = React.useState<string | null>(null);
+  const [openedConversationId, setOpenedConversationId] = React.useState<string | null>(null);
   const [historyRevision, setHistoryRevision] = React.useState(0);
   const [confirmedProposals, setConfirmedProposals] = React.useState<Record<string, string>>({});
   const [isLoadingHistory, setIsLoadingHistory] = React.useState(true);
@@ -132,6 +134,8 @@ export function AiChatView(): React.JSX.Element {
   const bottomInset = footerHeight + COMPOSER_OFFSET_PX + COMPOSER_BREATHING_PX;
 
   const setActiveConversation = React.useCallback((next: string | null): void => {
+    // A streamed persistence ID is not navigation to another conversation.
+    if (!acceptStreamData.current) setOpenedConversationId(next);
     if (
       next &&
       next !== activeKeyRef.current &&
@@ -192,7 +196,7 @@ export function AiChatView(): React.JSX.Element {
         // Terminal status can render before the final streamed snapshot.
         // Publish the complete SDK reply, retaining the same turn/card IDs.
         setMessages((current) => finishChatReply(current, message));
-        setPendingTurn(null);
+        if (hasCompletedAssistantResult(message)) setPendingTurn(null);
       },
       onData: (part) => {
         if (
@@ -210,8 +214,15 @@ export function AiChatView(): React.JSX.Element {
 
   const chatTurns = React.useMemo(() => groupChatTurns(messages), [messages]);
 
-  const { viewportRef, contentRef, jumpToBottom, followStream, resumeFollowing, awayFromBottom } =
-    useChatScroll(isBusy && !historyOnly);
+  const {
+    viewportRef,
+    contentRef,
+    openAtBottom,
+    jumpToBottom,
+    followStream,
+    resumeFollowing,
+    awayFromBottom,
+  } = useChatScroll(isBusy && !historyOnly);
 
   const restoreDraft = React.useCallback((key: string): void => {
     const cached = sessionRef.current.drafts[key] ?? emptyChatDraft();
@@ -383,9 +394,9 @@ export function AiChatView(): React.JSX.Element {
   const handleChatPanelMount = React.useCallback(
     (node: HTMLDivElement | null): void => {
       chatPanelMountedRef.current = node !== null;
-      if (node) jumpToBottom();
+      if (node) openAtBottom();
     },
-    [jumpToBottom],
+    [openAtBottom],
   );
 
   /**
@@ -395,8 +406,8 @@ export function AiChatView(): React.JSX.Element {
    */
   React.useLayoutEffect(() => {
     if (isLoadingHistory || !chatPanelMountedRef.current) return;
-    jumpToBottom();
-  }, [isLoadingHistory, conversationId, jumpToBottom]);
+    openAtBottom();
+  }, [isLoadingHistory, openedConversationId, openAtBottom]);
 
   /**
    * Jawaban yang bertambah diikuti selama pengguna masih membaca di dasar.

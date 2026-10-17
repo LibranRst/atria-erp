@@ -340,7 +340,7 @@ try {
   await act(async (): Promise<void> => {
     root.render(
       <PermissionsProvider
-        permissions={["create:bank_account", "create:rap", "lock:rap", "approve:rab"]}
+        permissions={["create:bank_account", "create:rap", "update:rap", "lock:rap", "approve:rab"]}
       >
         <Capabilities />
       </PermissionsProvider>,

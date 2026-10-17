@@ -158,7 +158,9 @@ export default function ApprovalsScreen(): React.JSX.Element {
         queryClient.invalidateQueries({ queryKey: ["screen", "expenses"] }),
       ]);
     } catch {
-      toast.error("Status pembayaran belum dapat dipastikan. Periksa transaksi sebelum mengulangi.");
+      toast.error(
+        "Status pembayaran belum dapat dipastikan. Periksa transaksi sebelum mengulangi.",
+      );
     } finally {
       setIsPaying(false);
     }

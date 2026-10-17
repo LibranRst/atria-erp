@@ -1,13 +1,12 @@
 import {
   createMaterialMastersTx,
   lockMaterialCatalog,
+  loadMaterialReferences,
 } from "@backend/server/usecases/material/master-writer";
-import { eq } from "drizzle-orm";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
 import { z } from "zod";
 
 import { db } from "@backend/db";
-import { inventoryLocation, vendor } from "@backend/db/schema";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import { assertSettingsPermission, getSessionUser } from "./system-utils";
 
@@ -48,12 +47,11 @@ async function resolveMaterialImport(
         message: validation.error.issues[0]?.message ?? "Data import material tidak valid.",
       },
     };
-  const [categories, locations, vendors, existingMaterials] = await Promise.all([
-    db.query.materialCategory.findMany(),
-    db.query.inventoryLocation.findMany({ where: eq(inventoryLocation.isActive, true) }),
-    db.query.vendor.findMany({ where: eq(vendor.isActive, true) }),
-    db.query.materialMaster.findMany({ columns: { name: true, code: true } }),
-  ]);
+  const references = await loadMaterialReferences();
+  const categories = references.categories;
+  const locations = references.locations.filter((row) => row.isActive);
+  const vendors = references.vendors.filter((row) => row.isActive);
+  const existingMaterials = references.materials;
   const items: MaterialImportPreview["items"][number][] = [];
   const errors: MaterialImportPreview["errors"][number][] = [];
   const seenNames = new Set(

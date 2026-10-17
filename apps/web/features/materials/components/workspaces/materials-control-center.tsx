@@ -1,13 +1,23 @@
 "use client";
 
-import { useCan } from "@/components/auth/permissions-provider";
+import {
+  useCan,
+  useCurrentUserProfile,
+  usePermissions,
+} from "@/components/auth/permissions-provider";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
-import { useId, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { transitionSpringSmooth } from "@/lib/utils/motion";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
-import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
+import type {
+  CountView,
+  MaterialOperationsDashboard,
+} from "@/app/actions/material/operations-dashboard";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { MaterialDesktopWorkspace } from "../desktop/material-desktop-workspace";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import { GoodsReceiptSheet } from "@/features/materials/components/sheets/goods-receipt-sheet";
 import {
   AppIcon,
@@ -17,6 +27,7 @@ import {
   PageHeader,
   SwitchRow,
   Textarea,
+  PageState,
 } from "@/components/ui";
 import { MaterialDetail } from "@/features/materials/components/sheets/material-operation-sheets";
 import {
@@ -43,11 +54,51 @@ import {
 } from "@/features/materials/utils/material-ui-utils";
 
 export function MaterialsControlCenter({
-  data,
+  data: incomingData,
 }: {
   readonly data: MaterialOperationsDashboard;
 }): React.JSX.Element {
   const can = useCan();
+  const actor = useCurrentUserProfile();
+  const permissions = usePermissions();
+  const router = useRouter();
+  const desktop = useWorkspacePresentation() === "desktop";
+  const stockCountReturnFocusRef = useRef<HTMLElement | null>(null);
+  const stockCountToolbarFocusRef = useRef<HTMLButtonElement | null>(null);
+  const [snapshot, setSnapshot] = useState(incomingData);
+  const [desktopCountDraft, setDesktopCountDraft] = useState<CountView | null>(null);
+  const [countToLoad, setCountToLoad] = useState<CountView | null>(null);
+  const [activityReadRevision, setActivityReadRevision] = useState(0);
+  const invalidateActivityReads = useCallback(
+    (): void => setActivityReadRevision((revision) => revision + 1),
+    [],
+  );
+  const data = useMemo(
+    (): MaterialOperationsDashboard =>
+      desktopCountDraft
+        ? {
+            ...snapshot,
+            counts: [
+              ...new Map(
+                [...snapshot.counts, desktopCountDraft].map((row) => [row.id, row]),
+              ).values(),
+            ],
+          }
+        : snapshot,
+    [snapshot, desktopCountDraft],
+  );
+  const actorScope = JSON.stringify({
+    userId: actor?.id,
+    sessionId: actor?.sessionId,
+    roleId: actor?.roleId,
+    dataScope: actor?.dataScope,
+    permissions: [...permissions].sort(),
+    capabilities: data.capabilities,
+  });
+  const activityRefreshToken = useMemo(
+    () => ({ data, revision: activityReadRevision, actorScope }),
+    [data, activityReadRevision, actorScope],
+  );
   const documentToken = useId().replaceAll(":", "").toUpperCase();
   const urlTab = useUrlSearchParam("tab");
   const tab = toMaterialTab(urlTab);
@@ -113,14 +164,31 @@ export function MaterialsControlCenter({
     runAdjust,
     decide,
     loadMore,
-  } = useMaterialControlOperations({ data, action, documentToken });
+    handleQuickOperation,
+  } = useMaterialControlOperations({
+    data,
+    action,
+    documentToken,
+    onMutationComplete: invalidateActivityReads,
+  });
+
+  const overlayOpen = Boolean(urlAction || detailMaterialId || receiptDetail || decision);
+  if (!overlayOpen && !pending && snapshot !== incomingData) setSnapshot(incomingData);
+  if (action === "COUNT" && countToLoad) {
+    loadCountDraft(countToLoad.id, countToLoad);
+    setCountToLoad(null);
+  }
+  if (action !== "COUNT" && !countToLoad && desktopCountDraft !== null) setDesktopCountDraft(null);
 
   function selectTab(nextTab: MaterialTab): void {
     const params = new URLSearchParams(window.location.search);
     if (nextTab === "overview") params.delete("tab");
     else params.set("tab", nextTab);
     const query = params.toString();
-    updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
+    updateBrowserUrl(
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+      "replace",
+    );
   }
 
   const {
@@ -168,95 +236,143 @@ export function MaterialsControlCenter({
   const shortageCount = data.shortages.filter((row) => row.needToBuy > 0).length;
 
   return (
-    <section className="space-y-sm pb-8 select-none max-[430px]:pb-6">
-      <header className="space-y-2 px-1">
-        <PageHeader
-          eyebrow="Kontrol material"
-          title="Material & Stok"
-          subtitle="Posisi stok, kebutuhan project, dan aktivitas gudang."
-          action={
-            <Badge status={data.capabilities.canOperate ? "PRIMARY" : "DRAFT"}>
-              {data.capabilities.canOperate ? roleLabel(data.roleName) : "HANYA LIHAT"}
-            </Badge>
-          }
+    <section
+      className={
+        desktop ? "min-w-0 space-y-4 pb-8" : "space-y-sm pb-8 select-none max-[430px]:pb-6"
+      }
+    >
+      <div hidden={desktop} inert={desktop} className={desktop ? "hidden" : "space-y-sm"}>
+        <header className="space-y-2 px-1">
+          <PageHeader
+            eyebrow="Kontrol material"
+            title="Material & Stok"
+            subtitle="Posisi stok, kebutuhan project, dan aktivitas gudang."
+            action={
+              <Badge status={data.capabilities.canOperate ? "PRIMARY" : "DRAFT"}>
+                {data.capabilities.canOperate ? roleLabel(data.roleName) : "HANYA LIHAT"}
+              </Badge>
+            }
+          />
+          {message && (
+            <div
+              className="flex min-h-10 items-center gap-2 px-1 text-meta font-semibold text-primary"
+              role="status"
+            >
+              <AppIcon name="info" className="icon-sm" />
+              <span className="min-w-0 flex-1">{message}</span>
+            </div>
+          )}
+        </header>
+
+        <MaterialTabsNavigation
+          value={tab}
+          onChange={selectTab}
+          shortageCount={shortageCount}
+          attentionCount={lowCount}
         />
-        {message && (
-          <div
-            className="flex min-h-10 items-center gap-2 px-1 text-[10px] leading-[1.3] font-semibold text-primary"
-            role="status"
-          >
-            <AppIcon name="info" className="icon-sm" />
-            <span className="min-w-0 flex-1">{message}</span>
-          </div>
+
+        {tab === "overview" && (
+          <MaterialOverviewTab
+            data={data}
+            totalStockValue={totalStockValue}
+            availableValue={availableValue}
+            lowCount={lowCount}
+            pendingApprovals={pendingApprovals}
+            movements={movements}
+            onDecision={setDecision}
+            onNavigate={selectTab}
+          />
         )}
-      </header>
 
-      <MaterialTabsNavigation
-        value={tab}
-        onChange={selectTab}
-        shortageCount={shortageCount}
-        attentionCount={lowCount}
-      />
+        {tab === "inventory" && (
+          <MaterialInventoryTab
+            search={search}
+            location={location}
+            status={status}
+            locations={inventoryLocations}
+            visibleMaterials={visibleMaterials}
+            canManage={data.capabilities.canOperate}
+            onSearchChange={setSearch}
+            onLocationChange={setLocation}
+            onStatusChange={setStatus}
+            onOpenMaterial={setDetailMaterialId}
+            onAddLocation={() => {
+              const params = new URLSearchParams(window.location.search);
+              params.set("action", "LOCATION");
+              const query = params.toString();
+              updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
+            }}
+          />
+        )}
 
-      {tab === "overview" && (
-        <MaterialOverviewTab
+        {tab === "needs" &&
+          (data.shortagesSource && data.shortagesSource.status !== "ready" ? (
+            <PageState
+              kind={data.shortagesSource.status === "restricted" ? "restricted" : "error"}
+              title="Kebutuhan RAP belum tersedia"
+              description={data.shortagesSource.message ?? "Data kebutuhan belum dapat dimuat."}
+            />
+          ) : (
+            <MaterialNeedsTab data={data} />
+          ))}
+
+        {tab === "activity" && (
+          <MaterialActivityTab
+            activityType={activityType}
+            activityPeriod={activityPeriod}
+            activityProject={activityProject}
+            activityLocation={activityLocation}
+            movementTypes={movementTypes}
+            activityProjectOptions={activityProjectOptions}
+            activityLocationOptions={activityLocationOptions}
+            visibleReceipts={visibleReceipts}
+            visibleMovements={visibleMovements}
+            movementsHasMore={movementsHasMore}
+            transfers={data.transfers}
+            counts={data.counts}
+            pending={pending}
+            onActivityTypeChange={setActivityType}
+            onActivityPeriodChange={setActivityPeriod}
+            onActivityProjectChange={setActivityProject}
+            onActivityLocationChange={setActivityLocation}
+            onOpenReceipt={setReceiptDetail}
+            onLoadMore={loadMore}
+          />
+        )}
+      </div>
+      <div hidden={!desktop} inert={!desktop} className={desktop ? "min-w-0" : "hidden"}>
+        <MaterialDesktopWorkspace
+          activityReturnFocusRef={stockCountReturnFocusRef}
+          countToolbarFocusRef={stockCountToolbarFocusRef}
           data={data}
+          refreshToken={activityRefreshToken}
+          grouped={grouped}
+          tab={tab}
+          active={desktop}
+          suspended={overlayOpen || pending}
+          pending={pending}
           totalStockValue={totalStockValue}
           availableValue={availableValue}
           lowCount={lowCount}
-          pendingApprovals={pendingApprovals}
-          movements={movements}
-          onDecision={setDecision}
           onNavigate={selectTab}
-        />
-      )}
-
-      {tab === "inventory" && (
-        <MaterialInventoryTab
-          search={search}
-          location={location}
-          status={status}
-          locations={inventoryLocations}
-          visibleMaterials={visibleMaterials}
-          canManage={data.capabilities.canOperate}
-          onSearchChange={setSearch}
-          onLocationChange={setLocation}
-          onStatusChange={setStatus}
+          onOperation={handleQuickOperation}
           onOpenMaterial={setDetailMaterialId}
-          onAddLocation={() => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("action", "LOCATION");
-            const query = params.toString();
-            updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
+          onOpenReceipt={setReceiptDetail}
+          onDecision={setDecision}
+          onReload={() => {
+            if (!overlayOpen && !pending) {
+              invalidateActivityReads();
+              router.refresh();
+            }
+          }}
+          onLoadCountDraft={(row) => {
+            if (!row.canEdit) return;
+            setDesktopCountDraft(row);
+            setCountToLoad(row);
+            handleQuickOperation("COUNT");
           }}
         />
-      )}
-
-      {tab === "needs" && <MaterialNeedsTab data={data} />}
-
-      {tab === "activity" && (
-        <MaterialActivityTab
-          activityType={activityType}
-          activityPeriod={activityPeriod}
-          activityProject={activityProject}
-          activityLocation={activityLocation}
-          movementTypes={movementTypes}
-          activityProjectOptions={activityProjectOptions}
-          activityLocationOptions={activityLocationOptions}
-          visibleReceipts={visibleReceipts}
-          visibleMovements={visibleMovements}
-          movementsHasMore={movementsHasMore}
-          transfers={data.transfers}
-          counts={data.counts}
-          pending={pending}
-          onActivityTypeChange={setActivityType}
-          onActivityPeriodChange={setActivityPeriod}
-          onActivityProjectChange={setActivityProject}
-          onActivityLocationChange={setActivityLocation}
-          onOpenReceipt={setReceiptDetail}
-          onLoadMore={loadMore}
-        />
-      )}
+      </div>
 
       <ProjectMaterialOperationSheet
         action={action}
@@ -323,6 +439,13 @@ export function MaterialsControlCenter({
       />
 
       <StockCountSheet
+        returnFocusRef={
+          desktop
+            ? tab === "activity"
+              ? stockCountReturnFocusRef
+              : stockCountToolbarFocusRef
+            : undefined
+        }
         open={action === "COUNT"}
         pending={pending}
         inventory={data.inventory}
@@ -369,6 +492,7 @@ export function MaterialsControlCenter({
           inventory={data.inventory}
           vendorBills={data.bills}
           showTrigger={false}
+          onMutationComplete={invalidateActivityReads}
         />
       )}
       <MaterialDetail

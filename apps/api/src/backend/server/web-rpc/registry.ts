@@ -14,6 +14,7 @@ import * as catalogSettingsAi from "@backend/app/actions/ai/catalog-settings";
 import * as procurementWarehouseAi from "@backend/app/actions/ai/procurement-warehouse";
 import * as vendorBillCorrections from "@backend/app/actions/finance/correct-vendor-bill";
 import * as dashboardDesktop from "@backend/app/actions/finance/dashboard-desktop";
+import * as reconciliationDesktop from "@backend/app/actions/finance/reconciliation-desktop";
 import * as projectStockAi from "@backend/app/actions/ai/project-stock";
 import * as rabAi from "@backend/app/actions/ai/rab-draft";
 import * as rabWorkflowAi from "@backend/app/actions/ai/rab-workflow";
@@ -554,6 +555,10 @@ const operations = {
     module68.transferBetweenBankAccounts,
   "app/actions/finance/reconciliation-workspace-query.getReconciliationWorkspace":
     module69.getReconciliationWorkspace,
+  "app/actions/finance/reconciliation-desktop.getReconciliationDesktopWorkspace":
+    reconciliationDesktop.getReconciliationDesktopWorkspace,
+  "app/actions/finance/reconciliation-desktop.getReconciliationMatchContext":
+    reconciliationDesktop.getReconciliationMatchContext,
   "app/actions/finance/field-request-review.verifyFieldRequest": module70.verifyFieldRequest,
   "app/actions/finance/field-request-review.approveFieldRequest": module70.approveFieldRequest,
   "app/actions/finance/field-request-review.approveVendorPayment": module70.approveVendorPayment,
@@ -584,6 +589,8 @@ const operations = {
   "app/actions/material/warehouse-stock-count.submitStockCount": module77.submitStockCount,
   "app/actions/material/warehouse-stock-count.approveStockCount": module77.approveStockCount,
   "app/actions/material/warehouse-stock-count.rejectStockCount": module77.rejectStockCount,
+  "app/actions/material/operations-dashboard.getMaterialDesktopActivity":
+    module78.getMaterialDesktopActivity,
   "app/actions/material/operations-dashboard.getMaterialMovementPage":
     module78.getMaterialMovementPage,
   "app/actions/material/operations-dashboard.getMaterialOperationsDashboard":
@@ -1656,6 +1663,18 @@ export async function invokeWebOperation(
       const parameters = [...args] as Parameters<typeof module69.getReconciliationWorkspace>;
       return module69.getReconciliationWorkspace(...parameters);
     }
+    case "app/actions/finance/reconciliation-desktop.getReconciliationDesktopWorkspace": {
+      const parameters = [...args] as Parameters<
+        typeof reconciliationDesktop.getReconciliationDesktopWorkspace
+      >;
+      return reconciliationDesktop.getReconciliationDesktopWorkspace(...parameters);
+    }
+    case "app/actions/finance/reconciliation-desktop.getReconciliationMatchContext": {
+      const parameters = [...args] as Parameters<
+        typeof reconciliationDesktop.getReconciliationMatchContext
+      >;
+      return reconciliationDesktop.getReconciliationMatchContext(...parameters);
+    }
     case "app/actions/finance/field-request-review.verifyFieldRequest": {
       const parameters = [...args] as Parameters<typeof module70.verifyFieldRequest>;
       return module70.verifyFieldRequest(...parameters);
@@ -1765,6 +1784,10 @@ export async function invokeWebOperation(
     case "app/actions/material/warehouse-stock-count.rejectStockCount": {
       const parameters = [...args] as Parameters<typeof module77.rejectStockCount>;
       return module77.rejectStockCount(...parameters);
+    }
+    case "app/actions/material/operations-dashboard.getMaterialDesktopActivity": {
+      const parameters = [...args] as Parameters<typeof module78.getMaterialDesktopActivity>;
+      return module78.getMaterialDesktopActivity(...parameters);
     }
     case "app/actions/material/operations-dashboard.getMaterialMovementPage": {
       const parameters = [...args] as Parameters<typeof module78.getMaterialMovementPage>;

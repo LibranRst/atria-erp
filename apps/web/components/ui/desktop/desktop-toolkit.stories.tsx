@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from "@storybook/nextjs";
 import React from "react";
 import { DesktopUIProvider } from "./desktop-ui-provider";
 import { DesktopButton, DesktopInput, DesktopSelect } from "./desktop-controls";
-import { DesktopTable, type DesktopTableColumn } from "./desktop-table";
+import {
+  Button,
+  DesktopTable,
+  FactRow,
+  GroupedSurface,
+  type DesktopTableColumn,
+} from "@/components/ui";
 import { FormSheet } from "../overlay/semantic-sheets";
 import { MoneyValue } from "../feedback/page-primitives";
 import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
@@ -112,9 +118,68 @@ function ToolkitFixture(): React.JSX.Element {
   );
 }
 
+const selectionRows: readonly FixtureRow[] = [
+  { id: "cipete", name: "Contoh proyek Cipete", budget: 125000000 },
+  { id: "menteng", name: "Contoh proyek Menteng", budget: 175000000 },
+];
+
+function ToggleableSelectionFixture(): React.JSX.Element {
+  const [selected, setSelected] = React.useState<FixtureRow | null>(null);
+  return (
+    <WorkspacePresentationProvider presentation="desktop">
+      <DesktopUIProvider className="space-y-4 bg-background p-6">
+        <div className="space-y-1">
+          <h1 className="text-section font-semibold">Pilih proyek untuk melihat rincian</h1>
+          <p className="text-support text-on-surface-variant">
+            Pilih baris yang sama lagi untuk menutup rincian. Gunakan Spasi saat baris terfokus
+            untuk memilih atau membatalkan pilihan.
+          </p>
+          <p role="status" className="text-support">
+            {selected ? `${selected.name} dipilih.` : "Belum ada proyek dipilih."}
+          </p>
+        </div>
+        <div
+          className={`grid min-w-0 items-start gap-4 ${selected ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}
+        >
+          <DesktopTable
+            ariaLabel="Contoh pemilihan rincian proyek"
+            columns={columns}
+            rows={selectionRows}
+            rowKey={(row): string => row.id}
+            selectedRowKey={selected?.id ?? null}
+            onRowSelectionChange={setSelected}
+          />
+          {selected ? (
+            <GroupedSurface variant="desktopPanel" className="min-w-0 overflow-hidden">
+              <h2 className="p-4 text-row font-semibold">{selected.name}</h2>
+              <FactRow
+                label="Anggaran"
+                value={<MoneyValue amount={selected.budget} variant="fullDynamic" />}
+              />
+              <div className="p-4">
+                <Button
+                  variant="secondary"
+                  size="compact"
+                  fullWidth
+                  onClick={(): void => setSelected(null)}
+                >
+                  Tutup rincian
+                </Button>
+              </div>
+            </GroupedSurface>
+          ) : null}
+        </div>
+      </DesktopUIProvider>
+    </WorkspacePresentationProvider>
+  );
+}
+
 const meta = { title: "ui/desktop/HeroUI Toolkit", component: ToolkitFixture } satisfies Meta<
   typeof ToolkitFixture
 >;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const TableControlsAndSharedSheet: Story = {};
+export const ToggleableRowSelection: Story = {
+  render: (): React.JSX.Element => <ToggleableSelectionFixture />,
+};

@@ -1,8 +1,6 @@
 import crypto from "crypto";
-import { cookies } from "@runtime/request-context";
-
-import { auth } from "@backend/lib/auth";
-import { assertPermission } from "@backend/lib/auth/permissions";
+import { resolveActor } from "@backend/server/actor";
+import { actorCan } from "@backend/lib/auth/permissions";
 import { parseNumericToCents } from "@backend/lib/finance/balance-mutation";
 import { normalizeCashDirection, type CashDirection } from "@atria/core/finance/cash-direction";
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -10,22 +8,20 @@ import type { ActionResponse } from "@atria/core/types/action-response";
 export async function requireReconciliationUser(): Promise<
   ActionResponse<{ readonly id: string }>
 > {
-  const session = await auth.api.getSession({ headers: { cookie: (await cookies()).toString() } });
-  if (!session?.user) {
+  const actor = await resolveActor();
+  if (!actor) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   }
-  try {
-    await assertPermission(session.user, "reconcile:ledger");
-    return { success: true, data: { id: session.user.id } };
-  } catch (error) {
+  if (!actor.isActive || !actorCan(actor, "reconcile:ledger") || actor.dataScope !== "GLOBAL") {
     return {
       success: false,
       error: {
         code: "FORBIDDEN",
-        message: error instanceof Error ? error.message : "Akses ditolak.",
+        message: "Rekonsiliasi memerlukan izin buku kas dan akses data global.",
       },
     };
   }
+  return { success: true, data: { id: actor.userId } };
 }
 
 export function normalizeReconciliationDescription(value: string): string {

@@ -8,10 +8,17 @@ import {
   AdministrationChangeError,
   administrationChangeFailure,
 } from "./change-writer";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { auditLog, role, rolePermission, user } from "@backend/db/schema";
+import {
+  auditLog,
+  role,
+  rolePermission,
+  user,
+  tenantMember,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
 import { getAllPermissionKeys } from "@backend/lib/auth/role-access";
 import type { Actor } from "@backend/server/actor";
 import { actorCan } from "@backend/lib/auth/permissions";
@@ -115,6 +122,15 @@ export async function listManagedRolesUseCase(
     db
       .select({ roleId: user.roleId, total: sql<number>`count(*)::int` })
       .from(user)
+      .where(
+        inArray(
+          user.id,
+          db
+            .select({ id: tenantMember.userId })
+            .from(tenantMember)
+            .where(eq(tenantMember.tenantId, INSTANCE_TENANT_ID)),
+        ),
+      )
       .groupBy(user.roleId),
   ]);
   const countByRole = new Map(counts.map((row) => [row.roleId, row.total]));

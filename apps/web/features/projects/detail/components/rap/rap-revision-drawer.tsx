@@ -26,6 +26,8 @@ export function InternalRevisionDrawer({
   toggleRevisionPackage,
   handleCreateInternalPlanRevision,
   isPending,
+  canReviseMaterial = true,
+  canRevisePackages = true,
 }: {
   readonly internalRevisionOpen: boolean;
   readonly setInternalRevisionOpen: (open: boolean) => void;
@@ -38,7 +40,11 @@ export function InternalRevisionDrawer({
   readonly toggleRevisionPackage: (id: string) => void;
   readonly handleCreateInternalPlanRevision: () => void;
   readonly isPending: boolean;
+  readonly canReviseMaterial?: boolean;
+  readonly canRevisePackages?: boolean;
 }): React.JSX.Element {
+  const unauthorizedSelection =
+    (reviseMaterial && !canReviseMaterial) || (revisionPackageIds.length > 0 && !canRevisePackages);
   return (
     <OperationalFormSheet
       desktopSize="wide"
@@ -90,15 +96,18 @@ export function InternalRevisionDrawer({
       submittingLabel="Membuat…"
       pending={isPending}
       disabled={
+        unauthorizedSelection ||
         internalRevisionReason.trim().length < 10 ||
         (!reviseMaterial && revisionPackageIds.length === 0)
       }
       disabledReason={
-        internalRevisionReason.trim().length < 10
-          ? "Jelaskan alasan revisi minimal 10 karakter."
-          : !reviseMaterial && revisionPackageIds.length === 0
-            ? "Pilih minimal satu bagian yang akan direvisi."
-            : undefined
+        unauthorizedSelection
+          ? "Izin revisi untuk pilihan ini tidak tersedia."
+          : internalRevisionReason.trim().length < 10
+            ? "Jelaskan alasan revisi minimal 10 karakter."
+            : !reviseMaterial && revisionPackageIds.length === 0
+              ? "Pilih minimal satu bagian yang akan direvisi."
+              : undefined
       }
       onSubmit={handleCreateInternalPlanRevision}
       statusText={`${internalRevisionReason.trim().length}/10 karakter · ${(reviseMaterial ? 1 : 0) + revisionPackageIds.length} bagian dipilih`}
@@ -131,7 +140,12 @@ export function InternalRevisionDrawer({
           helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan."
         >
           <fieldset className="space-y-2">
-            <ChoiceRow checked={reviseMaterial} onChange={setReviseMaterial} title="Material RAP" />
+            <ChoiceRow
+              checked={reviseMaterial}
+              onChange={setReviseMaterial}
+              title="Material RAP"
+              disabled={!canReviseMaterial || isPending}
+            />
             {categoryPlanItems
               .filter((item) => item.status === "LOCKED")
               .map((item) => (
@@ -141,6 +155,7 @@ export function InternalRevisionDrawer({
                   onChange={() => toggleRevisionPackage(item.id)}
                   title={item.name}
                   description={item.expenseCategoryName}
+                  disabled={!canRevisePackages || isPending}
                 />
               ))}
           </fieldset>

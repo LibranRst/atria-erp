@@ -36,6 +36,7 @@ import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentatio
 import { readAnyProposal } from "../utils/proposal-reader";
 import { toolNameFromPartType } from "../utils/tool-labels";
 import { activityToolState, deriveToolActivity } from "../utils/tool-activity";
+import { projectCardAwareAnswerText, type RenderedReadCard } from "../utils/card-aware-answer";
 import type { ActiveInputRequest } from "../utils/input-request-reader";
 import { USER_MESSAGE_ATTRIBUTE } from "../hooks/use-chat-scroll";
 import { ChatBubble } from "./chat-bubble";
@@ -79,6 +80,8 @@ type ChatMessageProps = {
   readonly onNavigate?: () => void;
   readonly elapsedSeconds?: number;
   readonly pendingInput?: ActiveInputRequest | null;
+  /** ChatTurn owns the stable activity disclosure during the temporary-to-result handoff. */
+  readonly showActivity?: boolean;
 };
 
 export type AssistantTextBubble = {
@@ -93,7 +96,10 @@ export type AssistantBubbleEntrance = "none" | "rise" | "riseFade";
  * Text part adalah boundary native AI SDK untuk satu episode teks. Indeks part
  * tetap stabil ketika delta berikutnya memperpanjang teks yang sama.
  */
-export function projectAssistantTextBubbles(message: UIMessage): readonly AssistantTextBubble[] {
+export function projectAssistantTextBubbles(
+  message: UIMessage,
+  renderedCards: readonly RenderedReadCard[] = [],
+): readonly AssistantTextBubble[] {
   const bubbles: AssistantTextBubble[] = [];
 
   message.parts.forEach((part, index) => {
@@ -101,7 +107,7 @@ export function projectAssistantTextBubbles(message: UIMessage): readonly Assist
 
     bubbles.push({
       key: `${message.id}-text-${index}`,
-      text: part.text,
+      text: projectCardAwareAnswerText(message, part.text, renderedCards),
       isFirst: bubbles.length === 0,
     });
   });
@@ -132,6 +138,7 @@ export function ChatMessage({
   onNavigate,
   elapsedSeconds = 0,
   pendingInput = null,
+  showActivity = true,
 }: ChatMessageProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const desktop = useWorkspacePresentation() === "desktop";
@@ -153,8 +160,7 @@ export function ChatMessage({
     );
   }
 
-  const cards: { toolName: string; node: React.JSX.Element }[] = [];
-  const assistantTextBubbles = projectAssistantTextBubbles(message);
+  const cards: { toolName: string; toolCallId?: string; node: React.JSX.Element }[] = [];
   let followUps: readonly string[] = [];
 
   const projectNames = collectProjectNames(message);
@@ -840,6 +846,7 @@ export function ChatMessage({
       if (Renderer && !suppressUnsupportedFactResults) {
         cards.push({
           toolName,
+          toolCallId,
           node: (
             <Renderer
               key={`${message.id}-card-${index}`}
@@ -853,7 +860,7 @@ export function ChatMessage({
     }
   });
 
-  const traces = deriveToolActivity(message, isStreaming, pendingInput);
+  const traces = showActivity ? deriveToolActivity(message, isStreaming, pendingInput) : [];
   /**
    * Kartu baru ditahan sampai jawaban selesai mengalir. Memunculkannya di
    * tengah aliran menggeser teks yang sedang dibaca dan membuat kartu itu
@@ -861,10 +868,18 @@ export function ChatMessage({
    * sedang berjalan — kartu di percakapan sebelumnya tetap di tempatnya.
    */
   const visibleCards = isStreaming ? [] : selectVisibleCards(cards);
+  const assistantTextBubbles = projectAssistantTextBubbles(
+    message,
+    visibleCards.flatMap((card) =>
+      card.toolCallId ? [{ toolName: card.toolName, toolCallId: card.toolCallId }] : [],
+    ),
+  );
 
   return (
     <div className={desktop ? "w-full max-w-150 min-w-0 space-y-3.5" : "space-y-3.5"}>
-      <ToolTraceList traces={traces} isActive={isStreaming} elapsedSeconds={elapsedSeconds} />
+      {showActivity && (
+        <ToolTraceList traces={traces} isActive={isStreaming} elapsedSeconds={elapsedSeconds} />
+      )}
       {assistantTextBubbles.length > 0 && (
         <div className="space-y-3.5">
           {assistantTextBubbles.map((bubble) => {

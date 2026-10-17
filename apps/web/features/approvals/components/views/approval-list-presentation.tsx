@@ -1,9 +1,11 @@
 "use client";
 
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import {
   AppIcon,
+  Button,
   DetailSheet,
   DuotoneIconTile,
   FactRow,
@@ -54,6 +56,7 @@ export function ApprovalDecisionSubject({
   readonly item: ApprovalItem;
   readonly className?: string;
 }): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   return (
     <div className={cn("flex items-center justify-between gap-3 text-left", className)}>
       <div className="min-w-0 flex-1">
@@ -64,7 +67,8 @@ export function ApprovalDecisionSubject({
       </div>
       <MoneyValue
         amount={item.amount}
-        variant="compact"
+        fractionDigits={Number.isInteger(item.amount) ? 0 : 2}
+        variant={desktop ? "fullDynamic" : "compact"}
         size="sm"
         align="right"
         className="shrink-0"
@@ -160,12 +164,14 @@ export function ApprovalQueueRow({
 export function ApprovalDetailSheet({
   item,
   pending,
+  canDecide = true,
   onClose,
   onOpenReceipt,
   onDecision,
 }: {
   readonly item: ApprovalItem | null;
   readonly pending: boolean;
+  readonly canDecide?: boolean;
   readonly onClose: () => void;
   readonly onOpenReceipt: (url: string) => void;
   readonly onDecision: (item: ApprovalItem, status: ApprovalDecision["status"]) => void;
@@ -187,13 +193,13 @@ export function ApprovalDetailSheet({
           <SheetFooterActions
             secondary={{
               label: "Tolak",
-              disabled: pending,
+              disabled: pending || !canDecide,
               variant: "criticalQuiet",
               onClick: () => onDecision(presentedItem, "REJECTED"),
             }}
             primary={{
               label: "Setujui",
-              disabled: pending,
+              disabled: pending || !canDecide,
               variant: "primary",
               onClick: () => onDecision(presentedItem, "APPROVED"),
             }}
@@ -314,14 +320,36 @@ export function ApprovalDetailContent({
  * The receipt as its own attached exhibit — a photo chip in the same gray
  * canvas as every other fact, not a bordered row inside a white list.
  */
-function ApprovalEvidenceRow({
+export function ApprovalEvidenceRow({
   item,
   onOpenReceipt,
+  presentation = "mobile",
 }: {
   readonly item: ApprovalItem;
   readonly onOpenReceipt: (url: string) => void;
+  readonly presentation?: "mobile" | "desktop";
 }): React.JSX.Element {
   const reduceMotion = useReducedMotion();
+
+  if (presentation === "desktop") {
+    const receiptUrl = item.receiptImageUrl;
+    return (
+      <GroupedSurface variant="desktopPanel" className="p-3">
+        {receiptUrl ? (
+          <Button
+            variant="secondary"
+            size="compact"
+            fullWidth
+            onClick={() => onOpenReceipt(receiptUrl)}
+          >
+            <AppIcon name="image" className="icon-sm" /> Buka bukti pengajuan
+          </Button>
+        ) : (
+          <p className="text-support text-on-surface-variant">Tidak ada bukti terlampir.</p>
+        )}
+      </GroupedSurface>
+    );
+  }
 
   if (!item.receiptImageUrl) {
     return (

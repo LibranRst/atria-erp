@@ -72,4 +72,3 @@ describe("effective project health", () => {
     expect(result.healthReasons).toEqual([]);
   });
 });
-

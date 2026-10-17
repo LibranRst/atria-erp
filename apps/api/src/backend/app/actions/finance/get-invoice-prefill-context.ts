@@ -1,14 +1,11 @@
-import { getRoleDataScopeByName } from "@backend/lib/auth/role-access";
-
-import { cookies } from "@runtime/request-context";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@backend/db";
-import { project } from "@backend/db/schema";
-import { auth } from "@backend/lib/auth";
-import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
+import { clientInvoice, INSTANCE_TENANT_ID, project } from "@backend/db/schema";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
+import { resolveActor } from "@backend/server/actor";
+import { assertFinancePermission } from "@backend/server/usecases/finance/mutation-access";
 import type { ActionResponse } from "@atria/core/types/action-response";
 import {
   deriveInvoicePrefill,
@@ -16,7 +13,12 @@ import {
 } from "@atria/core/finance/invoice-prefill";
 
 const getInvoicePrefillSchema = z.object({
-  projectId: z.string().uuid("ID proyek tidak valid."),
+  projectId: z
+    .string()
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      "ID proyek tidak valid.",
+    ),
 });
 
 /**
@@ -37,13 +39,9 @@ export async function getInvoicePrefillContext(input: {
   const { projectId } = validation.data;
 
   try {
-    const session = await auth.api.getSession({
-      headers: {
-        cookie: (await cookies()).toString(),
-      },
-    });
+    const actor = await resolveActor();
 
-    if (!session || !session.user) {
+    if (!actor) {
       return {
         success: false,
         error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
@@ -51,27 +49,22 @@ export async function getInvoicePrefillContext(input: {
     }
 
     try {
-      // Izinkan pembuat atau pelihat invoice memeriksa konteks
-      await assertPermission(session.user, "view:client_invoice");
-    } catch (err) {
+      assertFinancePermission(actor, "view:client_invoice");
+      await assertProjectAccess(projectId, actor.userId, actor.roleName);
+    } catch {
       return {
         success: false,
         error: {
           code: "FORBIDDEN",
-          message: err instanceof Error ? err.message : "Akses ditolak.",
+          message: "Anda belum memiliki akses melihat invoice proyek ini.",
         },
       };
     }
 
-    const userRoleName = await resolveRoleName(session.user.roleId);
-    if ((await getRoleDataScopeByName(userRoleName)) === "ASSIGNED") {
-      await assertProjectAccess(projectId, session.user.id, userRoleName);
-    }
-
     const proj = await db.query.project.findFirst({
-      where: eq(project.id, projectId),
+      where: and(eq(project.id, projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
       with: {
-        clientInvoices: true,
+        clientInvoices: { where: eq(clientInvoice.tenantId, INSTANCE_TENANT_ID) },
       },
     });
 
@@ -98,13 +91,12 @@ export async function getInvoicePrefillContext(input: {
       success: true,
       data: prefill,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: {
         code: "INTERNAL_SERVER_ERROR",
-        message:
-          error instanceof Error ? error.message : "Gagal mengambil data konteks invoice proyek.",
+        message: "Konteks invoice belum dapat dimuat. Coba lagi.",
       },
     };
   }

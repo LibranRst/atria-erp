@@ -156,9 +156,7 @@ export function BottomSheet({
                   declaredInset: scrollProps?.contentInset?.bottom,
                   nativeInset: metrics?.bottomInset,
                   keyboardVisible: Keyboard.isVisible(),
-                  keyboardOverlap: keyboard
-                    ? viewportTop + viewportHeight - keyboard.screenY
-                    : 0,
+                  keyboardOverlap: keyboard ? viewportTop + viewportHeight - keyboard.screenY : 0,
                 })
               : (metrics?.bottomInset ?? 0),
         });

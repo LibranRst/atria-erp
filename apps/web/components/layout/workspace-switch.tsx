@@ -45,11 +45,13 @@ export function WorkspaceSwitch({
         description="Simpan perubahan atau tutup formulir yang masih terbuka sebelum berpindah tampilan. Halaman dan filter yang sama akan dibuka."
         onClose={() => setConfirm(false)}
         actions={
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setConfirm(false)}>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary" fullWidth onClick={() => setConfirm(false)}>
               Tetap di sini
             </Button>
-            <Button onClick={switchSurface}>Ganti tampilan</Button>
+            <Button fullWidth onClick={switchSurface}>
+              Ganti tampilan
+            </Button>
           </div>
         }
       />

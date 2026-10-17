@@ -40,6 +40,7 @@ import {
 } from "@/features/materials/utils/goods-receipt-prefill";
 import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { useCan } from "@/components/auth/permissions-provider";
 export function GoodsReceiptSheet({
   projects,
   locations,
@@ -48,8 +49,10 @@ export function GoodsReceiptSheet({
   vendorBills,
   compact = false,
   showTrigger = true,
+  onMutationComplete,
 }: Props): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
+  const canCreateLocation = useCan()("manage:material_settings");
   const reduceMotion = useReducedMotion();
 
   const router = useRouter();
@@ -258,6 +261,7 @@ export function GoodsReceiptSheet({
         setReviewing(false);
         return;
       }
+      onMutationComplete?.();
       setSuccess({
         title: "Penerimaan barang berhasil",
         description:
@@ -456,7 +460,7 @@ export function GoodsReceiptSheet({
                 placeholder="Pilih lokasi"
                 createActionLabel="Buat lokasi baru"
                 createActionDescription="Tambahkan lokasi gudang atau workshop baru."
-                onCreateAction={() => setShowLocationComposer(true)}
+                onCreateAction={canCreateLocation ? () => setShowLocationComposer(true) : undefined}
                 required
               />
             </FormSection>
@@ -564,7 +568,7 @@ export function GoodsReceiptSheet({
         }}
       />
       <InventoryLocationSheet
-        open={showLocationComposer}
+        open={canCreateLocation && showLocationComposer}
         onClose={() => setShowLocationComposer(false)}
         onSuccess={(newLocation) => {
           setAddedLocations((curr) => [...curr, newLocation]);

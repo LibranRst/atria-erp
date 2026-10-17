@@ -32,9 +32,7 @@ export function AccountTransactionRows({
     <RowGroup>
       {transactions.map((transaction) => {
         const txDate = new Date(transaction.createdAt);
-        const dateLabel = Number.isNaN(txDate.getTime())
-          ? "—"
-          : txDate.toLocaleDateString("id-ID");
+        const dateLabel = Number.isNaN(txDate.getTime()) ? "—" : txDate.toLocaleDateString("id-ID");
 
         return (
           <button

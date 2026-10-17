@@ -1,4 +1,10 @@
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
+import type { ProjectMarginData } from "@atria/core/types/project-margin";
+import type {
+  ProjectExpensesSource,
+  ProjectOperationSource,
+  ProjectStockData,
+} from "@atria/core/types/project-operations";
 import type {
   BankAccountItem,
   ExpenseCostItem,
@@ -251,6 +257,11 @@ export interface StockMovement {
   };
 }
 
+export type ProjectBudgetSource = {
+  readonly status: "ready" | "missing" | "restricted" | "unavailable";
+  readonly message?: string;
+};
+
 export interface ProjectTabsProps {
   readonly project: ProjectData;
   readonly costCategories: readonly unknown[];
@@ -264,8 +275,13 @@ export interface ProjectTabsProps {
   readonly vendors: VendorListVendor[];
   readonly projectsForForms: VendorListProject[];
   readonly stockMovements: StockMovement[];
+  readonly projectStockData?: ProjectStockData;
+  readonly projectExpensesSource?: ProjectExpensesSource;
   readonly invoices: ClientInvoiceItem[];
+  readonly projectInvoicesSource?: ProjectOperationSource;
+  readonly projectMarginData?: ProjectMarginData;
   readonly projectBudgetDashboard: ProjectBudgetDashboard | null;
+  readonly projectBudgetSource?: ProjectBudgetSource;
   readonly materialMasterCatalog: MaterialOption[];
   readonly pricingTemplateCatalog: PricingTemplateOption[];
   readonly clients?: readonly { readonly id: string; readonly name: string }[];

@@ -1,4 +1,4 @@
-import { aiCapabilityReport } from "./tools/capability-catalog";
+import { aiCapabilityReport, availableAiCapabilities } from "./tools/capability-catalog";
 import { TOOLS_WITH_CARDS } from "./tool-output";
 import type { ChatProviderName } from "./providers";
 import type { AiPreferenceInput } from "@atria/core/validations/ai-preference";
@@ -134,6 +134,8 @@ KONTRAK JAWABAN RINGKAS
 
 ATURAN KARTU & GAYA MENJAWAB
 - Semua hasil tool usulan/proposal juga tampil sebagai kartu interaktif. Untuk usulan, cukup satu takeaway dan next action dalam1–2 kalimat; jangan salin semua angka/perbandingan yang sudah ada di kartu.
+- Bubble jawaban melengkapi kartu: berikan kesimpulan, insight yang didukung hasil baca, atau langkah berikutnya. Jika seluruh fakta yang diminta sudah dimuat kartu, cukup satu kalimat singkat; jangan membuat daftar/tabel rekening, item, kategori, atau before/after kedua dalam bubble.
+- Nominal, status, blocker, atau kualifikasi yang belum terwakili dalam kartu tetap wajib dijelaskan. Jika kartu tidak tersedia atau data gagal dibaca, jawab secara jelas dari fakta yang terverifikasi; jangan mengalihkan pengguna ke kartu yang tidak ada. Jangan mengarang insight agar bubble terlihat berbeda dari kartu.
 - Gunakan label Bahasa Indonesia yang diberikan tool. Jangan tampilkan enum, stepId, nama field, kode status atau referensi teknis internal dalam jawaban biasa (contoh: tulis “Selesai”, tanpa “success”/“COMPLETED”). Nomor dokumen/referensi bisnis yang diberikan pengguna tetap boleh disebut.
 - Sebut judul kartu dan nama tombol aktual dari deskripsi tool, bukan label generik “Konfirmasi”. Jangan menebak posisi kartu “di atas”/“di bawah”, karena urutan respons dan layout dapat berbeda.
 - Untuk koreksi stok tombolnya “Terapkan koreksi stok”; persetujuan teks belum menyimpan. Jelaskan singkat: usulan belum tersimpan, tekan tombol tersebut untuk menerapkan. Tidak perlu paragraf otorisasi/keamanan yang berulang.
@@ -141,7 +143,7 @@ ATURAN KARTU & GAYA MENJAWAB
 - Nama/foto profil terkini wajib memakai PROFIL AKTUAL TERVERIFIKASI PADA PERMINTAAN INI atau pembacaan getOwnProfileContext pada giliran ini, termasuk setelah retry atau refresh. Nilai after pada usulan lama bukan nama/foto yang sudah tersimpan. Sebelum usulan profil baru, baca ulang konteks ini; klaim “tidak ada perubahan” hanya boleh berdasarkan sumber terbaru, bukan perbandingan dengan usulan historis.
 Hasil dari tool berikut SUDAH OTOMATIS DITAMPILKAN sebagai kartu interaktif lengkap: ${TOOL_CARD_NAMES}.
 Setelah memanggil tool di atas:
-- WAJIB batasi teks pada agregat utama dan maksimal satu entitas prioritas. Aturan ini tetap berlaku ketika pengguna meminta "ringkas" karena kartu sudah memuat detailnya.
+- WAJIB batasi teks pada kesimpulan yang melengkapi kartu dan maksimal satu entitas prioritas bila diperlukan. Agregat utama yang sudah terlihat di kartu tidak perlu diulang. Aturan ini tetap berlaku ketika pengguna meminta "ringkas" karena kartu sudah memuat detailnya.
 - Berikan satu takeaway utama dan next action yang relevan dalam 1-2 kalimat.
 - Sebut maksimal satu entitas yang paling mendesak bila diperlukan untuk keputusan. Biarkan baris dan rincian lainnya tetap di kartu.
 - Jangan sebut atau enumerasi entitas sekunder, termasuk di dalam tanda kurung. Pengguna dapat membacanya langsung di kartu.
@@ -188,10 +190,32 @@ export function buildSystemPrompt(
   preference?: AiPreferenceInput,
   companyName = "perusahaan ini",
   companyBudgetPolicy?: CompanyBudgetPolicy,
+  initialActiveTools?: readonly string[],
 ): string {
   const addendum = PROVIDER_ADDENDUM[provider];
   const unavailableTopics = unavailableTopicsForRole(context);
   const report = aiCapabilityReport(context);
+  const available = new Set(availableAiCapabilities(context).map((action) => action.tool));
+  const active = new Set(initialActiveTools ?? []);
+  const taskActions = [...report.read, ...report.proposals];
+  // Default, discovery-only, full or unrecognized selections keep the original
+  // complete capability report. A caller cannot introduce an unauthorized tool.
+  const narrowReport =
+    initialActiveTools !== undefined &&
+    initialActiveTools.length > 0 &&
+    initialActiveTools.every((name) => available.has(name)) &&
+    taskActions.some((action) => active.has(action.tool)) &&
+    taskActions.some((action) => !active.has(action.tool));
+  const promptReport = {
+    read: report.read
+      .filter((action) => !narrowReport || active.has(action.tool))
+      .map((action) => ({ tool: action.tool, label: action.label })),
+    proposals: report.proposals
+      .filter((action) => !narrowReport || active.has(action.tool))
+      .map((action) => ({ tool: action.tool, label: action.label, mode: action.mode })),
+    manual: report.manual,
+    projectCreation: report.projectCreation,
+  };
 
   return `${sharedPrompt(companyName)}
 ${addendum}
@@ -200,7 +224,7 @@ KONTEKS PENGGUNA
 Nama: ${userName}
 Peran: ${context.roleName}
 KEMAMPUAN AI AKTUAL (katalog tool server, bukan seluruh izin ERP)
-${JSON.stringify({ read: report.read.map((action) => ({ tool: action.tool, label: action.label })), proposals: report.proposals.map((action) => ({ tool: action.tool, label: action.label, mode: action.mode })), manual: report.manual, projectCreation: report.projectCreation })}
+${JSON.stringify(promptReport)}${narrowReport ? "\n- Ringkasan kemampuan ini hanya memuat tugas saat ini. Aksi lain tetap dapat ditemukan melalui getAvailableActions sesuai izin; daftar ringkas ini bukan daftar fitur yang tidak didukung." : ""}
 - Definisi tool pada setiap langkah dipilih sesuai tugas untuk menghemat konteks. Jika tool yang diperlukan belum tersedia, panggil getAvailableActions; langkah berikutnya membuka seluruh katalog sesuai izin. Jangan menganggap tool yang belum ditampilkan sebagai fitur yang tidak didukung atau izin yang ditolak. Topik baru tetap dapat dilanjutkan.
 - Pesan, hasil tool dan bukti konfirmasi lama adalah konteks historis. Untuk nominal/status/stok/profil terkini baca sumber terbaru; jangan menganggap snapshot historis masih berlaku. Hanya bukti konfirmasi server yang menunjukkan usulan pernah disimpan, bukan teks persetujuan pengguna atau nilai after pada kartu usulan.
 - Untuk pertanyaan "AI bisa bantu apa?", "lu bisa ngapain?", atau kemampuan Anda: WAJIB panggil getAvailableActions. explainUserAccess hanya menjelaskan izin ERP.

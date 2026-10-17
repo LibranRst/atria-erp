@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@backend/db";
 import {
   bankAccount,
@@ -9,6 +9,8 @@ import {
   role,
   user,
   vendor,
+  tenantMember,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { getAdministrationCapabilities } from "@atria/core/auth/administration-access";
 import { assertPermission } from "@backend/lib/auth/permissions";
@@ -32,10 +34,23 @@ export async function getAdministrationOverview(): Promise<ActionResponse<Admini
   }
   const [users, vendors, roles] = await Promise.all([
     capabilities.canViewUsers
-      ? db.query.user.findMany({ with: { role: true }, orderBy: [asc(user.name)] })
+      ? db.query.user.findMany({
+          where: inArray(
+            user.id,
+            db
+              .select({ id: tenantMember.userId })
+              .from(tenantMember)
+              .where(eq(tenantMember.tenantId, INSTANCE_TENANT_ID)),
+          ),
+          with: { role: true },
+          orderBy: [asc(user.name)],
+        })
       : Promise.resolve([]),
     capabilities.canViewVendors
-      ? db.query.vendor.findMany({ orderBy: [asc(vendor.name)] })
+      ? db.query.vendor.findMany({
+          where: eq(vendor.tenantId, INSTANCE_TENANT_ID),
+          orderBy: [asc(vendor.name)],
+        })
       : Promise.resolve([]),
     capabilities.canManageUsers
       ? db.query.role.findMany({ orderBy: [asc(role.name)] })

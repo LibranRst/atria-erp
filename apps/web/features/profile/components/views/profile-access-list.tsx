@@ -86,6 +86,7 @@ export function ProfileAccessList({
 }): React.JSX.Element {
   const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
   const desktop = useWorkspacePresentation() === "desktop";
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
   const presence = useSheetPresenceValue(
     groups.find((group) => group.key === selectedKey) ?? null,
     selectedKey,
@@ -94,7 +95,12 @@ export function ProfileAccessList({
   const selectedCoverage = selectedGroup ? coverageOf(selectedGroup) : "none";
 
   return (
-    <>
+    <section
+      ref={returnFocusRef}
+      aria-label="Hak akses per modul"
+      tabIndex={-1}
+      className="min-w-0 rounded-owner outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+    >
       {desktop ? (
         <DesktopTable
           ariaLabel="Hak akses per modul"
@@ -158,6 +164,7 @@ export function ProfileAccessList({
         title={selectedGroup?.title ?? "Detail akses"}
         onClose={() => setSelectedKey(null)}
         onExitComplete={presence.handleExitComplete}
+        returnFocusRef={returnFocusRef}
       >
         {selectedGroup ? (
           <div className="space-y-3">
@@ -221,6 +228,6 @@ export function ProfileAccessList({
           </div>
         ) : null}
       </DetailSheet>
-    </>
+    </section>
   );
 }

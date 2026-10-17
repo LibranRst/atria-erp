@@ -38,10 +38,12 @@ function ButtonNavigation({
 }
 
 export type ButtonVariant =
-  "primary" | "secondary" | "tertiary" | "quiet" | "criticalQuiet" | "critical";
+  "primary" | "secondary" | "tertiary" | "quiet" | "ghost" | "criticalQuiet" | "critical";
 export type ButtonSize = "default" | "compact" | "mini";
 
 const variantClass: Record<ButtonVariant, string> = {
+  ghost:
+    "bg-transparent text-on-surface focus-visible:ring-focus-ring active:bg-surface-container-low",
   primary:
     "bg-primary text-on-primary shadow-primary focus-visible:ring-focus-ring active:shadow-raised",
   secondary:

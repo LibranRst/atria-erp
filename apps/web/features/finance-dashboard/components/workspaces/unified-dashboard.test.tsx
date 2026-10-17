@@ -49,6 +49,14 @@ test("desktop risk data has one comparison owner while mobile retains its previe
           data={data}
           financialPosition={<p>Ringkasan mobile</p>}
           setup={null}
+          trend={{
+            months: 6,
+            data: null,
+            loading: true,
+            error: null,
+            change: () => undefined,
+            reload: () => undefined,
+          }}
         />
       </WorkspacePresentationProvider>,
     );

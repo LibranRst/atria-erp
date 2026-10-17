@@ -1,12 +1,73 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import * as XLSX from "xlsx";
-import { analyzeBankStatementUseCase } from "./bank-statement-analyzer";
+import {
+  analyzeBankStatementUseCase,
+  tryParseGenericBankTabular,
+  parseCurrencyNumber,
+} from "./bank-statement-analyzer";
 import type { Actor } from "@backend/server/actor";
 import {
   documentModel,
   type DocumentContentRequest,
   type DocumentContentResponse,
 } from "@backend/lib/ai/document-model";
+
+describe("generic bank source completeness", () => {
+  const header = ["Tanggal", "Keterangan", "Debit", "Kredit"];
+  const valid = ["2026-10-17", "Transfer vendor", "100,25", ""];
+  test("ambiguous debit and credit never become an inferred inflow", () => {
+    expect(() =>
+      tryParseGenericBankTabular([header, valid, ["2026-10-17", "Ambiguous transfer", "10", "20"]]),
+    ).toThrow("Baris 3: isi tepat satu nominal debit atau kredit");
+  });
+  for (const [name, bad] of [
+    ["unreadable amount", ["2026-10-17", "Rusak nominal", "rusak", ""]],
+    ["missing description", ["2026-10-17", "", "100", ""]],
+    ["missing date", ["", "Tanggal belum ada", "100", ""]],
+    ["zero amount", ["2026-10-17", "Nominal kosong", "0", "0"]],
+    ["negative split amount", ["2026-10-17", "Nominal negatif", "-100", ""]],
+    ["invalid calendar day", ["2026-02-30", "Tanggal tidak valid", "100", ""]],
+    ["unrecognized date", ["not-a-date", "Tanggal rusak", "100", ""]],
+    ["embedded amount text", ["2026-10-17", "Nominal tercampur", "12rusak", ""]],
+  ] satisfies readonly (readonly [string, readonly string[]])[]) {
+    test(`${name} rejects the complete source with its original row reference`, () => {
+      expect(() => tryParseGenericBankTabular([header, valid, [...bad]])).toThrow("Baris 3:");
+    });
+  }
+  test("an unknown explicit direction is not guessed from a positive amount", () => {
+    expect(() =>
+      tryParseGenericBankTabular([
+        ["Tanggal", "Keterangan", "Nominal", "Tipe"],
+        ["2026-10-17", "Transfer ambigu", "100.25", "UNKNOWN"],
+      ]),
+    ).toThrow("Baris 2: arah dana");
+  });
+  test("blank, repeated header and recognized footer rows remain excluded, with source row numbers intact", () => {
+    const result = tryParseGenericBankTabular([
+      header,
+      valid,
+      [],
+      header,
+      ["Saldo Akhir", "", "", "100"],
+      ["2026-10-18", "Pembayaran klien", "", "200,50"],
+    ]);
+    expect(result?.rows).toMatchObject([
+      { rowNumber: 2, amount: 100.25, type: "OUTFLOW" },
+      { rowNumber: 6, amount: 200.5, type: "INFLOW" },
+    ]);
+    expect(result?.summary).toEqual({ rowCount: 2, totalInflow: 200.5, totalOutflow: 100.25 });
+  });
+  test("recognized signed amount and localized currency parsing stay available", () => {
+    const result = tryParseGenericBankTabular([
+      ["Tanggal", "Keterangan", "Nominal"],
+      ["2026-10-17", "Biaya bank", "-12,25"],
+    ]);
+    expect(result?.rows[0]).toMatchObject({ amount: 12.25, type: "OUTFLOW" });
+    expect(parseCurrencyNumber("Rp. 1.500.000,25")).toBe(1500000.25);
+    expect(parseCurrencyNumber("1,500,000.25")).toBe(1500000.25);
+    expect(parseCurrencyNumber("12oops")).toBeNull();
+  });
+});
 
 describe("analyzeBankStatementUseCase", () => {
   const dummyActor: Actor = {

@@ -1,10 +1,26 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
-import { AppIcon, EmptyState, GroupedSurface, Button } from "@/components/ui";
+import {
+  AppIcon,
+  EmptyState,
+  GroupedSurface,
+  Button,
+  DesktopTable,
+  DesktopTablePagination,
+  SearchInput,
+  WorkspaceStatusLabel,
+  type DesktopTableColumn,
+} from "@/components/ui";
+import {
+  settingsTablePageRows,
+  useSettingsFilterState,
+  useSettingsTableState,
+} from "../../hooks/use-settings-table-state";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import type { SettingsOption } from "../../types/material-types";
 
@@ -15,12 +31,31 @@ type LocationSettingsManagerProps = {
   readonly onMutationComplete?: () => void;
 };
 
+const locationColumns: readonly DesktopTableColumn<SettingsOption>[] = [
+  {
+    key: "location",
+    label: "Lokasi",
+    sortable: true,
+    sortValue: (location) => location.name,
+    render: (location) => <span className="font-semibold">{location.name}</span>,
+  },
+  { key: "purpose", label: "Kegunaan", render: () => "Penyimpanan inventori" },
+  {
+    key: "status",
+    label: "Status",
+    render: () => <WorkspaceStatusLabel label="Aktif" tone="neutral" />,
+  },
+];
+
 export function LocationSettingsManager({
   locations: initialLocations,
   activeMaterialCount,
   canManage,
   onMutationComplete,
 }: LocationSettingsManagerProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const table = useSettingsTableState<SettingsOption>("location", "settings-location");
+  const [search, setSearch] = useSettingsFilterState("settings-location", "search", "");
   const [addedLocations, setAddedLocations] = React.useState<readonly SettingsOption[]>([]);
   const [showLocationSheet, setShowLocationSheet] = React.useState(false);
   const [locationName, setLocationName] = React.useState("");
@@ -30,6 +65,10 @@ export function LocationSettingsManager({
     const existingIds = new Set(initialLocations.map((loc) => loc.id));
     return [...initialLocations, ...addedLocations.filter((loc) => !existingIds.has(loc.id))];
   }, [initialLocations, addedLocations]);
+
+  const filtered = locations.filter((location) =>
+    location.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   function handleCreateLocation(): void {
     const trimmed = locationName.trim();
@@ -58,10 +97,22 @@ export function LocationSettingsManager({
     <section className="min-w-0 space-y-sm">
       <div className="flex min-w-0 items-center justify-between gap-3">
         <span className="min-w-0 px-1">
-          <span className="block text-[13px] leading-5 font-bold text-on-surface">
+          <span
+            className={
+              desktop
+                ? "block text-title font-bold text-on-surface"
+                : "block text-row leading-5 font-bold text-on-surface"
+            }
+          >
             Lokasi Gudang & Workshop
           </span>
-          <span className="block text-meta text-on-surface-variant">
+          <span
+            className={
+              desktop
+                ? "mt-1 block text-support text-on-surface-variant"
+                : "block text-meta text-on-surface-variant"
+            }
+          >
             {locations.length} lokasi penyimpanan aktif
           </span>
         </span>
@@ -69,17 +120,65 @@ export function LocationSettingsManager({
           <Button
             type="button"
             onClick={() => setShowLocationSheet(true)}
-            className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+            className={
+              desktop
+                ? undefined
+                : "hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+            }
+            size={desktop ? "compact" : undefined}
             title="Tambah Lokasi Gudang Baru"
             variant="primary"
           >
             <AppIcon name="add" className="icon-sm" />
-            <span className="ml-1 max-[420px]:hidden">Tambah</span>
+            <span className={desktop ? undefined : "ml-1 max-[420px]:hidden"}>
+              {desktop ? "Tambah lokasi" : "Tambah"}
+            </span>
           </Button>
         ) : null}
       </div>
 
-      {locations.length === 0 ? (
+      {desktop ? (
+        <>
+          <div className="max-w-md">
+            <SearchInput
+              value={search}
+              onChange={(next) => {
+                setSearch(next);
+                table.resetPage();
+              }}
+              ariaLabel="Cari lokasi gudang"
+              placeholder="Cari lokasi gudang atau workshop"
+              showClear={false}
+            />
+          </div>
+          <DesktopTable
+            ariaLabel="Lokasi gudang dan workshop"
+            columns={locationColumns}
+            rows={settingsTablePageRows(filtered, locationColumns, table)}
+            rowKey={(location) => location.id}
+            sortDescriptor={table.sortDescriptor}
+            onSortChange={table.onSortChange}
+            emptyTitle={
+              locations.length === 0 ? "Belum ada lokasi gudang" : "Lokasi tidak ditemukan"
+            }
+            emptyDescription={
+              locations.length === 0
+                ? "Tambahkan lokasi gudang atau workshop pertama."
+                : "Ubah kata pencarian."
+            }
+            footer={
+              <DesktopTablePagination
+                page={table.page}
+                pageSize={table.pageSize}
+                total={filtered.length}
+                onPageChange={table.onPageChange}
+                onPageSizeChange={table.onPageSizeChange}
+                ariaLabel="Halaman lokasi gudang"
+              />
+            }
+          />
+        </>
+      ) : locations.length === 0 ? (
         <div className="space-y-3">
           <EmptyState
             title="Belum ada lokasi gudang"
@@ -108,11 +207,17 @@ export function LocationSettingsManager({
                   <span className="block truncate text-row font-bold text-on-surface">
                     {loc.name}
                   </span>
-                  <span className="block text-meta text-on-surface-variant">
+                  <span
+                    className={
+                      desktop
+                        ? "mt-1 block text-support text-on-surface-variant"
+                        : "block text-meta text-on-surface-variant"
+                    }
+                  >
                     Tempat penyimpanan inventori
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-success/8 px-2.5 py-1 text-[11px] font-semibold text-success">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/8 px-2.5 py-1 text-meta font-semibold text-success">
                   <AppIcon name="check_circle" className="icon-xs" />
                   Aktif
                 </span>

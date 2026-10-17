@@ -4,6 +4,7 @@ import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { DesktopDashboardOverview } from "../desktop/desktop-dashboard-overview";
+import type { DesktopDashboardTrendQuery } from "../../hooks/use-desktop-dashboard-data";
 import { BudgetRiskTab } from "./tab-budget-risk";
 import { DesktopFinancialPosition } from "@/features/finance-dashboard/components/overview/desktop-financial-position";
 
@@ -25,10 +26,12 @@ export function DashboardOverviewTab({
   data,
   financialPosition,
   setup,
+  trend,
 }: {
   readonly data: FinanceDashboardOverview;
   readonly financialPosition: React.ReactNode;
   readonly setup: OrganizationSetupOverview | null;
+  readonly trend: DesktopDashboardTrendQuery;
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const can = useCan();
@@ -37,7 +40,7 @@ export function DashboardOverviewTab({
     .filter((item) => item.severity !== "INFO")
     .slice(0, 3);
 
-  if (desktop) return <DesktopDashboardOverview data={data} setup={setup} />;
+  if (desktop) return <DesktopDashboardOverview data={data} setup={setup} trend={trend} />;
   return (
     <div className="space-y-sm">
       {desktop ? <DesktopFinancialPosition data={data} /> : financialPosition}

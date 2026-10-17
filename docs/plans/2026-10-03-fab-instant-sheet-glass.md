@@ -29,4 +29,4 @@ All 50 mobile tests, mobile typecheck/lint and diff whitespace check pass. Final
 
 Evidence: `.atria-demo/verification/2026-10-03-fab-instant-sheet-glass/`.
 
-Public UIKit references: [menu attachment point](https://developer.apple.com/documentation/uikit/uicontrol/menuattachmentpoint(for:)) and [retargeted native preview](https://developer.apple.com/documentation/uikit/uitargetedpreview/retargetedpreview(with:)).
+Public UIKit references: [menu attachment point](<https://developer.apple.com/documentation/uikit/uicontrol/menuattachmentpoint(for:)>) and [retargeted native preview](<https://developer.apple.com/documentation/uikit/uitargetedpreview/retargetedpreview(with:)>).

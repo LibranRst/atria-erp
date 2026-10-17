@@ -63,6 +63,7 @@ export function UnsavedChangesModal({
               type="button"
               disabled={pending}
               onClick={onDiscard}
+              fullWidth
               className="min-w-0 px-4"
               variant="critical"
             >
@@ -72,6 +73,7 @@ export function UnsavedChangesModal({
               type="button"
               disabled={pending}
               onClick={onContinue}
+              fullWidth
               className="min-w-0 px-4"
               variant="secondary"
             >

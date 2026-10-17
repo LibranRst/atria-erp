@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { SuccessDialog, SUCCESS_DIALOG_FACT_LIMIT } from "./dialogs";
+import {
+  CompactFormDialog,
+  ConfirmationDialog,
+  SuccessDialog,
+  SUCCESS_DIALOG_FACT_LIMIT,
+} from "./dialogs";
+import { DialogFrame } from "./dialog-frame";
 
 const framePath = new URL("./dialog-frame.tsx", import.meta.url);
 const viewportPath = new URL("./overlay-viewport.ts", import.meta.url);
@@ -24,7 +30,31 @@ describe("contextual dialog taxonomy", () => {
     expect(source).toContain("<OverlayLayerProvider anchored={zIndex + 2}>");
     expect(source).toContain('role?: "dialog" | "alertdialog"');
     expect(source).toContain("useReducedMotion");
-    expect(source).toContain("previousFocus.focus");
+  });
+
+  test("compact and confirmation dialogs forward logical focus return to the shared frame owner", () => {
+    const returnFocusRef = { current: null };
+    const compact = CompactFormDialog({
+      open: false,
+      title: "Form",
+      children: null,
+      actions: null,
+      onClose: (): void => {},
+      returnFocusRef,
+    });
+    const confirmation = ConfirmationDialog({
+      open: false,
+      title: "Confirm",
+      description: "Read-only contract fixture.",
+      confirmLabel: "Continue",
+      onConfirm: (): void => {},
+      onClose: (): void => {},
+      returnFocusRef,
+    });
+    expect(compact.type).toBe(DialogFrame);
+    expect(confirmation.type).toBe(DialogFrame);
+    expect(compact.props.returnFocusRef).toBe(returnFocusRef);
+    expect(confirmation.props.returnFocusRef).toBe(returnFocusRef);
   });
 
   test("keeps search top-biased and compact/calendar dialogs centered", async () => {

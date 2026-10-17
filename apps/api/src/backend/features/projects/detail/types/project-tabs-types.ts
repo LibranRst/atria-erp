@@ -1,4 +1,10 @@
 import type { BankAccountItem, ExpenseCostItem } from "@atria/core/types/expenses";
+import type { ProjectMarginData } from "@atria/core/types/project-margin";
+import type {
+  ProjectExpensesSource,
+  ProjectOperationSource,
+  ProjectStockData,
+} from "@atria/core/types/project-operations";
 
 import type {
   VendorListBill,
@@ -265,8 +271,16 @@ export interface ProjectTabsProps {
   readonly vendors: VendorListVendor[];
   readonly projectsForForms: VendorListProject[];
   readonly stockMovements: StockMovement[];
+  readonly projectStockData?: ProjectStockData;
+  readonly projectExpensesSource?: ProjectExpensesSource;
   readonly invoices: ClientInvoiceItem[];
+  readonly projectInvoicesSource?: ProjectOperationSource;
+  readonly projectMarginData?: ProjectMarginData;
   readonly projectBudgetDashboard: ProjectBudgetDashboard | null;
+  readonly projectBudgetSource?: {
+    readonly status: "ready" | "missing" | "restricted" | "unavailable";
+    readonly message?: string;
+  };
   readonly materialMasterCatalog: MaterialOption[];
   readonly pricingTemplateCatalog: PricingTemplateOption[];
   readonly clients?: readonly { readonly id: string; readonly name: string }[];

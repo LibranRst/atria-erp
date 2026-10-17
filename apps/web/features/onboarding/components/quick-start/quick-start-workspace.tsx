@@ -214,12 +214,13 @@ export function QuickStartWorkspace({
         onClose={() => setExitOpen(false)}
         actions={
           <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="secondary" onClick={() => setExitOpen(false)}>
+            <Button type="button" variant="secondary" fullWidth onClick={() => setExitOpen(false)}>
               Kembali
             </Button>
             <Button
               type="button"
               pending={pending}
+              fullWidth
               onClick={() => {
                 setExitOpen(false);
                 pause();

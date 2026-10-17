@@ -261,20 +261,18 @@ const foreignAttachmentId = crypto.randomUUID();
 await database
   .insert(schema.tenant)
   .values({ id: foreignTenantId, name: "Foreign", slug: "foreign" });
-await database
-  .insert(schema.attachment)
-  .values({
-    id: foreignAttachmentId,
-    tenantId: foreignTenantId,
-    uploadedById: aliceId,
-    referenceId: projectId,
-    referenceType: "private_expense",
-    fileName: "foreign.jpg",
-    fileUrl: "https://ik.imagekit.io/disposable/foreign.jpg",
-    mimeType: "image/jpeg",
-    fileSize: jpeg.length,
-    storageFileId: "foreign-fixture",
-  });
+await database.insert(schema.attachment).values({
+  id: foreignAttachmentId,
+  tenantId: foreignTenantId,
+  uploadedById: aliceId,
+  referenceId: projectId,
+  referenceType: "private_expense",
+  fileName: "foreign.jpg",
+  fileUrl: "https://ik.imagekit.io/disposable/foreign.jpg",
+  mimeType: "image/jpeg",
+  fileSize: jpeg.length,
+  storageFileId: "foreign-fixture",
+});
 previousCalls = fetchCalls;
 await expect(
   readPrivateAttachment(
@@ -299,18 +297,16 @@ await database
 await database
   .insert(schema.projectBudgetCategory)
   .values({ id: budgetCategoryId, projectBudgetId: budgetId, expenseCategoryId });
-await database
-  .insert(schema.projectCost)
-  .values({
-    id: costId,
-    projectId,
-    projectBudgetCategoryId: budgetCategoryId,
-    requestedById: aliceId,
-    amount: "100.00",
-    description: "Submitted proof",
-    status: "SUBMITTED",
-    receiptImageUrl: proof.url,
-  });
+await database.insert(schema.projectCost).values({
+  id: costId,
+  projectId,
+  projectBudgetCategoryId: budgetCategoryId,
+  requestedById: aliceId,
+  amount: "100.00",
+  description: "Submitted proof",
+  status: "SUBMITTED",
+  receiptImageUrl: proof.url,
+});
 const { deleteExpenseDraftAttachment } =
   await import("@backend/app/actions/finance/expense-draft-action-utils");
 previousCalls = fetchCalls;

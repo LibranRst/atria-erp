@@ -117,6 +117,7 @@ export function OnboardingWorkspaceActions({
             <Button
               type="button"
               onClick={() => onExitConfirmChange(false)}
+              fullWidth
               className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
               variant="secondary"
             >
@@ -125,6 +126,7 @@ export function OnboardingWorkspaceActions({
             <Button
               type="button"
               disabled={busy}
+              fullWidth
               onClick={() => {
                 onExitConfirmChange(false);
                 onPause();

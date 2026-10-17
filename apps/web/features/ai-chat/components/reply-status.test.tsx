@@ -24,6 +24,37 @@ describe("PendingReplyIndicator", () => {
     expect(html).not.toContain("shadow-");
   });
 
+  test("renders the submitted intention as a temporary bubble without generic thinking copy", () => {
+    const html = renderToStaticMarkup(
+      <PendingReplyIndicator
+        displayedPhase="analyzing"
+        visible
+        contentVisible={false}
+        intent="Aku akan memeriksa data stok gudang dulu."
+      />,
+    );
+    expect(html).toContain("Aku akan memeriksa data stok gudang dulu.");
+    expect(html).toContain("rounded-tl-md");
+    expect(html).toContain('data-visible="true"');
+    expect(html).not.toContain("Menganalisis…");
+    expect(html.match(/role="status"/g)).toHaveLength(1);
+  });
+
+  test("a ready result clears the introduction announcement immediately", () => {
+    const html = renderToStaticMarkup(
+      <PendingReplyIndicator
+        displayedPhase="composing"
+        visible
+        contentVisible
+        intent="Aku akan memeriksa data stok gudang dulu."
+      />,
+    );
+    expect(html).toContain('data-visible="false"');
+    expect(html).toContain(
+      '<span class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>',
+    );
+  });
+
   test("memisahkan visual row dari satu live region persisten", () => {
     const active = renderToStaticMarkup(
       <PendingReplyIndicator displayedPhase="analyzing" visible contentVisible={false} />,

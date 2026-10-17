@@ -13,11 +13,21 @@ import {
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { ROLE_DEEP_LINK_PARAMS, ROLE_WORKSPACE_VALUE } from "@atria/core/auth/role-deep-link";
-import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { updateBrowserUrl, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { RoleAccessManager } from "../roles/role-access-manager";
 import { AdministrationUserEditorSheet } from "../forms/administration-user-editor-sheet";
 import { AdministrationVendorEditorSheet } from "../forms/administration-vendor-editor-sheet";
 import { useAdministrationMutations } from "../../hooks/use-administration-mutations";
+import { useAdministrationTable } from "../../hooks/use-administration-table";
+import {
+  AdministrationDesktopTable,
+  administrationUserColumns,
+  administrationVendorColumns,
+  administrationUserSearch,
+  administrationVendorSearch,
+  administrationActiveFilter,
+} from "./desktop-administration-tables";
 import type {
   AdministrationTab,
   EditorMode,
@@ -57,7 +67,10 @@ export function AdministrationManager({
   readonly presentation?: "settings" | "onboarding";
   readonly onMutationComplete?: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop" && presentation === "settings";
   const [data, setData] = React.useState(initialData);
+  const [acceptedSource, setAcceptedSource] = React.useState(initialData);
+  const [roleBusy, setRoleBusy] = React.useState(false);
   /*
    * Tab entitas bisa ditunjuk dari luar lewat `?admin=roles`.
    *
@@ -66,28 +79,47 @@ export function AdministrationManager({
    */
   const workspaceParam = useBrowserUrlSearchParam(ROLE_DEEP_LINK_PARAMS.workspace);
   const newRoleParam = useBrowserUrlSearchParam(ROLE_DEEP_LINK_PARAMS.newRole);
-  const [activeTab, setActiveTab] = React.useState<AdministrationTab>(() => {
-    if (presentation === "settings" && workspaceParam === ROLE_WORKSPACE_VALUE) return "ROLES";
+  function resolveTab(): AdministrationTab {
+    if (
+      presentation === "settings" &&
+      workspaceParam === ROLE_WORKSPACE_VALUE &&
+      data.capabilities.canManageRoles
+    )
+      return "ROLES";
     if (
       presentation === "settings" &&
       workspaceParam === "vendor" &&
-      initialData.capabilities.canViewVendors
+      data.capabilities.canViewVendors
     ) {
       return "VENDORS";
     }
     if (
       presentation === "settings" &&
       workspaceParam === "team" &&
-      initialData.capabilities.canViewUsers
+      data.capabilities.canViewUsers
     ) {
       return "USERS";
     }
-    if (initialData.capabilities.canViewUsers) return "USERS";
-    if (initialData.capabilities.canViewVendors) return "VENDORS";
+    if (data.capabilities.canViewUsers) return "USERS";
+    if (data.capabilities.canViewVendors) return "VENDORS";
     // Peran adalah satu-satunya modul yang tersisa untuk peran yang hanya
     // memegang `manage:roles`; onboarding tidak pernah mendarat di sini.
     return presentation === "settings" ? "ROLES" : "VENDORS";
-  });
+  }
+  const [onboardingTab, setOnboardingTab] = React.useState<AdministrationTab>(resolveTab);
+  const activeTab = presentation === "settings" ? resolveTab() : onboardingTab;
+  function setActiveTab(next: AdministrationTab): void {
+    if (presentation !== "settings") {
+      setOnboardingTab(next);
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set(
+      ROLE_DEEP_LINK_PARAMS.workspace,
+      next === "USERS" ? "team" : next === "VENDORS" ? "vendor" : ROLE_WORKSPACE_VALUE,
+    );
+    updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
+  }
   const [editorMode, setEditorMode] = React.useState<EditorMode>(null);
   const [roleCreateOpen, setRoleCreateOpen] = React.useState(false);
   const [roleCreateLinkConsumed, setRoleCreateLinkConsumed] = React.useState(false);
@@ -102,6 +134,42 @@ export function AdministrationManager({
   const activeVendorCount = data.vendors.filter((row) => row.isActive).length;
   const userEditorOpen = editorMode === "NEW_USER" || editorMode === "EDIT_USER";
   const vendorEditorOpen = editorMode === "NEW_VENDOR" || editorMode === "EDIT_VENDOR";
+  const userTable = useAdministrationTable(
+    data.users,
+    administrationUserColumns,
+    administrationUserSearch,
+    administrationActiveFilter,
+    presentation === "settings" ? "admin-team" : undefined,
+  );
+  const vendorTable = useAdministrationTable(
+    data.vendors,
+    administrationVendorColumns,
+    administrationVendorSearch,
+    administrationActiveFilter,
+    presentation === "settings" ? "admin-vendors" : undefined,
+  );
+
+  function openUser(row: AdministrationOverview["users"][number]): void {
+    if (!data.capabilities.canManageUsers) return;
+    setSelectedUserId(row.id);
+    setUserForm({ name: row.name, email: row.email, roleId: row.roleId, temporaryPassword: "" });
+    setEditorMode("EDIT_USER");
+  }
+
+  function openVendor(row: AdministrationOverview["vendors"][number]): void {
+    if (!data.capabilities.canManageVendors) return;
+    setSelectedVendorId(row.id);
+    setVendorForm({
+      name: row.name,
+      phone: row.phone,
+      email: row.email ?? "",
+      address: row.address ?? "",
+      bankName: row.bankName ?? "",
+      bankAccountNumber: row.bankAccountNumber ?? "",
+      bankAccountHolder: row.bankAccountHolder ?? "",
+    });
+    setEditorMode("EDIT_VENDOR");
+  }
 
   function closeEditor(): void {
     if (pending) return;
@@ -140,6 +208,18 @@ export function AdministrationManager({
       setSelectedUserId,
       setSelectedVendorId,
     });
+  // Route refreshes may replace rows and capabilities, but an open owner keeps its draft source.
+  if (
+    initialData !== acceptedSource &&
+    !userEditorOpen &&
+    !vendorEditorOpen &&
+    !roleCreateOpen &&
+    !roleBusy &&
+    !pending
+  ) {
+    setAcceptedSource(initialData);
+    setData(initialData);
+  }
   /*
    * Label tab tanpa hitungan.
    * Dengan tiga tab dan tombol buat di baris yang sama, "Anggota Tim (5)" pada
@@ -203,7 +283,9 @@ export function AdministrationManager({
         ? data.capabilities.canManageVendors
         : data.capabilities.canManageRoles;
   return (
-    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
+    <section
+      className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : desktop ? "space-y-4" : "space-y-sm"}`}
+    >
       {presentation === "onboarding" ? (
         <div className="space-y-3">
           {tabOptions.length > 1 ? (
@@ -219,7 +301,7 @@ export function AdministrationManager({
           ) : null}
           <div className="flex min-w-0 items-center justify-between gap-3 px-1">
             <span className="min-w-0">
-              <span className="block text-[13px] leading-5 font-bold text-on-surface">
+              <span className="block text-row font-bold text-on-surface">
                 {activeTab === "USERS" ? "Tim internal" : "Vendor"}
               </span>
               <span className="block text-meta text-on-surface-variant">
@@ -244,7 +326,7 @@ export function AdministrationManager({
       ) : (
         <div className="flex min-w-0 items-center justify-between gap-2">
           {tabOptions.length > 1 ? (
-            <div className="min-w-0 flex-1">
+            <div className={`min-w-0 ${desktop ? "" : "flex-1"}`}>
               <SegmentedTabs
                 value={activeTab}
                 onChange={setActiveTab}
@@ -253,7 +335,7 @@ export function AdministrationManager({
                 layoutId="administration-entity-tabs"
                 density="compact"
                 scrollable
-                fillAvailableSpace
+                fillAvailableSpace={!desktop}
               />
             </div>
           ) : null}
@@ -266,9 +348,14 @@ export function AdministrationManager({
                * Tanpa itu, label yang disembunyikan menyisakan `px-3.5` di
                * kedua sisi sehingga tombolnya 44×48 — lonjong, bukan lingkaran.
                */
-              className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+              className={
+                desktop
+                  ? undefined
+                  : "hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
+              }
               title={createActionTitle}
               variant="primary"
+              size={desktop ? "compact" : "default"}
             >
               <AppIcon name="add" className="icon-sm" />
               <span className="ml-1 max-[420px]:hidden">{createActionLabel}</span>
@@ -278,7 +365,56 @@ export function AdministrationManager({
       )}
 
       {activeTab === "ROLES" ? (
-        <RoleAccessManager createOpen={roleCreateOpen} onCreateOpenChange={setRoleCreateOpen} />
+        <RoleAccessManager
+          createOpen={roleCreateOpen}
+          onCreateOpenChange={setRoleCreateOpen}
+          onBusyChange={setRoleBusy}
+        />
+      ) : desktop && activeTab === "USERS" ? (
+        <AdministrationDesktopTable
+          title="Tim internal"
+          description="Kelola akun, peran, dan status akses anggota tim."
+          summary={[
+            { label: "Anggota tim", value: data.users.length },
+            { label: "Aktif", value: activeUserCount },
+            {
+              label: "Wajib ganti password",
+              value: data.users.filter((row) => row.mustChangePassword).length,
+            },
+          ]}
+          table={userTable}
+          columns={administrationUserColumns}
+          filters={[
+            { value: "all", label: "Semua akun" },
+            { value: "active", label: "Aktif" },
+            { value: "inactive", label: "Nonaktif" },
+          ]}
+          rowKey={(row): string => row.id}
+          onRowAction={openUser}
+          selectedRowKey={userEditorOpen ? selectedUserId : null}
+          emptyTitle="Belum ada anggota tim"
+        />
+      ) : desktop && activeTab === "VENDORS" ? (
+        <AdministrationDesktopTable
+          title="Daftar vendor"
+          description="Kontak dan rekening vendor untuk tagihan serta kebutuhan material."
+          summary={[
+            { label: "Vendor", value: data.vendors.length },
+            { label: "Aktif", value: activeVendorCount },
+            { label: "Diarsipkan", value: data.vendors.length - activeVendorCount },
+          ]}
+          table={vendorTable}
+          columns={administrationVendorColumns}
+          filters={[
+            { value: "all", label: "Semua vendor" },
+            { value: "active", label: "Aktif" },
+            { value: "inactive", label: "Diarsipkan" },
+          ]}
+          rowKey={(row): string => row.id}
+          onRowAction={openVendor}
+          selectedRowKey={vendorEditorOpen ? selectedVendorId : null}
+          emptyTitle="Belum ada vendor"
+        />
       ) : activeTab === "USERS" ? (
         <section className="space-y-2">
           {presentation === "settings" ? (
@@ -296,16 +432,7 @@ export function AdministrationManager({
                   <motion.button
                     key={row.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedUserId(row.id);
-                      setUserForm({
-                        name: row.name,
-                        email: row.email,
-                        roleId: row.roleId,
-                        temporaryPassword: "",
-                      });
-                      setEditorMode("EDIT_USER");
-                    }}
+                    onClick={() => openUser(row)}
                     whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                     transition={transitionSpringSnappy}
                     className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
@@ -317,7 +444,7 @@ export function AdministrationManager({
                       <AppIcon name="group" className="icon-md" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
+                      <span className="block truncate text-row font-bold text-on-surface">
                         {row.name}
                       </span>
                       <span className="block truncate text-meta text-on-surface-variant">
@@ -375,19 +502,7 @@ export function AdministrationManager({
                   <motion.button
                     key={row.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedVendorId(row.id);
-                      setVendorForm({
-                        name: row.name,
-                        phone: row.phone,
-                        email: row.email ?? "",
-                        address: row.address ?? "",
-                        bankName: row.bankName ?? "",
-                        bankAccountNumber: row.bankAccountNumber ?? "",
-                        bankAccountHolder: row.bankAccountHolder ?? "",
-                      });
-                      setEditorMode("EDIT_VENDOR");
-                    }}
+                    onClick={() => openVendor(row)}
                     whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                     transition={transitionSpringSnappy}
                     className="flex min-h-17 w-full items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
@@ -399,7 +514,7 @@ export function AdministrationManager({
                       <AppIcon name="domain" className="icon-md" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
+                      <span className="block truncate text-row font-bold text-on-surface">
                         {row.name}
                       </span>
                       <span className="block truncate text-meta text-on-surface-variant">

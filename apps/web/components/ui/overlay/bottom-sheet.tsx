@@ -24,6 +24,7 @@ import { IconButton } from "../button/button";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import {
   deactivateOverlay,
+  canRestoreOverlayFocus,
   isOverlayKeyHandled,
   isTopOverlay,
   lockBodyScroll,
@@ -53,6 +54,10 @@ export type BottomSheetProps = {
   readonly dismissOnPull?: boolean;
   readonly onClose: () => void;
   readonly onExitComplete?: () => void;
+  /** A stable logical destination when the original opener is replaced during a workflow. */
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  /** Used only when neither an explicit return destination nor the exact invoker is available. */
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 };
 
 type SheetActionButtonProps = {
@@ -112,6 +117,8 @@ export function BottomSheet({
   dismissOnPull = false,
   onClose,
   onExitComplete,
+  returnFocusRef,
+  fallbackFocusRef,
 }: BottomSheetProps): React.JSX.Element | null {
   // Geometry follows the viewport; focused child controls retain their own presenter.
   const desktop = useWorkspacePresentation() === "desktop";
@@ -128,6 +135,29 @@ export function BottomSheet({
   const asideSummaryContentRef = React.useRef<HTMLDivElement>(null);
   const footerActionsRef = React.useRef<HTMLDivElement>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
+  const logicalReturnRef = React.useRef(returnFocusRef);
+  const fallbackReturnRef = React.useRef(fallbackFocusRef);
+  React.useLayoutEffect(() => {
+    logicalReturnRef.current = returnFocusRef;
+    fallbackReturnRef.current = fallbackFocusRef;
+  }, [returnFocusRef, fallbackFocusRef]);
+  const restoreFocus = React.useCallback((): void => {
+    const explicit = logicalReturnRef.current?.current;
+    const previous = previousFocusRef.current;
+    const fallback = fallbackReturnRef.current?.current;
+    const target = [explicit, previous, fallback].find((element): element is HTMLElement =>
+      Boolean(element && canRestoreOverlayFocus(element)),
+    );
+    const current = document.activeElement;
+    const readerMovedFocus =
+      current instanceof HTMLElement &&
+      current !== document.body &&
+      current !== target &&
+      canRestoreOverlayFocus(current);
+    if (target && !readerMovedFocus) target.focus({ preventScroll: true });
+    previousFocusRef.current = null;
+  }, []);
   const sheetId = React.useId();
   const onCloseRef = React.useRef(onClose);
   const dragControls = useDragControls();
@@ -307,7 +337,9 @@ export function BottomSheet({
   useEffect(() => {
     if (!open) return undefined;
     const activeSheetId = sheetId;
-    const previousFocus =
+    const activeSheet = sheetRef.current;
+    activeSheet?.removeAttribute("data-atria-overlay-closing");
+    previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const releaseBodyScroll = lockBodyScroll();
 
@@ -339,19 +371,19 @@ export function BottomSheet({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
+      activeSheet?.setAttribute("data-atria-overlay-closing", "true");
       deactivateOverlay(activeSheetId);
       releaseBodyScroll();
       window.removeEventListener("keydown", onKeyDown);
-
-      const activeElement = document.activeElement;
-      const anotherDialogHasFocus =
-        activeElement instanceof HTMLElement &&
-        activeElement.closest('[role="dialog"][aria-modal="true"]') !== null;
-      if (!anotherDialogHasFocus && previousFocus?.isConnected) {
-        previousFocus.focus({ preventScroll: true });
-      }
+      // A conditionally removed owner has no remaining exit animation callback.
+      if (!activeSheet?.isConnected) restoreFocus();
     };
-  }, [sheetId, open]);
+  }, [sheetId, open, restoreFocus]);
+
+  function finishExit(): void {
+    restoreFocus();
+    onExitComplete?.();
+  }
 
   if (portalNode === null) return null;
 
@@ -397,7 +429,7 @@ export function BottomSheet({
   }
 
   const sheet = (
-    <AnimatePresence onExitComplete={onExitComplete}>
+    <AnimatePresence onExitComplete={finishExit}>
       {open && (
         <OverlayLayerProvider anchored={zIndex + 2}>
           <ContentSizeMotionProvider value={contentSizeController}>
@@ -463,6 +495,7 @@ export function BottomSheet({
                   maxHeight: expandedHeight,
                 }}
                 role="dialog"
+                data-atria-overlay-id={sheetId}
                 data-atria-sheet-canvas="true"
                 data-atria-overlay-presentation={desktop ? "desktop" : "mobile"}
                 aria-modal="true"
@@ -561,7 +594,7 @@ export function BottomSheet({
                 <div
                   ref={bodyRef}
                   data-sheet-body="true"
-                  className={`no-scrollbar min-h-0 flex-1 overscroll-contain ${
+                  className={`no-scrollbar relative min-h-0 flex-1 overscroll-contain ${
                     contentOverflows ? "overflow-y-auto" : "overflow-y-hidden"
                   } ${sideFooter ? "mr-64" : ""}`}
                   style={{

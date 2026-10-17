@@ -2,7 +2,7 @@
  * THESIS: the approved Temu artwork identifies this product without competing with its workflows.
  * OWN-WORLD: outlined Manrope, terracotta Temu, ink wordmark; existing shared Operate surfaces.
  * STORY: recognize Paduna, then sign in or navigate within Paduna Build.
- * FIRST VIEWPORT: approved Paduna logo at 176px on login and 152px in the sidebar.
+ * FIRST VIEWPORT: primary Paduna logo at 176px on login and 152px in the sidebar.
  * FORM: narrow extension of established surfaces, with user-selected artwork; no concept seed.
  * FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
  */

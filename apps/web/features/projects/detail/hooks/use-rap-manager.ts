@@ -5,6 +5,7 @@ import type {
   MaterialOption,
   PricingTemplateOption,
   RapView,
+  RapItemView,
   ProjectPlanBudgetCategory,
   ProjectCategoryPlanItemView,
 } from "../types/rap-rab-types";
@@ -77,7 +78,8 @@ export function useRapManager({
     closeCategoryPlanForm,
   });
 
-  const { canEditRap, canEditCategoryPlan, canFinalizeRap } = getRapPermissions(permissions);
+  const { canCreateRap, canEditRap, canEditCategoryPlan, canFinalizeRap } =
+    getRapPermissions(permissions);
   const {
     plannedCost,
     needToBuy,
@@ -102,6 +104,23 @@ export function useRapManager({
     error: actions.error,
     success: actions.success,
     ...forms,
+    openAddRapForm: (): void => {
+      actions.resetMessages();
+      forms.openAddRapForm();
+    },
+    openEditRapForm: (item: RapItemView): void => {
+      actions.resetMessages();
+      forms.openEditRapForm(item);
+    },
+    openAddCategoryPlanForm: (category: "TUKANG" | "SUBCON"): void => {
+      actions.resetMessages();
+      forms.openAddCategoryPlanForm(category);
+    },
+    openEditCategoryPlanForm: (item: ProjectCategoryPlanItemView): void => {
+      actions.resetMessages();
+      forms.openEditCategoryPlanForm(item);
+    },
+    canCreateRap,
     canEditRap,
     canEditCategoryPlan,
     canFinalizeRap,

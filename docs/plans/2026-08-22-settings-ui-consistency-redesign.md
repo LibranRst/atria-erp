@@ -27,20 +27,20 @@
 
 ## Temuan clutter yang diperbaiki
 
-| # | Masalah | Lokasi | Solusi |
-|---|---------|--------|--------|
-| 1 | Sticky tab bar mati (flag `false`) + scrim `backdrop-blur-xl` | `settings-navigation.tsx` | Hapus mesin sticky → wrapper tipis `SegmentedTabs` |
-| 2 | Header ganda per modul (`hideHeader` yang tetap render) | 4 manager | Satu aturan: `presentation="settings"` → `WorkspaceModuleHeader`, `"onboarding"` → tanpa header. Prop `hideHeader` dihapus |
-| 3 | Dark focal surface 3 implementasi (radius 26/28/30) | hub, setup-readiness, loading skeleton | Komponen lokal `SettingsInverseSurface` token-based |
-| 4 | Tombol hand-rolled ~15 titik (`text-white` vs `text-on-primary`) | semua manager | Shared `Button` |
-| 5 | Dialog buang-perubahan copy-paste + split idiom | kategori, library ×2, material | `ConfirmationDialog` API standar (`confirmLabel`/`danger`) |
-| 6 | Toggle switch hand-rolled (~30 baris) | budget | Extend `SwitchRow` slot `trailing` |
-| 7 | Icon tile hand-rolled `h-9 rounded-[13px]` | hub, kategori, material, readiness | `DuotoneIconTile` |
-| 8 | Banner inline direinvent 3× ; `SettingsNotice` dsb. nganggur | kategori/library/material/budget | `FormRiskNotice`; dead export `settings-ui.tsx` dihapus |
-| 9 | Glass `backdrop-blur` pada save bar sticky | budget | Solid white + `shadow-raised` |
-| 10 | Fallback `<p>` mentah untuk modul tak tersedia | dashboard | `GroupedSurface` > `InlineStateRow` |
-| 11 | Radius drift nested surface | library price-preview, import tile | Token `rounded-owner`/`rounded-inset` |
-| 12 | Orchestrator raksasa (library 569, materials 442) | library/materials | Pisah hooks (filter draft, dirty tracking) + subkomponen |
+| #   | Masalah                                                          | Lokasi                                 | Solusi                                                                                                                     |
+| --- | ---------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Sticky tab bar mati (flag `false`) + scrim `backdrop-blur-xl`    | `settings-navigation.tsx`              | Hapus mesin sticky → wrapper tipis `SegmentedTabs`                                                                         |
+| 2   | Header ganda per modul (`hideHeader` yang tetap render)          | 4 manager                              | Satu aturan: `presentation="settings"` → `WorkspaceModuleHeader`, `"onboarding"` → tanpa header. Prop `hideHeader` dihapus |
+| 3   | Dark focal surface 3 implementasi (radius 26/28/30)              | hub, setup-readiness, loading skeleton | Komponen lokal `SettingsInverseSurface` token-based                                                                        |
+| 4   | Tombol hand-rolled ~15 titik (`text-white` vs `text-on-primary`) | semua manager                          | Shared `Button`                                                                                                            |
+| 5   | Dialog buang-perubahan copy-paste + split idiom                  | kategori, library ×2, material         | `ConfirmationDialog` API standar (`confirmLabel`/`danger`)                                                                 |
+| 6   | Toggle switch hand-rolled (~30 baris)                            | budget                                 | Extend `SwitchRow` slot `trailing`                                                                                         |
+| 7   | Icon tile hand-rolled `h-9 rounded-[13px]`                       | hub, kategori, material, readiness     | `DuotoneIconTile`                                                                                                          |
+| 8   | Banner inline direinvent 3× ; `SettingsNotice` dsb. nganggur     | kategori/library/material/budget       | `FormRiskNotice`; dead export `settings-ui.tsx` dihapus                                                                    |
+| 9   | Glass `backdrop-blur` pada save bar sticky                       | budget                                 | Solid white + `shadow-raised`                                                                                              |
+| 10  | Fallback `<p>` mentah untuk modul tak tersedia                   | dashboard                              | `GroupedSurface` > `InlineStateRow`                                                                                        |
+| 11  | Radius drift nested surface                                      | library price-preview, import tile     | Token `rounded-owner`/`rounded-inset`                                                                                      |
+| 12  | Orchestrator raksasa (library 569, materials 442)                | library/materials                      | Pisah hooks (filter draft, dirty tracking) + subkomponen                                                                   |
 
 ## Yang tidak disentuh
 

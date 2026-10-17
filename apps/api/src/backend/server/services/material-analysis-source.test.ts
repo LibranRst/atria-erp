@@ -122,6 +122,31 @@ describe("material spreadsheet ingestion", () => {
       expect(rows.map((row) => row.index)).toEqual([0, 1]);
       expect(rows[1].fields.name).toBe("Cat");
       expect(rows[1].uncertain).toBe(true);
+      expect(provider.mock.calls[0]?.[0].config?.workloadProfile).toBe("bounded");
+    } finally {
+      provider.mockRestore();
+    }
+  });
+  test("long material interpretation keeps the complex profile without trimming the source", async (): Promise<void> => {
+    const raw = `Cat putih liter ${"keterangan ".repeat(800)}`;
+    const provider = spyOn(documentModel.models, "generateContent").mockResolvedValue({
+      text: JSON.stringify({
+        rows: [
+          {
+            index: 0,
+            fields: { name: "Cat", unit: "liter", withoutVendor: true },
+            uncertain: true,
+          },
+        ],
+      }),
+    });
+    try {
+      const rows = await mapMaterialSources([{ row: 1, raw }], {}, AbortSignal.timeout(1000));
+      expect(rows).toHaveLength(1);
+      expect(rows[0].uncertain).toBe(true);
+      const request = provider.mock.calls[0]?.[0];
+      expect(request?.config?.workloadProfile).toBe("complex");
+      expect(request?.contents.join(" ")).toContain(raw);
     } finally {
       provider.mockRestore();
     }

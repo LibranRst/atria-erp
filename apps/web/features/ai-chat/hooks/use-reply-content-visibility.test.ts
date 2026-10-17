@@ -18,6 +18,30 @@ const toolPart = (state: string) => ({
 });
 
 describe("reply content handoff", () => {
+  test("model introduction is separate from final answer visibility", (): void => {
+    const intro = {
+      type: "data-assistant-introduction",
+      id: "assistant-introduction",
+      data: { text: "Aku cek saldo terbarunya dulu." },
+    };
+    const state = readAssistantContentState(assistant([intro]));
+    expect(state).toEqual({ hasVisibleText: false, hasTool: false, hasFailedTool: false });
+    expect(shouldRevealAssistantContent(state, { isBusy: true, toolDelayElapsed: true })).toBe(
+      false,
+    );
+    const pending = readAssistantContentState(assistant([intro, toolPart("input-available")]));
+    expect(pending.hasVisibleText).toBe(false);
+    expect(shouldRevealAssistantContent(pending, { isBusy: true, toolDelayElapsed: false })).toBe(
+      false,
+    );
+    const result = readAssistantContentState(
+      assistant([intro, { type: "text", state: "streaming", text: "Saldo tersedia Rp 125.000." }]),
+    );
+    expect(shouldRevealAssistantContent(result, { isBusy: true, toolDelayElapsed: false })).toBe(
+      true,
+    );
+  });
+
   test("menahan tool trace aktif sampai ambang 400ms", () => {
     const state = readAssistantContentState(assistant([toolPart("input-available")]));
 

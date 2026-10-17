@@ -40,6 +40,7 @@ export function createEmptyRabChangeOrderForm(): RabChangeOrderForm {
 }
 
 export interface RabManagerDerivedValues {
+  readonly canCreateRab: boolean;
   readonly canApproveRab: boolean;
   readonly canManageRab: boolean;
   readonly visibleRabValue: number;
@@ -97,8 +98,9 @@ export function getRabManagerDerivedValues({
   const hasManualQuotationLine = Boolean(manualQuotationLine.clientLabel.trim());
 
   return {
+    canCreateRab: permissions.includes("create:rab"),
     canApproveRab,
-    canManageRab: canApproveRab,
+    canManageRab: permissions.includes("update:rab"),
     visibleRabValue,
     approvedBaseline,
     isRevisionDraft:

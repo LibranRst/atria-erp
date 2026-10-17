@@ -128,7 +128,7 @@ export function PersistentWorkspaceMenu(): React.JSX.Element {
         ? "Setup organisasi"
         : item
           ? menuLabel(item.label)
-          : "Atria";
+          : "Paduna Build";
   const hidden = pathname === "/profile/password" || pathname === "/";
   const blocked = hidden || sheetPresented;
   return (

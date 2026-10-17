@@ -1,0 +1,128 @@
+{
+  "version": "1.0.0",
+  "date": "2026-10-17",
+  "parent": {
+    "name": "Paduna",
+    "role": "Umbrella brand for business operations software",
+    "descriptor": "Software untuk operasional bisnis",
+    "essence": "Kejelasan yang memberi kendali",
+    "tagline": null,
+    "nameStatus": "approved-by-user",
+    "namingInspiration": {
+      "words": ["padu", "guna"],
+      "status": "proposed creative brand story; not a dictionary etymology"
+    },
+    "pronunciation": "pa-du-na"
+  },
+  "identity": {
+    "symbol": "Temu",
+    "symbolStatus": "approved-by-user",
+    "colors": {
+      "ink": "#181817",
+      "terracotta": "#B84B2C",
+      "white": "#FFFFFF"
+    },
+    "parentWordmark": "Manrope 700 outlined",
+    "productSuffix": "Manrope 500 outlined, cap height 176 vs Paduna 232",
+    "symbolUnchanged": true
+  },
+  "products": {
+    "build": {
+      "name": "Paduna Build",
+      "nameStatus": "approved-by-user",
+      "stage": "current-product-in-this-repository",
+      "descriptor": "Kendali biaya dan material proyek",
+      "audience": "Interior and design/build project businesses",
+      "scope": "Project budgets, category expenses, payments, material/RAP, inventory and margin visibility",
+      "meaningOfProduction": "Project execution costs; not a full manufacturing/production-planning ERP",
+      "candidateTagline": "Proyek terkendali. Kerja lebih tenang.",
+      "taglineStatus": "candidate",
+      "iconBackground": "#B84B2C"
+    },
+    "office": {
+      "name": "Paduna Office",
+      "nameStatus": "approved-by-user",
+      "stage": "separate-planned-product",
+      "descriptor": "ERP untuk operasional perusahaan",
+      "initialDiscovery": "Prospective cable-business customer",
+      "modules": "to be validated; HR and other broader operations remain prospective",
+      "tagline": null,
+      "iconBackground": "#181817"
+    }
+  },
+  "architecture": {
+    "now": "Separate products and releases",
+    "future": "Possible phased integration; no combined platform implemented",
+    "codebaseOrDatabase": "Not determined by branding"
+  },
+  "rollout": "Paduna Build web and Expo display identity, metadata and assets implemented in source. Ordinary Paduna wordmark used on both; installed native verification is recorded separately in the mobile QA report. Package/repository names, auth/integration namespaces and deployment remain separate rollout work.",
+  "buildScopeGuardrail": [
+    "HR and payroll remain out of Build scope",
+    "Full manufacturing/production planning remains out of Build scope",
+    "Category-based project budget and margin workflow remains primary"
+  ],
+  "guide": "docs/brand/paduna/README.md",
+  "canonicalSvg": "docs/brand/paduna/svg/",
+  "status": "brand-selected-by-user",
+  "previousParent": "Atria",
+  "historicalGuide": "output/pdf/atria-brand-guide-v2.pdf (historical Atria identity)",
+  "supersedesForCurrentBrandUse": "docs/brand/atria/ (historical Atria identity)",
+  "availability": "Domain and trademark availability not established",
+  "brandBook": "output/pdf/paduna-brand-book-v1.pdf",
+  "quickReference": "output/pdf/paduna-quick-reference-v1.pdf",
+  "minimums": {
+    "horizontalParentCssPx": 176,
+    "horizontalProductCssPx": 240,
+    "compactProductCssPx": 176,
+    "symbolCssPx": 24,
+    "faviconOnlyPx": 16,
+    "printParentMm": 30,
+    "printProductMm": 45,
+    "printSymbolMm": 5,
+    "clearSpaceUnits": 32,
+    "symbolWidthUnits": 320,
+    "intrinsicHorizontalMarginUnits": 48
+  },
+  "voice": {
+    "traits": ["jelas", "tenang", "teliti", "praktis"],
+    "publicPronoun": "Anda",
+    "primaryLanguage": "id",
+    "claims": "Only implemented and evidenced capabilities"
+  },
+  "sources": [
+    {
+      "title": "WCAG 2.2 Contrast Minimum",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+    },
+    {
+      "title": "PWA maskable icons",
+      "url": "https://web.dev/articles/maskable-icon"
+    },
+    {
+      "title": "Android adaptive icons",
+      "url": "https://developer.android.com/develop/ui/compose/system/icon_design_adaptive"
+    },
+    {
+      "title": "Expo SDK 57 app config",
+      "url": "https://docs.expo.dev/versions/v57.0.0/config/app/"
+    }
+  ],
+  "rolloutStatus": {
+    "web": "implemented-and-locally-verified",
+    "native": "implemented; iOS signed Release simulator verified; Android config/assets/Hermes verified",
+    "technicalNames": "planned",
+    "deployment": "not-performed",
+    "evidence": "output/qa/paduna-web-brand-2026-10-17/",
+    "mobileEvidence": "docs/qa/2026-10-17-paduna-mobile-brand.md"
+  },
+  "webPlacementOverride": {
+    "date": "2026-10-17",
+    "authority": "User requested the normal Paduna logo instead of the product lockup",
+    "asset": "/brand/paduna.svg",
+    "visualWordmark": "Paduna",
+    "applicationName": "Paduna Build",
+    "loginWidthPx": 176,
+    "sidebarWidthPx": 152,
+    "masterArtwork": "unchanged primary Paduna SVG"
+  }
+}

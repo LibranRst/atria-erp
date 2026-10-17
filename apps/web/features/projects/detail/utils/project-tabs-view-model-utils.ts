@@ -1,5 +1,6 @@
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { formatShortIdr } from "@atria/core/utils/money";
+import { projectClientReceiptsCents } from "@atria/core/finance/project-cash";
 import type { ProjectReadinessItem } from "../components/overview/project-overview";
 import { buildRapForManager } from "./project-tabs-mappers";
 import type { ProjectTabsProps } from "../types/project-tabs-types";
@@ -55,12 +56,7 @@ export function calculateCashRealization({
 }
 
 export function calculateTotalReceived(invoices: ProjectTabsProps["invoices"]): number {
-  return invoices.reduce(
-    (sum, invoice) =>
-      sum +
-      invoice.payments.reduce((paymentSum, payment) => paymentSum + Number(payment.amountPaid), 0),
-    0,
-  );
+  return Number(projectClientReceiptsCents(invoices)) / 100;
 }
 
 export function calculateInvoiceOutstanding(invoices: ProjectTabsProps["invoices"]): number {

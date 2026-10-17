@@ -24,3 +24,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const SourceCents: Story = {
+  args: {
+    items: [
+      { label: "Harga satuan", amount: 11828542.55, fractionDigits: 2 },
+      { label: "Subtotal klien", amount: 106456882.95, fractionDigits: 2 },
+    ],
+  },
+};

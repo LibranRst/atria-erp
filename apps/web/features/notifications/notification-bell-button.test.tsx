@@ -26,12 +26,17 @@ describe("Notification badge animation and close timing", () => {
   });
 
   test("Notification button morph dialog expands with smooth spring without bouncy overshoot", async () => {
-    const dialogFramePath = new URL("../../components/ui/overlay/dialog-frame.tsx", import.meta.url);
+    const dialogFramePath = new URL(
+      "../../components/ui/overlay/dialog-frame.tsx",
+      import.meta.url,
+    );
     const source = await Bun.file(dialogFramePath).text();
 
     expect(source).toContain("transitionSpringSmooth");
     expect(source).not.toContain("transitionSpringBouncy");
-    expect(source).toMatch(/reduceMotion\s*\?\s*\{\s*duration:\s*0\s*\}\s*:\s*transitionSpringSmooth/);
+    expect(source).toMatch(
+      /reduceMotion\s*\?\s*\{\s*duration:\s*0\s*\}\s*:\s*transitionSpringSmooth/,
+    );
   });
 
   test("NotificationMorphDialog animates content and tabs with smooth fade in when opened and fade out when closed", async () => {

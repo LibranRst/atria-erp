@@ -1,8 +1,198 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-12T17:49:55Z",
-  "title": "Design System: Atria ERP",
+  "generatedAt": "2026-10-17T12:37:29.572958Z",
+  "title": "Design System: Paduna",
   "extensions": {
+    "branding": {
+      "parent": "Paduna",
+      "nameStatus": "approved-by-user",
+      "decisionDate": "2026-10-17",
+      "previousParent": "Atria",
+      "symbol": "Temu",
+      "currentProduct": "Paduna Build",
+      "plannedSeparateProduct": "Paduna Office",
+      "architecture": "Separate products now; future integration may be planned without widening Build scope",
+      "source": "docs/brand/paduna/brand-system.json",
+      "buildCandidateTagline": "Proyek terkendali. Kerja lebih tenang.",
+      "taglineStatus": "candidate; no parent or Office tagline selected",
+      "visualGuidelines": "docs/brand/paduna/04-visual-guidelines.md",
+      "mobileRollout": {
+        "status": "implemented in local Expo source; not distributed",
+        "component": "apps/mobile/src/components/brand/paduna-logo.tsx",
+        "composition": "Static expo-image wrapper renders the exact approved Temu + Paduna artwork without the Build suffix; application display name remains Paduna Build",
+        "assets": {
+          "rendered": "apps/mobile/assets/brand/paduna.png",
+          "canonicalSvg": "apps/mobile/assets/brand/paduna.svg",
+          "originalMaster": "docs/brand/paduna/svg/paduna.svg",
+          "intrinsicWidth": 1647,
+          "intrinsicHeight": 376
+        },
+        "placements": {
+          "login": {
+            "widthDp": 176,
+            "alignment": "left"
+          },
+          "launch": {
+            "widthDp": 176,
+            "alignment": "center",
+            "sameArtwork": true
+          }
+        },
+        "sharedLoginControls": ["Button", "FormField", "FormSection", "TextInput"],
+        "layoutOwners": "Existing safe-area and keyboard owners retained",
+        "inheritedSystem": "Manrope, ink/terracotta, cool canvas and native controls; no new tokens or visual world",
+        "displayIdentity": {
+          "applicationName": "Paduna Build",
+          "visualWordmark": "Paduna",
+          "constants": "apps/mobile/src/constants/brand.ts",
+          "configuration": "apps/mobile/app.json",
+          "copy": "Visible app and permission copy use Paduna Build"
+        },
+        "nativeAssets": {
+          "launcher": "White Temu on terracotta",
+          "iosIconComposer": "apps/mobile/assets/expo.icon/icon.json; one flat Temu layer on terracotta",
+          "other": "Canonical Temu artwork for light/dark splash, Android adaptive layers and monochrome notification roles"
+        },
+        "retainedIdentities": [
+          "slug",
+          "scheme",
+          "bundle identifier",
+          "package",
+          "native modules",
+          "auth",
+          "storage"
+        ],
+        "defaultTagline": "Absent; candidate remains unconfirmed",
+        "verification": {
+          "report": "docs/qa/2026-10-17-paduna-mobile-brand.md",
+          "artifacts": "output/qa/paduna-mobile-brand-2026-10-17/",
+          "sourceAndAssets": "passed",
+          "mobileTypecheckAndLint": "passed",
+          "existingTestsPassed": 20,
+          "hermesExports": ["iOS", "Android"],
+          "supplementalBrowser": {
+            "environment": "local Expo web; not native evidence",
+            "surface": "login",
+            "widthsPx": [320, 360, 390, 430],
+            "logoWidthPx": 176,
+            "pageErrors": 0,
+            "horizontalOverflow": false
+          },
+          "installedNative": {
+            "status": "passed",
+            "device": "isolated iPhone 17 Pro simulator",
+            "runtime": "iOS 26.5",
+            "configuration": "Release, local simulator ad-hoc signing",
+            "surfaces": [
+              "launcher icon/name",
+              "native light splash",
+              "login with keyboard",
+              "login without keyboard"
+            ],
+            "report": "output/qa/paduna-mobile-brand-2026-10-17/native-verification.json"
+          },
+          "limits": [
+            "Android config/assets/Hermes only; no native runtime",
+            "No physical device or authenticated business-flow verification",
+            "Dark splash source/config only"
+          ]
+        },
+        "finishReview": {
+          "disposition": "ship",
+          "remainingMaterialFindings": 0,
+          "report": "output/qa/paduna-mobile-brand-2026-10-17/finish-review.md"
+        }
+      },
+      "webRollout": {
+        "status": "implemented in local code; not deployed",
+        "nativeStatus": "implemented in Expo source; native verification scope recorded in mobileRollout",
+        "component": "apps/web/components/brand/product-logo.tsx",
+        "composition": "Next Image wrapper renders the approved primary Paduna horizontal SVG without the Build suffix; application identity remains Paduna Build",
+        "placementSelection": "compact prop changes placement width only; identical primary artwork in login and sidebar",
+        "placements": {
+          "login": {
+            "asset": "/brand/paduna.svg",
+            "widthPx": 176,
+            "intrinsicWidth": 1647,
+            "intrinsicHeight": 376
+          },
+          "desktopSidebar": {
+            "asset": "/brand/paduna.svg",
+            "widthPx": 152,
+            "intrinsicWidth": 1647,
+            "intrinsicHeight": 376,
+            "sidebarWidthPx": 208,
+            "alignment": "left, visible Temu edge aligned with navigation icons",
+            "linkPaddingPx": 20
+          }
+        },
+        "sharedLoginControls": ["FormSection", "FormField", "TextInput", "Button"],
+        "loginErrorCopy": "Existing text-support role (12px)",
+        "inheritedSystem": "Manrope, ink/terracotta, cool canvas; no new colors or tokens",
+        "displayIdentity": [
+          "document title",
+          "application name",
+          "Apple title",
+          "manifest display names",
+          "PWA icon assets",
+          "Open Graph",
+          "social previews"
+        ],
+        "retainedIdentities": [
+          "PWA id",
+          "PWA start_url",
+          "PWA scope",
+          "service-worker cache/tag namespaces",
+          "auth",
+          "package",
+          "native",
+          "tenant"
+        ],
+        "defaultTagline": "Absent; candidate remains unconfirmed",
+        "verification": {
+          "source": "output/qa/paduna-web-brand-2026-10-17/browser-verification.json",
+          "environment": "local synthetic browser",
+          "surfaces": ["login", "Dashboard"],
+          "widthsPx": [320, 360, 390, 430, 1024, 1280, 1440],
+          "screenshots": 14,
+          "pageErrors": 0,
+          "horizontalOverflow": false,
+          "keyboardLogin": "passed"
+        },
+        "finishReview": {
+          "role": "impeccable_finish_reviewer",
+          "disposition": "ship",
+          "type": "match",
+          "material": "match",
+          "compactSidebar": "allowed adaptation",
+          "materialFixesRemaining": 0,
+          "scope": "Initial rollout before the user-requested size refinement; refinement separately visually verified"
+        },
+        "sizeRefinement": {
+          "date": "2026-10-17",
+          "reason": "User requested a slightly smaller logo on the web preview",
+          "previousWidthsPx": {
+            "login": 240,
+            "desktopSidebar": 176
+          },
+          "verification": "output/qa/paduna-web-logo-size-2026-10-17/browser-verification.json",
+          "manualVisualReview": "passed",
+          "scope": "Earlier size refinement before the primary Paduna artwork selection; retained as history",
+          "trialWidthsPx": {
+            "login": 208,
+            "desktopSidebar": 152
+          }
+        },
+        "primaryLogoDecision": {
+          "date": "2026-10-17",
+          "request": "User prefers the normal Paduna logo over the Paduna Build lockup",
+          "applicationName": "Paduna Build",
+          "visualWordmark": "Paduna",
+          "verification": "output/qa/paduna-web-primary-logo-2026-10-17/browser-verification.json",
+          "manualVisualReview": "passed"
+        }
+      }
+    },
     "iconography": {
       "family": "Hugeicons Stroke Rounded (free)",
       "registry": "@atria/icons",
@@ -263,20 +453,7 @@
         "name": "split-detail",
         "value": "1280px"
       }
-    ],
-    "branding": {
-      "parent": "Paduna",
-      "currentProduct": "Paduna Build",
-      "symbol": "Temu",
-      "approvedArtwork": "apps/web/public/brand/paduna.svg",
-      "webRollout": {
-        "loginWidth": 176,
-        "sidebarWidth": 152,
-        "name": "Paduna Build",
-        "preserveTechnicalIdentifiers": true,
-        "scope": "display-only production web rollout"
-      }
-    }
+    ]
   },
   "components": [
     {
@@ -294,6 +471,14 @@
       "description": "A visible supporting action beside a primary commit.",
       "html": "<button class=\"ds-btn ds-btn-secondary\">Batal</button>",
       "css": ".ds-btn-secondary { background: #ffffff; color: #181817; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 6%, transparent), inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 1px 1px rgb(24 24 23 / 0.03), 0 3px 8px rgb(24 24 23 / 0.05); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, #3c3c43 6%, transparent), 0 0 0 2px color-mix(in srgb, #b84b2c 35%, transparent); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent neutral action on an existing owning surface; no resting lift or filled contextual auto-tone. Public Button retains shared sizing, focus, refs, guards and motion; desktop maps to HeroUI ghost.",
+      "html": "<button class=\"ds-btn-ghost\">Buka detail <svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"m9 6 6 6-6 6\" /></svg></button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border: none; border-radius: 9999px; background: transparent; color: var(--on-surface, #181817); box-shadow: none; font-family: Manrope, ui-sans-serif, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; } .ds-btn-ghost:hover:not(:disabled), .ds-btn-ghost:active:not(:disabled) { background: var(--surface-container-low, #efeff2); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--focus-ring, color-mix(in srgb, #b84b2c 35%, transparent)); outline-offset: 2px; } .ds-btn-ghost:disabled { cursor: not-allowed; opacity: 0.45; } @media (min-width: 1024px) and (pointer: fine) { .ds-btn-ghost { min-height: 40px; padding-inline: 12px; } }"
     },
     {
       "name": "Critical Button",
@@ -354,7 +539,7 @@
   ],
   "narrative": {
     "northStar": "The Quiet Command Center",
-    "overview": "Atria looks like a calm surface hiding real operational power underneath. Every screen — Owner dashboard, expense tracker, stock movement, reconciliation — carries genuine financial and material control (budgets, margin risk, cash ledger, over-budget approvals), but presents it the way modern iOS presents a bank balance: flat tonal layering, one confident dark surface for the number that matters, quiet grouped rows for everything else, and a single restrained terracotta accent reserved for what actually needs attention. Nothing shouts. A project team member checking material readiness one-handed at a job site, and an Owner scanning margin risk in 30 seconds from a phone, should both feel the same unhurried confidence — competence expressed through restraint, not decoration.\n\nThis is deliberately not a generic SaaS admin dashboard and not a dense accounting spreadsheet. It borrows iOS's clear grouping, confident typography, and disciplined motion, not its glass, gradients, or oversized chrome. The system draws its entire color vocabulary from a monochrome ink-and-canvas foundation plus exactly one accent family (terracotta), so status and priority read through intensity and position, never through a rainbow of category colors.\n\nThe same identity spans one responsive web application: the mobile composition supports field work, while desktop uses compact controls and contextual tables for comparison and review. Canonical routes and the existing web session serve every authenticated role within its domain permissions and project scope.",
+    "overview": "Paduna looks like a calm surface hiding real operational power underneath. Every screen — Owner dashboard, expense tracker, stock movement, reconciliation — carries genuine financial and material control (budgets, margin risk, cash ledger, over-budget approvals), but presents it the way modern iOS presents a bank balance: flat tonal layering, one confident dark surface for the number that matters, quiet grouped rows for everything else, and a single restrained terracotta accent reserved for what actually needs attention. Nothing shouts. A project team member checking material readiness one-handed at a job site, and an Owner scanning margin risk in 30 seconds from a phone, should both feel the same unhurried confidence — competence expressed through restraint, not decoration.\n\nThis is deliberately not a generic SaaS admin dashboard and not a dense accounting spreadsheet. It borrows iOS's clear grouping, confident typography, and disciplined motion, not its glass, gradients, or oversized chrome. The system draws its entire color vocabulary from a monochrome ink-and-canvas foundation plus exactly one accent family (terracotta), so status and priority read through intensity and position, never through a rainbow of category colors.\n\nThe same identity spans one responsive web application: the mobile composition supports field work, while desktop uses compact controls and contextual tables for comparison and review. Canonical routes and the existing web session serve every authenticated role within its domain permissions and project scope.",
     "keyCharacteristics": [
       "Solid tonal layering (canvas → white owner surface → inset gray) doing the structural work, finished with a barely-perceptible resting lift on owning surfaces — never glass or heavy elevation",
       "One monochrome ink primary, one terracotta accent family covering both focus and warning/critical",
@@ -364,6 +549,11 @@
       "One responsive workspace, with compact desktop density and the existing mobile composition sharing the same visual language"
     ],
     "rules": [
+      {
+        "name": "The Web Brand Placement Rule",
+        "body": "Use `ProductLogo` to render the exact approved outlined master SVG; never reconstruct the wordmark as live text. The login uses the horizontal lockup at 240px wide (2263×376 intrinsic), while the 208px desktop sidebar uses the approved compact lockup at 176px wide (1647×536 intrinsic). Choose compact explicitly for its placement, not automatically from viewport width; preserve the asset's proportions and built-in clear space. This wrapper composes Next Image and adds no control primitive. Login retains shared `FormSection`, `FormField`, `TextInput` and `Button`; source error copy uses the existing support-text role (12px). The extension inherits Manrope, ink/terracotta and cool canvas without new colors or tokens.",
+        "section": "branding"
+      },
       {
         "name": "The Planned RAP Review Rule",
         "body": "AI RAP proposals keep project identity, row count, proposal estimate and budget condition in a compact `ProposalCardShell` with one contextual review action. Review begins with project identity at the section-title role (17px) beneath the sheet headline (24px), followed by the budget decision, Material allocation comparison and material rows in one stable `FormSheet`. Material rows use shared `ReviewCollection` and `ReviewItem` on desktop and mobile. Identity and area/unit lead each row; the primary subtotal stays on the right on desktop and below context on mobile. Label Kebutuhan, Buffer and Harga with their units, then show stock/shortage and price-source context. One inline editor is active at a time beneath the row summary. “Ringkas” collapses the editor without applying corrections; controlled editor inputs remain mounted and inert while collapsed. Keep unit-cost source copy associated with the price `FormField` helper; area, quantity, buffer and unit estimate are editable, while material identity and unit stay fixed. Pass the concise budget summary through shared `desktopAsideSummary`; shared sheet chrome owns its desktop right-panel scroll and keeps protected actions outside it. Mobile keeps the summary above rows and actions in the sheet footer. Lead the budget summary with a status icon, a concise verdict and any over-allocation amount. Keep “RAP setelah usulan” and “Alokasi Material” as divided `FactRow` rows in one white `GroupedSurface`, with the same stacked reading order on mobile and in the narrow desktop aside, without a nested metric panel. Use the optional shared `wrapLabel` behavior for narrow fact labels and `MoneyValue` with `variant=\"fullDynamic\"` for complete, unwrapped rupiah values; other `FactRow` consumers retain their default label behavior. A plain `FormDisclosure` contains existing RAP, proposal addition, actual spend, pending review and financial remaining budget, with labels and amounts on opposite edges. Desktop places “Rincian budget” in a white `GroupedSurface` in the wide main column below the Material rows; the aside retains the concise budget verdict, primary plan/allocation facts and protected actions. Mobile keeps budget detail within the summary. Reuse the existing 16px horizontal disclosure wrapper with `FactRow inset={false}` for one inset owner. Disclosure expansion, pagination and local correction state survive resize. The verdict compares total planned RAP after the proposal (existing RAP plus proposal addition) against Material allocation; proposal edits leave actual spend, pending review and financial remaining budget unchanged. Local edits recalculate subtotals and budget impact immediately. “Terapkan koreksi” persists reviewed corrections before the separate “Simpan draft RAP” action; unapplied edits, validation errors and pending operations prevent saving. Shared dirty-form dismissal protects unapplied changes, and reopening restores applied corrections. Preserve five-row pagination on mobile and desktop, stable input DOM and draft/page state across resize. Shared review rows and `BottomSheet` aside-footer placement preserve their separate content and overlay responsibilities; other consumers retain their defaults. Applying corrections or saving a RAP draft is never presented as budget consumption, stock reservation or cash movement. Review opens at natural content height and grows with disclosures or editors, bounded by the viewport; a desktop aside measures its inner content independently. The shared sheet-header canvas scrim covers the actual header height before fading over 16px, keeping scrolled content from competing with the title without changing sheet geometry. The review collection owns one white `GroupedSurface`, matching the budget surface's 28px radius and `shadow-surface` depth on mobile and desktop; inline editors use an embedded `FormSection`. Mobile editors reuse the public stacked `FormField` layout with sentence-case labels above start-aligned regular-weight Manrope values, retaining the 16px editable-text floor and tabular digits. Desktop editors use the shared `FormSection contentClassName` inner two-column grid, with Area and unit price spanning its width; mobile keeps stacked fields. Kebutuhan and Buffer reuse `NumericInput` with associated unit helpers. Area uses the public wrapping `Textarea` and normal caret editing. The `MoneyInput` label names the price unit, with the currency prefix beside its input value; row numbers remain in accessible labels rather than repeating in the visual form. Notes stay in a secondary plain `FormDisclosure`.",
@@ -595,13 +785,58 @@
       },
       {
         "name": "The AI Activity Outcome Rule",
-        "body": "AI activity uses shared `FormDisclosure` with `variant=\"activity\"`: one compact contextual summary, no extra surface, and details opened by the reader. The summary reflects the current task outcome, with running work, unresolved failures and stopped work taking priority over waiting or completion. A recovered read remains in the flat semantic history as a neutral refresh icon with visible “Pulih”; it is not a current failure. Recovery requires a later genuine result from the same tool with the same canonical inputs within the same assistant message, preserving target, filters and page. The bounded historical exception is a one-character project-search validation failure followed by a scoped project list whose actual results supply the subsequent project-selector options. A different tool or target, access denial, mutation, interruption, missing result or structured output error cannot establish recovery. Expanded unresolved steps show fixed, safe category guidance without raw inputs, values or error strings. Waiting follows the active input request and its current wizard values: an unselected required project shows “Pilih proyek untuk melanjutkan”; a valid project selection shows “Menunggu isian Anda”. Submitted, cancelled or dismissed requests stop waiting while recovered history remains. Details keep small shared `ActivityMark` / `AppIcon` state icons, accessible completion text and visible running, failed, recovered and stopped labels without elevation or repeated completion badges. Waiting uses a static clock; only running activity loops, using unified motion presets with reduced-motion and visibility support.",
+        "body": "AI activity uses shared `FormDisclosure` with `variant=\"activity\"`: one compact contextual summary, no extra surface, and details opened by the reader. The summary reflects the current task outcome, with running work, unresolved failures and stopped work taking priority over waiting or completion. A recovered read remains in the flat semantic history as a neutral refresh icon with visible “Pulih”; it is not a current failure. Recovery requires a later genuine result from the same tool with the same canonical inputs within the same assistant message, preserving target, filters and page. The bounded historical exception is a one-character project-search validation failure followed by a scoped project list whose actual results supply the subsequent project-selector options. A different tool or target, access denial, mutation, interruption, missing result or structured output error cannot establish recovery. Expanded unresolved steps show fixed, safe category guidance without raw inputs, values or error strings. Waiting follows the active input request and its current wizard values: an unselected required project shows “Pilih proyek untuk melanjutkan”; a valid project selection shows “Menunggu isian Anda”. Submitted, cancelled or dismissed requests stop waiting while recovered history remains. Details keep small shared `ActivityMark` / `AppIcon` state icons, accessible completion text and visible running, failed, recovered and stopped labels without elevation or repeated completion badges. Waiting uses a static clock; only running activity loops, using unified motion presets with reduced-motion and visibility support. Within one assistant turn, render the model-written public introduction first, one stable activity disclosure second, then final answer bubbles, complete domain cards and follow-up suggestions. Persist the introduction as a separate data part, not answer text or another assistant message. It describes a future step without financial results or a claim of saving. Before model copy arrives, the same compact disclosure shows honest pending status; actual tools, errors and waiting states update it in place without changing its surface, focus or expansion. Preserve supplied introductions after completion and refresh; legacy and direct fast answers do not acquire fabricated preambles. Introduction-only or unfinished background-read replies retain retry recovery. Final answer bubbles complement selected result cards. Server-verified cash and budget sections may carry typed card narratives; use a short alternative only when its exact source call has a matching, valid, displayed card. Company cash details and per-account amounts stay in the card; named account/bank questions retain their scoped conclusion. Budget copy preserves paid/pending facts, requested qualifications and category rows omitted by the shared card-selection policy. Invalid, absent, hidden or unsupported cards retain the complete canonical answer, and partial errors remain visible. Model-generated card answers use concise supported takeaways without copying lists or before/after rows. Legacy history is not heuristically rewritten; stored presentation metadata restores the same complementary view. Transcript scrolling treats initial/history alignment separately from streamed persistence IDs. New responses follow only until the newest user question reaches the reading inset; incidental scroll/resize events never promote that cap to bottom following. Upward reader gestures cancel queued movement. Deliberate return to the bottom or the newest-answer control can resume bottom following. Idle disclosure/card growth updates the control visibility without moving the reading position; reader interaction cancels bounded opening alignment.",
         "section": "components"
       },
       {
         "name": "The Manual Desktop Form Panel Rule",
         "body": "Meaningful manual input and review sheets use the existing wide, content-sized FormSheet with desktopFooterPlacement=\"aside\" and desktopAsideSummary. The main pane owns editable fields and reviewed rows; the right pane owns live draft context and protected existing actions. Reuse OperationalFormSheet, WorkflowFormSheet, GroupedSurface and SheetFooterActions. Narrow aside facts use FactRow layout=\"stacked\" so labels and long values remain readable; its default inline contract stays unchanged. Monetary summaries retain exact cents through shared MoneyValue formatting when present. Existing input → review → commit, pending/disabled guards, HTML form associations, dirty dismissal and presence remain with their owners. Unknown references and unread/failed sources never become healthy zeros. Short names/reasons, profile/security decisions, confirmations and read-only details stay focused; dedicated desktop page editors retain their layout. Mobile/native-pinned composition, footer ordering and draft/focus state through resize remain. No feature introduces its own modal, portal, scroll owner or finance/material calculation.",
         "section": "Forms & Sheets"
+      },
+      {
+        "name": "The Settings Desktop Workspace Rule",
+        "body": "Settings inherits Dashboard's compact white panels, semantic typography, native HeroUI tables and existing capsule controls. Finansial compares the budget cap and allocation defaults in one quiet band, followed by a category allocation table with formula/simulation context and the approval thresholds. State the applicability to new budgets or requests beside the settings rather than implying changes to recorded projects. Katalog uses complete Material and Item & Price Library tables with inline search/filters and controlled 10/25/50 pagination; Lokasi shows only supplied reference facts. Organisasi uses Tim, Vendor and Peran tables with actual contact, status, scope, user and permission data, preserving password requirements, Owner/system-role locks and existing editors. Kesiapan places required and optional foundations in independently sized grouped panels with real status and action links; its initial-stock subflow retains the explicit existing decisions. Structural skeletons follow the active tab, source failures stay distinct from valid empty or zero data, and controls use the documented type roles. Domain owners retain filtering, full-result sorting, selection, pending work and drafts; presentation does not change permissions, scope or mutation rules. Library editing uses one OperationalFormSheet at every width, with the existing desktop main/aside contract and mobile bottom-sheet composition, keeping dirty fields and nested overlay ownership through resize. Mobile and native-pinned hierarchy remains the source of truth.",
+        "section": "components"
+      },
+      {
+        "name": "The Expenses Desktop Workspace Rule",
+        "body": "Standalone `/expenses` inherits Dashboard and Settings' compact Atria grammar. A source-backed comparison band, peer/status views and inline search/filter controls precede native HeroUI tables. At 1024–1279px rows open a list/detail progression with a back action; from 1280px the table and independently sized detail panel sit beside each other only when an actual row supplies context. Empty and filtered-zero claims, bills and payments use the full table width without reserving an aside. Native active-row highlighting follows visible context: from 1280px it identifies the row shown in the right detail panel; the narrower list has no fallback-selected row while that panel is hidden. Preserve explicit selection through resize and clear it only through existing Back/filter interactions. Vendor detail actions use two columns when the owning panel reaches 512px and one column in the narrow aside; a guarded single action fills the row. Field expenses expose only supplied project/requester/category/date/nominal/status and evidence facts, while vendor bills and payments preserve the existing payment-summary calculations and distinguish scheduling, approval and cash recording. Reuse public DesktopTable, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, MoneyValue, SearchInput/FilterSelect, status, facts and shared overlays. Domain owners filter and sort the complete authorized collection before 10/25/50 pagination and retain truthful totals; exact values preserve supplied cents. Assigned field costs remain the actor's own requests, assigned vendor records follow PM projects, and account identities remain redacted without bank-view permission. Tabs and create/verify/pay entry points follow domain rights rather than role names. Compact draft recovery distinguishes waiting, failure/retry and a valid empty result. Selection, filters, pending work and recovery stay above responsive presenters; focused controls and existing sheets retain their single focus/dismissal/confirmation owner through resize. Structural skeletons match claims, bills and payment collections without fabricated zero totals or focusable placeholders. Mobile and native-pinned composition remains authoritative; the project-embedded desktop continuation is documented below. This adaptation introduces no backend write path, database migration, finance formula, bulk action or real-time claim.",
+        "section": "components"
+      },
+      {
+        "name": "The Approvals Desktop Workspace Rule",
+        "body": "Canonical `/approvals` extends the Dashboard and Expenses grammar with a compact queue-count/value/priority/waiting band, peer views, inline search/project/priority filters and a native HeroUI table. The six columns preserve supplied request/project identity, readable type, requester, nominal, queue date and priority reason; initial priority order follows the source-ranked queue. Reuse public DesktopTable, useDesktopTable and controlled DesktopTablePagination to filter and sort the complete authorized collection before 10/25/50 pagination, retain truthful totals, reset the page after filter/sort/page-size changes and clamp it after source shrink. Fixed-layout columns use the shared widthPercent contract rather than feature-local table geometry. At 1024–1279px the first row action opens detail and Back clears explicit selection; from 1280px the table sits beside an independently sized 288px contextual aside. Start with no selected row or detail panel. Native single selection opens detail only after explicit pointer or keyboard activation; activating the selected row again clears selection and closes detail. Empty selection and empty or filtered-zero queues use the full table width. The public DesktopTable onRowSelectionChange callback reports a row or null through HeroUI/React Aria; existing row-action consumers retain their action behavior. Pending decision guards block selection changes, and explicit selection survives resize. Detail groups supplied facts, exact amounts, evidence and actual budget/stock consequences before the existing guarded decision actions. Inventory purchase value contributes no additional project actual when the source marks it as inventory; opening stock explains physical stock/audit effects separately from cash, vendor debt and project actual. Shared MoneyValue retains supplied cents in rows, detail and confirmation. Queue visibility and finance-row access follow existing domain permissions and scope; decision controls additionally require the matching cost or opening-stock approval right. Read-only access stays explicit. Rejection, opening-stock and emergency self-approval reasons, pending guards, confirmation, evidence inspection and mutation callbacks remain with the existing owner. Incoming source refreshes wait while a decision is open or pending, and acknowledged decisions stay absent during a lagging refresh. Keep route children, selection, filters, table state and overlay ownership stable through resize. Pending Change Orders remain a compact plain FormDisclosure linking to the existing project RAB workflow. Structural loading mirrors summary, controls, ten table rows, pagination and contextual detail with inert/hidden placeholders and truthful busy copy. Mobile and native-pinned composition remains authoritative. This extension adds no write path, finance formula, bulk decision or automatic payment.",
+        "section": "components"
+      },
+      {
+        "name": "The Materials Desktop Workspace Rule",
+        "body": "Canonical `/materials` extends the accepted Dashboard, Expenses, Approvals and Reconciliation grammar with compact receiving/project-stock/warehouse actions, one divided stock-value/available-value/location-risk/uncovered-RAP band and Ringkasan / Inventori / Kebutuhan / Aktivitas peer views. Overview separates a bounded five-material attention preview, pending decisions and three recent events from the complete collections. Each recent event is a keyboard-focusable shared ghost Button opening its exact existing activity detail. Inventory filters locations before invoking the canonical grouped-stock summary; physical, reserved, available, minimum and value facts therefore describe the selected locations. A worst-location status beside an aggregate quantity names the affected count as “N dari M lokasi” when multiple locations are present. Needs retain project/RAP identity, actual item units and supplied quantities; their estimate describes the whole RAP row, separate from debt or payment, and available stock is not automatically allocated. Never add quantities across unlike units. Reuse public DesktopTable fixed widthPercent columns, desktopTablePage, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, status, FactRow, PageState and existing outer sheets. Filter and sort the complete authorized inventory/needs collections before 10/25/50 pagination; the four activity collections use bounded API reads with server-side filtering, counts, sorting and pagination, separate from mobile preview caps. Keep each collection’s controls and page in URL state with truthful totals, page resets and clamping. At 1024–1279px the first row action opens detail and Back clears explicit selection; from 1280px an actual row supplies an independently sized 18rem contextual aside. Native active-row highlighting follows visible context only; empty and filtered-zero results use the full width. Detail preserves supplied cents and per-item units before the existing explicit receiving, stock, receipt-reversal or count workflow. Restricted/unavailable RAP sources stay distinct from valid empty or fulfilled needs, and pending activity totals come from the complete scoped summary. Existing inventory/domain permissions, tenant and assigned-project fences govern initial, paged and exact-detail reads. The stable MaterialsControlCenter retains drafts, selection, pending state and single overlay ownership through resize; source refresh waits while an overlay or pending workflow is active and stale activity reads are ignored. Structural loading mirrors the active tab, compact band, controls, table, pagination and optional context with inert/hidden placeholders and truthful busy copy. Mobile and native-pinned composition remains authoritative. This extension adds read contracts and scoped reads without changing writers, money movement or material projection formulas.",
+        "section": "components"
+      },
+      {
+        "name": "The Projects Desktop Workspace Rule",
+        "body": "Canonical `/projects` extends the accepted Atria Operate grammar with a compact title/create action, one divided active-project band for project value, internal budget, consumed budget and remaining budget, peer views and inline search/client/PM/status/health filters. A six-column native HeroUI table compares project identity, value, budget, consumed, remaining and condition. Filter and sort the complete authorized collection before controlled 10/25/50 pagination; retain truthful filtered totals, deterministic ties, page resets and clamping. Keep portfolio controls in prefixed URL state while preserving unrelated parameters and the hash. A missing budget stays distinct from a valid zero; show supplied paid, pending and projected-margin facts only with their canonical source metadata. Compact values and exact detail use shared MoneyValue and retain supplied cents. At 1024–1279px a first row action opens detail and Back clears explicit selection; from 1280px an actual row supplies an independently sized 18rem context panel. Native highlight identifies visible context only, with no fallback-selected row behind a hidden panel. Empty and filtered-zero results use the full width.\n\nThe project's Ringkasan/Budget surface at `/projects/[id]?tab=overview` keeps a compact identity header and peer navigation above the four financial facts, paid/pending/usage/margin context and a five-category comparison table. Category context exposes exact allocations, consumed, paid, pending and remaining amounts before permission-supplied existing actions. Header and budget verdict share canonical effective health, including the stored risk floor; missing, restricted and unavailable sources remain neutral and distinct from healthy zero. Reuse public DesktopTable, desktopTablePage, DesktopTablePagination, SegmentedTabs, FilterSelect, GroupedSurface.desktopPanel, MoneyValue, status, FactRow, PageState and existing shared FormSheet owners. The stable list/detail workflow owners defer incoming source updates while a workflow is open or pending and retain drafts, selection, focused controls and overlay ownership through resize. Structural skeletons mirror the compact portfolio or overview hierarchy with inert, hidden placeholders and truthful busy copy. This extension preserves mobile/native composition, RAP/RAB special views and other detail tabs/editors; it adds no finance formula, bulk workflow or automatic mutation.",
+        "section": "components"
+      },
+      {
+        "name": "The Project Planning Desktop Workspace Rule",
+        "body": "The project's RAP and RAB views extend the accepted Projects/Dashboard grammar on canonical routes at >=1024px. RAP leads with internal execution cost, Material/Tukang/Subcon context and the existing setup or review stages; RAB leads with the client selling value, actual approved baseline, revision and document visibility. Keep internal planning and client document facts distinct. Use compact white owning panels, divided comparison bands, inline controls and native HeroUI tables through public DesktopTable, desktopTablePage, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, status and FactRow primitives. Filter and sort each complete authorized collection before 10/25/50 pagination; retain truthful totals, deterministic ties, page resets and clamping. Separate prefixed URL state preserves each collection's controls, unrelated parameters and the hash. RAB starts in stored document order; changing table sort never changes export order. Bundle-member visibility reflects its own visibility and its parent bundle; client totals use the bundle price without counting members again. RAP's purchase summary counts material records needing purchase, never sums quantities across unlike units; row quantities retain the existing source projection and their unit. Use supplied values and exact cents through shared MoneyValue, without inventing margin or baseline facts. At 1024–1279px the first row action opens detail and Back clears explicit selection; from 1280px an actual row supplies an independently sized 18rem context panel. Native highlight identifies visible context only, with no fallback selection behind hidden detail; empty and filtered-zero collections use full width. Existing material, package, source, bundle, revision, Change Order, approval, override and export owners retain their drafts, selection, focus, dismissal and pending guards through resize. Defer incoming source data while any owning workflow is open or pending, then reconcile source identities against the accepted revision after it closes. Existing action permissions remain independent; desktop presentation grants no write capability. Structural route and local loading mirror the active planning hierarchy with inert, hidden placeholders and truthful busy copy. Mobile and native-pinned composition remains authoritative. This scoped extension changes neither finance/material calculations nor writer behavior and introduces no visual token family or overlay primitive.",
+        "section": "components"
+      },
+      {
+        "name": "The Project Operations Desktop Workspace Rule",
+        "body": "The project's Stok and Pengeluaran views extend the accepted Atria Operate grammar at >=1024px: compact white owning panels, divided source-backed comparison bands, peer filters and native HeroUI tables before independent record context and existing actions. Stock summaries count material records; each quantity retains its own unit. Keep project coverage, warehouse availability and recorded movements distinct: warehouse stock is not automatically reserved, and movement history is not a cash ledger. The inventory-only projection supplies material quantities without exposing internal RAP cost. Ready, missing, restricted and unavailable sources retain distinct copy; unknown data never becomes healthy zero. Embedded expenses reuse the existing claims, vendor-bill and payment workspaces within the current project, omitting redundant project columns and selectors while retaining source-backed money, status, approval and cash distinctions. Reuse public DesktopTable, desktopTablePage, controlled DesktopTablePagination, SegmentedTabs, SearchInput/FilterSelect, GroupedSurface.desktopPanel, MoneyValue, FactRow, status and existing shared workflows; add no token family or overlay primitive.\n\nFilter and sort each complete authorized stock or expense collection before 10/25/50 pagination. Stock uses `stock-view`, `stock-materials-` and `stock-activity-`; embedded expenses use `project-${id}-expenses-view`, `project-${id}-expenses-filter`, `project-${id}-expenses-claims-` and `project-${id}-expenses-vendor-`, with separate `bills-` and `payments-` table keys inside the vendor namespace. Preserve unrelated query parameters and the hash. At 1024–1279px the first row action opens detail and Back clears explicit selection; from 1280px actual row context supplies an independently sized 18rem panel. Empty and filtered-zero results use full width; hidden detail creates no fallback highlight. Stable owners retain selection, drafts, pending protection, focused controls and shared overlay ownership through resize, deferring incoming project data while workflows are open or pending. Project-route expense and vendor forms lock project context; foreign recovery drafts remain intact with explicit guidance, and mismatched autosave/manual save/copy cannot silently move them into the current project. Structural stock/claims/bills/payment skeletons follow the active collection with inert placeholders and truthful busy copy. Mobile and native-pinned presentation retains its existing composition, with the stock summary corrected to record counts and unit guidance. Domain permissions, explicit mutation workflows and calculations remain authoritative.",
+        "section": "components"
+      },
+      {
+        "name": "The Project Payments Desktop Workspace Rule",
+        "body": "The project's Pembayaran view extends Atria Operate at >=1024px with one divided band for active invoices, actual cash received, outstanding receivables and unbilled contract value, followed by Invoice/Penerimaan peers, inline filters, native tables and independent exact record context. Invoice commitment and received cash remain distinct. Canceled invoices leave active billing and debt totals while their historical receipts remain received cash. Presentation-only overdue attention uses the Jakarta calendar date before today and preserves paid/canceled status. Translate stage and status codes at the presentation boundary. Reuse public DesktopTable, desktopTablePage, controlled DesktopTablePagination, SegmentedTabs, SearchInput/FilterSelect, GroupedSurface.desktopPanel, MoneyValue, FactRow, statuses and the existing invoice, receipt and activity-detail owners; introduce no token family or overlay primitive.",
+        "section": "components"
+      },
+      {
+        "name": "The Project Margin Desktop Workspace Rule",
+        "body": "The project's Margin view extends Atria Operate at >=1024px with one white divided band for conservative projected margin, configured target margin, consumed budget and remaining budget, retaining contract value and internal-budget context. The explanation preserves the canonical projection: contract value minus the greater of consumed cost and internal budget. Target comparisons use the project's supplied target, never a fixed percentage. Five category rows compare allocation, consumed cost, remaining and readable condition before exact category context; this bounded collection needs neither search nor pagination. Reuse public DesktopTable, GroupedSurface.desktopPanel, MoneyValue, FactRow, statuses, PageState and the existing ProjectCategoryDesktopDetail. From 1280px an actual category supplies an independent 18rem context panel with native highlight; at 1024–1279px first row action opens detail and Kembali ke kategori clears explicit selection. A hidden panel creates no fallback selection. Introduce no token family, chart or overlay primitive.\n\nMargin, actual cash and stored FINAL snapshots retain separate source contracts; missing, restricted and unavailable data remain distinct from valid zero. For a completed project with an independently authorized ready FINAL snapshot, desktop and mobile retain the frozen contract, target, consumed cost, remaining budget and cash position even when today's budget read is missing or unavailable; current category and cash-breakdown failures stay separate, while active projects and restricted margin access cannot use this fallback. Current cash uses complete exact-cents client receipts and canonical paidCost, never consumed cost; noncash stock usage does not create cash outflow. Completed projects use stored FINAL totals and cash position when supplied, with snapshot time. Category rows and received/paid cash breakdown remain explicitly current data. A missing final snapshot stays visible as unavailable history and is never manufactured from current projections. One project-keyed ProfitabilityPanel owns closing inspection, notes and shared ConfirmationDialog through resize. Closing requires view:project, update:budget, view:profitability and close:project, an active project, ready budget source, an explicit server checklist with no blockers and a trimmed note of at least 10 characters. Show read freshness and current blockers; explain that saving rechecks readiness. Failed checks or completion clear prior checklist authority. Pending guards, dirty-note discard confirmation and deferred source refresh preserve the reviewed state without carrying another project's checklist. Structural loading mirrors the summary, five-category table, optional context and cash/closing owners with inert hidden placeholders and truthful busy copy. Mobile and native-pinned presentation retain their one-column composition. Existing writer, database, authorization and finance calculations remain authoritative.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -640,8 +875,12 @@
     "entryPermission": null,
     "desktopEntryMinWidth": 1024,
     "splitDetailMinWidth": 1280,
+    "reviewDialogReturnFocus": "CompactFormDialog/ConfirmationDialog optional stable logical returnFocusRef forwarded to existing DialogFrame; auto-focused reasons retain DOM/value/focus through resize, cancellation returns to visible labeled review context without child-as-opener capture",
+    "sheetReturnFocus": "optional logical returnFocusRef through existing FormSheet/WorkflowFormSheet owner; restore after exit or conditional unmount with current top-layer, visible-parent and closing-ancestor eligibility, preserving deliberate outside focus; reconciliation matching returns to visible Back or labeled context pane across resize",
+    "listDetailFocus": "public useListDetailFocus on existing pane wrappers; repair only owned focus hidden/removed by responsive list/detail changes; Back restores invoking row with visible fallback; preventScroll and preserve toolbar/search/outside/overlay ownership; Pengeluaran/Persetujuan/Rekonsiliasi consumers",
+    "financeCollectionContinuity": "namespaced canonical URL filters/sort/page/pageSize/peer view preserve unrelated query/hash; context belongs to the current visible page; default unselected loading is full width, known-context refresh may reserve detail; confirmation MoneyValue stays exact with supplied cents",
     "sidebarWidth": 208,
-    "sharedUI": "public DesktopTable/control adapters, MoneyValue, AppIcon, statuses, tabs, forms and outer overlays",
+    "sharedUI": "public DesktopTable/control adapters and controlled DesktopTablePagination, MoneyValue, AppIcon, statuses, tabs, forms and outer overlays",
     "styleScope": "[data-atria-admin]",
     "mobileShell": "max-w-md unchanged",
     "motion": "existing Framer Motion presets; no Hero CSS animations",
@@ -649,7 +888,10 @@
     "controlDensity": "HeroUI compact 32px / standard 40px for fine pointers; 48px mobile/coarse-pointer targets",
     "topbarControls": "equal 40px button, notification and profile geometry; 48px coarse pointers",
     "selection": "HeroUI Select with Autocomplete filtering and SearchField for desktop grouped, search and explicit create/custom-value choices; inline FilterSelect adapter with trailing metadata and whole-popup FAB spring",
+    "rowSelection": "contextual desktop tables start with no selected row or detail and never fall back to the first row; use public DesktopTable controlled onRowSelectionChange(row | null) native single toggle for pointer/Enter/Space; clearing closes detail and releases its column; retain explicit selection through resize plus narrow Back, source freshness, pending and dirty-discard guards; row commands and multirow review inclusion retain their established meaning",
+    "tabDataRetention": "shared useRetainedQueryPages holds one exact-query result per finite slot in the stable page owner; visited queries render immediately without reread/skeleton; first/uncached queries load honestly; explicit refresh, writes, source/actor generation and permission invalidation govern freshness; denial purges retained data; paused/hidden/open workflows do not fetch; late results ignored; retain read results above conditional panels without retaining discarded form intent; existing client snapshots need no extra cache; no persistent/global storage, prefetch or clock TTL",
     "feedback": "scale up while pressed with buttonTapActiveScale and transitionSpringSnappy, semantic raised depth; disabled/pending and reduced motion do not scale",
+    "switchMotion": "shared snappy spring on local horizontal track coordinates, clamped to measured logical endpoints; no parent/y layout projection; actual DOM ref attachment, fractional sizes, RTL, initial/reduced endpoint placement; HeroUI checked/keyboard/focus/disabled semantics",
     "tabs": "native HeroUI keyboard semantics with one Framer Motion shared sliding pill; intrinsic-width track",
     "tableSurface": "native HeroUI primary: gray frame/header, white body, native 20px radius, padding, typography weight, sort and interaction states; content height beside details",
     "actionColors": "normal desktop action/icon buttons are ink on bright white owning surfaces, white on gray owning surfaces; native hovered/selected table cells follow their gray state; destructive, input and option semantics retained",
@@ -687,6 +929,224 @@
       "review": "existing entry/review/commit preserved",
       "sourceTruth": "unknown, unread and failed context are distinct from valid zero; exact cents retained",
       "mobile": "single column, draft/focus/overlay owner stable across resize"
+    },
+    "settings": {
+      "mode": "operate",
+      "scope": "four canonical /settings tabs: Finansial, Katalog, Organisasi and Kesiapan; existing permission gates and mobile/native hierarchy retained",
+      "shell": "available responsive workspace width at >=1024px; max-w-md for mobile/native; content-sized peer tracks and independent 16px section gaps",
+      "financial": "one cap/default comparison band, category allocation table, formula/simulation applicability context and thresholds; existing dirty drafts and separate confirmations retained",
+      "catalog": "complete Material and Item & Price Library references with inline search/filters and native HeroUI tables; Lokasi limited to supplied reference facts",
+      "organization": "DTO-backed Tim/Vendor/Peran tables; password requirements, readable scope/user/permission counts and Owner/system-role locks; same row editors",
+      "tables": "owners filter and sort complete authorized results before controlled 10/25/50 pagination; public DesktopTablePagination owns footer presentation and truthful totals only",
+      "readiness": "required and optional foundations in independent grouped panels; compact setup notice; actual status/links and existing initial-stock decisions",
+      "libraryEditor": "one OperationalFormSheet across widths; established wide main/aside desktop and mobile bottom-sheet composition retain draft/focus/nested owners",
+      "loading": "tab-aware structural composition; inert/hidden placeholders, truthful busy/error/empty/restricted states and role-load recovery",
+      "identity": "existing Manrope, cool semantic surfaces, ink/terracotta and capsule motion; legacy off-ramp text normalized to documented roles without new tokens",
+      "domain": "presentation only; canonical intent/state, permissions, scope, source reads, financial/material calculations and explicit mutation owners preserved",
+      "urlState": "independent Catalog/Organization entity/search/filter/sort/direction/page/pageSize prefixes preserve main/nested returns and unrelated query/hash; filter/sort/pageSize reset page; sanitize malformed geometry; retain existing financial dirty/discard ownership without hidden editors",
+      "sources": "per-source ready/restricted/unavailable handles ActionResponse failures and rejected reads; retry and block dependent setup authority; no false empty history, no-stock declaration or missing threshold success",
+      "readScopes": "instance tenant predicates on Settings overview/default/reference, administration, readiness and opening history/items/eligibility; global role definitions retain their contract",
+      "capabilities": "vendor creation uses manage:vendors independently from material editing; initial-stock creation/decision actions follow actual existing writer rights; ordinary vendor selection and permitted read-only history remain",
+      "refresh": "administration accepts fresh rows/capabilities when idle; defers latest incoming source through user/vendor/role editors and pending actions, applying it after close; no retained discarded intent",
+      "roleCounts": "displayed holders use instance tenantMember boundary matching Team; global role definitions and writer/Owner protections remain unchanged"
+    },
+    "expenses": {
+      "mode": "operate",
+      "scope": "standalone canonical /expenses at >=1024px; field claims, vendor bills and planned payments; existing mobile/native and embedded project composition retained",
+      "layout": "compact header/peer tabs, source-backed comparison band, status views and inline toolbar; list/detail progression at 1024–1279px and native table + independent 288px detail from 1280px only when the active collection supplies row context",
+      "sharedUI": "public DesktopTable and controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, MoneyValue, SearchInput/FilterSelect, status/facts/disclosure and shared outer overlays",
+      "fieldClaims": "supplied expense/project/requester identity, category, createdAt, nominal, status, budget-overrun signal and evidence; existing guarded verification/disbursement callbacks",
+      "vendorBills": "existing payment-summary helper; bill/payment peer views, supplied due/payment dates, notes and payment records; scheduling/approval/payment distinctions retained",
+      "tables": "filter and sort the complete authorized collection before 10/25/50 pagination; truthful filtered total, page reset on filter/sort/page-size changes and clamping after source shrink",
+      "money": "compact primary and shared exact value/detail; fractionDigits=2 for supplied noninteger monetary values, default integer presentation retained",
+      "readScope": "existing loader: ASSIGNED field costs are actor-owned requests; vendor records follow PM assignments; bank identity exposure follows view:bank_account; unavailable field domain is not a healthy zero portfolio",
+      "permissions": "domain-gated tabs and create/verify/pay controls; field verification requires update:cost and verify:cost; server authorization remains authoritative",
+      "drafts": "compact plain disclosure, supplied identity/item count/nominal, continue/delete, structural busy and truthful error/retry; successful empty returns no filler; one existing discard confirmation",
+      "state": "selection/filter/pagination above responsive presenters; focused/open-overlay control presentation frozen until interaction ends; existing manual-entry, OCR, scheduling, disbursement, recovery, evidence and activity-detail owners retained",
+      "navigation": "existing view/filter/new-expense/expense-draft/expense-entry=receipt/new-vendor-bill intent retained; receipt hint never silently replaces a draft",
+      "loading": "claims/bills/payments structural native-table variants with ten-row scaffold; unique collection IDs, inert/hidden visual placeholders and a truthful status; shared route failure/retry distinct from empty or valid zero",
+      "domain": "presentation adaptation only; no new backend write path, migration, formula, bulk approval/payment, development database mutation or real-time claim",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/eatures-expenses-components-lists-expense-list-tsx.md",
+      "emptyLayout": "valid empty and filtered-zero claims, bills and payments use full-width tables; no empty reserved aside or fabricated context",
+      "rowSurface": "initially no selected row or detail; native pointer/Enter/Space selection toggles row/null through public DesktopTable onRowSelectionChange, with no first-row fallback; clearing detail restores full width; explicit selection survives resize and existing pending/dirty guards remain authoritative",
+      "detailActions": "container-aware two columns at 512px owning panel width; narrow aside stacks, guarded single action fills row"
+    },
+    "approvals": {
+      "mode": "operate",
+      "scope": "canonical /approvals at >=1024px; complete authorized queue; existing mobile/native composition retained",
+      "layout": "compact header/manual refresh, optional Change Order disclosure, queue count/value/critical/waiting band, peer views and inline search/project/priority filters; six-column native HeroUI table",
+      "detail": "list/detail first-click progression with Back clearing explicit selection at 1024–1279px; independent 288px contextual aside from1280px only with actual row context; empty and filtered-zero queues use full width",
+      "rowSurface": "initially no selected row or detail; public DesktopTable controlled onRowSelectionChange uses native single toggle selection with row/null, so pointer/Enter/Space can select or clear; no first-row fallback; unselected table uses full width; pending decisions block selection changes and explicit selection survives resize",
+      "sharedUI": "public DesktopTable fixed layout/widthPercent, useDesktopTable, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, statuses, FactRow, FormDisclosure and existing outer overlays",
+      "tables": "initial source-ranked priority order; owners filter/sort complete authorized collection before 10/25/50 pagination, truthful filtered totals, deterministic ties, reset after filter/sort/page-size changes and clamp after source shrink; existing Expense consumers use the same public controller",
+      "facts": "supplied request/project/type/requester/category/scope/date/due-date/priority/reason/notes; existing evidence and physical opening-stock rows; exact nominal before guarded decisions",
+      "money": "compact queue values and fullDynamic detail/confirmation values through MoneyValue; supplied noninteger amounts retain two decimal places",
+      "impact": "canonical helper preserves consumesBudgetActual=false for inventory purchase; opening stock describes stock movement/audit without cash outflow, vendor debt or project actual; approval is separate from disbursement",
+      "permissions": "view:approval_queue plus GLOBAL scope for entry; finance rows require decide:all_approvals; actual finance decisions require approve:cost and opening-stock decisions approve:opening_inventory; existing self-approval/override and server gates remain authoritative",
+      "decisions": "existing owner retains explicit reason labels, rejection/opening-stock/emergency reasons, confirmations, pending/repeat-submit guards, evidence inspection and mutation callbacks; review-only guidance remains explicit",
+      "state": "stable ApprovalList and route children; defer incoming props while decision/pending; acknowledged IDs suppress lagging-refresh resurrection; queue/selection/filter/table state and single focus/dismissal/portal owner survive resize",
+      "changeOrders": "compact plain FormDisclosure with supplied project/reason/revisions/author/value delta and existing Buka RAB project navigation; mobile composition retained",
+      "loading": "structural header/four-fact band/peer views/inline controls/six-column table/ten-row first page/pagination/aside; inert and hidden placeholders under truthful busy status; restricted/error/valid-empty/filtered-zero remain distinct",
+      "domain": "presentation extension only; no new write path, backend query, migration, finance formula, bulk decision, automatic payment or real-time claim",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-approvals.md"
+    },
+    "reconciliation": {
+      "mode": "operate",
+      "scope": "canonical /reconciliation at >=1024px; complete tenant-scoped API source; existing mobile/native composition and mobile preview caps retained",
+      "layout": "compact header/manual/import actions, divided action-required/unmatched/exception/matched count band, Mutasi bank / Catatan Atria / Riwayat peer views, manual source refresh and inline search/account/direction/applicable-status filters; six-column native HeroUI table",
+      "detail": "list/detail first-click progression with Back clearing explicit selection at 1024–1279px; independent 18rem contextual aside from 1280px only with actual row context; empty and filtered-zero results use full width",
+      "rowSurface": "initially no selected row or detail; native pointer/Enter/Space selection toggles row/null through public DesktopTable onRowSelectionChange, with no first-row fallback; clearing detail restores full width; explicit selection survives resize and existing pending/dirty guards remain authoritative",
+      "sharedUI": "public DesktopTable fixed layout/widthPercent, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, statuses, FactRow, PageState and existing shared outer sheets",
+      "tables": "API filters/sorts the complete tenant-scoped collection before 10/25/50 pagination; source counts separate from truthful filtered totals, deterministic ID ties, page reset on control changes and clamp after source shrink; full source stays server-only",
+      "urlState": "each view retains search/account/direction/status/sort/sort-direction/page/page-size parameters; updates preserve unrelated query parameters and hash",
+      "matchContext": "separate exact read supplies candidate context beyond the visible page; candidates compare account, direction and amount in cents before existing explicit review/confirmation",
+      "facts": "supplied cash/bank identity, account, direction, dates, references, source/project evidence, exception reason and candidate context; confirmed history remains locked",
+      "historyDates": "Dikonfirmasi displays and sorts reconciledAt; detail retains Jakarta-local confirmation time and separate bank transaction date",
+      "money": "compact row amounts and fullDynamic detail/confirmation amounts through MoneyValue; exact views retain two decimal places for supplied noninteger amounts",
+      "permissions": "active actor, reconcile:ledger and GLOBAL scope for entry and new reads; tenant fences apply to source and exact context; existing server mutation gates remain authoritative",
+      "state": "stable ReconciliationWorkspace retains manual/import/exception/matching drafts, pending work and outer overlay ownership; desktop presenter remains mounted through resize, ignores stale reads and suspends refresh while an overlay is open",
+      "loading": "initial structural header/actions/four-count band/peer views/inline controls/six-column table/five-placeholder rows/pagination/optional context; after first success keep last-read summary, tabs and filters mounted while only the requested collection shows its table skeleton or local error/retry; preserve shared indicator motion and focus, reject late responses and hide old detail actions until the active collection is fresh; inert hidden placeholders and truthful busy status; error, valid-empty and filtered-zero remain distinct",
+      "pageRetention": "one exact-query response per view, bounded to three in the mounted owner; visited successful queries return with no duplicate read or skeleton; first/uncached queries load honestly; retry/reload and parent/mutation owner token invalidate all views; suspend while inactive/open/pending; reject late responses; permission denial purges all pages/metadata; displayed-page timestamp and explicit errors remain honest; candidate context must match the current row source reference and is read fresh on re-entry; no prefetch, persistent cache or timer TTL",
+      "domain": "new read contracts and typed API facades only; existing writers and matching semantics retained; no write path, migration, finance formula, bulk matching, automatic balance movement or real-time claim",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-reconciliation.md"
+    },
+    "ghostAction": "public Button ghost maps to HeroUI ghost, transparent semantic background, neutral foreground and no resting lift; exempt from filled contextual auto-tone; retains shared capsule sizing, focus/ref contract, pending/disabled guards and motion",
+    "materials": {
+      "mode": "operate",
+      "scope": "canonical /materials at >=1024px; complete authorized inventory/needs comparison and complete bounded activity reads; existing mobile/native composition and mobile preview caps retained",
+      "layout": "compact receiving/project-stock/warehouse actions, divided stock-value/available-value/location-risk/uncovered-RAP band, Ringkasan / Inventori / Kebutuhan / Aktivitas peer views; overview has five-material attention preview, pending decisions and three exact recent events",
+      "detail": "first-click list/detail progression with Back clearing explicit selection at 1024–1279px; independent 18rem context from 1280px only with an actual row; empty and filtered-zero results use full width",
+      "rowSurface": "initially no selected row or detail; native pointer/Enter/Space selection toggles row/null through public DesktopTable onRowSelectionChange, with no first-row fallback; clearing detail restores full width; explicit selection survives resize and existing pending/dirty guards remain authoritative",
+      "sharedUI": "public DesktopTable fixed layout/widthPercent, desktopTablePage, controlled DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, statuses, FactRow, PageState, Button ghost and existing shared outer sheets",
+      "inventory": "filter locations before canonical getGroupedMaterialStockSummary; physical/reserved/available/minimum/value facts describe selected locations; multi-location worst-status qualifiers name N dari M lokasi beside aggregate quantity",
+      "needs": "project/RAP identity and actual source units accompany each quantity; full-row RAP cost estimate is separate from debt/payment; available stock is not automatically allocated; no unlike-unit quantity sums",
+      "localTables": "complete authorized inventory/needs source filtered/sorted through public desktopTablePage before 10/25/50 pagination; truthful filtered totals, deterministic ties, reset on controls and clamp after source shrink",
+      "activity": "Gerakan stok / Penerimaan / Transfer / Stock opname use bounded API reads with server-side search, applicable project/location/period/type-or-status filters, counts, sorting and 10/25/50 pagination; complete scoped activitySummary supplies pending totals",
+      "urlState": "inventory, needs and each activity kind retain their own search/filter/sort/direction/page/pageSize parameters; unrelated query parameters and hash survive updates",
+      "eventDetail": "three overview recent events are keyboard-focusable public ghost Buttons opening exact STOCK_MOVEMENT IDs through existing global ActivityDetail owner; table activity details retain existing receipt, transfer, movement and count owners",
+      "sourceHonesty": "RAP ready/restricted/unavailable are explicit; unknown needs show no healthy-zero claim; valid empty, fulfilled, filtered-zero, busy and retry remain distinct",
+      "money": "shared compact and fullDynamic MoneyValue retain two decimals for supplied noninteger amounts; quantities retain their source item unit",
+      "permissions": "existing inventory/domain rights and tenant/assigned-project fences govern initial, paged and by-ID material/activity reads; action capability and server mutation gates remain authoritative",
+      "state": "stable MaterialsControlCenter, mounted presenters and existing forms preserve draft/selection/pending/focus/dismissal/portal owners through resize; source refresh freezes while overlay or pending workflow is active; stale activity responses are ignored",
+      "loading": "active-tab structural header/actions/four-fact band/peer views/inline controls/native table/pagination/optional detail; five-row overview preview or ten-row collection scaffold; inert and hidden placeholders under truthful busy status",
+      "domain": "new read contracts and typed API facades plus scoped-read hardening; no writer, money movement, material projection formula, migration, automatic stock action or real-time claim",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-materials.md"
+    },
+    "projects": {
+      "mode": "operate",
+      "scope": "canonical /projects portfolio and /projects/[id]?tab=overview Ringkasan/Budget at >=1024px; other detail tabs/editors and mobile/native composition retained",
+      "layout": "compact title/create, one divided active-project value/budget/consumed/remaining band, peer views, inline search/client/PM/status/health controls and six-column native HeroUI table",
+      "tables": "complete authorized collection filtered/sorted through desktopTablePage before controlled 10/25/50 pagination; truthful filtered totals, deterministic ties, control-change reset and source-shrink clamp",
+      "urlState": "portfolio-prefixed controls/sort/direction/page/pageSize preserve unrelated query parameters and hash",
+      "detail": "first-click list/detail and Back at 1024–1279px; independent 18rem context from 1280px only with actual row context; filtered-zero/empty use full width",
+      "rowSurface": "initially no selected row or detail; native pointer/Enter/Space selection toggles row/null through public DesktopTable onRowSelectionChange, with no first-row fallback; clearing detail restores full width; explicit selection survives resize and existing pending/dirty guards remain authoritative",
+      "sourceHonesty": "missing budget differs from valid zero; paid/pending/margin appear only with canonical supplied metadata; missing/restricted/unavailable overview sources remain neutral",
+      "overview": "compact project identity and navigation, four financial facts, paid/pending/usage/margin and five-category table; exact category context before existing guarded actions",
+      "health": "header and budget verdict share canonical effective health including stored project risk floor; reviewed discrepancy resolved to Awas in both places",
+      "money": "shared compact/fullDynamic MoneyValue retains supplied cents",
+      "sharedUI": "public DesktopTable, desktopTablePage, DesktopTablePagination, SegmentedTabs, SearchInput/FilterSelect, GroupedSurface.desktopPanel, MoneyValue, statuses, FactRow, PageState and existing FormSheet owners",
+      "state": "stable workflow owners defer incoming source updates while open/pending and retain drafts, selection, focus, dismissal and portal ownership through resize",
+      "loading": "structural portfolio/overview header, four-fact band, controls/navigation, native table and optional context; inert/hidden placeholders under truthful busy status",
+      "domain": "presentation extension; canonical source facts and existing permissions/scope/writers retained; no finance formula, bulk workflow or automatic mutation",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-projects.md"
+    },
+    "projectPlanning": {
+      "mode": "operate",
+      "scope": "canonical project-detail RAP/RAB views at >=1024px; existing mobile and native-pinned composition retained",
+      "layout": "RAP internal execution cost and Material/Tukang/Subcon stage or review context; RAB client selling value, actual approved baseline, revision and document visibility; compact divided bands, inline controls and native HeroUI tables",
+      "tables": "complete authorized collections filtered/sorted through desktopTablePage before 10/25/50 pagination; truthful totals, deterministic ties, control-change resets and source-shrink clamping",
+      "urlState": "separate prefixed controls/sort/direction/page/pageSize per collection preserve unrelated parameters and hash",
+      "detail": "first-click list/detail and Back at 1024–1279px; independently sized 18rem context from 1280px only with actual row context; empty/filtered-zero use full width",
+      "rowSurface": "initially no selected row or detail; native pointer/Enter/Space selection toggles row/null through public DesktopTable onRowSelectionChange, with no first-row fallback; clearing detail restores full width; explicit selection survives resize and existing pending/dirty guards remain authoritative",
+      "rap": "count purchase-needed material records; retain existing projected source quantities and units without unlike-unit sums; existing setup stages, package scope and final review remain explicit",
+      "rab": "default stored document order; table sorting does not change export; bundle-member visibility follows the item and its parent; client totals count the bundle price once; stale sources, revision baseline, history and Change Order context stay inspectable",
+      "money": "shared compact/fullDynamic MoneyValue retains supplied cents; no invented margin or baseline facts",
+      "sharedUI": "public DesktopTable, desktopTablePage, DesktopTablePagination, SegmentedTabs, GroupedSurface.desktopPanel, SearchInput/FilterSelect, MoneyValue, statuses, FactRow and existing shared outer overlays/export owner",
+      "state": "stable project-tabs and rap-rab-manager owners freeze incoming props while open/pending; existing form/edit/export/source/bundle/Change Order/revision/override ownership, focus, selection and drafts survive resize; source identities reconcile after closing against the accepted revision",
+      "permissions": "existing RAP create/update, package update-budget and lock capabilities remain distinct; RAB create/update/approve remain independent; nested reads retain tenant, assigned-project and view-RAP/RAB fences while canonical budget facts remain available to permitted readers",
+      "loading": "structural active RAP/RAB route and local planning header, navigation, divided band, controls, native table, pagination and optional context; inert/hidden placeholders under truthful busy status",
+      "domain": "presentation extension and scoped-read hardening; no changed writers, calculations, schema, automatic mutation or client publication",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-projects.md",
+      "editing": {
+        "surface": "Canonical RAP workspace is the existing page-level editing surface; existing shared item/package sheets remain its edit owners, with no parallel route or batch-save contract.",
+        "draftTable": "During setup compare quantity with its own unit, supplied unit price and supplied estimated total. Locked execution retains its actual-cost column. Sort the complete source before pagination; unsupported view-sort keys fall back visibly to item name without losing URL state.",
+        "handoff": "Selected context places direct Edit near identity, using the existing material/package form opener. Respect independent update:rap/update:budget rights, package DRAFT status, locked baseline and pending guards. Context retains main quantity, buffer and exact source unit price.",
+        "navigation": "Desktop rap-context (RAP ID plus revision), rap-stage and rap-view retain stage/collection choices across peer return and reload. Unrelated parameters/hash remain. External stage reads honor unlock state; successful local stage advancement survives the wait for refreshed props. Mobile/native retain local intent through resize.",
+        "feedback": "Existing OperationalFormSheet error slot presents persistent source/action failures inside the active editor. One event-owned toast accompanies the result. Pending input/selection and duplicate submits cannot change or resubmit the in-flight intent; failure retains draft for correction and explicit retry.",
+        "acceptance": "docs/plans/2026-10-16-rap-editor-desktop-audit.md"
+      },
+      "rabEditing": {
+        "surface": "Canonical RAB workspace and incumbent line/manual/source/bundle/revision editors; no new route, batch writer, price formula or client publication.",
+        "context": "Draft Edit is beside selected identity before long descriptions. Bundle-member commands retain pending guards and inherited parent visibility. Read-only bundle paths require the same update permission as other editable RAB consumers.",
+        "sourceFacts": "Read-only detail uses supplied stored subtotal, not a fresh multiplication. Explicit fractional money in shared MoneyValue and ValuePreviewStrip matches source cents; unchanged consumers retain rounding defaults. Editable preview math, stored order and export grouping/totals stay authoritative.",
+        "visibility": "Explain effective hidden-parent state separately from the item own visibility choice. Preserve checkbox value and payload; hidden parent membership does not become visible client content.",
+        "feedback": "One result toast, persistent inline error in the active owner, pending action/input/portaled-selection guards and feedback reset at new editor intent. Failure keeps draft; explicit retry uses existing actions. Source/manual discard resets through incumbent source defaults; failed bundle removal retains its parent until successful result.",
+        "focus": "Optional shared fallbackFocusRef follows explicit returnFocusRef then a visible previous invoker. RAB supplies a stable labeled section across responsive presenters; no feature duplicates visibility checks, trapping or dismissal.",
+        "changeOrder": "The existing workflow records client confirmation then waits for separate Owner/Finance approval. Copy must not claim an immediate approved baseline change.",
+        "acceptance": "docs/plans/2026-10-17-rab-editor-desktop-audit.md"
+      }
+    },
+    "projectOperations": {
+      "mode": "operate",
+      "scope": "canonical project-detail Stok/Pengeluaran at >=1024px; incumbent mobile/native retained with unit-safe stock record-count correction",
+      "sequence": "source-backed record counts or money/status → peer views and inline controls → native table → independent record detail and existing explicit action",
+      "stock": "material record counts; row-level units; coverage, warehouse availability and movement remain distinct; inventory-only projection has no internal RAP cost",
+      "sources": "ready, missing, restricted and unavailable stay distinct; unknown is not zero or covered stock; expense collection failures stay local",
+      "tables": "complete authorized filtering and sorting before controlled 10/25/50 pagination; truthful totals, deterministic ties, reset and clamping",
+      "urlState": "stock-view; stock-materials-*; stock-activity-*; project-${id}-expenses-view/filter; project-${id}-expenses-claims-*; project-${id}-expenses-vendor-* with bills-* and payments-* table keys; unrelated query parameters and hash preserved",
+      "detail": "initially no selected row or detail; native single toggle row/null closes or opens context without a first-row fallback; first-click detail and Back at 1024–1279px; independent 18rem context from 1280px; native highlight follows visible context; empty/filtered-zero collections use full width; explicit selection and pending/dirty guards retained",
+      "expenses": "existing field claims, vendor bills and payments scoped to current project; redundant project column/filter omitted; canonical money/status, scheduling, approval and cash semantics preserved",
+      "sharedUI": "public DesktopTable, desktopTablePage, DesktopTablePagination, SegmentedTabs, SearchInput/FilterSelect, GroupedSurface.desktopPanel, MoneyValue, FactRow, statuses and existing workflows",
+      "state": "stable project and workflow owners freeze incoming data while open/pending; preserve drafts, selection, focus and shared overlay ownership through resize",
+      "forms": "project-route context locked; foreign recovered drafts preserved with guidance; mismatched autosave, manual save and save-as-copy guarded",
+      "loading": "active stock/material/activity or claims/bills/payments structural skeleton; inert hidden placeholders and truthful busy copy",
+      "domain": "existing project scope, domain permissions, calculations and explicit mutation workflows; no new token or primitive",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-projects.md"
+    },
+    "projectPayments": {
+      "mode": "operate",
+      "scope": "canonical project-detail Pembayaran at >=1024px; existing mobile/native composition with exact-money and action-fit corrections",
+      "sequence": "active billing, actual cash, outstanding and unbilled contract band → Invoice/Penerimaan peers and inline filters → native tables → independent exact context and existing action",
+      "money": "shared exact-cents helpers; canceled invoices excluded from active billing/debt while historical receipts remain received cash; Jakarta calendar overdue attention preserves paid/canceled status",
+      "tables": "complete authorized filtering and sorting before controlled 10/25/50 pagination; truthful totals, deterministic ties, reset and clamping",
+      "urlState": "payments-view; project-invoices-* and project-receipts-* independent search/status/date/sort/direction/page/pageSize namespaces; unrelated parameters and hash preserved",
+      "detail": "initially no selected row or detail; native single toggle row/null closes or opens context without a first-row fallback; first-click detail and Back at 1024–1279px; independent 18rem context from 1280px; native highlight follows visible context; empty/filtered-zero collections use full width; explicit selection and pending/dirty guards retained",
+      "sources": "ProjectOperationSource ready/restricted/unavailable remain distinct; supplied receipt DTO facts only, without inferred bank/reconciliation state; readable stage/status boundary",
+      "sharedUI": "public DesktopTable, desktopTablePage, DesktopTablePagination, SegmentedTabs, SearchInput/FilterSelect, GroupedSurface.desktopPanel, MoneyValue, FactRow, statuses and existing invoice/receipt/activity owners",
+      "state": "stable owners freeze incoming sources through create/receipt/review open or pending, including new-invoice; preserve drafts, selection, focus and dismissal through resize",
+      "recovery": "pathname-keyed global invoice owner and project-keyed recovery isolate projects; late prefill ignored and prefill failures visible",
+      "loading": "active Invoice/Penerimaan structural skeleton with inert hidden placeholders and truthful busy copy",
+      "domain": "existing project scope, permissions and explicit finance writers; no new token or primitive",
+      "surfaceBrief": "apps/web/.impeccable/surfaces/route-projects.md"
+    },
+    "projectMaterialContinuity": {
+      "focus": "public useListDetailFocus on portfolio, Budget, RAP/RAB, project stock, inventory/needs/activity; mounted lists, keyboard Back entry and exact-row/collection restoration; resume recognizes existing focused rows without stealing filter/overlay focus",
+      "budget": "category sort/direction in URL; revision dialogs use stable labeled Budget return target; preserve dirty/source-freeze owners and resize",
+      "loading": "initial Budget/RAP/RAB/project stock use full-width table skeleton; context scaffold only when known selected detail is requested",
+      "materialReads": "canonical DB UUID shape accepts legacy IDs; invalid filters fail closed with recovery; scoped shortage metadata includes project identity/unit independently of active write options; unavailable/retry distinct from permission denial",
+      "capabilities": "location creation follows manage:material_settings across warehouse/receipt/transfer entry points; existing writers remain authoritative",
+      "countDraft": "remote editable count drafts return through existing sheet returnFocusRef to persistent labeled Activity collection after invoker replacement and resize/discard; normal toolbar counts return to the exact stable Gudang trigger",
+      "acceptance": "docs/plans/2026-10-16-desktop-project-material-consistency-audit.md",
+      "mobileRap": "existing mobile composition keeps shared MoneyValue compactWithFull inverse primary on one line plus exact value; purchase summary counts material records with the same desktop helper, never sums unlike units"
+    },
+    "profileFocus": "persistent labeled identity/security/access contexts use existing sheet returnFocusRef after invoker replacement through resize; OperationalFormSheet forwards optional logical return target without another focus/dismissal owner; dirty cancellation/explicit save and ephemeral password close preserved",
+    "profilePermissionSummary": "display summaries omit compatibility use:desktop_admin and resulting empty groups only; all domain rights and stored catalog/grants unchanged",
+    "profileLoading": "desktop scaffold mirrors identity/edit/session, security, browser notifications and native module table; inert/aria-hidden placeholders; existing mobile hierarchy retained",
+    "dialogFooterColumns": "equal-column confirmation/recovery/success Buttons explicitly use fullWidth to fill HeroUI intrinsic-width controls; shared auto height/wrapping keeps paired actions aligned; asymmetric 1fr/auto footers fill only the flexible action; deliberate adaptive/intrinsic layouts and all action/pending/focus ownership remain unchanged",
+    "modalControlGeometry": {
+      "dateAndQuantity": "Shared DatePickerField and QuantityStepper: 40px standalone / 32px grouped for fine-pointer desktop, matching quantity side controls; coarse48 targets. Preserve mobile/native geometry and control DOM, association, values, focus and overlay owners through resize.",
+      "filePickers": "Public Button triggers the incumbent hidden native file input. Bound and truncate long filenames while preserving the complete accessible name; reserve icon space and disable trigger plus input while pending. Keep accept, parser, validation and same-file retry contracts.",
+      "acceptance": "docs/plans/2026-10-16-desktop-modal-spacing-audit.md"
+    },
+    "sheetReturnFocusFallback": "Shared sheets/confirmation dialogs may receive fallbackFocusRef. Restore explicit logical target, then valid original invoker, then fallback; never override a reader move or another active overlay. Default consumers retain their established behavior.",
+    "fileReview": {
+      "owner": "Existing WorkflowFormSheet/FormSheet, DesktopTable, DesktopTablePagination, SegmentedTabs, MoneyValue and contextual errors; no feature overlay owner.",
+      "integrity": "Early reading phase and latest-file epochs invalidate stale file/decode/preview work on replacement/reset/close/identity; reviewed payload and filename remain paired; pending commit prevents conflicting intent and repeat action.",
+      "preview": "Complete valid/error collections use controlled10/25/50 pages with original row references, units/prices/exact cents and truthful totals; invalid canonical CSV stays local; generic statement formats retain their existing recognized fallback.",
+      "statement": "Chosen destination account never changes from detected bank metadata; retain uploaded source URL when supplied; explicit import only.",
+      "export": "Accepted SVG/WebP logos normalize to transparent PNG for stored config and XLSX; original company identity/client-safe projection/order preserved. Source checked before generation and release; canvas keyboard End and consumed wheel stay within visible stage.",
+      "media": "MediaPreviewDialog purpose=document gives evidence a desktop viewport with fit/enlarge, labeled native scrolling and inline retry; compact avatar/mobile defaults and DialogFrame focus/dismissal ownership retained.",
+      "acceptance": "docs/plans/2026-10-17-import-export-desktop-audit.md"
     }
   },
   "standaloneAdmin": {

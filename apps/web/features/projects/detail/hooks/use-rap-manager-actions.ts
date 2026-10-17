@@ -83,6 +83,7 @@ export function useRapManagerActions({
 
   function handleSubmitCategoryPlanItem(event: FormEvent): void {
     event.preventDefault();
+    if (isPending) return;
     resetMessages();
 
     const payload = buildCategoryPlanPayload({ projectId, categoryPlanForm });
@@ -150,6 +151,7 @@ export function useRapManagerActions({
 
   function handleSubmitRapItem(event: FormEvent): void {
     event.preventDefault();
+    if (isPending) return;
     resetMessages();
     if (!rap) {
       showError("Buat RAP draft terlebih dahulu.");
@@ -315,6 +317,7 @@ export function useRapManagerActions({
     isPending,
     error,
     success,
+    resetMessages,
     handleCreateRap,
     handleSubmitCategoryPlanItem,
     handleMarkCategoryPlanActive,

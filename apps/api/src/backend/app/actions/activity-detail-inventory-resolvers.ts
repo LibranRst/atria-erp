@@ -1,5 +1,6 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@backend/db";
+import { INSTANCE_TENANT_ID } from "@backend/db/schema";
 import {
   dateValue,
   moneyValue,
@@ -22,7 +23,7 @@ export async function resolveStockMovement(
   roleName: string,
 ): Promise<ActivityDetailView | null> {
   const row = await db.query.stockMovement.findFirst({
-    where: (table) => eq(table.id, id),
+    where: (table) => and(eq(table.id, id), eq(table.tenantId, INSTANCE_TENANT_ID)),
     with: {
       material: true,
       location: true,
@@ -102,7 +103,7 @@ export async function resolveGoodsReceipt(
   roleName: string,
 ): Promise<ActivityDetailView | null> {
   const row = await db.query.goodsReceipt.findFirst({
-    where: (table) => eq(table.id, id),
+    where: (table) => and(eq(table.id, id), eq(table.tenantId, INSTANCE_TENANT_ID)),
     with: {
       project: true,
       inventoryLocation: true,
@@ -119,6 +120,7 @@ export async function resolveGoodsReceipt(
       ? await db.query.materialInventory.findMany({
           where: (table, { and }) =>
             and(
+              eq(table.tenantId, INSTANCE_TENANT_ID),
               eq(table.locationId, row.inventoryLocationId),
               inArray(
                 table.materialId,
@@ -218,7 +220,7 @@ export async function resolveGoodsReceipt(
 
 export async function resolveStockTransfer(id: string): Promise<ActivityDetailView | null> {
   const row = await db.query.stockTransfer.findFirst({
-    where: (table) => eq(table.id, id),
+    where: (table) => and(eq(table.id, id), eq(table.tenantId, INSTANCE_TENANT_ID)),
     with: {
       fromLocation: true,
       toLocation: true,
@@ -265,7 +267,7 @@ export async function resolveStockTransfer(id: string): Promise<ActivityDetailVi
 
 export async function resolveStockCount(id: string): Promise<ActivityDetailView | null> {
   const row = await db.query.stockCount.findFirst({
-    where: (table) => eq(table.id, id),
+    where: (table) => and(eq(table.id, id), eq(table.tenantId, INSTANCE_TENANT_ID)),
     with: {
       location: true,
       createdBy: true,

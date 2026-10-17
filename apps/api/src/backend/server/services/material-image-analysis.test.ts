@@ -53,6 +53,7 @@ test("long image extraction checkpoints bounded regions and maps all 20 rows wit
   const heights: number[] = [];
   const provider = spyOn(documentModel.models, "generateContent").mockImplementation(
     async (input: DocumentContentRequest): Promise<DocumentContentResponse> => {
+      expect(input.config?.workloadProfile).toBe("bounded");
       const pictures = input.contents.filter((part) => typeof part !== "string");
       const picture = pictures.at(-1);
       if (!picture) throw new Error("Image rows must not need a second model mapping");

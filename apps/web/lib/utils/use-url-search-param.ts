@@ -58,7 +58,7 @@ function getUrlSnapshot(): string {
  */
 export function useUrlSearchParam(key: string): string | null {
   const nextSearchParams = useSearchParams();
-  const serverSearch = `?${nextSearchParams.toString()}`;
+  const serverSearch = `?${nextSearchParams?.toString() ?? ""}`;
   const getServerSnapshot = useCallback(() => serverSearch, [serverSearch]);
   const search = useSyncExternalStore(subscribeToUrl, getUrlSnapshot, getServerSnapshot);
 

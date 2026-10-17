@@ -22,7 +22,10 @@ export type AtriaNativeDockViewProps = ViewProps & {
   readonly onSelect: (event: { readonly nativeEvent: { readonly id: string } }) => void;
   readonly onAction: (event: { readonly nativeEvent: { readonly id: string } }) => void;
 };
-const NativeView = requireNativeView<AtriaNativeDockViewProps>("AtriaNativeDock", "AtriaNativeDockView");
+const NativeView = requireNativeView<AtriaNativeDockViewProps>(
+  "AtriaNativeDock",
+  "AtriaNativeDockView",
+);
 export default function AtriaNativeDockView(props: AtriaNativeDockViewProps): React.JSX.Element {
   return <NativeView {...props} />;
 }

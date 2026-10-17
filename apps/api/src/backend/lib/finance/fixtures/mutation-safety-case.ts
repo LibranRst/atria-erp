@@ -138,40 +138,34 @@ await database
   .values({ id: expenseCategoryId, code: "OPERASIONAL", name: "Operasional" });
 const budgetId = crypto.randomUUID();
 const categoryId = crypto.randomUUID();
-await database
-  .insert(schema.projectBudgets)
-  .values({
-    id: budgetId,
-    projectId: assignedProjectId,
-    status: "APPROVED",
-    contractValue: "100000000.00",
-    approvedRabValue: "100000000.00",
-    internalBudget: "90000000.00",
-    budgetCapRatio: "0.9",
-    targetGrossAmount: "10000000.00",
-    targetGrossPercentage: "10",
-  });
-await database
-  .insert(schema.projectBudgetCategory)
-  .values({
-    id: categoryId,
-    projectBudgetId: budgetId,
-    expenseCategoryId,
-    ratioPercentage: "1.0",
-    allocatedAmount: "90000000.00",
-    remainingAmount: "90000000.00",
-  });
+await database.insert(schema.projectBudgets).values({
+  id: budgetId,
+  projectId: assignedProjectId,
+  status: "APPROVED",
+  contractValue: "100000000.00",
+  approvedRabValue: "100000000.00",
+  internalBudget: "90000000.00",
+  budgetCapRatio: "0.9",
+  targetGrossAmount: "10000000.00",
+  targetGrossPercentage: "10",
+});
+await database.insert(schema.projectBudgetCategory).values({
+  id: categoryId,
+  projectBudgetId: budgetId,
+  expenseCategoryId,
+  ratioPercentage: "1.0",
+  allocatedAmount: "90000000.00",
+  remainingAmount: "90000000.00",
+});
 const bankAccountId = crypto.randomUUID();
-await database
-  .insert(schema.bankAccount)
-  .values({
-    id: bankAccountId,
-    name: "Fixture account",
-    accountNumber: "FIXTURE-001",
-    bankName: "Fixture",
-    holderName: "Fixture",
-    balance: "50000000.00",
-  });
+await database.insert(schema.bankAccount).values({
+  id: bankAccountId,
+  name: "Fixture account",
+  accountNumber: "FIXTURE-001",
+  bankName: "Fixture",
+  holderName: "Fixture",
+  balance: "50000000.00",
+});
 const invoiceId = crypto.randomUUID();
 const foreignInvoiceId = crypto.randomUUID();
 await database.insert(schema.clientInvoice).values([
@@ -200,35 +194,32 @@ const paymentId = crypto.randomUUID();
 await database
   .insert(schema.vendor)
   .values({ id: vendorId, name: "Fixture vendor", phone: "-", email: "vendor@example.invalid" });
-await database
-  .insert(schema.vendorBill)
-  .values({
-    id: billId,
-    projectId: assignedProjectId,
-    projectBudgetCategoryId: categoryId,
-    vendorId,
-    billNumber: "FIXTURE-VB",
-    amount: "1000000.00",
-    status: "UNPAID",
-    dueDate: new Date(),
-  });
-await database
-  .insert(schema.vendorPayment)
-  .values({
-    id: paymentId,
-    vendorBillId: billId,
-    bankAccountId,
-    amountPaid: "1000000.00",
-    paymentDate: new Date(),
-    paidById: otherUserId,
-  });
+await database.insert(schema.vendorBill).values({
+  id: billId,
+  projectId: assignedProjectId,
+  projectBudgetCategoryId: categoryId,
+  vendorId,
+  billNumber: "FIXTURE-VB",
+  amount: "1000000.00",
+  status: "UNPAID",
+  dueDate: new Date(),
+});
+await database.insert(schema.vendorPayment).values({
+  id: paymentId,
+  vendorBillId: billId,
+  bankAccountId,
+  amountPaid: "1000000.00",
+  paymentDate: new Date(),
+  paidById: otherUserId,
+});
 const conversationId = crypto.randomUUID();
 await database
   .insert(schema.aiConversation)
   .values({ id: conversationId, userId, title: "Fixture" });
 const { recordClientPayment } = await import("@backend/app/actions/finance/record-client-payment");
 const { payVendorBill } = await import("@backend/app/actions/finance/pay-vendor-bill");
-const { scheduleVendorBillPayment } = await import("@backend/app/actions/finance/schedule-vendor-bill");
+const { scheduleVendorBillPayment } =
+  await import("@backend/app/actions/finance/schedule-vendor-bill");
 const { submitVendorBill } = await import("@backend/app/actions/finance/submit-vendor-bill");
 const { approveVendorPayment } = await import("@backend/app/actions/finance/field-request-review");
 const { confirmAiRecordClientPaymentProposal, confirmAiPayVendorBillProposal } =
@@ -237,7 +228,8 @@ const { confirmAiExpenseProposal, confirmAiDisburseExpenseProposal } =
   await import("@backend/app/actions/ai/confirm-expense-proposal");
 const { confirmAiSetupBudgetProposal } =
   await import("@backend/app/actions/ai/confirm-project-proposal");
-const { confirmAiCreateProjectProposal } = await import("@backend/app/actions/ai/confirm-project-proposal");
+const { confirmAiCreateProjectProposal } =
+  await import("@backend/app/actions/ai/confirm-project-proposal");
 const { getOwnerBudgetDashboard } = await import("@backend/app/actions/project/excel-budget");
 const { submitFieldRequest, verifyFieldRequest, payFieldRequest } =
   await import("@backend/app/actions/finance/field-requests");
@@ -303,15 +295,45 @@ expect(await getOwnerBudgetDashboard()).toMatchObject({
   error: { code: "FORBIDDEN" },
 });
 expect((await recordClientPayment(clientInput)).success).toBe(true);
-await database.update(schema.project).set({ projectManagerId: otherUserId }).where(eq(schema.project.id, assignedProjectId));
+await database
+  .update(schema.project)
+  .set({ projectManagerId: otherUserId })
+  .where(eq(schema.project.id, assignedProjectId));
 const beforeVendorScopeDenials = await snapshot();
-expect(await payVendorBill({ vendorPaymentId: paymentId, bankAccountId, referenceNumber: "FOREIGN-VENDOR" })).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
-expect(await approveVendorPayment(paymentId)).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
-expect(await scheduleVendorBillPayment({ vendorBillId: billId, bankAccountId, paymentDate: new Date(), amountPaid: 10000 })).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
-expect(await submitVendorBill({ vendorId, projectId: assignedProjectId, projectBudgetCategoryId: categoryId, billNumber: "FOREIGN-CREATE", amount: 10000, dueDate: new Date() })).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
+expect(
+  await payVendorBill({
+    vendorPaymentId: paymentId,
+    bankAccountId,
+    referenceNumber: "FOREIGN-VENDOR",
+  }),
+).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
+expect(await approveVendorPayment(paymentId)).toMatchObject({
+  success: false,
+  error: { code: "FORBIDDEN" },
+});
+expect(
+  await scheduleVendorBillPayment({
+    vendorBillId: billId,
+    bankAccountId,
+    paymentDate: new Date(),
+    amountPaid: 10000,
+  }),
+).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
+expect(
+  await submitVendorBill({
+    vendorId,
+    projectId: assignedProjectId,
+    projectBudgetCategoryId: categoryId,
+    billNumber: "FOREIGN-CREATE",
+    amount: 10000,
+    dueDate: new Date(),
+  }),
+).toMatchObject({ success: false, error: { code: "FORBIDDEN" } });
 expect(await snapshot()).toEqual(beforeVendorScopeDenials);
-await database.update(schema.project).set({ projectManagerId: userId }).where(eq(schema.project.id, assignedProjectId));
-
+await database
+  .update(schema.project)
+  .set({ projectManagerId: userId })
+  .where(eq(schema.project.id, assignedProjectId));
 
 // A failing confirmation insert must roll back money, audit and durable notification effects.
 sessionRoleId = roleId;
@@ -391,27 +413,49 @@ expect(
 ).toBe(1);
 
 sessionRoleId = roleId;
-const projectProposal = { conversationId, toolCallId: "fail-project", name: "Atomic project creation fixture", projectManagerId: userId, totalContractValue: 10000000, newClientName: "Atomic client fixture" };
+const projectProposal = {
+  conversationId,
+  toolCallId: "fail-project",
+  name: "Atomic project creation fixture",
+  projectManagerId: userId,
+  totalContractValue: 10000000,
+  newClientName: "Atomic client fixture",
+};
 const beforeProject = await snapshot();
 expect((await confirmAiCreateProjectProposal(projectProposal)).success).toBe(false);
 expect(await snapshot()).toEqual(beforeProject);
-const createdProject = await confirmAiCreateProjectProposal({ ...projectProposal, toolCallId: "project" });
+const createdProject = await confirmAiCreateProjectProposal({
+  ...projectProposal,
+  toolCallId: "project",
+});
 expect(createdProject.success).toBe(true);
 if (!createdProject.success) throw new Error(JSON.stringify(createdProject.error));
-expect((await database.select().from(schema.auditLog).where(and(eq(schema.auditLog.action, "CREATE_PROJECT"), eq(schema.auditLog.targetId, createdProject.data.projectId)))).length).toBe(1);
+expect(
+  (
+    await database
+      .select()
+      .from(schema.auditLog)
+      .where(
+        and(
+          eq(schema.auditLog.action, "CREATE_PROJECT"),
+          eq(schema.auditLog.targetId, createdProject.data.projectId),
+        ),
+      )
+  ).length,
+).toBe(1);
 const afterProject = await snapshot();
-expect(await confirmAiCreateProjectProposal({ ...projectProposal, toolCallId: "project" })).toMatchObject({ success: true, data: { alreadyConfirmed: true } });
+expect(
+  await confirmAiCreateProjectProposal({ ...projectProposal, toolCallId: "project" }),
+).toMatchObject({ success: true, data: { alreadyConfirmed: true } });
 expect(await snapshot()).toEqual(afterProject);
 
 // Settings threshold is frozen in the expense decision, including at payment.
 sessionRoleId = roleId;
-await database
-  .insert(schema.appConfig)
-  .values({
-    key: APPROVAL_THRESHOLD_CONFIG_KEYS.fieldCost,
-    value: "1000000000",
-    updatedById: userId,
-  });
+await database.insert(schema.appConfig).values({
+  key: APPROVAL_THRESHOLD_CONFIG_KEYS.fieldCost,
+  value: "1000000000",
+  updatedById: userId,
+});
 const submitted = await submitFieldRequest({
   projectId: assignedProjectId,
   projectBudgetCategoryId: categoryId,
@@ -474,7 +518,13 @@ expect(
   ).success,
 ).toBe(false);
 expect(await snapshot()).toEqual(beforeDisbursement);
-const disbursementProposal = { conversationId, toolCallId: "disbursement", expenseId: createdExpense.data.expenseId, bankAccountId, referenceNumber: "AI-DISBURSE-FIXTURE" };
+const disbursementProposal = {
+  conversationId,
+  toolCallId: "disbursement",
+  expenseId: createdExpense.data.expenseId,
+  bankAccountId,
+  referenceNumber: "AI-DISBURSE-FIXTURE",
+};
 const paid = await confirmAiDisburseExpenseProposal(disbursementProposal);
 expect(paid).toMatchObject({ success: true, data: { alreadyConfirmed: false } });
 const afterDisbursement = await snapshot();
@@ -484,22 +534,19 @@ if (!paid.success || !replayed.success) throw new Error("Disbursement replay fai
 expect(replayed.data.nextBalance).toBe(paid.data.nextBalance);
 expect(await snapshot()).toEqual(afterDisbursement);
 
-
 // Private proof ownership is validated on both save and direct submission.
 const attachmentId = crypto.randomUUID();
-await database
-  .insert(schema.attachment)
-  .values({
-    id: attachmentId,
-    uploadedById: otherUserId,
-    referenceType: "private_expense",
-    referenceId: assignedProjectId,
-    fileUrl: "https://ik.imagekit.io/test/private-proof.jpg",
-    fileName: "proof.jpg",
-    mimeType: "image/jpeg",
-    fileSize: 10,
-    storageFileId: "fixture-private",
-  });
+await database.insert(schema.attachment).values({
+  id: attachmentId,
+  uploadedById: otherUserId,
+  referenceType: "private_expense",
+  referenceId: assignedProjectId,
+  fileUrl: "https://ik.imagekit.io/test/private-proof.jpg",
+  fileName: "proof.jpg",
+  mimeType: "image/jpeg",
+  fileSize: 10,
+  storageFileId: "fixture-private",
+});
 const protectedUrl = `http://127.0.0.1:3000/api/media/attachments/${attachmentId}`;
 const deniedProof = await submitFieldRequest({
   projectId: assignedProjectId,

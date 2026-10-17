@@ -149,6 +149,9 @@ export function MaterialMasterProposalCard({
   }, [conversationId, toolCallId, isStreaming]);
   const draftId = draft?.id;
   const analysisStatus = draft?.payload.analysisStatus;
+  const acceptProgress = React.useEffectEvent((result: ActionResponse<MaterialDraftView>): void => {
+    accept(result);
+  });
   React.useEffect(() => {
     if (!draftId || !analysisStatus || !["QUEUED", "PROCESSING"].includes(analysisStatus)) return;
     let disposed = false;
@@ -157,7 +160,7 @@ export function MaterialMasterProposalCard({
       const epoch = requestEpoch.current;
       void getAiMaterialDraft({ draftId })
         .then((result) => {
-          if (!disposed && epoch === requestEpoch.current) accept(result);
+          if (!disposed && epoch === requestEpoch.current) acceptProgress(result);
         })
         .catch(() => {
           if (!disposed && epoch === requestEpoch.current)

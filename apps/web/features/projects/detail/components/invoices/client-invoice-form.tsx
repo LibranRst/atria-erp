@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getInvoicePrefillContext } from "@/app/actions/finance/get-invoice-prefill-context";
 import type { InvoicePrefillResult } from "@atria/core/finance/invoice-prefill";
-import { cn } from "@/lib/utils/cn";
 import {
   GroupedSurface,
   FactRow,
@@ -109,6 +108,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         if (!active) return;
         if (res.success && res.data) {
           const data = res.data;
+          setError(null);
           setPrefill(data);
 
           setPayload((prev) => {
@@ -128,10 +128,18 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
               notes: prev.notes ? prev.notes : data.suggestedNotes,
             };
           });
+        } else {
+          setError(
+            "Prefill invoice belum tersedia. Isi data manual atau buka kembali form untuk mencoba lagi.",
+          );
         }
       })
       .catch(() => {
-        // Abaikan error jaringan non-fatal saat prefill
+        if (active) {
+          setError(
+            "Prefill invoice belum tersedia. Isi data manual atau buka kembali form untuk mencoba lagi.",
+          );
+        }
       });
 
     return () => {
@@ -431,7 +439,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
               >
                 {prefill?.presets && prefill.presets.length > 0 && (
                   <div className="px-4 pt-3 pb-2.5">
-                    <span className="block text-[11px] font-semibold text-on-surface-variant">
+                    <span className="block text-meta font-semibold text-on-surface-variant">
                       Pilihan termin cepat:
                     </span>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -440,9 +448,12 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                           Number(draft.payload.amount) === preset.amount &&
                           draft.payload.stage === preset.stage;
                         return (
-                          <button
+                          <Button
                             key={preset.label}
                             type="button"
+                            size="compact"
+                            variant={isSelected ? "primary" : "quiet"}
+                            aria-pressed={isSelected}
                             disabled={isPending}
                             onClick={() => {
                               patch({
@@ -451,15 +462,9 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                                 notes: preset.notes,
                               });
                             }}
-                            className={cn(
-                              "inline-flex min-h-8 items-center rounded-full px-3 py-1 text-xs font-semibold transition-all select-none",
-                              isSelected
-                                ? "bg-primary text-white shadow-xs ring-1 ring-primary"
-                                : "bg-surface-container-low text-on-surface ring-1 ring-ring-subtle hover:bg-surface-container",
-                            )}
                           >
                             {preset.label}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>

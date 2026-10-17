@@ -32,6 +32,7 @@
     "lint": "bun --filter '*' lint",
     "lint:fix": "bun --filter '*' lint:fix",
     "test": "bun --filter '*' test && bun run test:dev-scripts",
+    "test:integration": "python3 scripts/test-integration.py",
     "test:dev-scripts": "bun run --cwd apps/mobile test ../../scripts/dev-mobile.test.ts ../../scripts/dev-presets.test.ts ../../scripts/native-shadow-tokens.test.ts",
     "tokens:generate": "bun scripts/generate-tokens.ts",
     "tokens:check": "bun scripts/generate-tokens.ts --check",
@@ -59,8 +60,7 @@
     "db:dev:seed": "bun --filter @atria/api db:dev:seed",
     "db:dev:reset": "bun --filter @atria/api db:dev:reset",
     "db:dev:verify": "bun --filter @atria/api db:dev:verify",
-    "dev:api:local": "bun --filter @atria/api dev:local",
-    "test:integration": "python3 scripts/test-integration.py"
+    "dev:api:local": "bun --filter @atria/api dev:local"
   },
   "devDependencies": {
     "prettier": "^3.9.5",
@@ -81,6 +81,7 @@
     "unrs-resolver"
   ],
   "patchedDependencies": {
-    "expo-constants@57.0.11": "patches/expo-constants@57.0.11.patch"
+    "expo-constants@57.0.11": "patches/expo-constants@57.0.11.patch",
+    "expo-modules-jsi@57.0.4": "patches/expo-modules-jsi@57.0.4.patch"
   }
 }

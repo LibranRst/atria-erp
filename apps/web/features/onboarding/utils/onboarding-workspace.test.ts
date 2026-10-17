@@ -242,7 +242,7 @@ describe("inline owner onboarding workspace", () => {
     expect(panel).not.toContain("<FormSheet");
     expect(entry).toContain("<OperationalFormSheet");
     expect(entry).toContain('formId="onboarding-opening-inventory-form"');
-    expect(entry).toContain('submitLabel="Ajukan saldo awal"');
+    expect(entry).toMatch(/submitLabel=\{[^\n]*"Ajukan saldo awal"/);
     expect(entry).toContain("disabledReason={submitDisabledReason}");
   });
 });

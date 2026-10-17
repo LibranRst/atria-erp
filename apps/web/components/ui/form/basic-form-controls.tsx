@@ -612,6 +612,7 @@ export function QuantityStepper({
   const resolvedInvalid = ariaInvalid ?? association?.invalid;
   const resolvedRequired = required ?? association?.required;
   const grouped = useFormPresentation() === "grouped";
+  const desktop = useWorkspaceControlPresentation() === "desktop";
 
   function adjust(delta: number): void {
     const current = Number(value || 0);
@@ -623,11 +624,13 @@ export function QuantityStepper({
 
   return (
     <div
+      data-grouped={grouped || undefined}
       className={cx(
         "grid grid-cols-[44px_1fr_44px] overflow-hidden focus-within:ring-2 focus-within:ring-focus-ring",
         grouped
           ? "min-h-10 rounded-full bg-surface-container-low"
           : "min-h-12 rounded-full border border-outline-variant/35 bg-surface-container-lowest shadow-control",
+        desktop && "atria-desktop-quantity-stepper",
       )}
     >
       <button

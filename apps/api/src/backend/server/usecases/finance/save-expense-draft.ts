@@ -42,9 +42,22 @@ export async function saveExpenseDraftUseCase(
   if (!authResult.success) return authResult;
   try {
     const receipt = validation.data.payload.receipt;
-    if (receipt) await assertExpenseAttachment(actor, validation.data.payload.projectId, receipt.url, receipt.fileId);
+    if (receipt)
+      await assertExpenseAttachment(
+        actor,
+        validation.data.payload.projectId,
+        receipt.url,
+        receipt.fileId,
+      );
   } catch {
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Bukti pengeluaran tidak sesuai dengan akun atau proyek. Unggah ulang bukti untuk draft ini." } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message:
+          "Bukti pengeluaran tidak sesuai dengan akun atau proyek. Unggah ulang bukti untuk draft ini.",
+      },
+    };
   }
   const now = new Date();
 

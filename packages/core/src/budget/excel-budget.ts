@@ -133,14 +133,11 @@ export function calculateRabBudgetDerivation(params: {
   const productionScopeTotal = Math.max(0, approvedValue - serviceFeeTotal);
   const internalBudget = Math.round(productionScopeTotal * params.budgetCapRatio * 100) / 100;
   const targetGrossAmount = Math.round((approvedValue - internalBudget) * 100) / 100;
-  const targetGrossPercentage =
-    approvedValue > 0 ? (targetGrossAmount / approvedValue) * 100 : 0;
+  const targetGrossPercentage = approvedValue > 0 ? (targetGrossAmount / approvedValue) * 100 : 0;
   const productionGrossMarginAmount =
     Math.round((productionScopeTotal - internalBudget) * 100) / 100;
   const productionGrossMarginPercentage =
-    productionScopeTotal > 0
-      ? (productionGrossMarginAmount / productionScopeTotal) * 100
-      : 0;
+    productionScopeTotal > 0 ? (productionGrossMarginAmount / productionScopeTotal) * 100 : 0;
 
   return {
     approvedValue,

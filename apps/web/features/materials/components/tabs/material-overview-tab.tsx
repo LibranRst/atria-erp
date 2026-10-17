@@ -198,14 +198,24 @@ export function MaterialOverviewTab({
           title="Perlu perhatian"
           count={attention.length > 0 ? attention.length : undefined}
           countLabel="Prioritas"
-          meta={attention.length === 0 ? "Terkendali" : undefined}
+          meta={
+            attention.length === 0
+              ? data.shortagesSource && data.shortagesSource.status !== "ready"
+                ? "Data RAP belum tersedia"
+                : "Terkendali"
+              : undefined
+          }
         >
           <GroupedSurface>
             {attention.length === 0 ? (
               <InlineStateRow
                 icon="check_circle"
                 title="Tidak ada perhatian mendesak"
-                description="Kebutuhan RAP, batas minimum, dan keputusan stok saat ini terkendali."
+                description={
+                  data.shortagesSource && data.shortagesSource.status !== "ready"
+                    ? "Kondisi inventori yang dimuat tidak memerlukan perhatian; kebutuhan RAP belum dapat disimpulkan."
+                    : "Kebutuhan RAP, batas minimum, dan keputusan stok saat ini terkendali."
+                }
                 tone="positive"
               />
             ) : (

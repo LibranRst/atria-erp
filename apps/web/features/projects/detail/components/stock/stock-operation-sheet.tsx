@@ -3,7 +3,8 @@
 import { useCan } from "@/components/auth/permissions-provider";
 import { toast } from "sonner";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import {
@@ -13,6 +14,9 @@ import {
   wasteMaterialForProject,
 } from "@/app/actions/material/inventory";
 import {
+  ActionMenu,
+  AppIcon,
+  Button,
   MoneyValue,
   GroupedSurface,
   FactRow,
@@ -30,7 +34,9 @@ import {
 } from "@/components/ui";
 import { InventoryStockStatusCard } from "@/features/materials/components/shared/inventory-stock-status-card";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
-import type { MaterialOption, RapView } from "../shared/rap-rab-manager";
+import type { MaterialOption } from "../shared/rap-rab-manager";
+import type { ProjectStockRap } from "./project-stock-types";
+import { allowedProjectStockOperations } from "./project-stock-desktop-model";
 
 type Operation = "RESERVE" | "USE" | "RETURN" | "WASTE";
 
@@ -57,12 +63,15 @@ export function StockOperationSheet({
   projectId,
   rap,
   materials,
+  onWorkflowActiveChange,
 }: {
   readonly projectId: string;
-  readonly rap: RapView | null;
+  readonly rap: ProjectStockRap | null;
   readonly materials: readonly MaterialOption[];
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
 }): React.JSX.Element | null {
   const can = useCan();
+  const desktop = useWorkspacePresentation() === "desktop";
   const router = useRouter();
   const [operation, setOperation] = useState<Operation | null>(null);
   const [rapItemId, setRapItemId] = useState("");
@@ -75,7 +84,8 @@ export function StockOperationSheet({
   const [success, setSuccess] = useState<OperationSuccess | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [pending, startTransition] = useTransition();
-  const canOperate = can("create:stock_movement");
+  const allowedOperations = allowedProjectStockOperations(can);
+  const canOperate = allowedOperations.length > 0;
   const rapItem = rap?.items.find((item) => item.id === rapItemId) ?? null;
   const material = materials.find((item) => item.id === rapItem?.materialId) ?? null;
   const inventories = material?.inventories ?? [];
@@ -123,9 +133,16 @@ export function StockOperationSheet({
     description: `Tersedia ${row.availableStock.toLocaleString("id-ID")}`,
     meta: `Avg ${money.format(row.averageCost)}`,
   }));
+  useEffect((): void => {
+    onWorkflowActiveChange?.(
+      Boolean(operation || confirmWaste || confirmClose || success || pending),
+    );
+  }, [operation, confirmWaste, confirmClose, success, pending, onWorkflowActiveChange]);
+  useEffect(() => (): void => onWorkflowActiveChange?.(false), [onWorkflowActiveChange]);
   if (!canOperate) return null;
 
   function open(next: Operation): void {
+    if (pending || !allowedOperations.includes(next)) return;
     const defaultRapItemId = rapOptions.length === 1 ? (rapOptions[0]?.value ?? "") : "";
     const defaultRapItem = rap?.items.find((item) => item.id === defaultRapItemId) ?? null;
     const defaultMaterial =
@@ -155,15 +172,24 @@ export function StockOperationSheet({
     setOperation(null);
   }
   function submit(): void {
-    if (!operation || !rapItem?.materialId || !inventory || !valid) return;
+    if (
+      pending ||
+      !operation ||
+      !allowedOperations.includes(operation) ||
+      !rapItem?.materialId ||
+      !inventory ||
+      !valid
+    )
+      return;
     if (operation === "WASTE" && !confirmWaste) {
       setConfirmWaste(true);
       return;
     }
+    const materialId = rapItem.materialId;
     startTransition(async () => {
       const input = {
         projectId,
-        materialId: rapItem.materialId as string,
+        materialId,
         projectRapItemId: rapItem.id,
         inventoryLocationId: inventory.locationId,
         quantity: Number(quantity),
@@ -202,18 +228,42 @@ export function StockOperationSheet({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-x-2 gap-y-3">
-        {(Object.keys(LABELS) as Operation[]).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => open(key)}
-            className={`rounded-full px-3 py-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/10 text-error ring-1 ring-white/15" : "bg-white/10 text-white ring-1 ring-white/15"}`}
-          >
-            {LABELS[key]}
-          </button>
-        ))}
-      </div>
+      {desktop ? (
+        <ActionMenu
+          label="Operasi stok proyek"
+          trigger={
+            <Button
+              type="button"
+              size="compact"
+              variant="secondary"
+              disabled={!rapOptions.length || pending}
+              trailingIcon={<AppIcon name="expand_more" />}
+            >
+              Operasi stok
+            </Button>
+          }
+          items={allowedOperations.map((key) => ({
+            id: key,
+            label: LABELS[key],
+            tone: key === "WASTE" ? "critical" : "default",
+            onSelect: (): void => open(key),
+          }))}
+        />
+      ) : (
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3">
+          {allowedOperations.map((key) => (
+            <button
+              key={key}
+              type="button"
+              disabled={!rapOptions.length || pending}
+              onClick={() => open(key)}
+              className={`rounded-full px-3 py-3 text-xs font-bold ${key === "WASTE" ? "bg-error-container/10 text-error ring-1 ring-white/15" : "bg-white/10 text-white ring-1 ring-white/15"}`}
+            >
+              {LABELS[key]}
+            </button>
+          ))}
+        </div>
+      )}
       <WorkflowFormSheet
         desktopSize="wide"
         desktopFooterPlacement="aside"
@@ -358,7 +408,7 @@ export function StockOperationSheet({
                 setMessage(null);
               }}
               ariaLabel="Operasi stok"
-              options={(Object.keys(LABELS) as Operation[]).map((key) => ({
+              options={allowedOperations.map((key) => ({
                 value: key,
                 label: LABELS[key],
               }))}

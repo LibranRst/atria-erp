@@ -14,9 +14,11 @@ import {
 export function ChangePasswordSheet({
   open,
   onClose,
+  returnFocusRef,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -67,6 +69,7 @@ export function ChangePasswordSheet({
       disabledReason={canSubmit ? undefined : "Lengkapi ketiga kolom terlebih dahulu."}
       statusText="Perangkat lain akan keluar otomatis. Perangkat ini tetap masuk."
       onClose={onClose}
+      returnFocusRef={returnFocusRef}
       onSubmit={() => void submit()}
     >
       <FormSection

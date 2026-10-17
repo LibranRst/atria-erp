@@ -10,6 +10,7 @@ import {
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
   FormField,
+  FormRiskNotice,
   FormSection,
   MoneyInput,
   MoneyValue,
@@ -42,6 +43,7 @@ export function CategoryPlanFormDrawer({
   handleSubmitCategoryPlanItem,
   isPending,
   categoryFormEstimatedTotal,
+  error,
 }: {
   readonly showCategoryPlanForm: boolean;
   readonly closeCategoryPlanForm: () => void;
@@ -55,6 +57,7 @@ export function CategoryPlanFormDrawer({
   readonly handleSubmitCategoryPlanItem: (event: React.FormEvent) => void;
   readonly isPending: boolean;
   readonly categoryFormEstimatedTotal: number;
+  readonly error?: string | null;
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
@@ -62,6 +65,9 @@ export function CategoryPlanFormDrawer({
     editingCategoryPlanItemId ?? "new-category-plan",
     JSON.stringify(categoryPlanForm),
   );
+  function updateCategoryPlanForm(value: React.SetStateAction<CategoryPlanFormState>): void {
+    if (!isPending) setCategoryPlanForm(value);
+  }
   return (
     <OperationalFormSheet
       desktopSize="wide"
@@ -127,6 +133,15 @@ export function CategoryPlanFormDrawer({
       submitLabel={editingCategoryPlanItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
+      error={
+        error ? (
+          <div role="alert">
+            <FormRiskNotice title="Paket kerja belum tersimpan" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : undefined
+      }
       disabled={
         !categoryPlanForm.projectBudgetCategoryId ||
         !categoryPlanForm.name ||
@@ -182,7 +197,7 @@ export function CategoryPlanFormDrawer({
                   />
                 </div>
                 {categoryPlanForm.quantity && categoryPlanForm.unit && (
-                  <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                  <p className="mt-0.5 truncate text-meta text-on-surface-variant">
                     Volume {categoryPlanForm.quantity} {categoryPlanForm.unit}
                   </p>
                 )}
@@ -203,8 +218,11 @@ export function CategoryPlanFormDrawer({
               <div>
                 <AdaptiveSelect
                   label="Gunakan template Library"
+                  disabled={isPending}
                   value={categoryPlanForm.templateId}
-                  onChange={handleCategoryTemplateChange}
+                  onChange={(value): void => {
+                    if (!isPending) handleCategoryTemplateChange(value);
+                  }}
                   options={[
                     {
                       value: "",
@@ -238,9 +256,10 @@ export function CategoryPlanFormDrawer({
           >
             <AdaptiveSelect
               label="Kategori Budget"
+              disabled={isPending}
               value={categoryPlanForm.projectBudgetCategoryId}
               onChange={(value) =>
-                setCategoryPlanForm((curr) => ({
+                updateCategoryPlanForm((curr) => ({
                   ...curr,
                   projectBudgetCategoryId: value,
                 }))
@@ -253,17 +272,19 @@ export function CategoryPlanFormDrawer({
               required
             />
             <ComboboxField
+              disabled={isPending}
               label="Area / Lingkup"
               value={categoryPlanForm.area}
-              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, area: value }))}
+              onChange={(value) => updateCategoryPlanForm((curr) => ({ ...curr, area: value }))}
               options={COMMON_ROOM_OPTIONS}
               placeholder="Pilih atau ketik area"
             />
             <AdaptiveSelect
               label="Vendor"
+              disabled={isPending}
               optional
               value={categoryPlanForm.vendorId}
-              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))}
+              onChange={(value) => updateCategoryPlanForm((curr) => ({ ...curr, vendorId: value }))}
               options={[
                 { value: "", label: "Tanpa vendor" },
                 ...vendors.map((vendor) => ({
@@ -274,17 +295,19 @@ export function CategoryPlanFormDrawer({
             />
             <FormField label="Nama Paket">
               <TextInput
+                disabled={isPending}
                 value={categoryPlanForm.name}
-                onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, name: value }))}
+                onChange={(value) => updateCategoryPlanForm((curr) => ({ ...curr, name: value }))}
                 placeholder="Nama paket kerja"
               />
             </FormField>
             <FormField label="Lingkup Pekerjaan">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={categoryPlanForm.scopeDescription}
                 onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
+                  updateCategoryPlanForm((curr) => ({
                     ...curr,
                     scopeDescription: value,
                   }))
@@ -300,9 +323,10 @@ export function CategoryPlanFormDrawer({
           >
             <FormField label="Jumlah">
               <NumericInput
+                disabled={isPending}
                 value={categoryPlanForm.quantity}
                 onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
+                  updateCategoryPlanForm((curr) => ({
                     ...curr,
                     quantity: value,
                   }))
@@ -311,17 +335,19 @@ export function CategoryPlanFormDrawer({
               />
             </FormField>
             <ComboboxField
+              disabled={isPending}
               label="Satuan"
               value={categoryPlanForm.unit}
-              onChange={(value) => setCategoryPlanForm((curr) => ({ ...curr, unit: value }))}
+              onChange={(value) => updateCategoryPlanForm((curr) => ({ ...curr, unit: value }))}
               options={COMMON_UNIT_OPTIONS}
               placeholder="Pilih satuan"
             />
             <FormField label="Biaya per Satuan">
               <MoneyInput
+                disabled={isPending}
                 value={categoryPlanForm.estimatedUnitCost}
                 onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
+                  updateCategoryPlanForm((curr) => ({
                     ...curr,
                     estimatedUnitCost: value,
                   }))
@@ -331,10 +357,11 @@ export function CategoryPlanFormDrawer({
             </FormField>
             <FormField label="Catatan Internal">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={categoryPlanForm.internalNote}
                 onChange={(value) =>
-                  setCategoryPlanForm((curr) => ({
+                  updateCategoryPlanForm((curr) => ({
                     ...curr,
                     internalNote: value,
                   }))

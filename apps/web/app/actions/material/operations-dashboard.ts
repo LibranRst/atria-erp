@@ -25,3 +25,13 @@ export async function getMaterialOperationsDashboard(
     { allowCookieWrites: true },
   );
 }
+
+export async function getMaterialDesktopActivity(
+  ...args: WebRpcArgs<"app/actions/material/operations-dashboard.getMaterialDesktopActivity">
+): Promise<WebRpcResult<"app/actions/material/operations-dashboard.getMaterialDesktopActivity">> {
+  return callBackendAction(
+    "app/actions/material/operations-dashboard.getMaterialDesktopActivity",
+    args,
+    { allowCookieWrites: true },
+  );
+}

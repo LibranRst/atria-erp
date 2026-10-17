@@ -16,8 +16,8 @@ export default function OnboardingReviewBridgeScreen(): React.JSX.Element {
       <View style={styles.copy}>
         <Text style={styles.title}>Saldo awal menunggu keputusan</Text>
         <Text style={styles.description}>
-          Review saldo awal dilakukan di Atria web supaya detail stok, nilai, dan jejak audit tetap
-          terlihat lengkap.
+          Review saldo awal dilakukan di Paduna Build web supaya detail stok, nilai, dan jejak audit
+          tetap terlihat lengkap.
         </Text>
       </View>
       <GroupedSurface>

@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { FormDisclosure, AppIcon } from "@/components/ui";
-import { ActivityMark, ActivityLine } from "./ai-activity";
+import { ActivityMark } from "./ai-activity";
 import { activitySummary, waitingDuration, type ActivityTrace } from "../utils/activity-summary";
 export type ToolTrace = ActivityTrace;
 export function ToolTraceList({
@@ -14,8 +14,7 @@ export function ToolTraceList({
   readonly elapsedSeconds?: number;
 }): React.JSX.Element | null {
   const [open, setOpen] = React.useState(false);
-  if (!traces.length)
-    return isActive ? <ActivityLine label="Menyusun jawaban…" seconds={elapsedSeconds} /> : null;
+  if (!traces.length && !isActive) return null;
   const summary = activitySummary(traces, isActive);
   const detail = [
     summary.detail,
@@ -32,6 +31,11 @@ export function ToolTraceList({
       expanded={open}
       onToggle={() => setOpen((value) => !value)}
     >
+      {traces.length === 0 && (
+        <p className="pb-1 pl-2.5 text-support text-on-surface-variant">
+          Langkah pemeriksaan akan muncul saat dijalankan.
+        </p>
+      )}
       <ul aria-label="Langkah asisten" className="space-y-0.5 pb-1 pl-2.5">
         {traces.map((trace) => (
           <li key={trace.key} className="flex min-h-8 items-start gap-2 py-1">

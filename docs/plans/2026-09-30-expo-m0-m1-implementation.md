@@ -46,18 +46,18 @@ Pembaruan akses: login Owner UAT dengan email yang terdokumentasi di financial_w
 
 ## Bukti pemeriksaan
 
-| Pemeriksaan                                | Hasil                                                                                                                            |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Actual `screen.capabilities` caller tests  | 5 pass: custom role, revoke-all role bawaan, grant berubah, sesi/nonaktif, password sementara                                    |
-| Compatibility/wiring tests + core purity   | Lolos dalam suite workspace                                                                                                      |
-| `bun run test`                             | Core 296 pass, mobile 10 pass, web 1.040 pass / 151 skip / 0 fail; token checks lolos                                            |
-| `bun run lint`                             | Seluruh workspace lolos, 0 error                                                                                                 |
-| Mobile typecheck                           | Lolos, termasuk regenerasi declaration API                                                                                       |
-| `bun run build`                            | Web production build lolos                                                                                                       |
-| Expo export iOS dan Android                | Keduanya lolos; masing-masing satu bundle Hermes sekitar 12 MB                                                                   |
-| iOS client Atria, iPhone 17 Pro/iOS 26.5    | Build/run native lolos; Owner login, Dashboard, header/FAB tanpa keyboard, scroll dock tetap expanded, detail/back dan form dismissal terverifikasi |
-| Browser website                            | Login Owner UAT berhasil lewat @Browser; halaman /ledger dan seluruh section Ringkasan teramati. Full-state comparison masih terbuka |
-| Android runtime                            | Belum dijalankan; export bukan verifikasi appearance/gesture                                                                     |
+| Pemeriksaan                               | Hasil                                                                                                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Actual `screen.capabilities` caller tests | 5 pass: custom role, revoke-all role bawaan, grant berubah, sesi/nonaktif, password sementara                                                       |
+| Compatibility/wiring tests + core purity  | Lolos dalam suite workspace                                                                                                                         |
+| `bun run test`                            | Core 296 pass, mobile 10 pass, web 1.040 pass / 151 skip / 0 fail; token checks lolos                                                               |
+| `bun run lint`                            | Seluruh workspace lolos, 0 error                                                                                                                    |
+| Mobile typecheck                          | Lolos, termasuk regenerasi declaration API                                                                                                          |
+| `bun run build`                           | Web production build lolos                                                                                                                          |
+| Expo export iOS dan Android               | Keduanya lolos; masing-masing satu bundle Hermes sekitar 12 MB                                                                                      |
+| iOS client Atria, iPhone 17 Pro/iOS 26.5  | Build/run native lolos; Owner login, Dashboard, header/FAB tanpa keyboard, scroll dock tetap expanded, detail/back dan form dismissal terverifikasi |
+| Browser website                           | Login Owner UAT berhasil lewat @Browser; halaman /ledger dan seluruh section Ringkasan teramati. Full-state comparison masih terbuka                |
+| Android runtime                           | Belum dijalankan; export bukan verifikasi appearance/gesture                                                                                        |
 
 Tool `agent-browser`, Chrome for Testing dan `@swmansion/argent` dipasang setelah pengguna mengizinkan. Argent dapat membaca accessibility tree simulator. Instalasi Xcode di host menyediakan runtime/CLI, tetapi tidak menyediakan aplikasi Simulator GUI biasa di `Developer/Applications`; jangan mengasumsikan pengguna dapat mengetik di Simulator.app.
 

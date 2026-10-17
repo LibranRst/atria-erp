@@ -40,6 +40,7 @@ export const emptyCategoryPlanForm: CategoryPlanFormState = {
 };
 
 export interface RapManagerPermissions {
+  readonly canCreateRap: boolean;
   readonly canEditRap: boolean;
   readonly canEditCategoryPlan: boolean;
   readonly canFinalizeRap: boolean;
@@ -69,10 +70,11 @@ export function getInitialRapOverviewFilter(): RapOverviewFilter {
 }
 
 export function getRapPermissions(permissions: readonly PermissionKey[]): RapManagerPermissions {
-  const canEditRap = permissions.includes("create:rap");
-  const canEditCategoryPlan = permissions.includes("create:rap");
+  const canEditRap = permissions.includes("update:rap");
+  const canEditCategoryPlan = permissions.includes("update:budget");
 
   return {
+    canCreateRap: permissions.includes("create:rap"),
     canEditRap,
     canEditCategoryPlan,
     canFinalizeRap: permissions.includes("lock:rap"),

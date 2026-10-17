@@ -23,9 +23,8 @@ import {
   buildRapFormFromItem,
   emptyCategoryPlanForm,
   emptyRapForm,
-  getInitialRapOverviewFilter,
-  getInitialRapStage,
 } from "../utils/rap-manager-utils";
+import { useRapNavigationState } from "./use-rap-navigation-state";
 
 export function useRapManagerForms({
   rap,
@@ -82,12 +81,8 @@ export function useRapManagerForms({
     useState<CategoryPlanFormState>(emptyCategoryPlanForm);
   const [editingRapItemId, setEditingRapItemId] = useState<string | null>(null);
   const [editingCategoryPlanItemId, setEditingCategoryPlanItemId] = useState<string | null>(null);
-  const [activeRapStage, setActiveRapStage] = useState<RapSetupStage>(() =>
-    getInitialRapStage(rap),
-  );
-  const [rapOverviewFilter, setRapOverviewFilter] = useState<RapOverviewFilter>(
-    getInitialRapOverviewFilter,
-  );
+  const { activeRapStage, setActiveRapStage, rapOverviewFilter, setRapOverviewFilter } =
+    useRapNavigationState(rap);
   const [rapDetailItemId, setRapDetailItemId] = useState<string | null>(null);
   const [packageDetailItemId, setPackageDetailItemId] = useState<string | null>(null);
   const [internalRevisionOpen, setInternalRevisionOpen] = useState(false);

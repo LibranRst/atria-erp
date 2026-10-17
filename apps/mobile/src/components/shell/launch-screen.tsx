@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/theme";
+import { PadunaLogo } from "@/components/brand/paduna-logo";
+import { MOBILE_APP_NAME } from "@/constants/brand";
 
 export function LaunchScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -9,11 +11,11 @@ export function LaunchScreen(): React.JSX.Element {
   return (
     <View
       accessible
-      accessibilityLabel="Membuka Atria"
+      accessibilityLabel={`Membuka ${MOBILE_APP_NAME}`}
       accessibilityState={{ busy: true }}
       style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
     >
-      <Text style={styles.brand}>Atria</Text>
+      <PadunaLogo accessible={false} />
       <Text style={styles.message}>Menyiapkan workspace…</Text>
     </View>
   );
@@ -27,11 +29,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     backgroundColor: theme.colors.background,
     paddingHorizontal: theme.spacing.marginMobile,
-  },
-  brand: {
-    color: theme.colors.onSurface,
-    fontFamily: theme.fonts.extrabold,
-    ...theme.typography.title,
   },
   message: {
     color: theme.colors.onSurfaceVariant,

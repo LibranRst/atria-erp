@@ -24,23 +24,23 @@ kode — lebih buruk daripada tidak ada layar sama sekali.
 
 ### Empat retakan
 
-| # | Retakan | Bukti |
-| --- | --- | --- |
-| 1 | **Matriks izin bukan satu-satunya otoritas** | 78 perbandingan nama peran hardcoded di 40 berkas. `server/usecases/project/create-project.ts:31` memakai `actor.roleName !== "OWNER" && !== "FINANCE_ADMIN"`; permission key `create:project` tidak ada sama sekali. |
-| 2 | **Empat gaya penegakan berdampingan** | `assertPermission` (melempar), `assertSettingsPermission` (mengembalikan error), helper domain (`authorizeFieldRequestAction`, `assertProjectMutationAccess`), dan perbandingan nama peran mentah. Tidak ada satu titik cekik, dan `lib/architecture/server-boundaries.test.ts` menguji bentuk modul — bukan otorisasi. |
-| 3 | **Cakupan data proyek ditulis dua kali** | `lib/auth/scoping.ts:17` (OWNER/FINANCE_ADMIN global, PROJECT_MANAGER tertugas, sisanya nol baris) dan salinannya `GLOBAL_SCOPE_ROLES` di `lib/ai/tools/context.ts:24`. |
-| 4 | **Konfigurasi peran yang berbohong** | `ROLE_PERMISSIONS` mendefinisikan tujuh peran dan `ROLE_ID_TO_NAME` memetakan tujuh UUID, tetapi `packages/core/src/auth/role-constants.ts` hanya menjadikan **empat** bisa ditugaskan. SALES, DESIGNER, dan MARKETING punya matriks lengkap yang tidak bisa dipakai siapa pun. |
+| #   | Retakan                                      | Bukti                                                                                                                                                                                                                                                                                                                   |
+| --- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Matriks izin bukan satu-satunya otoritas** | 78 perbandingan nama peran hardcoded di 40 berkas. `server/usecases/project/create-project.ts:31` memakai `actor.roleName !== "OWNER" && !== "FINANCE_ADMIN"`; permission key `create:project` tidak ada sama sekali.                                                                                                   |
+| 2   | **Empat gaya penegakan berdampingan**        | `assertPermission` (melempar), `assertSettingsPermission` (mengembalikan error), helper domain (`authorizeFieldRequestAction`, `assertProjectMutationAccess`), dan perbandingan nama peran mentah. Tidak ada satu titik cekik, dan `lib/architecture/server-boundaries.test.ts` menguji bentuk modul — bukan otorisasi. |
+| 3   | **Cakupan data proyek ditulis dua kali**     | `lib/auth/scoping.ts:17` (OWNER/FINANCE_ADMIN global, PROJECT_MANAGER tertugas, sisanya nol baris) dan salinannya `GLOBAL_SCOPE_ROLES` di `lib/ai/tools/context.ts:24`.                                                                                                                                                 |
+| 4   | **Konfigurasi peran yang berbohong**         | `ROLE_PERMISSIONS` mendefinisikan tujuh peran dan `ROLE_ID_TO_NAME` memetakan tujuh UUID, tetapi `packages/core/src/auth/role-constants.ts` hanya menjadikan **empat** bisa ditugaskan. SALES, DESIGNER, dan MARKETING punya matriks lengkap yang tidak bisa dipakai siapa pun.                                         |
 
 ### Ambang persetujuan tercecer sebelum sempat dikonfigurasi
 
-| Lokasi | Bentuk |
-| --- | --- |
-| `packages/core/src/finance/expense-approval-rule.ts:1` | `OWNER_APPROVAL_AMOUNT_THRESHOLD = 5_000_000` (rupiah) |
-| `packages/core/src/finance/vendor-payment-rules.ts:12` | `OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS = 500_000_000n` (sen) |
-| `apps/web/lib/finance/approval-details.ts:253` | literal `5_000_000` |
-| `apps/web/app/actions/finance/field-request-review.ts:86` | literal `5000000` |
+| Lokasi                                                                       | Bentuk                                                                              |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `packages/core/src/finance/expense-approval-rule.ts:1`                       | `OWNER_APPROVAL_AMOUNT_THRESHOLD = 5_000_000` (rupiah)                              |
+| `packages/core/src/finance/vendor-payment-rules.ts:12`                       | `OWNER_APPROVAL_PAYMENT_THRESHOLD_CENTS = 500_000_000n` (sen)                       |
+| `apps/web/lib/finance/approval-details.ts:253`                               | literal `5_000_000`                                                                 |
+| `apps/web/app/actions/finance/field-request-review.ts:86`                    | literal `5000000`                                                                   |
 | `apps/web/features/expenses/components/sheets/vendor-payment-sheets.tsx:145` | literal ×3 — **UI memutuskan sendiri** kapan menulis "Memerlukan persetujuan Owner" |
-| `apps/web/features/expenses/hooks/use-vendor-payment-operations.ts:167` | literal |
+| `apps/web/features/expenses/hooks/use-vendor-payment-operations.ts:167`      | literal                                                                             |
 
 Dua satuan berbeda untuk satu aturan, dan klien menghitung ulang keputusan yang
 seharusnya milik server.
@@ -52,65 +52,65 @@ Dua kelas, keduanya harus dimigrasi — tetapi karena alasan yang berbeda.
 **Otorisasi (server).** Menentukan siapa boleh menulis atau membaca apa. Salah
 di sini adalah lubang keamanan.
 
-| Berkas | Titik |
-| --- | --- |
-| `app/actions/material/operations-dashboard.ts` | 7 |
-| `lib/auth/scoping.ts` | 4 |
-| `server/usecases/onboarding/owner-onboarding-overview.ts` | 2 |
-| `server/usecases/finance/dashboard-overview.ts` | 2 |
-| `app/actions/project/revision-change-order-approval.ts` | 2 |
-| `server/usecases/project/{create-project,project-form-bootstrap}.ts` | 2 |
-| `app/actions/project/{workflow-governance,rap-setup,closing,activation}.ts` | 4 |
-| `app/actions/material/{warehouse-stock-count,warehouse-receipt-reversal,warehouse-adjustment,opening-inventory-queries,inventory-utils,goods-receipt}.ts` | 6 |
-| `app/actions/finance/{vendor-bill-drafts,field-request-review}.ts` | 2 |
-| `app/actions/{onboarding-review,developer-account-simulation,activity-detail-resolver-utils}.ts` | 3 |
-| `lib/finance/approval-details.ts` | 1 |
-| `features/expenses/utils/expenses-access.ts` | 1 — **redaksi data rekening**, bukan sekadar tampilan |
+| Berkas                                                                                                                                                    | Titik                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `app/actions/material/operations-dashboard.ts`                                                                                                            | 7                                                     |
+| `lib/auth/scoping.ts`                                                                                                                                     | 4                                                     |
+| `server/usecases/onboarding/owner-onboarding-overview.ts`                                                                                                 | 2                                                     |
+| `server/usecases/finance/dashboard-overview.ts`                                                                                                           | 2                                                     |
+| `app/actions/project/revision-change-order-approval.ts`                                                                                                   | 2                                                     |
+| `server/usecases/project/{create-project,project-form-bootstrap}.ts`                                                                                      | 2                                                     |
+| `app/actions/project/{workflow-governance,rap-setup,closing,activation}.ts`                                                                               | 4                                                     |
+| `app/actions/material/{warehouse-stock-count,warehouse-receipt-reversal,warehouse-adjustment,opening-inventory-queries,inventory-utils,goods-receipt}.ts` | 6                                                     |
+| `app/actions/finance/{vendor-bill-drafts,field-request-review}.ts`                                                                                        | 2                                                     |
+| `app/actions/{onboarding-review,developer-account-simulation,activity-detail-resolver-utils}.ts`                                                          | 3                                                     |
+| `lib/finance/approval-details.ts`                                                                                                                         | 1                                                     |
+| `features/expenses/utils/expenses-access.ts`                                                                                                              | 1 — **redaksi data rekening**, bukan sekadar tampilan |
 
 **Bentuk & navigasi (loader + klien).** Menentukan apa yang tampak. Salah di
 sini bukan lubang keamanan, tetapi peran kustom akan mendapat aplikasi yang
 kosong atau rusak — jadi tetap harus ikut pindah.
 
-| Berkas | Titik |
-| --- | --- |
-| `features/finance-dashboard/**` (workspace, tab, hook, loader) | 11 |
-| `components/layout/bottom-nav-config.ts` | 5 |
-| `components/layout/header-menu-config.ts` | 4 |
-| `features/profile/server/get-profile-page-data.ts` | 4 |
-| `features/materials/components/**` | 5 |
-| `features/navigation/server/get-mobile-home-route.ts` | 3 |
-| `features/expenses/server/get-expenses-page-data.ts` | 3 |
-| `features/approvals/server/get-approvals-page-data.ts` | 3 |
-| `app/page.tsx` | 3 |
-| `features/projects/{detail,list}/server/*.ts` | 3 |
-| `features/administration/components/forms/administration-user-editor-sheet.tsx` | 2 |
+| Berkas                                                                          | Titik |
+| ------------------------------------------------------------------------------- | ----- |
+| `features/finance-dashboard/**` (workspace, tab, hook, loader)                  | 11    |
+| `components/layout/bottom-nav-config.ts`                                        | 5     |
+| `components/layout/header-menu-config.ts`                                       | 4     |
+| `features/profile/server/get-profile-page-data.ts`                              | 4     |
+| `features/materials/components/**`                                              | 5     |
+| `features/navigation/server/get-mobile-home-route.ts`                           | 3     |
+| `features/expenses/server/get-expenses-page-data.ts`                            | 3     |
+| `features/approvals/server/get-approvals-page-data.ts`                          | 3     |
+| `app/page.tsx`                                                                  | 3     |
+| `features/projects/{detail,list}/server/*.ts`                                   | 3     |
+| `features/administration/components/forms/administration-user-editor-sheet.tsx` | 2     |
 
 ## Keputusan
 
-| # | Keputusan |
-| --- | --- |
-| 1 | Lingkup penuh: Owner bisa menyunting izin peran **dan** membuat peran baru — dengan penyatuan penegakan sebagai fase satu yang berdiri sendiri dan bisa dirilis lebih dulu. |
-| 2 | Sumber kebenaran izin pindah ke tabel `role_permission`; matriks kode turun status menjadi seed, sejalan dengan aturan repo "Settings adalah sumber kebenaran, konstanta kode hanya seed/fallback". |
-| 3 | `PermissionKey` tetap union tertutup milik kode. Owner menyalakan/mematikan kunci, tidak pernah membuat kunci baru — kunci yang belum ditegakkan kode adalah janji kosong. |
-| 4 | Cakupan data menjadi atribut peran (`data_scope: GLOBAL \| ASSIGNED`), dan `GLOBAL_SCOPE_ROLES` milik AI dihapus supaya batas AI tidak pernah berbeda dari batas halaman. |
-| 5 | Peran OWNER kebal: izin tetap, tidak bisa dihapus atau diganti nama, dan tidak bisa dilepas dari Owner aktif terakhir. Ini menutup penguncian-diri tanpa logika "minimal satu peran punya X". |
-| 6 | Izin dibaca per request dengan cache satu-request (`React.cache`). Tidak pernah ditanam ke sesi/token — izin yang ditanam basi justru saat ketepatannya paling penting, yaitu saat pencabutan. |
-| 7 | Ambang persetujuan **bukan** konfigurasi peran. Ia kontrol finansial perusahaan, jadi tinggal di Settings di atas `app_config`. |
-| 8 | Layar "Peran & akses" hidup di workspace Administrasi, bersebelahan dengan daftar staf; hub Settings menautkannya. |
-| 9 | Dua ambang terpisah (`approval.field_cost.owner_threshold`, `approval.vendor_payment.owner_threshold`) — angkanya kebetulan sama hari ini, bukan secara desain. Perubahan hanya berlaku untuk pengajuan baru. |
-| 10 | `data_scope: ASSIGNED` untuk sekarang berarti "seperti PM" (`project.projectManagerId`). Tabel `project_member` dicatat sebagai pekerjaan berikutnya — ia menyentuh setiap kueri berlingkup proyek dan pantas jadi proyek tersendiri. |
-| 11 | Kunci baru dibuat satu per **keputusan bisnis**, bukan per Server Action. Perkiraan 10–14 kunci; daftar final muncul saat migrasi tiap domain. Satu kunci per fungsi akan menghasilkan matriks yang tak terbaca di kolom 448 px. |
-| 12 | Migrasi domain demi domain (finance → project → material → settings → navigasi/klien → AI). **AI paling akhir**, supaya tidak pernah ada jendela di mana AI memakai aturan lebih longgar daripada halaman. |
-| 13 | Tes arsitektur: (a) larang literal nama peran di luar daftar putih kecil — ditegakkan keras lewat regex atas sumber, gaya `lib/architecture/*`; (b) tuntut setiap modul `"use server"` atau use-case yang dipanggilnya menyebut satu penjaga bernama, dengan pengecualian eksplisit untuk yang memang publik-per-sesi. |
-| 14 | Pencabutan izin di tengah sesi: gagal di server dengan `FORBIDDEN` dan pesan "Akses Anda berubah. Muat ulang halaman." Tidak ada polling izin, tidak ada logout paksa — mencabut izin bukan mencabut identitas. |
-| 15 | Daur hidup peran: hapus ditolak selama masih dipakai (pesan menyebut jumlah pengguna); duplikasi disediakan karena cara nyata membuat peran adalah "seperti PM tapi tanpa X"; tiga peran mati dibuang dari matriks; audit satu baris per penyimpanan berisi selisih izin. |
-| 16 | Editor memakai ulang taksonomi enam modul dan deskripsi Bahasa Indonesia yang sudah ada di `features/profile/utils/profile-access.ts`, sehingga yang Owner atur terbaca identik dengan yang stafnya lihat di halaman Profil. |
-| 17 | `role_permission` diisi lewat **migrasi Drizzle**, bukan skrip terpisah atau backfill malas. Database yang sudah jalan naik dengan perilaku identik — itulah yang membuat Fase 1 dan 3 bisa dirilis terpisah. |
-| 18 | `manage:roles` boleh diberikan ke peran lain, dengan satu aturan anti-eskalasi: **sebuah peran tidak pernah bisa memberikan izin yang tidak dimilikinya sendiri.** Tanpa itu, mendelegasikan pengelolaan peran sama dengan menyerahkan seluruh sistem. |
-| 19 | Yang dibekukan ke baris pengajuan adalah **keputusannya** (`requires_owner_approval`), bukan angkanya. Alur kerja bertanya "apakah ini butuh Owner", bukan "berapa ambangnya". Alasan historis tetap terlacak lewat `audit_log` perubahan `app_config`. |
-| 20 | `role.data_scope` dan `role.is_system` ditegakkan di use-case dan dikunci tes, bukan trigger database — repo ini tidak punya satu pun trigger, dan yang pertama tidak layak lahir demi satu aturan otorisasi. `is_system` juga yang membuat tombol hapus/ganti nama **hilang** dari UI, bukan sekadar ditolak setelah ditekan. |
-| 21 | Nilai ambang disimpan dalam **sen**, sejalan dengan aturan uang repo. Dua konstanta yang ada hari ini tidak sepakat satuannya; sen adalah yang mengikuti aturan. |
-| 22 | `ROLE_ID_TO_NAME`/`resolveStaticRoleName` dibuang: peta statis akan mulai berbohong begitu peran bisa dibuat dan diganti nama, dan bohongnya senyap karena `?? []` menyamarkannya sebagai "peran tanpa izin". `OWNER_ROLE_ID` **tetap** — bootstrap Owner pertama pada database kosong butuh satu jangkar yang tidak bergantung data. |
+| #   | Keputusan                                                                                                                                                                                                                                                                                                                             |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Lingkup penuh: Owner bisa menyunting izin peran **dan** membuat peran baru — dengan penyatuan penegakan sebagai fase satu yang berdiri sendiri dan bisa dirilis lebih dulu.                                                                                                                                                           |
+| 2   | Sumber kebenaran izin pindah ke tabel `role_permission`; matriks kode turun status menjadi seed, sejalan dengan aturan repo "Settings adalah sumber kebenaran, konstanta kode hanya seed/fallback".                                                                                                                                   |
+| 3   | `PermissionKey` tetap union tertutup milik kode. Owner menyalakan/mematikan kunci, tidak pernah membuat kunci baru — kunci yang belum ditegakkan kode adalah janji kosong.                                                                                                                                                            |
+| 4   | Cakupan data menjadi atribut peran (`data_scope: GLOBAL \| ASSIGNED`), dan `GLOBAL_SCOPE_ROLES` milik AI dihapus supaya batas AI tidak pernah berbeda dari batas halaman.                                                                                                                                                             |
+| 5   | Peran OWNER kebal: izin tetap, tidak bisa dihapus atau diganti nama, dan tidak bisa dilepas dari Owner aktif terakhir. Ini menutup penguncian-diri tanpa logika "minimal satu peran punya X".                                                                                                                                         |
+| 6   | Izin dibaca per request dengan cache satu-request (`React.cache`). Tidak pernah ditanam ke sesi/token — izin yang ditanam basi justru saat ketepatannya paling penting, yaitu saat pencabutan.                                                                                                                                        |
+| 7   | Ambang persetujuan **bukan** konfigurasi peran. Ia kontrol finansial perusahaan, jadi tinggal di Settings di atas `app_config`.                                                                                                                                                                                                       |
+| 8   | Layar "Peran & akses" hidup di workspace Administrasi, bersebelahan dengan daftar staf; hub Settings menautkannya.                                                                                                                                                                                                                    |
+| 9   | Dua ambang terpisah (`approval.field_cost.owner_threshold`, `approval.vendor_payment.owner_threshold`) — angkanya kebetulan sama hari ini, bukan secara desain. Perubahan hanya berlaku untuk pengajuan baru.                                                                                                                         |
+| 10  | `data_scope: ASSIGNED` untuk sekarang berarti "seperti PM" (`project.projectManagerId`). Tabel `project_member` dicatat sebagai pekerjaan berikutnya — ia menyentuh setiap kueri berlingkup proyek dan pantas jadi proyek tersendiri.                                                                                                 |
+| 11  | Kunci baru dibuat satu per **keputusan bisnis**, bukan per Server Action. Perkiraan 10–14 kunci; daftar final muncul saat migrasi tiap domain. Satu kunci per fungsi akan menghasilkan matriks yang tak terbaca di kolom 448 px.                                                                                                      |
+| 12  | Migrasi domain demi domain (finance → project → material → settings → navigasi/klien → AI). **AI paling akhir**, supaya tidak pernah ada jendela di mana AI memakai aturan lebih longgar daripada halaman.                                                                                                                            |
+| 13  | Tes arsitektur: (a) larang literal nama peran di luar daftar putih kecil — ditegakkan keras lewat regex atas sumber, gaya `lib/architecture/*`; (b) tuntut setiap modul `"use server"` atau use-case yang dipanggilnya menyebut satu penjaga bernama, dengan pengecualian eksplisit untuk yang memang publik-per-sesi.                |
+| 14  | Pencabutan izin di tengah sesi: gagal di server dengan `FORBIDDEN` dan pesan "Akses Anda berubah. Muat ulang halaman." Tidak ada polling izin, tidak ada logout paksa — mencabut izin bukan mencabut identitas.                                                                                                                       |
+| 15  | Daur hidup peran: hapus ditolak selama masih dipakai (pesan menyebut jumlah pengguna); duplikasi disediakan karena cara nyata membuat peran adalah "seperti PM tapi tanpa X"; tiga peran mati dibuang dari matriks; audit satu baris per penyimpanan berisi selisih izin.                                                             |
+| 16  | Editor memakai ulang taksonomi enam modul dan deskripsi Bahasa Indonesia yang sudah ada di `features/profile/utils/profile-access.ts`, sehingga yang Owner atur terbaca identik dengan yang stafnya lihat di halaman Profil.                                                                                                          |
+| 17  | `role_permission` diisi lewat **migrasi Drizzle**, bukan skrip terpisah atau backfill malas. Database yang sudah jalan naik dengan perilaku identik — itulah yang membuat Fase 1 dan 3 bisa dirilis terpisah.                                                                                                                         |
+| 18  | `manage:roles` boleh diberikan ke peran lain, dengan satu aturan anti-eskalasi: **sebuah peran tidak pernah bisa memberikan izin yang tidak dimilikinya sendiri.** Tanpa itu, mendelegasikan pengelolaan peran sama dengan menyerahkan seluruh sistem.                                                                                |
+| 19  | Yang dibekukan ke baris pengajuan adalah **keputusannya** (`requires_owner_approval`), bukan angkanya. Alur kerja bertanya "apakah ini butuh Owner", bukan "berapa ambangnya". Alasan historis tetap terlacak lewat `audit_log` perubahan `app_config`.                                                                               |
+| 20  | `role.data_scope` dan `role.is_system` ditegakkan di use-case dan dikunci tes, bukan trigger database — repo ini tidak punya satu pun trigger, dan yang pertama tidak layak lahir demi satu aturan otorisasi. `is_system` juga yang membuat tombol hapus/ganti nama **hilang** dari UI, bukan sekadar ditolak setelah ditekan.        |
+| 21  | Nilai ambang disimpan dalam **sen**, sejalan dengan aturan uang repo. Dua konstanta yang ada hari ini tidak sepakat satuannya; sen adalah yang mengikuti aturan.                                                                                                                                                                      |
+| 22  | `ROLE_ID_TO_NAME`/`resolveStaticRoleName` dibuang: peta statis akan mulai berbohong begitu peran bisa dibuat dan diganti nama, dan bohongnya senyap karena `?? []` menyamarkannya sebagai "peran tanpa izin". `OWNER_ROLE_ID` **tetap** — bootstrap Owner pertama pada database kosong butuh satu jangkar yang tidak bergantung data. |
 
 ## Fase
 

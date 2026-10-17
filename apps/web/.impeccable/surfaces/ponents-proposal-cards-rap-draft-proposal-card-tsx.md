@@ -1,7 +1,8 @@
 ---
 version: 1
 slug: "ponents-proposal-cards-rap-draft-proposal-card-tsx"
-primary_target: "apps/web/features/ai-chat/components/proposal-cards/rap-draft-proposal-card.tsx"
+primary_target: "features/ai-chat/components/proposal-cards/rap-draft-proposal-card.tsx"
+# prettier-ignore
 related_targets: []
 ---
 

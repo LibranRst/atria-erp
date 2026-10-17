@@ -12,6 +12,7 @@ import {
   ConfirmationDialog,
   FactRow,
   FormField,
+  FormRiskNotice,
   FormSection,
   MoneyInput,
   MoneyValue,
@@ -37,6 +38,9 @@ export function RabBundleDrawer({
   isPending,
   rabEstimate,
   setBundleForm,
+  error,
+  canManageRab,
+  fallbackFocusRef,
 }: {
   readonly bundleEditorOpen: boolean;
   readonly setBundleEditorOpen: (open: boolean) => void;
@@ -48,11 +52,14 @@ export function RabBundleDrawer({
   readonly isPending: boolean;
   readonly rabEstimate: RabEstimateView | null;
   readonly setBundleForm: React.Dispatch<React.SetStateAction<RabBundleForm>>;
+  readonly error?: string | null;
+  readonly canManageRab: boolean;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const bundleTotal = Number(bundleForm.quantity) * Number(bundleForm.unitPrice);
-  const editable = rabEstimate?.status === "DRAFT";
+  const editable = rabEstimate?.status === "DRAFT" && canManageRab;
   const dirty = useFormDirtySnapshot(
     bundleEditorOpen,
     editingBundleId ?? "new-bundle",
@@ -60,10 +67,16 @@ export function RabBundleDrawer({
   );
 
   const bundleItems = rabEstimate?.items.filter((item) => item.bundleId === editingBundleId) ?? [];
+  const storedBundle = rabEstimate?.bundles.find((bundle) => bundle.id === editingBundleId);
+
+  function updateBundleForm(value: React.SetStateAction<RabBundleForm>): void {
+    if (!isPending) setBundleForm(value);
+  }
 
   if (!editable && bundleEditorOpen) {
     return (
       <DetailSheet
+        fallbackFocusRef={fallbackFocusRef}
         open={bundleEditorOpen}
         title="Detail Paket RAB"
         onClose={() => setBundleEditorOpen(false)}
@@ -96,6 +109,7 @@ export function RabBundleDrawer({
               value={
                 <MoneyValue
                   amount={Number(bundleForm.unitPrice)}
+                  fractionDigits={Number.isInteger(Number(bundleForm.unitPrice)) ? 0 : 2}
                   variant="compact"
                   size="sm"
                   align="right"
@@ -105,13 +119,18 @@ export function RabBundleDrawer({
             <FactRow
               label="Total Nilai Paket"
               value={
-                <MoneyValue
-                  amount={bundleTotal}
-                  variant="compact"
-                  size="sm"
-                  align="right"
-                  tone="default"
-                />
+                storedBundle ? (
+                  <MoneyValue
+                    amount={Number(storedBundle.lineTotal)}
+                    fractionDigits={Number.isInteger(Number(storedBundle.lineTotal)) ? 0 : 2}
+                    variant="compact"
+                    size="sm"
+                    align="right"
+                    tone="default"
+                  />
+                ) : (
+                  "Belum tersedia"
+                )
               }
             />
           </div>
@@ -138,6 +157,7 @@ export function RabBundleDrawer({
   return (
     <>
       <OperationalFormSheet
+        fallbackFocusRef={fallbackFocusRef}
         desktopSize="wide"
         desktopFooterPlacement="aside"
         desktopAsideSummary={
@@ -193,6 +213,15 @@ export function RabBundleDrawer({
         title={editingBundleId ? "Edit Paket RAB" : "Buat Paket RAB"}
         onClose={() => setBundleEditorOpen(false)}
         pending={isPending}
+        error={
+          error ? (
+            <div role="alert">
+              <FormRiskNotice title="Paket RAB belum tersimpan" tone="danger">
+                {error}
+              </FormRiskNotice>
+            </div>
+          ) : undefined
+        }
         disabled={
           bundleForm.clientLabel.trim().length < 3 ||
           Number(bundleForm.quantity) <= 0 ||
@@ -209,7 +238,9 @@ export function RabBundleDrawer({
         }
         submitLabel={editingBundleId ? "Perbarui" : "Simpan"}
         submittingLabel="Menyimpan…"
-        onSubmit={handleSaveBundle}
+        onSubmit={(): void => {
+          if (!isPending) handleSaveBundle();
+        }}
         statusText={
           desktop
             ? undefined
@@ -228,16 +259,18 @@ export function RabBundleDrawer({
           >
             <FormField label="Nama paket">
               <TextInput
+                disabled={isPending}
                 value={bundleForm.clientLabel}
-                onChange={(value) => setBundleForm((curr) => ({ ...curr, clientLabel: value }))}
+                onChange={(value) => updateBundleForm((curr) => ({ ...curr, clientLabel: value }))}
                 placeholder="Nama paket untuk klien"
               />
             </FormField>
             <FormField label="Deskripsi untuk klien" optional>
               <Textarea
+                disabled={isPending}
                 rows={3}
                 value={bundleForm.description}
-                onChange={(value) => setBundleForm((curr) => ({ ...curr, description: value }))}
+                onChange={(value) => updateBundleForm((curr) => ({ ...curr, description: value }))}
                 placeholder="Deskripsi lingkup paket"
               />
             </FormField>
@@ -249,22 +282,25 @@ export function RabBundleDrawer({
           >
             <FormField label="Jumlah">
               <NumericInput
+                disabled={isPending}
                 min={0.01}
                 value={bundleForm.quantity}
-                onChange={(value) => setBundleForm((curr) => ({ ...curr, quantity: value }))}
+                onChange={(value) => updateBundleForm((curr) => ({ ...curr, quantity: value }))}
               />
             </FormField>
             <ComboboxField
+              disabled={isPending}
               label="Satuan"
               value={bundleForm.unit}
-              onChange={(value) => setBundleForm((curr) => ({ ...curr, unit: value }))}
+              onChange={(value) => updateBundleForm((curr) => ({ ...curr, unit: value }))}
               options={COMMON_UNIT_OPTIONS}
               placeholder="Pilih satuan"
             />
             <FormField label="Harga paket untuk klien">
               <MoneyInput
+                disabled={isPending}
                 value={bundleForm.unitPrice}
-                onChange={(value) => setBundleForm((curr) => ({ ...curr, unitPrice: value }))}
+                onChange={(value) => updateBundleForm((curr) => ({ ...curr, unitPrice: value }))}
                 showPreview={false}
               />
             </FormField>
@@ -274,6 +310,7 @@ export function RabBundleDrawer({
                   {
                     label: "Total paket",
                     amount: bundleTotal,
+                    fractionDigits: Number.isInteger(bundleTotal) ? 0 : 2,
                     tone: bundleTotal > 0 ? "success" : "warning",
                   },
                 ]}
@@ -292,8 +329,11 @@ export function RabBundleDrawer({
                   .map((item) => (
                     <ChoiceRow
                       key={item.id}
+                      disabled={isPending}
                       checked={bundleForm.itemIds.includes(item.id)}
-                      onChange={() => toggleBundleItem(item.id)}
+                      onChange={(): void => {
+                        if (!isPending) toggleBundleItem(item.id);
+                      }}
                       title={item.clientLabel}
                     />
                   ))}
@@ -307,7 +347,10 @@ export function RabBundleDrawer({
             >
               <Button
                 type="button"
-                onClick={() => setConfirmDelete(true)}
+                disabled={isPending}
+                onClick={(): void => {
+                  if (!isPending) setConfirmDelete(true);
+                }}
                 className="min-h-12 w-full rounded-full bg-error-container/25 px-5 text-xs font-bold text-error outline-none active:z-10 active:shadow-raised"
                 variant="criticalQuiet"
               >
@@ -322,12 +365,17 @@ export function RabBundleDrawer({
         title="Bongkar paket RAB?"
         description="Item anggota kembali tampil sebagai baris terpisah. Nilai dan sumber item tidak dihapus."
         tone="danger"
-        onClose={() => setConfirmDelete(false)}
+        pending={isPending}
+        onClose={(): void => {
+          if (!isPending) setConfirmDelete(false);
+        }}
         actions={
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
+              disabled={isPending}
               onClick={() => setConfirmDelete(false)}
+              fullWidth
               className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
               variant="secondary"
             >
@@ -336,10 +384,11 @@ export function RabBundleDrawer({
             <Button
               type="button"
               disabled={isPending}
+              fullWidth
               onClick={() => {
+                if (isPending) return;
                 if (editingBundleId) handleDeleteBundle(editingBundleId);
                 setConfirmDelete(false);
-                setBundleEditorOpen(false);
               }}
               className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white outline-none active:z-10 active:shadow-raised disabled:opacity-40"
               variant="critical"

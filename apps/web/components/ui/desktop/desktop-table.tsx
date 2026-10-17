@@ -15,6 +15,8 @@ export type DesktopTableColumn<Row extends object> = {
   readonly mobileSpan?: "full";
   readonly mobileHidden?: boolean;
   readonly reviewWidth?: number;
+  /** Percentage of a fixed-layout table, including the cell's padding. */
+  readonly widthPercent?: number;
   readonly sortValue?: (row: Row) => string | number;
 };
 
@@ -25,11 +27,14 @@ export type DesktopTableProps<Row extends object> = {
   readonly rowKey: (row: Row) => string;
   readonly rowHref?: (row: Row) => string;
   readonly onRowAction?: (row: Row) => void;
+  /** Controlled single selection: activating the selected row again may report null. */
+  readonly onRowSelectionChange?: (row: Row | null) => void;
   readonly selectedRowKey?: string | null;
   readonly emptyTitle?: string;
   readonly emptyDescription?: string;
   readonly footer?: React.ReactNode;
   readonly className?: string;
+  readonly layout?: "auto" | "fixed";
   readonly sortDescriptor?: SortDescriptor;
   readonly onSortChange?: (descriptor: SortDescriptor) => void;
   /** Editable review keeps the same inputs mounted when rows reflow on mobile. */
@@ -45,11 +50,13 @@ export function DesktopTable<Row extends object>({
   rowKey,
   rowHref,
   onRowAction,
+  onRowSelectionChange,
   selectedRowKey,
   emptyTitle = "Belum ada data",
   emptyDescription,
   footer,
   className,
+  layout = "auto",
   sortDescriptor,
   onSortChange,
   reviewPresentation,
@@ -77,7 +84,8 @@ export function DesktopTable<Row extends object>({
     if (keys === "all") return;
     const key = keys.values().next().value;
     const row = rows.find((item: Row): boolean => rowKey(item) === String(key));
-    if (row) onRowAction?.(row);
+    if (onRowSelectionChange) onRowSelectionChange(row ?? null);
+    else if (row) onRowAction?.(row);
   };
   const onAction = React.useCallback(
     (key: React.Key): void => {
@@ -90,16 +98,48 @@ export function DesktopTable<Row extends object>({
   const table = (
     <Table
       variant="primary"
+      onKeyDownCapture={
+        onRowSelectionChange && !rowHref
+          ? (event: React.KeyboardEvent<HTMLDivElement>): void => {
+              if (event.key !== "Enter") return;
+              const target = event.target;
+              if (!(target instanceof Element)) return;
+              const row = target.closest("tbody tr[data-key]");
+              if (
+                !row ||
+                row.closest("table") !== event.currentTarget.querySelector("table") ||
+                target.closest(
+                  "button, a[href], input, select, textarea, [contenteditable]:not([contenteditable='false']), [role='button'], [role='link'], [role='textbox'], [role='combobox'], [role='checkbox'], [role='radio'], [role='switch'], [role='spinbutton'], [role='slider']",
+                )
+              )
+                return;
+              // React Aria leaves Enter's native default enabled on macOS.
+              // Narrow detail focus can reach Back during keydown; cancel that
+              // accidental native activation while Aria owns selection.
+              event.preventDefault();
+            }
+          : undefined
+      }
       data-atria-review-layout={reviewPresentation}
       className={cx("atria-desktop-table min-w-0 self-start", className)}
     >
       <Table.ScrollContainer>
         <Table.Content
-          className={reviewPresentation === "desktop" ? "w-full table-fixed" : undefined}
+          className={
+            reviewPresentation === "desktop" || layout === "fixed"
+              ? "w-full table-fixed"
+              : undefined
+          }
           aria-label={ariaLabel}
-          selectionMode={onRowAction && selectedRowKey !== undefined ? "single" : "none"}
-          selectionBehavior="replace"
-          disallowEmptySelection={Boolean(onRowAction && selectedRowKey !== undefined)}
+          selectionMode={
+            (onRowSelectionChange || onRowAction) && selectedRowKey !== undefined
+              ? "single"
+              : "none"
+          }
+          selectionBehavior={onRowSelectionChange ? "toggle" : "replace"}
+          disallowEmptySelection={
+            !onRowSelectionChange && Boolean(onRowAction && selectedRowKey !== undefined)
+          }
           selectedKeys={
             selectedRowKey === undefined
               ? undefined
@@ -120,7 +160,9 @@ export function DesktopTable<Row extends object>({
                 style={
                   reviewPresentation === "desktop" && column.reviewWidth
                     ? { width: `${column.reviewWidth}%` }
-                    : undefined
+                    : column.widthPercent !== undefined
+                      ? { width: `${column.widthPercent}%` }
+                      : undefined
                 }
                 textValue={column.label}
                 isRowHeader={column.key === columns[0]?.key}
@@ -158,12 +200,17 @@ export function DesktopTable<Row extends object>({
                 id={rowKey(row)}
                 href={rowHref?.(row)}
                 columns={columns}
-                data-atria-interactive={Boolean(onRowAction || rowHref) || undefined}
+                dependencies={[selectedRowKey, reviewPresentation, expandedRowKey]}
+                data-atria-interactive={
+                  Boolean(onRowSelectionChange || onRowAction || rowHref) || undefined
+                }
                 data-atria-selected={rowKey(row) === selectedRowKey ? "true" : undefined}
                 aria-expanded={
                   reviewPresentation === "mobile" ? rowKey(row) === expandedRowKey : undefined
                 }
-                className={onRowAction || rowHref ? "cursor-pointer" : undefined}
+                className={
+                  onRowSelectionChange || onRowAction || rowHref ? "cursor-pointer" : undefined
+                }
               >
                 {(column: DesktopTableColumn<Row>): React.JSX.Element => (
                   <Table.Cell

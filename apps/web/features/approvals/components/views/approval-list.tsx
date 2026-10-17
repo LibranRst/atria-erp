@@ -4,7 +4,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
 
 import React from "react";
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import {
+  useWorkspaceControlPresentation,
+  useWorkspacePresentation,
+} from "@/lib/navigation/workspace-presentation";
+import { useCan } from "@/components/auth/permissions-provider";
 import { toast } from "sonner";
 
 import { approveFieldRequest, approveVendorPayment } from "@/app/actions/finance/field-requests";
@@ -13,17 +17,18 @@ import {
   CompactFormDialog,
   ConfirmationDialog,
   DetailSection,
-  DesktopTable,
   Button,
   ExclusiveSearchFilterBar,
   FormField,
   MediaPreviewDialog,
   MoneyValue,
   PageState,
+  PageHeader,
   RowGroup,
   type SearchFilterMode,
   SummaryFact,
   SummarySurface,
+  SheetFooterActions,
   Textarea,
 } from "@/components/ui";
 import {
@@ -44,37 +49,50 @@ import { getErrorMessage } from "@atria/core/utils/error-message";
 import { transitionEaseSmooth, transitionSpringSmooth } from "@/lib/utils/motion";
 import {
   ApprovalDecisionSubject,
-  ApprovalDetailContent,
   ApprovalDetailSheet,
   ApprovalQueueRow,
   type ApprovalDecision,
   type ApprovalItem,
 } from "./approval-list-presentation";
+import { ApprovalDesktopWorkspace } from "./approval-desktop-workspace";
+import type { ApprovalFilter } from "../../utils/approval-desktop";
 
 export { ApprovalDetailContent } from "./approval-list-presentation";
 export type { ApprovalItem } from "./approval-list-presentation";
-
-type ApprovalFilter = "ALL" | "FIELD" | "VENDOR" | "STOCK" | "CRITICAL";
 
 interface ApprovalListProps {
   readonly initialApprovals: readonly ApprovalItem[];
   readonly canEmergencyOverride?: boolean;
   readonly referenceDateIso: string;
+  readonly leadingContent?: React.ReactNode;
 }
 
 export function ApprovalList({
   initialApprovals,
   canEmergencyOverride = true,
   referenceDateIso,
+  leadingContent,
 }: ApprovalListProps): React.JSX.Element {
-  const desktop = useWorkspacePresentation() === "desktop";
+  const viewportDesktop = useWorkspacePresentation() === "desktop";
+  const controlsDesktop = useWorkspaceControlPresentation() === "desktop";
+  const desktop = viewportDesktop || controlsDesktop;
+  const can = useCan();
+  const canDecide = React.useCallback(
+    (item: ApprovalItem): boolean =>
+      can(item.type === "inventory_opening" ? "approve:opening_inventory" : "approve:cost"),
+    [can],
+  );
   const router = useRouter();
   const [approvals, setApprovals] = React.useState<ApprovalItem[]>([...initialApprovals]);
+  const [appliedReferenceDateIso, setAppliedReferenceDateIso] = React.useState(referenceDateIso);
+  const appliedSource = React.useRef({ items: initialApprovals, date: referenceDateIso });
+  const recordedDecisions = React.useRef(new Set<string>());
   const [query, setQuery] = React.useState("");
   const [filter, setFilter] = React.useState<ApprovalFilter>("ALL");
   const [controlMode, setControlMode] = React.useState<SearchFilterMode>("filter");
   const [selected, setSelected] = React.useState<ApprovalItem | null>(null);
   const [decision, setDecision] = React.useState<ApprovalDecision | null>(null);
+  const decisionReturnFocusRef = React.useRef<HTMLElement | null>(null);
   const [rejectionReason, setRejectionReason] = React.useState("");
   const [approvalReason, setApprovalReason] = React.useState("");
   const [emergencyOverride, setEmergencyOverride] = React.useState(false);
@@ -91,11 +109,34 @@ export function ApprovalList({
   const rejectionMinimum = decision?.item.type === "inventory_opening" ? 10 : 5;
   const stickyActive = WORKSPACE_STICKY_CONTROLS_ENABLED && isSticky;
   const [pending, startTransition] = React.useTransition();
-  const referenceDate = React.useMemo(() => new Date(referenceDateIso), [referenceDateIso]);
+  const referenceDate = React.useMemo(
+    () => new Date(appliedReferenceDateIso),
+    [appliedReferenceDateIso],
+  );
   const shouldReduceStickyMotion = useReducedMotion();
   const hasApprovals = approvals.length > 0;
   const stickyTransition = shouldReduceStickyMotion ? { duration: 0 } : transitionSpringSmooth;
   const surfaceTransition = shouldReduceStickyMotion ? { duration: 0 } : transitionEaseSmooth;
+
+  React.useEffect(() => {
+    if (
+      pending ||
+      decision ||
+      (appliedSource.current.items === initialApprovals &&
+        appliedSource.current.date === referenceDateIso)
+    )
+      return;
+    const incoming = initialApprovals.filter((item) => !recordedDecisions.current.has(item.id));
+    setApprovals([...incoming]);
+    setAppliedReferenceDateIso(referenceDateIso);
+    setSelected((current) =>
+      current ? (incoming.find((item) => item.id === current.id) ?? null) : null,
+    );
+    for (const id of recordedDecisions.current) {
+      if (!initialApprovals.some((item) => item.id === id)) recordedDecisions.current.delete(id);
+    }
+    appliedSource.current = { items: initialApprovals, date: referenceDateIso };
+  }, [decision, initialApprovals, pending, referenceDateIso]);
 
   React.useEffect(() => {
     if (!WORKSPACE_STICKY_CONTROLS_ENABLED) return;
@@ -182,6 +223,7 @@ export function ApprovalList({
   }
 
   function requestDecision(item: ApprovalItem, status: ApprovalDecision["status"]): void {
+    if (pending || !canDecide(item)) return;
     setDecision({ item, status });
     if (status === "REJECTED") setRejectionReason("");
     if (status === "APPROVED") {
@@ -201,7 +243,7 @@ export function ApprovalList({
   }
 
   function confirmDecision(): void {
-    if (!decision) return;
+    if (!decision || pending || !canDecide(decision.item)) return;
     const requiresEmergencyOverride = approvalRequiresEmergencyOverride(
       decision.item,
       canEmergencyOverride,
@@ -266,6 +308,7 @@ export function ApprovalList({
 
         if (!response.success) throw new Error(response.error.message);
 
+        recordedDecisions.current.add(item.id);
         setApprovals((current) => current.filter((row) => row.id !== item.id));
         setSelected(null);
         setDecision(null);
@@ -291,256 +334,221 @@ export function ApprovalList({
   }
 
   return (
-    <div className="space-y-sm">
-      <SummarySurface
-        ariaLabel="Antrean persetujuan"
-        eyebrow="Antrean keputusan"
-        icon="approval"
-        status={approvals.length > 0 ? "Perlu ditinjau" : "Selesai"}
-        statusTone={approvals.length > 0 ? "warning" : "positive"}
-      >
-        <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
-          <div className="min-w-0">
-            <p className="financial-amount text-[36px] leading-none font-extrabold tracking-[-0.045em] text-on-surface max-[430px]:text-[32px]">
-              {approvals.length}
-            </p>
-            <p className="text-meta font-semibold text-on-surface-variant">
-              persetujuan menunggu keputusan
-            </p>
-          </div>
-          <div className="min-w-0 shrink-0 text-right">
-            <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
-            <MoneyValue
-              amount={approvalSummary.totalAmount}
-              variant="compact"
-              size="lg"
-              align="right"
-              className="mt-1"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 p-2">
-          <SummaryFact
-            label="Prioritas kritis"
-            value={String(approvalSummary.criticalCount)}
-            tone={approvalSummary.criticalCount > 0 ? "danger" : "default"}
-          />
-          <SummaryFact
-            label="Menunggu ≥3 hari"
-            value={String(approvalSummary.waitingLongCount)}
-            tone={approvalSummary.waitingLongCount > 0 ? "warning" : "positive"}
-          />
-        </div>
-      </SummarySurface>
-
-      {hasApprovals ? (
-        <motion.div
-          ref={stickyControlRef}
-          data-sticky={stickyActive ? "true" : "false"}
-          data-density={stickyActive ? "floating" : "inline"}
-          animate={{
-            marginLeft: stickyActive ? -8 : 0,
-            marginRight: stickyActive ? -8 : 0,
-            padding: stickyActive ? 8 : 0,
-          }}
-          transition={stickyTransition}
-          className={WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20" : "relative"}
+    <div
+      className={
+        desktop
+          ? "min-w-0 space-y-4 pb-8"
+          : "space-y-sm px-1 pb-8 select-none max-[430px]:-mx-1 max-[430px]:pb-6"
+      }
+    >
+      <PageHeader
+        title="Persetujuan"
+        subtitle="Tinjau dampak budget, kas, atau stok sebelum memberi keputusan."
+        action={
+          desktop ? (
+            <Button
+              size="compact"
+              variant="secondary"
+              disabled={pending || decision !== null}
+              onClick={() => router.refresh()}
+            >
+              Segarkan
+            </Button>
+          ) : undefined
+        }
+      />
+      {leadingContent}
+      <div hidden={!desktop} inert={!desktop}>
+        <ApprovalDesktopWorkspace
+          approvals={approvals}
+          summary={approvalSummary}
+          active={desktop}
+          decisionReturnFocusRef={decisionReturnFocusRef}
+          selected={selected}
+          onSelect={setSelected}
+          pending={pending}
+          canDecide={canDecide}
+          onDecision={requestDecision}
+          onOpenReceipt={setActiveImage}
+          referenceDateIso={appliedReferenceDateIso}
+        />
+      </div>
+      <div hidden={desktop} inert={desktop} className="space-y-sm">
+        <SummarySurface
+          ariaLabel="Antrean persetujuan"
+          eyebrow="Antrean keputusan"
+          icon="approval"
+          status={approvals.length > 0 ? "Perlu ditinjau" : "Selesai"}
+          statusTone={approvals.length > 0 ? "warning" : "positive"}
         >
-          <AnimatePresence initial={false}>
-            {stickyActive ? (
-              <motion.div
-                key="sticky-approval-filter-surface"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={surfaceTransition}
-                className="pointer-events-none absolute inset-0 rounded-owner bg-white ring-1 ring-ring-subtle"
-                aria-hidden="true"
+          <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+            <div className="min-w-0">
+              <p className="financial-amount text-focal leading-none font-extrabold tracking-tight text-on-surface">
+                {approvals.length}
+              </p>
+              <p className="text-meta font-semibold text-on-surface-variant">
+                persetujuan menunggu keputusan
+              </p>
+            </div>
+            <div className="min-w-0 shrink-0 text-right">
+              <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total antrean</p>
+              <MoneyValue
+                amount={approvalSummary.totalAmount}
+                variant="compact"
+                size="lg"
+                align="right"
+                className="mt-1"
               />
-            ) : null}
-          </AnimatePresence>
-          <div className="relative">
-            <ExclusiveSearchFilterBar
-              mode={controlMode}
-              filterValue={filter}
-              onFilterChange={changeFilter}
-              filterAriaLabel="Filter persetujuan"
-              filterLayoutId="approval-list-filter"
-              searchLayoutId="approval-list-search-control"
-              searchValue={query}
-              onSearchChange={(value) => {
-                setOlderVisibleLimit(APPROVAL_PAGE_SIZE);
-                setQuery(value);
-              }}
-              onModeChange={changeControlMode}
-              searchPlaceholder="Cari proyek, pengaju, keterangan"
-              searchAriaLabel="Cari antrean persetujuan"
-              fillAvailableSpace
-              filterOptions={[
-                { value: "ALL", label: "Semua", count: approvals.length },
-                {
-                  value: "FIELD",
-                  label: "Lapangan",
-                  count: counts.field > 0 ? counts.field : undefined,
-                },
-                {
-                  value: "VENDOR",
-                  label: "Vendor",
-                  count: counts.vendor > 0 ? counts.vendor : undefined,
-                },
-                {
-                  value: "STOCK",
-                  label: "Stok",
-                  count: counts.stock > 0 ? counts.stock : undefined,
-                },
-                {
-                  value: "CRITICAL",
-                  label: "Risiko",
-                  count: counts.critical > 0 ? counts.critical : undefined,
-                },
-              ]}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 p-2">
+            <SummaryFact
+              label="Prioritas kritis"
+              value={String(approvalSummary.criticalCount)}
+              tone={approvalSummary.criticalCount > 0 ? "danger" : "default"}
+            />
+            <SummaryFact
+              label="Menunggu ≥3 hari"
+              value={String(approvalSummary.waitingLongCount)}
+              tone={approvalSummary.waitingLongCount > 0 ? "warning" : "positive"}
             />
           </div>
-        </motion.div>
-      ) : null}
+        </SummarySurface>
 
-      <div ref={resultsRef} className="space-y-sm" style={resultsStyle}>
-        {approvals.length === 0 ? (
-          <DetailSection title="Urutan prioritas">
-            <PageState
-              kind="first-use"
-              title="Semua keputusan selesai"
-              description="Tidak ada pengajuan finansial yang menunggu otorisasi saat ini."
-            />
-          </DetailSection>
-        ) : filtered.length === 0 ? (
-          <DetailSection title="Hasil pencarian">
-            <PageState
-              kind="filtered-empty"
-              title="Antrean tidak ditemukan"
-              description={
-                controlMode === "search"
-                  ? "Coba kata kunci lain atau tutup pencarian."
-                  : "Pilih filter lain untuk melihat pengajuan."
-              }
-              actionLabel={controlMode === "search" ? "Tutup pencarian" : "Reset filter"}
-              onAction={resetFilters}
-            />
-          </DetailSection>
-        ) : desktop ? (
-          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
-            <DesktopTable
-              ariaLabel="Antrean persetujuan"
-              rows={queuePage.groups.flatMap((group) => group.items)}
-              rowKey={(item) => item.id}
-              selectedRowKey={selected?.id}
-              onRowAction={(item) => {
-                if (!pending) setSelected(item);
-              }}
-              columns={[
-                {
-                  key: "subject",
-                  label: "Pengajuan",
-                  render: (item) => (
-                    <div>
-                      <p className="font-semibold">{item.description}</p>
-                      <p className="text-meta text-on-surface-variant">
-                        {item.projectName} · {item.requestedBy}
-                      </p>
-                    </div>
-                  ),
-                },
-                {
-                  key: "amount",
-                  label: "Nilai",
-                  align: "end",
-                  render: (item) => <MoneyValue amount={item.amount} variant="compact" size="sm" />,
-                },
-                {
-                  key: "risk",
-                  label: "Prioritas",
-                  render: (item) => (
-                    <span
-                      className={
-                        approvalIsCritical(item) ? "text-error" : "text-on-surface-variant"
-                      }
-                    >
-                      {item.priorityReason}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-            <section
-              aria-label="Detail persetujuan"
-              className="min-w-0 space-y-4 xl:sticky xl:top-24"
-            >
-              {selected && filtered.some((item) => item.id === selected.id) ? (
-                <>
-                  <ApprovalDetailContent item={selected} onOpenReceipt={setActiveImage} />
-                  <div className="flex gap-3">
-                    <Button
-                      variant="criticalQuiet"
-                      disabled={pending}
-                      onClick={() => requestDecision(selected, "REJECTED")}
-                    >
-                      Tolak
-                    </Button>
-                    <Button
-                      disabled={pending}
-                      onClick={() => requestDecision(selected, "APPROVED")}
-                    >
-                      Setujui
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <PageState
-                  kind="first-use"
-                  title="Pilih pengajuan"
-                  description="Tinjau bukti dan dampak budget sebelum mengambil keputusan."
-                />
-              )}
-            </section>
-          </div>
-        ) : (
-          queuePage.groups.map((group) => (
-            <DetailSection
-              key={group.label}
-              title={group.label}
-              count={group.totalCount}
-              countLabel="Pengajuan"
-            >
-              <RowGroup>
-                {group.items.map((item) => (
-                  <ApprovalQueueRow
-                    key={item.id}
-                    item={item}
-                    pending={pending}
-                    onSelect={() => setSelected(item)}
-                  />
-                ))}
-              </RowGroup>
-            </DetailSection>
-          ))
-        )}
-
-        {queuePage.remainingCount > 0 ? (
-          <Button
-            type="button"
-            onClick={() => setOlderVisibleLimit((current) => current + APPROVAL_PAGE_SIZE)}
-            aria-label={`Tampilkan ${queuePage.nextPageCount} persetujuan berikutnya dari ${queuePage.remainingCount} tersisa`}
-            className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-            variant="secondary"
+        {hasApprovals ? (
+          <motion.div
+            ref={stickyControlRef}
+            data-sticky={stickyActive ? "true" : "false"}
+            data-density={stickyActive ? "floating" : "inline"}
+            animate={{
+              marginLeft: stickyActive ? -8 : 0,
+              marginRight: stickyActive ? -8 : 0,
+              padding: stickyActive ? 8 : 0,
+            }}
+            transition={stickyTransition}
+            className={WORKSPACE_STICKY_CONTROLS_ENABLED ? "sticky top-16 z-20" : "relative"}
           >
-            Tampilkan {queuePage.nextPageCount} berikutnya
-          </Button>
+            <AnimatePresence initial={false}>
+              {stickyActive ? (
+                <motion.div
+                  key="sticky-approval-filter-surface"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={surfaceTransition}
+                  className="pointer-events-none absolute inset-0 rounded-owner bg-white ring-1 ring-ring-subtle"
+                  aria-hidden="true"
+                />
+              ) : null}
+            </AnimatePresence>
+            <div className="relative">
+              <ExclusiveSearchFilterBar
+                mode={controlMode}
+                filterValue={filter}
+                onFilterChange={changeFilter}
+                filterAriaLabel="Filter persetujuan"
+                filterLayoutId="approval-list-filter"
+                searchLayoutId="approval-list-search-control"
+                searchValue={query}
+                onSearchChange={(value) => {
+                  setOlderVisibleLimit(APPROVAL_PAGE_SIZE);
+                  setQuery(value);
+                }}
+                onModeChange={changeControlMode}
+                searchPlaceholder="Cari proyek, pengaju, keterangan"
+                searchAriaLabel="Cari antrean persetujuan"
+                fillAvailableSpace
+                filterOptions={[
+                  { value: "ALL", label: "Semua", count: approvals.length },
+                  {
+                    value: "FIELD",
+                    label: "Lapangan",
+                    count: counts.field > 0 ? counts.field : undefined,
+                  },
+                  {
+                    value: "VENDOR",
+                    label: "Vendor",
+                    count: counts.vendor > 0 ? counts.vendor : undefined,
+                  },
+                  {
+                    value: "STOCK",
+                    label: "Stok",
+                    count: counts.stock > 0 ? counts.stock : undefined,
+                  },
+                  {
+                    value: "CRITICAL",
+                    label: "Risiko",
+                    count: counts.critical > 0 ? counts.critical : undefined,
+                  },
+                ]}
+              />
+            </div>
+          </motion.div>
         ) : null}
+
+        <div ref={resultsRef} className="space-y-sm" style={resultsStyle}>
+          {approvals.length === 0 ? (
+            <DetailSection title="Urutan prioritas">
+              <PageState
+                kind="first-use"
+                title="Semua keputusan selesai"
+                description="Tidak ada pengajuan finansial yang menunggu otorisasi saat ini."
+              />
+            </DetailSection>
+          ) : filtered.length === 0 ? (
+            <DetailSection title="Hasil pencarian">
+              <PageState
+                kind="filtered-empty"
+                title="Antrean tidak ditemukan"
+                description={
+                  controlMode === "search"
+                    ? "Coba kata kunci lain atau tutup pencarian."
+                    : "Pilih filter lain untuk melihat pengajuan."
+                }
+                actionLabel={controlMode === "search" ? "Tutup pencarian" : "Reset filter"}
+                onAction={resetFilters}
+              />
+            </DetailSection>
+          ) : (
+            queuePage.groups.map((group) => (
+              <DetailSection
+                key={group.label}
+                title={group.label}
+                count={group.totalCount}
+                countLabel="Pengajuan"
+              >
+                <RowGroup>
+                  {group.items.map((item) => (
+                    <ApprovalQueueRow
+                      key={item.id}
+                      item={item}
+                      pending={pending}
+                      onSelect={() => setSelected(item)}
+                    />
+                  ))}
+                </RowGroup>
+              </DetailSection>
+            ))
+          )}
+
+          {queuePage.remainingCount > 0 ? (
+            <Button
+              type="button"
+              onClick={() => setOlderVisibleLimit((current) => current + APPROVAL_PAGE_SIZE)}
+              aria-label={`Tampilkan ${queuePage.nextPageCount} persetujuan berikutnya dari ${queuePage.remainingCount} tersisa`}
+              className="min-h-12 w-full rounded-full bg-surface-container text-xs font-bold text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+              variant="secondary"
+            >
+              Tampilkan {queuePage.nextPageCount} berikutnya
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <ApprovalDetailSheet
         item={desktop ? null : selected}
+        canDecide={selected ? canDecide(selected) : false}
         pending={pending}
         onClose={() => {
           if (!pending) setSelected(null);
@@ -550,6 +558,7 @@ export function ApprovalList({
       />
 
       <ConfirmationDialog
+        returnFocusRef={decisionReturnFocusRef}
         open={decision?.status === "APPROVED"}
         title="Setujui pengajuan?"
         tone={
@@ -565,6 +574,7 @@ export function ApprovalList({
         confirmLabel="Setujui"
         pending={pending}
         disabled={
+          Boolean(decision && !canDecide(decision.item)) ||
           (decision?.item.type === "inventory_opening" &&
             approvalRequiresOpeningReason(decision.item, canEmergencyOverride) &&
             approvalReason.trim().length < 10) ||
@@ -602,20 +612,29 @@ export function ApprovalList({
       </ConfirmationDialog>
 
       <CompactFormDialog
+        returnFocusRef={decisionReturnFocusRef}
         open={decision?.status === "REJECTED"}
         title="Alasan penolakan"
         onClose={closeDecision}
         pending={pending}
         actions={
-          <Button
-            type="button"
-            disabled={pending || rejectionReason.trim().length < rejectionMinimum}
-            onClick={confirmDecision}
-            className="min-h-12 w-full rounded-full bg-error px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
-            variant="critical"
-          >
-            {pending ? "Menyimpan penolakan" : "Tolak pengajuan"}
-          </Button>
+          <SheetFooterActions
+            secondary={{
+              label: "Batal",
+              variant: "secondary",
+              disabled: pending,
+              onClick: closeDecision,
+            }}
+            primary={{
+              label: pending ? "Menyimpan penolakan" : "Tolak pengajuan",
+              variant: "critical",
+              disabled:
+                pending ||
+                Boolean(decision && !canDecide(decision.item)) ||
+                rejectionReason.trim().length < rejectionMinimum,
+              onClick: confirmDecision,
+            }}
+          />
         }
       >
         <div className="space-y-md">
@@ -635,6 +654,7 @@ export function ApprovalList({
           >
             <Textarea
               id="approval-rejection-reason"
+              aria-label="Alasan penolakan"
               autoFocus
               rows={4}
               value={rejectionReason}
@@ -652,6 +672,7 @@ export function ApprovalList({
       <MediaPreviewDialog
         open={activeImage !== null}
         title="Bukti pengajuan"
+        purpose="document"
         imageUrl={activeImage}
         alt="Bukti pengajuan"
         onClose={() => setActiveImage(null)}

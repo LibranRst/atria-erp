@@ -25,16 +25,18 @@ export async function loadProjects(): Promise<{
   };
   if (!actor.permissions.includes("view:budget"))
     return { data: { status: "restricted" }, permissions, formOptions: null };
-  const [data, form] = await Promise.all([
-    callBackendData(
-      "features/projects/list/server/get-project-list-page-data.getProjectListPageData",
-      [actor],
-    ),
-    permissions.canCreate || permissions.canEdit
-      ? callBackendData("app/actions/project/crud.getProjectFormData", [])
-      : Promise.resolve(null),
-  ]);
-  return { data, permissions, formOptions: form?.success ? form.data : null };
+  const data = await callBackendData(
+    "features/projects/list/server/get-project-list-page-data.getProjectListPageData",
+    [actor],
+  );
+  return {
+    data,
+    permissions,
+    formOptions:
+      data.status === "ready" && (permissions.canCreate || permissions.canEdit)
+        ? { clients: [...data.clients], users: [...data.users] }
+        : null,
+  };
 }
 
 export async function loadProject(projectId: string): Promise<{
@@ -51,19 +53,19 @@ export async function loadProject(projectId: string): Promise<{
   };
   if (!actor.permissions.includes("view:budget"))
     return { data: null, permissions, formOptions: null };
-  const [data, form] = await Promise.all([
-    callBackendData(
-      "features/projects/detail/server/get-project-detail-data.getProjectDetailData",
-      [projectId, "/projects"],
-    ),
-    permissions.canEdit
-      ? callBackendData("app/actions/project/crud.getProjectFormData", [])
-      : Promise.resolve(null),
-  ]);
+  const data = await callBackendData(
+    "features/projects/detail/server/get-project-detail-data.getProjectDetailData",
+    [projectId, "/projects"],
+  );
   if (!data.project) notFound();
   return {
     data: projectDetailPayload(data),
     permissions,
-    formOptions: form?.success ? form.data : null,
+    formOptions: permissions.canEdit
+      ? {
+          clients: [...(data.clients ?? [])],
+          users: (data.projectManagers ?? []).map(({ id, name }) => ({ id, name })),
+        }
+      : null,
   };
 }

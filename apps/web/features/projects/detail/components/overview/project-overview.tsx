@@ -8,6 +8,7 @@ import {
 } from "@/lib/navigation/workspace-presentation";
 import React, { useState } from "react";
 import { useRouter } from "@/lib/navigation/workspace-navigation";
+import { updateBrowserUrl, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 import { toast } from "sonner";
 
@@ -40,6 +41,7 @@ import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { cn } from "@/lib/utils/cn";
+import type { ProjectBudgetSource } from "../../types/project-tabs-types";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
 export type ProjectOverviewTab =
@@ -64,11 +66,14 @@ export type ProjectReadinessItem = {
 
 type ProjectOverviewProps = {
   readonly budget: ProjectBudgetDashboard | null;
+  readonly budgetSource?: ProjectBudgetSource;
+  readonly storedHealth?: string;
   readonly contractValue: number;
   readonly actions: readonly ProjectOverviewAction[];
   readonly readiness: readonly ProjectReadinessItem[];
   readonly onNavigate: (tab: ProjectOverviewTab) => void;
   readonly onAssignPm?: () => void;
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
 };
 
 function categoryTone(status: string): IndicatorTone {
@@ -100,19 +105,43 @@ function SectionHeading({
 }
 
 export function ProjectOverview({
-  budget,
+  budget: incomingBudget,
+  budgetSource: incomingBudgetSource,
+  storedHealth,
   contractValue,
   actions,
   readiness,
   onNavigate,
   onAssignPm,
+  onWorkflowActiveChange,
 }: ProjectOverviewProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const desktopControls = useWorkspaceControlPresentation() === "desktop";
   const can = useCan();
   const router = useRouter();
+  const [sourceSnapshot, setSourceSnapshot] = useState({
+    budget: incomingBudget,
+    budgetSource: incomingBudgetSource,
+  });
+  const { budget, budgetSource } = sourceSnapshot;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [categorySort, setCategorySort] = useState<BudgetCategorySort>();
+  const [selectedCategorySurface, setSelectedCategorySurface] = useState<"sheet" | "panel">(
+    "panel",
+  );
+  const categorySortColumn = useBrowserUrlSearchParam("budget-category-sort");
+  const categorySortDirection = useBrowserUrlSearchParam("budget-category-direction");
+  const categorySort = React.useMemo<BudgetCategorySort | undefined>(
+    () =>
+      categorySortColumn &&
+      ["category", "allocated", "actual", "remaining", "condition"].includes(categorySortColumn)
+        ? {
+            column: categorySortColumn,
+            direction: categorySortDirection === "descending" ? "descending" : "ascending",
+          }
+        : undefined,
+    [categorySortColumn, categorySortDirection],
+  );
+  const budgetDecisionReturnFocusRef = React.useRef<HTMLElement | null>(null);
   const [reallocationOpen, setReallocationOpen] = useState(false);
   const [reallocationReason, setReallocationReason] = useState("");
   const [budgetDecision, setBudgetDecision] = useState<"submit" | "approve" | "reject" | null>(
@@ -129,6 +158,26 @@ export function ProjectOverview({
     ),
   );
   const [savingAllocation, setSavingAllocation] = useState(false);
+  const sourceFrozen =
+    reallocationOpen || budgetDecision !== null || budgetDecisionPending || savingAllocation;
+  function updateCategorySort(sort: BudgetCategorySort): void {
+    if (!desktop || sourceFrozen) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("budget-category-sort", String(sort.column));
+    url.searchParams.set("budget-category-direction", sort.direction);
+    updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
+  }
+  React.useEffect(() => {
+    onWorkflowActiveChange?.(sourceFrozen);
+    return () => onWorkflowActiveChange?.(false);
+  }, [onWorkflowActiveChange, sourceFrozen]);
+  if (
+    !sourceFrozen &&
+    (sourceSnapshot.budget !== incomingBudget ||
+      sourceSnapshot.budgetSource !== incomingBudgetSource)
+  ) {
+    setSourceSnapshot({ budget: incomingBudget, budgetSource: incomingBudgetSource });
+  }
   const selectedCategory =
     budget?.categories.find((category) => category.id === selectedCategoryId) ?? null;
   const remaining = budget?.remainingBudget ?? 0;
@@ -211,9 +260,17 @@ export function ProjectOverview({
 
   return (
     <div className="space-y-sm">
-      {desktop ? (
+      <section
+        ref={budgetDecisionReturnFocusRef}
+        aria-label="Ringkasan budget proyek"
+        tabIndex={-1}
+        hidden={!desktop}
+        inert={!desktop ? true : undefined}
+      >
         <ProjectOverviewDesktop
           budget={budget}
+          budgetSource={budgetSource}
+          storedHealth={storedHealth}
           contractValue={contractValue}
           actions={actions}
           readiness={readiness}
@@ -223,14 +280,19 @@ export function ProjectOverview({
           canApproveBudget={canApproveBudget}
           canReallocate={canReallocate}
           decisionPending={budgetDecisionPending}
-          onCategorySelect={setSelectedCategoryId}
-          onCategorySort={setCategorySort}
+          onCategorySelect={(categoryId) => {
+            setSelectedCategorySurface("panel");
+            setSelectedCategoryId(categoryId);
+          }}
+          onCategoryClose={() => setSelectedCategoryId(null)}
+          onRetry={() => router.refresh()}
+          onCategorySort={updateCategorySort}
           onBudgetDecision={setBudgetDecision}
           onReallocate={openReallocation}
           onNavigate={onNavigate}
           onAssignPm={onAssignPm}
         />
-      ) : null}
+      </section>
       {!desktop &&
         (!budget ? (
           <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
@@ -455,6 +517,7 @@ export function ProjectOverview({
       ) : null}
 
       <ConfirmationDialog
+        returnFocusRef={budgetDecisionReturnFocusRef}
         open={budgetDecision === "submit" || budgetDecision === "approve"}
         title={budgetDecision === "approve" ? "Setujui Project Budget?" : "Ajukan Project Budget?"}
         description={
@@ -469,6 +532,7 @@ export function ProjectOverview({
       />
 
       <CompactFormDialog
+        returnFocusRef={budgetDecisionReturnFocusRef}
         open={budgetDecision === "reject"}
         title="Minta revisi budget"
         pending={budgetDecisionPending}
@@ -576,7 +640,10 @@ export function ProjectOverview({
               <button
                 key={category.id}
                 type="button"
-                onClick={() => setSelectedCategoryId(category.id)}
+                onClick={() => {
+                  setSelectedCategorySurface("sheet");
+                  setSelectedCategoryId(category.id);
+                }}
                 className={`block w-full px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
                 <span className="flex items-center justify-between gap-3">
@@ -622,7 +689,7 @@ export function ProjectOverview({
       ) : null}
 
       <DetailSheet
-        open={Boolean(selectedCategory)}
+        open={Boolean(selectedCategory) && (!desktop || selectedCategorySurface === "sheet")}
         title={selectedCategory?.name ?? "Detail kategori"}
         onClose={() => setSelectedCategoryId(null)}
         footer={
@@ -635,6 +702,7 @@ export function ProjectOverview({
                 onNavigate(tab);
               }}
               size={desktopControls ? "compact" : "default"}
+              fullWidth
               className={
                 desktopControls
                   ? "w-full"
@@ -858,6 +926,7 @@ function DetailMoneyRow({
       <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
         variant="fullDynamic"
         tone={danger ? "danger" : "default"}
         align="right"

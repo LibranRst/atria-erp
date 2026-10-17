@@ -9,6 +9,6 @@ describe("rab-source-drawers preview configuration", () => {
     // In grouped presentation, MoneyInput inherits default showPreview=false without manual override
     expect(source).not.toContain("showPreview={false}");
     expect(source).not.toContain("showPreview\n");
-    expect(source).toContain("<FormField label=\"Harga satuan klien\">");
+    expect(source).toContain('<FormField label="Harga satuan klien">');
   });
 });

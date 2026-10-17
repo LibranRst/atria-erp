@@ -38,6 +38,7 @@ export type InitialStockImportPreview = {
     readonly materialInventoryId: string;
     readonly materialName: string;
     readonly locationName: string;
+    readonly unit?: string;
     readonly quantity: number;
     readonly unitCost: number;
   }[];

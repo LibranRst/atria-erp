@@ -11,11 +11,7 @@
  * "Project Manager" — dua ejaan untuk satu peran, di layar yang sama.
  */
 export function formatRoleLabel(name: string): string {
-  const words = name
-    .trim()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .toLocaleLowerCase("id-ID");
+  const words = name.trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ").toLocaleLowerCase("id-ID");
   if (!words) return "—";
 
   return words

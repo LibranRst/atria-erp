@@ -7,11 +7,7 @@ import {
 } from "./project-invoices-utils";
 import type { ClientInvoiceItem } from "../types/project-invoices-types";
 
-function mockInvoice(
-  id: string,
-  amount: number,
-  paidAmounts: number[] = [],
-): ClientInvoiceItem {
+function mockInvoice(id: string, amount: number, paidAmounts: number[] = []): ClientInvoiceItem {
   return {
     id,
     invoiceNumber: `INV-${id}`,
@@ -52,7 +48,58 @@ describe("project-invoices-utils", () => {
     expect(totals.unpaidAmount).toBe(30_000_000);
   });
 
+  it("keeps decimal receipts and remaining cents exact across the entire collection", () => {
+    const invoice = mockInvoice("cents", 100.75, [20.15, 0.1, 0.2]);
+    const rows = [invoice, mockInvoice("second", 0.3, [0.1, 0.2])];
+    expect(calculateInvoicePaidAmount(invoice)).toBe(20.45);
+    expect(calculateInvoiceRemaining(invoice)).toBe(80.3);
+    expect(calculateInvoiceTotals(rows)).toEqual({
+      activeInvoicesCount: 2,
+      totalInvoiceAmount: 101.05,
+      totalPaidAmount: 20.75,
+      unpaidAmount: 80.3,
+    });
+  });
+
+  it("excludes cancelled invoices from billing and outstanding but preserves actual receipts", () => {
+    const cancelled = { ...mockInvoice("cancelled", 100, [30]), status: "VOID" } as const;
+    const active = mockInvoice("active", 70, [20]);
+    expect(calculateInvoiceRemaining(cancelled)).toBe(0);
+    expect(calculateInvoiceTotals([cancelled, active])).toEqual({
+      activeInvoicesCount: 1,
+      totalInvoiceAmount: 70,
+      totalPaidAmount: 50,
+      unpaidAmount: 50,
+    });
+    const status = calculateInvoiceSettlementStatus([cancelled, active], 100);
+    expect(status.unbilledContractAmount).toBe(30);
+    expect(status.billedCoverage).toBe(70);
+  });
+
+  it("does not offset another invoice's outstanding with a legacy overpayment", () => {
+    const legacyOverpayment = mockInvoice("legacy", 10, [10.01]);
+    expect(calculateInvoiceRemaining(legacyOverpayment)).toBe(0);
+    expect(calculateInvoiceTotals([legacyOverpayment, mockInvoice("open", 5)]).unpaidAmount).toBe(
+      5,
+    );
+  });
+
   describe("calculateInvoiceSettlementStatus", () => {
+    it("does not let cancelled receipt history settle an underbilled contract", () => {
+      const cancelled = { ...mockInvoice("void", 100, [100]), status: "VOID" } as const;
+      const status = calculateInvoiceSettlementStatus(
+        [cancelled, mockInvoice("current", 40, [40])],
+        100,
+      );
+      expect(status.totalPaidAmount).toBe(140);
+      expect(status.isFullySettled).toBe(false);
+      expect(status.isCurrentInvoicesSettled).toBe(true);
+      expect(status.unbilledContractAmount).toBe(60);
+      expect(calculateInvoiceSettlementStatus([cancelled], 100).isFullySettled).toBe(false);
+      expect(calculateInvoiceSettlementStatus([cancelled], 100).isCurrentInvoicesSettled).toBe(
+        false,
+      );
+    });
     it("returns isFullySettled true when 100% contract value is billed and paid", () => {
       const contractValue = 100_000_000;
       const invoices = [

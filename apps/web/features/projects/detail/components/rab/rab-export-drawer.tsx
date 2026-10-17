@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import {
   ActionMenu,
@@ -50,6 +50,7 @@ interface RabExportDrawerProps {
   readonly sourceError?: string;
   readonly onRetry?: () => void;
   readonly onDownloaded?: (format: RabExportFormat) => void;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }
 export function RabExportDrawer({
   open,
@@ -61,58 +62,175 @@ export function RabExportDrawer({
   sourceError,
   onRetry,
   onDownloaded,
+  fallbackFocusRef,
 }: RabExportDrawerProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const documentRef = useRef<HTMLDivElement>(null),
     fileInputRef = useRef<HTMLInputElement>(null),
     inFlight = useRef(false);
+  const identity = rabEstimate ? `${rabEstimate.id}:${rabEstimate.revision}` : "none";
+  const available = Boolean(rabEstimate && meta && !sourceError);
+  const current = useRef({ identity, open, available });
+  const mounted = useRef(false);
+  const exportEpoch = useRef(0);
+  const logoEpoch = useRef(0);
+  const logoJob = useRef<{ reader: FileReader; controller: AbortController } | null>(null);
   const [activeTab, setActiveTab] = useState<"preview" | "customize">("preview");
   const [format, setFormat] = useState<RabExportFormat>(initialFormat);
   const [config, setConfig] = useState<RabDocumentConfig>(() =>
     loadSavedRabConfig(meta?.clientName, meta?.companyName, rabEstimate?.id),
   );
+  const configRef = useRef(config);
   const [pending, setPending] = useState(false),
+    [logoPending, setLogoPending] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState("");
   const [canShareNative] = useState(
     () => typeof navigator !== "undefined" && typeof navigator.share === "function",
   );
-  const available = Boolean(rabEstimate && meta && !sourceError);
+  const [boundary, setBoundary] = useState({ identity, open, available });
+  const busy = pending || logoPending;
   const filename = `RAB_${(meta?.projectName ?? "Dokumen").replace(/[^a-zA-Z0-9_-]/g, "_")}_R${rabEstimate?.revision ?? 1}`;
-  const updateConfig = (updates: Partial<RabDocumentConfig>): void => {
-    setConfig((prev) => {
-      const next = { ...prev, ...updates };
-      saveRabConfig(next, rabEstimate?.id);
-      return next;
-    });
+  const cancelLogo = React.useCallback((updateState = true): void => {
+    logoEpoch.current++;
+    const previous = logoJob.current;
+    logoJob.current = null;
+    previous?.controller.abort();
+    if (previous?.reader.readyState === 1) previous.reader.abort();
+    if (updateState && mounted.current) setLogoPending(false);
+  }, []);
+  useLayoutEffect((): (() => void) => {
+    const epoch = exportEpoch;
+    mounted.current = true;
+    return (): void => {
+      mounted.current = false;
+      cancelLogo(false);
+      epoch.current++;
+      inFlight.current = false;
+    };
+  }, [cancelLogo]);
+  useLayoutEffect((): void => {
+    configRef.current = config;
+  }, [config]);
+  useLayoutEffect((): (() => void) => {
+    const epoch = exportEpoch;
+    current.current = { identity, open, available };
+    cancelLogo(false);
+    epoch.current++;
+    inFlight.current = false;
+    return (): void => {
+      cancelLogo(false);
+      epoch.current++;
+      inFlight.current = false;
+    };
+  }, [identity, open, available, cancelLogo]);
+  if (
+    boundary.identity !== identity ||
+    boundary.open !== open ||
+    boundary.available !== available
+  ) {
+    setBoundary({ identity, open, available });
+    setPending(false);
+    setLogoPending(false);
+    setError("");
     setResult("");
+    if (boundary.identity !== identity) {
+      setConfig(loadSavedRabConfig(meta?.clientName, meta?.companyName, rabEstimate?.id));
+      setFormat(initialFormat);
+      setActiveTab("preview");
+    }
+  }
+
+  function canChange(): boolean {
+    return (
+      mounted.current &&
+      current.current.open &&
+      current.current.available &&
+      !inFlight.current &&
+      !logoJob.current
+    );
+  }
+  function commitConfig(updates: Partial<RabDocumentConfig>): void {
+    const next = { ...configRef.current, ...updates };
+    configRef.current = next;
+    setConfig(next);
+    saveRabConfig(next, rabEstimate?.id);
+    setResult("");
+  }
+  const updateConfig = (updates: Partial<RabDocumentConfig>): void => {
+    if (canChange()) commitConfig(updates);
   };
   const handleResetConfig = (): void => {
-    setConfig(resetRabConfig(meta?.clientName, meta?.companyName, rabEstimate?.id));
+    if (inFlight.current || !current.current.open || !current.current.available) return;
+    cancelLogo();
+    const next = resetRabConfig(meta?.clientName, meta?.companyName, rabEstimate?.id);
+    configRef.current = next;
+    setConfig(next);
+    setError("");
     setResult("");
   };
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file || inFlight.current || !current.current.open || !current.current.available) return;
+    cancelLogo();
     if (file.size > 2 * 1024 * 1024) {
       setError("Ukuran logo maksimal 2MB.");
       return;
     }
+    if (!["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.type)) {
+      setError("Pilih logo PNG, JPEG, WebP, atau SVG.");
+      return;
+    }
+    const epoch = ++logoEpoch.current;
+    const sourceIdentity = identity;
     const reader = new FileReader();
-    reader.onload = async () => {
+    const controller = new AbortController();
+    logoJob.current = { reader, controller };
+    setLogoPending(true);
+    setError("");
+    setResult("");
+    const active = (): boolean =>
+      mounted.current &&
+      logoEpoch.current === epoch &&
+      current.current.identity === sourceIdentity &&
+      current.current.open &&
+      current.current.available;
+    const finish = (message?: string): void => {
+      reader.onload = null;
+      reader.onerror = null;
+      reader.onabort = null;
+      if (!active()) return;
+      logoJob.current = null;
+      setLogoPending(false);
+      if (message) setError(message);
+    };
+    reader.onerror = (): void =>
+      finish("Logo belum dapat dibaca. Pilih ulang berkas yang sama atau gambar lain.");
+    reader.onabort = (): void => finish();
+    reader.onload = async (): Promise<void> => {
       try {
         if (typeof reader.result !== "string") throw new Error("Logo tidak valid.");
-        const logo = await optimizeLogoDataUrl(reader.result);
-        updateConfig({ logoType: "image", logoDataUrl: logo });
+        const logo = await optimizeLogoDataUrl(reader.result, 400, 160, controller.signal);
+        if (!active()) return;
+        commitConfig({ logoType: "image", logoDataUrl: logo });
         setError("");
+        finish();
       } catch {
-        setError("Logo belum dapat dibaca. Pilih PNG, JPEG, WebP atau SVG yang valid.");
+        finish("Logo belum dapat dibaca. Pilih PNG, JPEG, WebP atau SVG yang valid.");
       }
     };
-    reader.readAsDataURL(file);
+    try {
+      reader.readAsDataURL(file);
+    } catch {
+      finish("Logo belum dapat dibaca. Pilih ulang berkas yang sama atau gambar lain.");
+    }
   };
   const handleRemoveLogo = (): void => {
-    updateConfig({ logoType: "text", logoDataUrl: "" });
+    if (inFlight.current || !current.current.open || !current.current.available) return;
+    cancelLogo();
+    commitConfig({ logoType: "text", logoDataUrl: "" });
+    setError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
   async function createFile(chosen: RabExportFormat): Promise<Blob> {
@@ -130,26 +248,38 @@ export function RabExportDrawer({
     return image.blob;
   }
   async function download(share = false): Promise<void> {
-    if (inFlight.current || !available) return;
+    if (!canChange()) return;
     if (activeTab !== "preview") {
       setActiveTab("preview");
       return;
     }
+    const epoch = ++exportEpoch.current;
+    const sourceIdentity = identity;
+    const active = (): boolean =>
+      mounted.current &&
+      exportEpoch.current === epoch &&
+      current.current.identity === sourceIdentity &&
+      current.current.open &&
+      current.current.available;
+    const chosen = share ? "PNG" : format;
     inFlight.current = true;
     setPending(true);
     setError("");
     setResult("");
     try {
       await verifySource?.();
-      const chosen = share ? "PNG" : format,
-        blob = await createFile(chosen);
+      if (!active()) return;
+      const blob = await createFile(chosen);
+      if (!active()) return;
       await verifySource?.();
+      if (!active()) return;
       if (share) {
         const shared = await shareImageViaWhatsAppOrDevice(
           blob,
           filename,
           meta?.projectName ?? "RAB",
         );
+        if (!active()) return;
         if (!shared.shared && !shared.aborted) {
           downloadRabBlob(blob, `${filename}.png`);
           setResult("Gambar siap diunduh untuk dibagikan.");
@@ -164,11 +294,14 @@ export function RabExportDrawer({
         );
         onDownloaded?.(chosen);
       }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Ekspor belum berhasil. Coba lagi.");
+    } catch (error: unknown) {
+      if (active())
+        setError(error instanceof Error ? error.message : "Ekspor belum berhasil. Coba lagi.");
     } finally {
-      inFlight.current = false;
-      setPending(false);
+      if (exportEpoch.current === epoch) {
+        inFlight.current = false;
+        if (mounted.current) setPending(false);
+      }
     }
   }
   const footer = (
@@ -184,17 +317,28 @@ export function RabExportDrawer({
               : `Unduh ${format === "EXCEL" ? "Excel" : format === "PNG" ? "gambar" : "PDF"}`,
           pending,
           pendingLabel: "Menyiapkan berkas…",
-          disabled: !available,
+          disabled: !available || logoPending,
           onClick: () => void download(),
         }}
+        disabledReason={
+          logoPending ? "Tunggu logo selesai diproses sebelum menyiapkan dokumen." : undefined
+        }
         secondary={{
           label: activeTab === "customize" ? "Reset tampilan" : "Tampilan dokumen",
           variant: "quiet",
           disabled: pending || !available,
-          onClick: () =>
-            activeTab === "customize" ? handleResetConfig() : setActiveTab("customize"),
+          onClick: (): void => {
+            if (inFlight.current) return;
+            if (activeTab === "customize") handleResetConfig();
+            else if (canChange()) setActiveTab("customize");
+          },
         }}
       />
+      {logoPending ? (
+        <p role="status" className="text-support text-on-surface-variant">
+          Memproses logo…
+        </p>
+      ) : null}
       {error && !sourceError && (
         <InlineStateRow
           tone="critical"
@@ -253,17 +397,18 @@ export function RabExportDrawer({
               { value: "PNG", label: "Gambar (.png)" },
             ]}
             onChange={(value) => {
+              if (!canChange()) return;
               if (value === "PDF" || value === "EXCEL" || value === "PNG") setFormat(value);
               setResult("");
             }}
-            disabled={pending}
+            disabled={busy}
           />
         </FormSection>
         {canShareNative && (
           <ActionMenu
             label="Bagikan dokumen"
             trigger={
-              <Button variant="secondary" fullWidth disabled={pending}>
+              <Button variant="secondary" fullWidth disabled={busy}>
                 Bagikan
               </Button>
             }
@@ -281,6 +426,7 @@ export function RabExportDrawer({
     ) : null;
   return (
     <FormSheet
+      fallbackFocusRef={fallbackFocusRef}
       open={open}
       title="Dokumen RAB"
       desktopSize="wide"
@@ -291,7 +437,9 @@ export function RabExportDrawer({
       dismissal={{ mode: "preserve" }}
       pending={pending}
       onClose={() => {
-        if (!inFlight.current) onClose();
+        if (inFlight.current) return;
+        cancelLogo();
+        onClose();
       }}
     >
       <div className="space-y-5">
@@ -322,12 +470,12 @@ export function RabExportDrawer({
               value={activeTab}
               density="compact"
               onChange={(val) => {
-                if (!pending && (val === "preview" || val === "customize")) setActiveTab(val);
+                if (canChange() && (val === "preview" || val === "customize")) setActiveTab(val);
               }}
               ariaLabel="Navigasi dokumen RAB"
               options={[
-                { value: "preview", label: "Preview" },
-                { value: "customize", label: "Tampilan" },
+                { value: "preview", label: "Preview", disabled: busy },
+                { value: "customize", label: "Tampilan", disabled: busy },
               ]}
             />
             {activeTab === "preview" && rabEstimate && meta && (
@@ -349,6 +497,7 @@ export function RabExportDrawer({
                 >
                   <FormField label="Warna Aksen Dokumen">
                     <CustomColorPicker
+                      disabled={busy}
                       value={config.themeColor}
                       onChange={(nextHex) => updateConfig({ themeColor: nextHex })}
                       presets={RAB_THEME_PRESETS}
@@ -372,8 +521,8 @@ export function RabExportDrawer({
                         }}
                         ariaLabel="Pilih Jenis Logo"
                         options={[
-                          { value: "text", label: "Teks Studio" },
-                          { value: "image", label: "Logo Gambar / SVG" },
+                          { value: "text", label: "Teks Studio", disabled: busy },
+                          { value: "image", label: "Logo Gambar / SVG", disabled: busy },
                         ]}
                       />
                     </div>
@@ -385,6 +534,7 @@ export function RabExportDrawer({
                         <input
                           ref={fileInputRef}
                           type="file"
+                          disabled={pending}
                           accept="image/png,image/jpeg,image/svg+xml,image/webp"
                           onChange={handleLogoUpload}
                           className="hidden"
@@ -403,12 +553,16 @@ export function RabExportDrawer({
                               <Button
                                 variant="secondary"
                                 size="compact"
-                                onClick={() => fileInputRef.current?.click()}
+                                disabled={pending}
+                                onClick={(): void => {
+                                  if (!inFlight.current) fileInputRef.current?.click();
+                                }}
                               >
                                 Ganti
                               </Button>
                               <Button
                                 type="button"
+                                disabled={pending}
                                 onClick={handleRemoveLogo}
                                 className="rounded-full bg-critical-container px-3.5 py-1.5 text-meta font-bold text-critical hover:opacity-90 active:z-10 active:shadow-raised"
                                 variant="criticalQuiet"
@@ -422,7 +576,10 @@ export function RabExportDrawer({
                           <Button
                             variant="secondary"
                             size="compact"
-                            onClick={() => fileInputRef.current?.click()}
+                            disabled={pending}
+                            onClick={(): void => {
+                              if (!inFlight.current) fileInputRef.current?.click();
+                            }}
                           >
                             <AppIcon name="image" className="icon-sm" />
                             <span>Pilih File Logo</span>
@@ -442,6 +599,7 @@ export function RabExportDrawer({
                   ).map(([field, label]) => (
                     <FormField key={field} label={label}>
                       <TextInput
+                        disabled={busy}
                         value={config[field]}
                         onChange={(value) => updateConfig({ [field]: value })}
                       />
@@ -454,6 +612,7 @@ export function RabExportDrawer({
                 >
                   <FormField label="Judul dokumen">
                     <TextInput
+                      disabled={busy}
                       value={config.docTitle}
                       onChange={(value) => updateConfig({ docTitle: value })}
                     />
@@ -463,6 +622,7 @@ export function RabExportDrawer({
                     helper="Opsional · satu ketentuan per baris"
                   >
                     <Textarea
+                      disabled={busy}
                       rows={4}
                       value={config.paymentTermsNotes}
                       onChange={(value) => updateConfig({ paymentTermsNotes: value })}
@@ -482,6 +642,7 @@ export function RabExportDrawer({
                   ).map(([field, label]) => (
                     <FormField key={field} label={label}>
                       <TextInput
+                        disabled={busy}
                         value={config[field]}
                         onChange={(value) => updateConfig({ [field]: value })}
                       />

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui";
 import type { FinanceDashboardOverview } from "@atria/core/finance/dashboard-contracts";
 import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
-import { useDashboardCashFlow } from "../../hooks/use-desktop-dashboard-data";
+import type { DesktopDashboardTrendQuery } from "../../hooks/use-desktop-dashboard-data";
 import { DASHBOARD_PROJECT_COLUMNS, DesktopCategoryPanel } from "./desktop-dashboard-tabs";
 import Link from "@/lib/navigation/workspace-link";
 
@@ -95,11 +95,12 @@ export function DesktopBudgetBand({
 export function DesktopDashboardOverview({
   data,
   setup,
+  trend,
 }: {
   readonly data: FinanceDashboardOverview;
   readonly setup: OrganizationSetupOverview | null;
+  readonly trend: DesktopDashboardTrendQuery;
 }): React.JSX.Element {
-  const trend = useDashboardCashFlow(data.generatedAt);
   const excluded = trend.data
     ? Object.values(trend.data.exclusions).reduce((total, row) => total + row.count, 0)
     : 0;

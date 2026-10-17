@@ -3,6 +3,7 @@ import { simulateReadableStream, tool, type UIMessage, type UIMessageChunk } fro
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4CallOptions, LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import { z } from "zod";
+import { cardNarrativeSchema } from "@atria/core/ai/answer-presentation";
 
 const mode = process.argv[2];
 const sent: LanguageModelV4CallOptions[] = [];
@@ -219,6 +220,27 @@ expect(published).not.toContain("Semua stok tersedia");
 expect(stored ?? "").not.toContain("25.000.000");
 expect(JSON.stringify(original)).toBe(before);
 expect(proposalsExecuted).toBe(0);
+const presentationSchema = z.object({ cardNarratives: z.array(cardNarrativeSchema).optional() });
+const publishedPresentation = chunks.flatMap((chunk) =>
+  chunk.type === "data-grounded-facts" && "data" in chunk
+    ? [presentationSchema.parse(chunk.data)]
+    : [],
+);
+const storedPresentation =
+  saved?.parts.flatMap((part) =>
+    part.type === "data-grounded-facts" && "data" in part
+      ? [presentationSchema.parse(part.data)]
+      : [],
+  ) ?? [];
+expect(storedPresentation).toEqual(publishedPresentation);
+if (published.includes("1.000.000")) {
+  const narrative = cardNarrativeSchema.parse(publishedPresentation[0]?.cardNarratives?.[0]);
+  expect(narrative.toolName).toBe("getBankBalances");
+  expect(published).toContain(narrative.fullText);
+  expect(narrative.cardText).toContain("Rekening QA");
+  expect(narrative.cardText).toContain("1.000.000");
+  expect(narrative.cardText).not.toContain("25.000.000");
+} else expect(publishedPresentation[0]?.cardNarratives).toBeUndefined();
 expect(
   sent.every(
     (options) =>

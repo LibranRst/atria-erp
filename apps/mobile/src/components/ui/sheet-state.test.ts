@@ -41,9 +41,7 @@ function replayFabricScrollCommand({
 
 describe("sheet bottom inset ownership", () => {
   test("safe area and declared content inset remain when no keyboard owns the viewport", () => {
-    expect(
-      sheetEffectiveBottomInset({ safeAreaInset: 34, keyboardVisible: false }),
-    ).toBe(34);
+    expect(sheetEffectiveBottomInset({ safeAreaInset: 34, keyboardVisible: false })).toBe(34);
     expect(
       sheetEffectiveBottomInset({
         safeAreaInset: 34,
@@ -107,9 +105,9 @@ describe("native form content extent before client-mode changes", () => {
   test("a short form covers the visible viewport beneath adjusted system insets", () => {
     expect(sheetContentMinimumHeight(geometry)).toBe(708);
     expect(sheetContentMinimumHeight({ ...geometry, readingOffset: -120 })).toBe(708);
-    expect(
-      sheetContentMinimumHeight({ viewportHeight: 80, topInset: 70, bottomInset: 34 }),
-    ).toBe(0);
+    expect(sheetContentMinimumHeight({ viewportHeight: 80, topInset: 70, bottomInset: 34 })).toBe(
+      0,
+    );
   });
 
   test("new-to-existing content shrink preserves the legal resting offset without a restore command", () => {
@@ -362,12 +360,12 @@ describe("floating header field clearance", () => {
     expect(sheetScrollTarget({ offset: 100, delta: -500 })).toBe(0);
   });
   test("overflow-enabled focus commands stay within the reachable content range", () => {
-    expect(
-      sheetScrollTarget({ offset: 250, delta: 120, topInset: 70, maximumOffset: 280 }),
-    ).toBe(280);
-    expect(
-      sheetScrollTarget({ offset: 50, delta: -200, topInset: 70, maximumOffset: 280 }),
-    ).toBe(-70);
+    expect(sheetScrollTarget({ offset: 250, delta: 120, topInset: 70, maximumOffset: 280 })).toBe(
+      280,
+    );
+    expect(sheetScrollTarget({ offset: 50, delta: -200, topInset: 70, maximumOffset: 280 })).toBe(
+      -70,
+    );
   });
 });
 

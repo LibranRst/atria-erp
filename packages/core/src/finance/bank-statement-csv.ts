@@ -1,4 +1,5 @@
 import type { CashDirection } from "./cash-direction";
+import { fromCents, parseNumericToCents } from "./money-minor";
 
 export type ParsedBankStatementRow = {
   readonly rowNumber: number;
@@ -95,38 +96,52 @@ function parseDate(value: string, rowNumber: number): Date {
 function parseRupiah(value: string, rowNumber: number, header: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
-  let normalized = trimmed.replace(/rp/gi, "").replace(/\s+/g, "");
-  if (normalized.startsWith("-") || normalized.startsWith("(")) {
+  const source = trimmed.replace(/^rp\.?\s*/i, "").trim();
+  if (source.startsWith("-") || source.startsWith("(")) {
     throw new Error(`CSV_INVALID_AMOUNT: Baris ${rowNumber}: ${header} tidak boleh negatif.`);
   }
-  if (/[.,]00$/.test(normalized)) normalized = normalized.slice(0, -3);
-  if (!/^\d+$/.test(normalized)) {
-    const grouped = /^\d{1,3}([.,]\d{3})+$/.test(normalized);
-    if (!grouped) {
-      throw new Error(`CSV_INVALID_AMOUNT: Baris ${rowNumber}: format ${header} tidak valid.`);
-    }
-    normalized = normalized.replace(/[.,]/g, "");
+  const indonesianDecimal = /^(\d+|\d{1,3}(?:\.\d{3})+),(\d{1,2})$/.exec(source);
+  const canonicalDecimal = /^(\d+)\.(\d{1,2})$/.exec(source);
+  const internationalDecimal = /^(\d{1,3}(?:,\d{3})+)\.(\d{1,2})$/.exec(source);
+  const decimal = indonesianDecimal ?? canonicalDecimal ?? internationalDecimal;
+  let normalized: string;
+  if (decimal?.[1] !== undefined && decimal[2] !== undefined) {
+    normalized = `${decimal[1].replace(/[.,]/g, "")}.${decimal[2]}`;
+  } else if (/^\d+$/.test(source)) {
+    normalized = source;
+  } else if (/^\d{1,3}(?:\.\d{3})+$/.test(source) || /^\d{1,3}(?:,\d{3})+$/.test(source)) {
+    normalized = source.replace(/[.,]/g, "");
+  } else {
+    throw new Error(`CSV_INVALID_AMOUNT: Baris ${rowNumber}: format ${header} tidak valid.`);
   }
-  const amount = BigInt(normalized);
+  const amount = parseNumericToCents(normalized);
   if (amount <= 0n) {
     throw new Error(`CSV_INVALID_AMOUNT: Baris ${rowNumber}: ${header} harus lebih dari nol.`);
   }
-  return `${amount}.00`;
+  return fromCents(amount);
 }
 
 export function parseBankStatementCsv(content: string): readonly ParsedBankStatementRow[] {
   const records = parseCsvRecords(content, detectDelimiter(content));
   const header = records[0]?.map((value) => value.trim().toLocaleLowerCase("id-ID"));
   if (!header) throw new Error("CSV_EMPTY: File rekening koran kosong.");
-
   const indexes = new Map(header.map((value, index) => [value, index]));
   const missing = REQUIRED_HEADERS.filter((name) => !indexes.has(name));
   if (missing.length > 0) {
     throw new Error(`CSV_MISSING_HEADERS: Kolom wajib belum ada: ${missing.join(", ")}.`);
   }
+  const duplicates = header.filter((name, index) => header.indexOf(name) !== index);
+  if (duplicates.length > 0)
+    throw new Error(
+      `CSV_DUPLICATE_HEADERS: Nama kolom berulang: ${[...new Set(duplicates)].map((name) => name || "tanpa nama").join(", ")}.`,
+    );
 
   const rows = records.slice(1).map((record, index) => {
     const rowNumber = index + 2;
+    if (record.length !== header.length)
+      throw new Error(
+        `CSV_INVALID_ROW_WIDTH: Baris ${rowNumber}: jumlah kolom harus ${header.length}, ditemukan ${record.length}. Periksa pemisah dan tanda kutip.`,
+      );
     const value = (name: (typeof REQUIRED_HEADERS)[number]): string =>
       record[indexes.get(name) ?? -1]?.trim() ?? "";
     const description = value("deskripsi");

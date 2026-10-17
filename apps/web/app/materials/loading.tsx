@@ -1,8 +1,18 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { toMaterialTab } from "@/features/materials/utils/material-ui-utils";
+import { MaterialDesktopSkeleton } from "@/features/materials/components/desktop/material-desktop-skeleton";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function MaterialsLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const tab = useBrowserUrlSearchParam("tab", "overview");
+  if (desktop) return <MaterialDesktopSkeleton tab={toMaterialTab(tab)} />;
   return (
     <div
       className="space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"

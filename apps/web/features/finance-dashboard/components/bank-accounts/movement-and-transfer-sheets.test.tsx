@@ -141,11 +141,11 @@ describe("BankAccountsControl key stability contract", () => {
     const source = await Bun.file(controlPath).text();
 
     // Verify MovementSheet does not have changing key depending on control.sheet
-    expect(source).not.toContain('key={`movement-${control.sheet');
+    expect(source).not.toContain("key={`movement-${control.sheet");
     expect(source).not.toMatch(/<MovementSheet[^>]*\bkey=/);
 
     // Verify TransferSheet does not have changing key depending on control.sheet
-    expect(source).not.toContain('key={`transfer-${control.sheet');
+    expect(source).not.toContain("key={`transfer-${control.sheet");
     expect(source).not.toMatch(/<TransferSheet[^>]*\bkey=/);
 
     // Verify both sheets maintain stable mounting
@@ -176,7 +176,7 @@ describe("MovementSheet exit transition contract", () => {
     // Uses presentedAccount instead of raw account for financial calculations and rendering
     expect(source).toContain("presentedAccount.balance + amount");
     expect(source).toContain("<BankAccountContextCard account={presentedAccount}");
-    expect(source).toContain("label={presentedAccount?.name ?? \"Rekening\"}");
+    expect(source).toContain('label={presentedAccount?.name ?? "Rekening"}');
     expect(source).toContain("before={presentedAccount?.balance ?? 0}");
     expect(source).toContain("shortMoney(presentedAccount?.balance ?? 0)");
   });
@@ -316,7 +316,7 @@ describe("TransferSheet exit transition contract", () => {
     // Uses presentedAccount instead of raw account for financial calculations and rendering
     expect(source).toContain("presentedAccount ? presentedAccount.balance - amount : 0");
     expect(source).toContain("<BankAccountContextCard account={presentedAccount}");
-    expect(source).toContain("label={`Sumber · ${presentedAccount?.name ?? \"Rekening\"}`}");
+    expect(source).toContain('label={`Sumber · ${presentedAccount?.name ?? "Rekening"}`}');
     expect(source).toContain("before={presentedAccount?.balance ?? 0}");
     expect(source).toContain("shortMoney(presentedAccount?.balance ?? 0)");
   });

@@ -7,6 +7,7 @@ import {
   clientPayment,
   bankAccount,
   auditLog,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { and, eq } from "drizzle-orm";
 
@@ -41,7 +42,9 @@ export async function recordClientPaymentTx(
   const [invoice] = await tx
     .select()
     .from(clientInvoice)
-    .where(eq(clientInvoice.id, clientInvoiceId))
+    .where(
+      and(eq(clientInvoice.id, clientInvoiceId), eq(clientInvoice.tenantId, INSTANCE_TENANT_ID)),
+    )
     .for("update");
 
   if (!invoice) {
@@ -49,7 +52,19 @@ export async function recordClientPaymentTx(
   }
 
   const invoiceProject = await lockFinanceProject(tx, actor, invoice.projectId);
+  if (invoiceProject.tenantId !== INSTANCE_TENANT_ID) {
+    throw new Error("FORBIDDEN: Proyek di luar akses Anda.");
+  }
   assertProjectStatusIsOperational(invoiceProject.status);
+
+  const [destinationAccount] = await tx
+    .select({ id: bankAccount.id })
+    .from(bankAccount)
+    .where(and(eq(bankAccount.id, bankAccountId), eq(bankAccount.tenantId, INSTANCE_TENANT_ID)))
+    .for("update");
+  if (!destinationAccount) {
+    throw new Error("FORBIDDEN: Rekening penerima tidak tersedia dalam organisasi ini.");
+  }
 
   if (invoice.status === "PAID" || invoice.status === "VOID") {
     throw new Error(
@@ -59,6 +74,7 @@ export async function recordClientPaymentTx(
 
   const duplicateReference = await tx.query.cashTransaction.findFirst({
     where: and(
+      eq(cashTransaction.tenantId, INSTANCE_TENANT_ID),
       eq(cashTransaction.bankAccountId, bankAccountId),
       eq(cashTransaction.bankReference, referenceNumber),
     ),
@@ -70,7 +86,12 @@ export async function recordClientPaymentTx(
   const existingPayments = await tx
     .select({ amountPaid: clientPayment.amountPaid })
     .from(clientPayment)
-    .where(eq(clientPayment.clientInvoiceId, clientInvoiceId));
+    .where(
+      and(
+        eq(clientPayment.clientInvoiceId, clientInvoiceId),
+        eq(clientPayment.tenantId, INSTANCE_TENANT_ID),
+      ),
+    );
   const alreadyPaidCents = existingPayments.reduce(
     (sum, payment) => sum + parseNumericToCents(payment.amountPaid),
     BigInt(0),
@@ -104,7 +125,7 @@ export async function recordClientPaymentTx(
 
   // 3.4 Ambil saldo bank terbaru pasca-mutasi untuk dikembalikan ke client
   const updatedAccount = await tx.query.bankAccount.findFirst({
-    where: eq(bankAccount.id, bankAccountId),
+    where: and(eq(bankAccount.id, bankAccountId), eq(bankAccount.tenantId, INSTANCE_TENANT_ID)),
   });
 
   const newBalanceStr = updatedAccount?.balance || "0.00";
@@ -133,7 +154,12 @@ export async function recordClientPaymentTx(
   const previousPayments = await tx
     .select({ amountPaid: clientPayment.amountPaid })
     .from(clientPayment)
-    .where(eq(clientPayment.clientInvoiceId, clientInvoiceId));
+    .where(
+      and(
+        eq(clientPayment.clientInvoiceId, clientInvoiceId),
+        eq(clientPayment.tenantId, INSTANCE_TENANT_ID),
+      ),
+    );
 
   const totalPaidCents = previousPayments.reduce(
     (sum, p) => sum + parseNumericToCents(p.amountPaid),
@@ -149,7 +175,9 @@ export async function recordClientPaymentTx(
       status: nextStatus,
       updatedAt: new Date(),
     })
-    .where(eq(clientInvoice.id, clientInvoiceId));
+    .where(
+      and(eq(clientInvoice.id, clientInvoiceId), eq(clientInvoice.tenantId, INSTANCE_TENANT_ID)),
+    );
 
   // 3.7 Catat ke riwayat audit untuk aksi pencatatan pembayaran klien
   await tx.insert(auditLog).values({

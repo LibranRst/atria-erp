@@ -30,6 +30,7 @@ export type {
 
 interface VendorBillListProps {
   readonly leadingContent?: React.ReactNode;
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
   readonly projectId?: string;
   readonly vendorBills: VendorListBill[];
   readonly vendorPayments: VendorListPayment[];
@@ -41,6 +42,7 @@ interface VendorBillListProps {
 
 export function VendorBillList({
   leadingContent,
+  onWorkflowActiveChange,
   projectId,
   vendorBills,
   vendorPayments,
@@ -53,8 +55,20 @@ export function VendorBillList({
     bankAccounts,
     ownerApprovalThreshold: vendorPaymentApprovalThreshold,
   });
+  const workflowActive =
+    operations.pending ||
+    Boolean(operations.selectedBill || operations.selectedPayment || operations.success);
+  React.useEffect((): void => {
+    onWorkflowActiveChange?.(workflowActive);
+  }, [onWorkflowActiveChange, workflowActive]);
+  React.useEffect(
+    () => (): void => {
+      onWorkflowActiveChange?.(false);
+    },
+    [onWorkflowActiveChange],
+  );
   const isOwnerOrFinance = can("view:bank_account");
-  const canCreateVendorBill = can("view:vendor_bill");
+  const canCreateVendorBill = can("create:vendor_bill");
 
   return (
     <div className="space-y-sm">
@@ -65,9 +79,11 @@ export function VendorBillList({
         vendorPayments={vendorPayments}
         canCreateVendorBill={canCreateVendorBill}
         isOwnerOrFinance={isOwnerOrFinance}
+        canPayVendorBill={can("pay:vendor_bill")}
         onAddBill={() => updateUrlSearchParam("new-vendor-bill", "true", "push")}
         onSchedule={operations.openSchedule}
         onDisburse={operations.openDisburse}
+        pending={operations.pending}
       />
 
       <VendorSchedulePaymentSheet

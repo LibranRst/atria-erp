@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { ComponentProps } from "react";
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
 import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 import { ProjectOverviewDesktop, type BudgetCategorySort } from "./project-overview-desktop";
@@ -74,6 +75,7 @@ function html(
   canUpdate: boolean,
   canApprove: boolean,
   categorySort?: BudgetCategorySort,
+  overrides: Partial<ComponentProps<typeof ProjectOverviewDesktop>> = {},
 ): string {
   return renderToStaticMarkup(
     <WorkspacePresentationProvider presentation="desktop">
@@ -82,7 +84,7 @@ function html(
         contractValue={budget.contractValue}
         actions={[]}
         readiness={[]}
-        selectedCategoryId="material"
+        selectedCategoryId={null}
         categorySort={categorySort}
         canUpdateBudget={canUpdate}
         canApproveBudget={canApprove}
@@ -93,6 +95,8 @@ function html(
         onBudgetDecision={() => undefined}
         onReallocate={() => undefined}
         onNavigate={() => undefined}
+        onCategoryClose={() => undefined}
+        {...overrides}
       />
     </WorkspacePresentationProvider>,
   );
@@ -110,7 +114,7 @@ describe("compact project budget desktop", () => {
     expect(requested.indexOf(">Lain-lain<")).toBeLessThan(requested.indexOf(">Material<"));
     expect(requested).toContain('aria-sort="ascending"');
   });
-  test("leads with authoritative consumed/paid/remaining/margin before readiness and preserves selected-category semantics", () => {
+  test("leads with authoritative consumed/paid/remaining/margin before readiness without selecting hidden detail", () => {
     const markup = html("APPROVED", false, false);
     expect(markup).toContain("Rp 40 jt");
     expect(markup).toContain("Rp 30 jt");
@@ -118,7 +122,7 @@ describe("compact project budget desktop", () => {
     expect(markup).toContain("Rp 60 jt");
     expect(markup.indexOf("Budget per kategori")).toBeLessThan(markup.indexOf("Kesiapan proyek"));
     expect(markup).toContain('aria-label="Budget proyek per kategori"');
-    expect(markup).toContain('aria-current="true"');
+    expect(markup).not.toContain('aria-current="true"');
     expect(markup).not.toContain("Atur alokasi");
   });
   test("draft and pending-review commands follow domain permission rather than viewport or role name", () => {
@@ -131,4 +135,71 @@ describe("compact project budget desktop", () => {
     expect(approver).toContain("button--sm");
     expect(html("APPROVED", false, true)).toContain("Atur alokasi");
   });
+});
+
+describe("project budget source and detail truth", () => {
+  test("distinguishes missing, restricted and failed sources from a healthy zero budget", () => {
+    const missing = html("APPROVED", false, false, undefined, {
+      budget: null,
+      budgetSource: { status: "missing" },
+    });
+    expect(missing).toContain("Budget internal belum terbentuk");
+    expect(missing).not.toContain("Proyeksi margin");
+    expect(missing).not.toContain("Budget proyek per kategori");
+    expect(missing).not.toContain(">Sehat<");
+    const failed = html("APPROVED", true, false, undefined, {
+      budget: null,
+      budgetSource: { status: "unavailable" },
+      onRetry: () => undefined,
+    });
+    expect(failed).toContain("Budget belum dapat dimuat");
+    expect(failed).toContain("Coba lagi");
+    expect(failed).not.toContain("Buka perencanaan");
+    const restricted = html("APPROVED", false, false, undefined, {
+      budget: null,
+      budgetSource: { status: "restricted" },
+    });
+    expect(restricted).toContain("Akses budget terbatas");
+    expect(restricted).not.toContain("Coba lagi");
+    const validZero = html("APPROVED", false, false, undefined, {
+      budget: { ...budget, actualCost: 0, paidCost: 0, pendingCost: 0, usedPercentage: 0 },
+      budgetSource: { status: "ready" },
+    });
+    expect(validZero).toContain("Budget proyek per kategori");
+    expect(validZero).toContain("Rp 0");
+    expect(validZero).not.toContain("Budget belum dapat dimuat");
+  });
+
+  test("narrow explicit category opens exact payment/pending context with a way back", () => {
+    const selected = html("APPROVED", false, false, undefined, {
+      budget: {
+        ...budget,
+        categories: [{ ...budget.categories[0]!, paidAmount: 20000.25, pendingAmount: 1250.5 }],
+      },
+      selectedCategoryId: "material",
+    });
+    expect(selected).toContain("Kembali ke kategori");
+    expect(selected).toContain('aria-label="Rincian kategori Material"');
+    expect(selected).toContain("20.000,25");
+    expect(selected).toContain("1.250,50");
+    expect(selected).toContain('aria-label="Budget proyek per kategori"');
+    expect(selected).toContain('hidden=""');
+    expect(selected).not.toContain('aria-current="true"');
+  });
+
+  test("canonical risk describes margin shortfall without changing the budget amounts", () => {
+    const result = html("APPROVED", false, false, undefined, {
+      budget: { ...budget, projectedMarginPercentage: 18, targetGrossPercentage: 30 },
+    });
+    expect(result).toContain("Margin di bawah target");
+    expect(result).toContain("target margin 30%");
+    expect(result).toContain("Rp 100 jt");
+  });
+});
+
+test("desktop budget risk retains the same explicit team severity floor as the project identity", () => {
+  const result = html("APPROVED", false, false, undefined, { storedHealth: "CRITICAL" });
+  expect(result).toContain("Ditandai kritis oleh tim");
+  expect(result).toContain(">Kritis<");
+  expect(result).not.toContain(">Sehat<");
 });

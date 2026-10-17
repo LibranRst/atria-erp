@@ -9,6 +9,8 @@ import { directionCopy, formatReconciliationDate } from "./reconciliation-primit
 export function StatementImportSummary({
   accountName,
   fileName,
+  detectedBankName,
+  detectedAccountNumber,
   rowCount,
   inflow,
   outflow,
@@ -16,6 +18,8 @@ export function StatementImportSummary({
 }: {
   readonly accountName: string | undefined;
   readonly fileName: string;
+  readonly detectedBankName?: string | null;
+  readonly detectedAccountNumber?: string | null;
   readonly rowCount: number;
   readonly inflow: number;
   readonly outflow: number;
@@ -31,6 +35,22 @@ export function StatementImportSummary({
           value={accountName || "Belum dipilih"}
         />
         <FactRow layout="stacked" label="Berkas" wrapLabel value={fileName || "Belum dipilih"} />
+        {detectedBankName ? (
+          <FactRow layout="stacked" label="Bank pada berkas" wrapLabel value={detectedBankName} />
+        ) : null}
+        {detectedAccountNumber ? (
+          <FactRow
+            layout="stacked"
+            label="Nomor pada berkas"
+            wrapLabel
+            value={detectedAccountNumber}
+          />
+        ) : null}
+        {detectedBankName || detectedAccountNumber ? (
+          <p className="px-4 py-3 text-support text-on-surface-variant">
+            Periksa identitas pada berkas. Rekening tujuan tetap mengikuti pilihan Anda.
+          </p>
+        ) : null}
         <FactRow
           layout="stacked"
           label="Pratinjau"

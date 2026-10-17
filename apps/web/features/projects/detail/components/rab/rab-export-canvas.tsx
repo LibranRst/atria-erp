@@ -114,6 +114,9 @@ export function RabExportCanvas({
         const zoomDelta = -e.deltaY * 0.003;
         setScale((prev) => Math.min(Math.max(Number((prev + zoomDelta).toFixed(2)), 0.15), 2.5));
       } else {
+        if (e.deltaX === 0 && e.deltaY === 0) return;
+        // The canvas consumes this gesture; its containing sheet must not scroll too.
+        e.preventDefault();
         setPan((prev) => ({
           x: prev.x - e.deltaX * 0.8,
           y: prev.y - e.deltaY * 0.8,
@@ -236,7 +239,11 @@ export function RabExportCanvas({
       onKeyDown={(e) => {
         if (e.target !== e.currentTarget || e.ctrlKey || e.metaKey || e.altKey) return;
         const step = 64,
-          page = containerRef.current?.clientHeight || 440;
+          page =
+            containerRef.current?.querySelector<HTMLElement>("[data-export-canvas-stage]")
+              ?.clientHeight ||
+            containerRef.current?.clientHeight ||
+            440;
         const end = Math.min(0, page - 24 - (contentRef.current?.offsetHeight || 0) * scale);
         if (
           [

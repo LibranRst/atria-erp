@@ -89,7 +89,7 @@ export function ExpenseFormEntryFields({
           onChange={onProjectChange}
           options={projectOptions}
           placeholder="Pilih proyek aktif"
-          disabled={busy}
+          disabled={busy || Boolean(safeRouteProjectId)}
           required
         />
         {!safeRouteProjectId &&

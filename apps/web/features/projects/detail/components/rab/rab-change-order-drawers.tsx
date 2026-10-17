@@ -56,7 +56,7 @@ function ReviewRow({
       <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
       <div className="text-right">
         <span className="font-bold text-on-surface">{value}</span>
-        {subvalue ? <p className="mt-0.5 text-[10px] text-on-surface-variant">{subvalue}</p> : null}
+        {subvalue ? <p className="mt-0.5 text-meta text-on-surface-variant">{subvalue}</p> : null}
       </div>
     </div>
   );
@@ -71,6 +71,8 @@ export function ChangeOrderDrawer({
   isPending,
   approvedBaseline,
   visibleRabValue,
+  error,
+  fallbackFocusRef,
 }: {
   readonly changeOrderOpen: boolean;
   readonly setChangeOrderOpen: (open: boolean) => void;
@@ -80,6 +82,8 @@ export function ChangeOrderDrawer({
   readonly isPending: boolean;
   readonly approvedBaseline: RabRevisionHistoryView | null;
   readonly visibleRabValue: number;
+  readonly error?: string | null;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
@@ -101,6 +105,7 @@ export function ChangeOrderDrawer({
   );
 
   function handleDiscard(): void {
+    if (isPending) return;
     setReviewing(false);
     setChangeOrderForm({
       reason: "",
@@ -111,12 +116,18 @@ export function ChangeOrderDrawer({
   }
 
   function handleClose(): void {
+    if (isPending) return;
     setReviewing(false);
     setChangeOrderOpen(false);
   }
 
+  function updateChangeOrderForm(value: React.SetStateAction<RabChangeOrderForm>): void {
+    if (!isPending) setChangeOrderForm(value);
+  }
+
   return (
     <WorkflowFormSheet
+      fallbackFocusRef={fallbackFocusRef}
       desktopSize="wide"
       desktopFooterPlacement="aside"
       desktopAsideSummary={
@@ -149,7 +160,7 @@ export function ChangeOrderDrawer({
               <FactRow
                 layout="stacked"
                 wrapLabel
-                label="Nilai baru"
+                label="Nilai usulan"
                 value={
                   <MoneyValue
                     fractionDigits={Number.isInteger(visibleRabValue) ? 0 : 2}
@@ -184,7 +195,8 @@ export function ChangeOrderDrawer({
             </div>
           </GroupedSurface>
           <p className="px-1 text-support text-on-surface-variant">
-            Baseline resmi berubah setelah tinjauan dan persetujuan Change Order.
+            Persetujuan klien dicatat untuk pengajuan. Baseline resmi berubah setelah persetujuan
+            terpisah oleh Owner atau Finance Admin.
           </p>
         </div>
       }
@@ -197,7 +209,7 @@ export function ChangeOrderDrawer({
       open={changeOrderOpen}
       title={reviewing ? "Tinjau Change Order" : "Proses Change Order"}
       onClose={handleClose}
-      primaryLabel={reviewing ? "Setujui Perubahan" : "Lanjut Tinjau"}
+      primaryLabel={reviewing ? "Catat persetujuan klien" : "Lanjut Tinjau"}
       secondaryLabel={reviewing ? "Ubah" : undefined}
       pending={isPending}
       pendingLabel="Memproses…"
@@ -208,21 +220,31 @@ export function ChangeOrderDrawer({
           : undefined
       }
       onPrimary={() => {
+        if (isPending || !formValid) return;
         if (reviewing) {
           handleApproveChangeOrder();
         } else {
           setReviewing(true);
         }
       }}
-      onSecondary={() => setReviewing(false)}
+      onSecondary={(): void => {
+        if (!isPending) setReviewing(false);
+      }}
       statusText={
         desktop
           ? undefined
-          : `Nilai baru Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih ${valueDelta >= 0 ? "+" : ""}Rp ${valueDelta.toLocaleString("id-ID")}`
+          : `Nilai usulan Rp ${visibleRabValue.toLocaleString("id-ID")} · Selisih ${valueDelta >= 0 ? "+" : ""}Rp ${valueDelta.toLocaleString("id-ID")}`
       }
       statusTone={!formValid || valueDelta > 0 ? "warning" : "success"}
     >
       <div className="space-y-md">
+        {error ? (
+          <div role="alert">
+            <FormRiskNotice title="Persetujuan klien belum tercatat" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : null}
         {/* Context Card: Perbandingan Nilai Kontrak */}
         {!desktop && (
           <div className="rounded-3xl bg-surface-container-lowest p-4 shadow-surface ring-1 ring-ring-subtle">
@@ -246,7 +268,7 @@ export function ChangeOrderDrawer({
               </div>
               <div className="px-2 text-center">
                 <p className="text-[9px] font-bold tracking-wider text-on-surface-variant uppercase">
-                  Sesudah
+                  Usulan
                 </p>
                 <div className="mt-1 flex justify-center font-mono text-xs font-bold text-on-surface tabular-nums">
                   <MoneyValue amount={visibleRabValue} variant="compact" size="xs" align="center" />
@@ -282,7 +304,7 @@ export function ChangeOrderDrawer({
           <div className="space-y-md">
             <FormSection
               title="Rincian pengajuan Change Order"
-              helper="Periksa kembali detail revisi sebelum memperbarui baseline kontrak resmi."
+              helper="Periksa data pengajuan sebelum mencatat persetujuan klien."
             >
               <ReviewRow label="Target revisi" value={`R${baseRevision} → R${targetRevision}`} />
               <ReviewRow label="Alasan perubahan" value={changeOrderForm.reason} />
@@ -294,10 +316,10 @@ export function ChangeOrderDrawer({
               />
             </FormSection>
 
-            <FormRiskNotice title="Persetujuan mengikat kontrak" tone="warning">
-              Setelah disetujui, nilai kontrak dan baseline RAB proyek akan diperbarui menjadi R
-              {targetRevision}. Revisi sebelumnya akan terkunci sebagai riwayat audit dan tidak
-              dapat diedit langsung.
+            <FormRiskNotice title="Menunggu persetujuan internal" tone="warning">
+              Tindakan ini mencatat persetujuan klien pada pengajuan Change Order. Owner atau
+              Finance Admin meninjau dan menyetujui pengajuan secara terpisah sebelum baseline
+              kontrak diperbarui. Baseline yang disetujui tetap berlaku selama menunggu.
             </FormRiskNotice>
           </div>
         ) : (
@@ -313,9 +335,12 @@ export function ChangeOrderDrawer({
                 helper="Minimal 10 karakter latar belakang revisi"
               >
                 <Textarea
+                  disabled={isPending}
                   rows={3}
                   value={changeOrderForm.reason}
-                  onChange={(value) => setChangeOrderForm((curr) => ({ ...curr, reason: value }))}
+                  onChange={(value) =>
+                    updateChangeOrderForm((curr) => ({ ...curr, reason: value }))
+                  }
                   placeholder="Contoh: Permintaan penambahan pekerjaan partisi dan upgrade material lantai oleh klien."
                 />
               </FormField>
@@ -325,10 +350,11 @@ export function ChangeOrderDrawer({
                 helper="Rincian pekerjaan tambah/kurang dari baseline sebelumnya"
               >
                 <Textarea
+                  disabled={isPending}
                   rows={3}
                   value={changeOrderForm.scopeSummary}
                   onChange={(value) =>
-                    setChangeOrderForm((curr) => ({
+                    updateChangeOrderForm((curr) => ({
                       ...curr,
                       scopeSummary: value,
                     }))
@@ -348,9 +374,10 @@ export function ChangeOrderDrawer({
                 helper="Nomor surat, nomor SPK, judul email, atau bukti pesan resmi"
               >
                 <TextInput
+                  disabled={isPending}
                   value={changeOrderForm.clientReference}
                   onChange={(value) =>
-                    setChangeOrderForm((curr) => ({
+                    updateChangeOrderForm((curr) => ({
                       ...curr,
                       clientReference: value,
                     }))
@@ -359,10 +386,11 @@ export function ChangeOrderDrawer({
                 />
               </FormField>
               <DatePickerField
+                disabled={isPending}
                 label="Tanggal persetujuan klien"
                 value={changeOrderForm.clientConfirmedAt}
                 onChange={(value) =>
-                  setChangeOrderForm((curr) => ({
+                  updateChangeOrderForm((curr) => ({
                     ...curr,
                     clientConfirmedAt: value,
                   }))
@@ -374,8 +402,8 @@ export function ChangeOrderDrawer({
               title="Perubahan baseline resmi"
               tone={valueDelta > 0 ? "warning" : "default"}
             >
-              Form ini menyiapkan pengajuan perubahan kontrak. Baseline resmi proyek baru akan
-              diperbarui setelah Anda meninjau dan menyetujui langkah berikutnya.
+              Form ini mencatat pengajuan dan persetujuan klien. Baseline resmi proyek tetap berlaku
+              sampai Owner atau Finance Admin menyetujui Change Order secara terpisah.
             </FormRiskNotice>
           </>
         )}
@@ -391,6 +419,8 @@ export function VoidRevisionDrawer({
   setVoidReason,
   handleVoidRabRevision,
   isPending,
+  error,
+  fallbackFocusRef,
 }: {
   readonly voidRevisionOpen: boolean;
   readonly setVoidRevisionOpen: (open: boolean) => void;
@@ -398,9 +428,12 @@ export function VoidRevisionDrawer({
   readonly setVoidReason: (reason: string) => void;
   readonly handleVoidRabRevision: () => void;
   readonly isPending: boolean;
+  readonly error?: string | null;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   return (
     <ConfirmationDialog
+      fallbackFocusRef={fallbackFocusRef}
       open={voidRevisionOpen}
       title="Batalkan Revisi?"
       description="Revisi ini akan ditandai VOID. RAB approved, nilai kontrak, budget, RAP, dan paket tidak berubah."
@@ -408,18 +441,34 @@ export function VoidRevisionDrawer({
       danger
       pending={isPending}
       disabled={voidReason.trim().length < 3}
-      onClose={() => setVoidRevisionOpen(false)}
-      onConfirm={handleVoidRabRevision}
+      onClose={(): void => {
+        if (!isPending) setVoidRevisionOpen(false);
+      }}
+      onConfirm={(): void => {
+        if (!isPending) handleVoidRabRevision();
+      }}
     >
-      <FormField label="Alasan pembatalan" helper="Wajib diisi, minimal 3 karakter.">
-        <Textarea
-          autoFocus
-          rows={3}
-          value={voidReason}
-          onChange={setVoidReason}
-          placeholder="Contoh: Klien membatalkan perubahan lingkup"
-        />
-      </FormField>
+      <div className="space-y-3">
+        {error ? (
+          <div role="alert">
+            <FormRiskNotice title="Revisi belum dibatalkan" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : null}
+        <FormField label="Alasan pembatalan" helper="Wajib diisi, minimal 3 karakter.">
+          <Textarea
+            disabled={isPending}
+            autoFocus
+            rows={3}
+            value={voidReason}
+            onChange={(value): void => {
+              if (!isPending) setVoidReason(value);
+            }}
+            placeholder="Contoh: Klien membatalkan perubahan lingkup"
+          />
+        </FormField>
+      </div>
     </ConfirmationDialog>
   );
 }

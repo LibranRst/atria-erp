@@ -2,6 +2,9 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
 import { approvedChatProviders } from "./provider-policy";
+import { selectNineRouterChatModel, type ChatWorkloadProfile } from "./chat-workload-policy";
+
+export type { ChatWorkloadProfile } from "./chat-workload-policy";
 
 /**
  * Penyedia model untuk AI chat agent.
@@ -160,7 +163,7 @@ function getProviderApiKey(provider: ChatProviderName): string | undefined {
   return readEnvFileFallback(envKeyName);
 }
 
-function getNineRouterClient() {
+function getNineRouterClient(reasoningEffort?: string): ReturnType<typeof createOpenAICompatible> {
   const apiKey = getProviderApiKey("NINEROUTER") ?? "";
   return createOpenAICompatible({
     name: "9router",
@@ -172,7 +175,9 @@ function getNineRouterClient() {
       // needs buffered JSON; chat explicitly supplies true and stays streaming.
       stream: body.stream ?? false,
       reasoning_effort:
-        process.env.NINEROUTER_REASONING_EFFORT || NINEROUTER_DEFAULT_REASONING_EFFORT,
+        reasoningEffort ||
+        process.env.NINEROUTER_REASONING_EFFORT ||
+        NINEROUTER_DEFAULT_REASONING_EFFORT,
     }),
   });
 }
@@ -188,9 +193,20 @@ export function isProviderConfigured(provider: ChatProviderName): boolean {
   return hasKey;
 }
 
-export function resolveChatModel(provider: ChatProviderName): LanguageModel {
+export function resolveChatModel(
+  provider: ChatProviderName,
+  profile?: ChatWorkloadProfile,
+): LanguageModel {
   if (provider === "NINEROUTER") {
     const modelId = normalizeNineRouterModel(process.env.NINEROUTER_MODEL_ID);
+    const selection = selectNineRouterChatModel({
+      normalizedModelId: modelId,
+      configuredReasoningEffort:
+        process.env.NINEROUTER_REASONING_EFFORT || NINEROUTER_DEFAULT_REASONING_EFFORT,
+      profile,
+    });
+    if (selection.adaptive)
+      return getNineRouterClient(selection.reasoningEffort)(selection.modelId);
     return getNineRouterClient()(modelId);
   }
   if (provider === "OPENROUTER") {

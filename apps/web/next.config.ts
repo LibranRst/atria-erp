@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Keep verification builds separate from an already running development server.
   distDir: process.env.ATRIA_NEXT_DIST_DIR ?? ".next",
-  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   // Di monorepo, Next menelusuri dependensi dari direktori app-nya dan akan
   // melewatkan `node_modules` yang di-hoist ke root workspace.
   outputFileTracingRoot: path.join(import.meta.dirname, "../../"),

@@ -79,6 +79,8 @@ export function OperationalFormSheet({
   desktopFooterPlacement,
   desktopAsideSummary,
   sizing,
+  returnFocusRef,
+  fallbackFocusRef,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -111,6 +113,8 @@ export function OperationalFormSheet({
   readonly desktopFooterPlacement?: "bottom" | "aside";
   readonly desktopAsideSummary?: React.ReactNode;
   readonly sizing?: "content" | "maximum";
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const hasSubmitAction = !hideSubmit;
   const effectiveSubmitLabel = submitLabel ?? primaryLabel ?? "Simpan";
@@ -192,6 +196,8 @@ export function OperationalFormSheet({
       desktopFooterPlacement={desktopFooterPlacement}
       desktopAsideSummary={desktopAsideSummary}
       sizing={sizing}
+      returnFocusRef={returnFocusRef}
+      fallbackFocusRef={fallbackFocusRef}
     >
       <FormSheetPresentationBoundary>
         <div className="space-y-4">
@@ -615,6 +621,8 @@ export function WorkflowFormSheet({
   desktopAsideSummary,
   sizing,
   contentKey,
+  returnFocusRef,
+  fallbackFocusRef,
 }: {
   readonly open: boolean;
   readonly title: string;
@@ -640,6 +648,8 @@ export function WorkflowFormSheet({
   readonly desktopAsideSummary?: React.ReactNode;
   readonly sizing?: "content" | "maximum";
   readonly contentKey?: string;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   return (
     <FormSheet
@@ -655,6 +665,8 @@ export function WorkflowFormSheet({
       contentKey={contentKey}
       onClose={onClose}
       onExitComplete={onExitComplete}
+      returnFocusRef={returnFocusRef}
+      fallbackFocusRef={fallbackFocusRef}
       footer={
         <SheetFooterActions
           desktopStacked={desktopFooterPlacement === "aside"}

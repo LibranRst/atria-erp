@@ -1,13 +1,18 @@
 import { getRoleAccessByName } from "@backend/lib/auth/role-access";
 
 import { cookies } from "@runtime/request-context";
-import { and, asc, desc, eq, lt, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, lt, ne, or } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
+  INSTANCE_TENANT_ID,
   goodsReceipt,
   inventoryLocation,
   project,
+  projectRap,
+  projectRapItem,
+  stockCount,
+  stockTransfer,
   stockMovement,
   vendorBill,
 } from "@backend/db/schema";
@@ -21,6 +26,17 @@ import {
   type MaterialInventoryRow,
   type MaterialShortageRow,
 } from "./inventory";
+import {
+  materialProjectScope,
+  materialProjectReferenceScope,
+  type MaterialReadActor,
+} from "@backend/server/usecases/material/material-read-scope";
+import { getMaterialDesktopActivityUseCase } from "@backend/server/usecases/material/material-desktop";
+import { resolveActor } from "@backend/server/actor";
+import type {
+  MaterialDesktopActivityRequest,
+  MaterialDesktopActivityData,
+} from "@atria/core/material/material-desktop";
 import type { GoodsReceiptVendorBillOption } from "@backend/features/materials/utils/goods-receipt-prefill";
 
 export interface MaterialMovementView {
@@ -109,7 +125,20 @@ export interface ProjectStockOption {
 }
 export interface MaterialOperationsDashboard {
   readonly roleName: string;
+  readonly shortagesSource?: {
+    readonly status: "ready" | "restricted" | "unavailable";
+    readonly message?: string;
+  };
+  readonly activitySummary?: {
+    readonly movements: number;
+    readonly receipts: number;
+    readonly transfers: number;
+    readonly counts: number;
+    readonly pendingCounts: number;
+    readonly pendingReversals: number;
+  };
   readonly capabilities: {
+    readonly canCreateLocation?: boolean;
     readonly canReceive: boolean;
     readonly canOperate: boolean;
     readonly canTransfer: boolean;
@@ -142,14 +171,19 @@ type MaterialMovementCursor = {
 async function movementRows(
   limit: number,
   cursor?: MaterialMovementCursor,
+  actor?: MaterialReadActor,
 ): Promise<MaterialMovementPage> {
   const rows = await db.query.stockMovement.findMany({
-    where: cursor
-      ? or(
-          lt(stockMovement.createdAt, cursor.createdAt),
-          and(eq(stockMovement.createdAt, cursor.createdAt), lt(stockMovement.id, cursor.id)),
-        )
-      : undefined,
+    where: and(
+      eq(stockMovement.tenantId, INSTANCE_TENANT_ID),
+      actor ? materialProjectReferenceScope(stockMovement.projectId, actor, true) : undefined,
+      cursor
+        ? or(
+            lt(stockMovement.createdAt, cursor.createdAt),
+            and(eq(stockMovement.createdAt, cursor.createdAt), lt(stockMovement.id, cursor.id)),
+          )
+        : undefined,
+    ),
     with: { material: true, location: true, project: true, createdBy: true },
     orderBy: [desc(stockMovement.createdAt), desc(stockMovement.id)],
     limit: limit + 1,
@@ -198,7 +232,16 @@ export async function getMaterialMovementPage(
     return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
   try {
     await assertPermission(session.user, "view:inventory");
-    return { success: true, data: await movementRows(parsed.data.limit, parsed.data.cursor) };
+    const access = await getRoleAccessByName(await resolveRoleName(session.user.roleId));
+    const actor: MaterialReadActor = {
+      userId: session.user.id,
+      permissions: access?.permissions ?? [],
+      dataScope: access?.dataScope ?? "NONE",
+    };
+    return {
+      success: true,
+      data: await movementRows(parsed.data.limit, parsed.data.cursor, actor),
+    };
   } catch (error) {
     return {
       success: false,
@@ -219,6 +262,13 @@ export async function getMaterialOperationsDashboard(): Promise<
   try {
     await assertPermission(session.user, "view:inventory");
     const roleName = await resolveRoleName(session.user.roleId);
+    const access = await getRoleAccessByName(roleName);
+    const permissions = access?.permissions ?? [];
+    const actor: MaterialReadActor = {
+      userId: session.user.id,
+      permissions,
+      dataScope: access?.dataScope ?? "NONE",
+    };
     const [
       inventoryResult,
       shortageResult,
@@ -231,9 +281,13 @@ export async function getMaterialOperationsDashboard(): Promise<
       locations,
     ] = await Promise.all([
       getMaterialInventory(),
-      getMaterialShortages(),
-      movementRows(30),
+      permissions.includes("view:rap") ? getMaterialShortages() : Promise.resolve(null),
+      movementRows(30, undefined, actor),
       db.query.goodsReceipt.findMany({
+        where: and(
+          eq(goodsReceipt.tenantId, INSTANCE_TENANT_ID),
+          materialProjectReferenceScope(goodsReceipt.projectId, actor),
+        ),
         with: {
           project: true,
           inventoryLocation: true,
@@ -245,6 +299,7 @@ export async function getMaterialOperationsDashboard(): Promise<
         limit: 50,
       }),
       db.query.stockCount.findMany({
+        where: eq(stockCount.tenantId, INSTANCE_TENANT_ID),
         with: {
           location: true,
           createdBy: true,
@@ -255,18 +310,28 @@ export async function getMaterialOperationsDashboard(): Promise<
         limit: 50,
       }),
       db.query.stockTransfer.findMany({
+        where: eq(stockTransfer.tenantId, INSTANCE_TENANT_ID),
         with: { fromLocation: true, toLocation: true, items: { with: { material: true } } },
         orderBy: (table, { desc: descending }) => [descending(table.createdAt)],
         limit: 50,
       }),
       db.query.project.findMany({
-        where: eq(project.status, "ACTIVE"),
+        where: and(eq(project.status, "ACTIVE"), materialProjectScope(actor)),
         columns: { id: true, name: true },
-        with: { raps: { with: { items: true } } },
+        with: {
+          raps: {
+            where: eq(projectRap.tenantId, INSTANCE_TENANT_ID),
+            with: { items: { where: eq(projectRapItem.tenantId, INSTANCE_TENANT_ID) } },
+          },
+        },
         orderBy: (table, { asc }) => [asc(table.name)],
       }),
       db.query.vendorBill.findMany({
-        where: ne(vendorBill.status, "VOID"),
+        where: and(
+          ne(vendorBill.status, "VOID"),
+          eq(vendorBill.tenantId, INSTANCE_TENANT_ID),
+          materialProjectReferenceScope(vendorBill.projectId, actor),
+        ),
         columns: {
           id: true,
           projectId: true,
@@ -287,14 +352,76 @@ export async function getMaterialOperationsDashboard(): Promise<
         orderBy: (table, { desc: descending }) => [descending(table.createdAt)],
       }),
       db.query.inventoryLocation.findMany({
-        where: eq(inventoryLocation.isActive, true),
+        where: and(
+          eq(inventoryLocation.isActive, true),
+          eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+        ),
         columns: { id: true, name: true },
         orderBy: [asc(inventoryLocation.name), asc(inventoryLocation.id)],
       }),
     ]);
     if (!inventoryResult.success) return inventoryResult;
-    const shortages = shortageResult.success ? shortageResult.data : [];
-    const permissions = (await getRoleAccessByName(roleName))?.permissions ?? [];
+    const shortages = shortageResult?.success ? shortageResult.data : [];
+    const shortagesSource: NonNullable<MaterialOperationsDashboard["shortagesSource"]> =
+      !shortageResult
+        ? { status: "restricted", message: "Rincian kebutuhan RAP memerlukan izin melihat RAP." }
+        : shortageResult.success
+          ? { status: "ready" }
+          : { status: "unavailable", message: shortageResult.error.message };
+    const [
+      movementTotal,
+      receiptTotal,
+      transferTotal,
+      countTotal,
+      pendingCounts,
+      pendingReversals,
+    ] = await Promise.all([
+      db
+        .select({ value: count() })
+        .from(stockMovement)
+        .where(
+          and(
+            eq(stockMovement.tenantId, INSTANCE_TENANT_ID),
+            materialProjectReferenceScope(stockMovement.projectId, actor, true),
+          ),
+        ),
+      db
+        .select({ value: count() })
+        .from(goodsReceipt)
+        .where(
+          and(
+            eq(goodsReceipt.tenantId, INSTANCE_TENANT_ID),
+            materialProjectReferenceScope(goodsReceipt.projectId, actor),
+          ),
+        ),
+      db
+        .select({ value: count() })
+        .from(stockTransfer)
+        .where(eq(stockTransfer.tenantId, INSTANCE_TENANT_ID)),
+      db
+        .select({ value: count() })
+        .from(stockCount)
+        .where(eq(stockCount.tenantId, INSTANCE_TENANT_ID)),
+      db
+        .select({ value: count() })
+        .from(stockCount)
+        .where(
+          and(
+            eq(stockCount.tenantId, INSTANCE_TENANT_ID),
+            eq(stockCount.status, "PENDING_APPROVAL"),
+          ),
+        ),
+      db
+        .select({ value: count() })
+        .from(goodsReceipt)
+        .where(
+          and(
+            eq(goodsReceipt.tenantId, INSTANCE_TENANT_ID),
+            eq(goodsReceipt.status, "REVERSAL_REQUESTED"),
+            materialProjectReferenceScope(goodsReceipt.projectId, actor),
+          ),
+        ),
+    ]);
     const operational = permissions.includes("create:stock_movement");
     const billOptions = bills
       .filter((row) => row.budgetCategory.expenseCategory.code === "MATERIAL")
@@ -345,7 +472,17 @@ export async function getMaterialOperationsDashboard(): Promise<
       success: true,
       data: {
         roleName,
+        shortagesSource,
+        activitySummary: {
+          movements: movementTotal[0]?.value ?? 0,
+          receipts: receiptTotal[0]?.value ?? 0,
+          transfers: transferTotal[0]?.value ?? 0,
+          counts: countTotal[0]?.value ?? 0,
+          pendingCounts: pendingCounts[0]?.value ?? 0,
+          pendingReversals: pendingReversals[0]?.value ?? 0,
+        },
         capabilities: {
+          canCreateLocation: permissions.includes("manage:material_settings"),
           canReceive: operational,
           canOperate: operational,
           canTransfer: permissions.includes("transfer:stock"),
@@ -433,12 +570,24 @@ export async function getMaterialOperationsDashboard(): Promise<
       },
     };
   } catch (error) {
+    const forbidden = error instanceof Error && error.message.startsWith("FORBIDDEN:");
     return {
       success: false,
       error: {
-        code: "FORBIDDEN",
-        message: error instanceof Error ? error.message : "Akses material ditolak.",
+        code: forbidden ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR",
+        message: forbidden
+          ? "Akses material ditolak."
+          : "Data material belum dapat dimuat. Coba lagi.",
       },
     };
   }
+}
+
+export async function getMaterialDesktopActivity(
+  input: MaterialDesktopActivityRequest,
+): Promise<ActionResponse<MaterialDesktopActivityData>> {
+  const actor = await resolveActor();
+  if (!actor)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." } };
+  return getMaterialDesktopActivityUseCase(actor, input);
 }

@@ -81,9 +81,7 @@ describe("deriveInvoicePrefill", () => {
     const prefill = deriveInvoicePrefill({
       projectName: "Fit-Out Interior Studio Bassura City — Unit 18B",
       totalContractValue: 50_000_000,
-      existingInvoices: [
-        { amount: 25_000_000, stage: "DP", status: "PAID" },
-      ],
+      existingInvoices: [{ amount: 25_000_000, stage: "DP", status: "PAID" }],
       currentDate: fixedDate,
     });
 
@@ -116,9 +114,7 @@ describe("deriveInvoicePrefill", () => {
     const prefill = deriveInvoicePrefill({
       projectName: "Fit-Out Interior Studio Bassura City — Unit 18B",
       totalContractValue: 50_000_000,
-      existingInvoices: [
-        { amount: 25_000_000, stage: "DP", status: "VOID" },
-      ],
+      existingInvoices: [{ amount: 25_000_000, stage: "DP", status: "VOID" }],
       currentDate: fixedDate,
     });
 
@@ -333,6 +329,3 @@ describe("deriveExpensePaymentReference", () => {
     expect(refKonsumsi).toBe("KAS-OPS-BSR-03");
   });
 });
-
-
-

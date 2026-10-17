@@ -1,11 +1,12 @@
 import { actorCan } from "@backend/lib/auth/permissions";
 import { db } from "@backend/db";
-import { project } from "@backend/db/schema";
+import { client, INSTANCE_TENANT_ID, project } from "@backend/db/schema";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
 import type { Actor } from "@backend/server/actor";
 import type { ProjectItem } from "@atria/core/types/projects";
 import type { ProjectFormBootstrapInput } from "@atria/core/validations/project";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { isProjectManagerOption } from "./project-manager-options";
 
 type ProjectFormIdentity = Pick<
   ProjectItem,
@@ -62,7 +63,7 @@ export async function getProjectFormBootstrap(
   const canUpdate = actorCan(actor, "update:budget");
 
   if (!actorCan(actor, "view:budget")) return { status: "restricted" };
-  if (input.projectId && !canUpdate) return { status: "restricted" };
+  if (input.projectId ? !canUpdate : !canCreate) return { status: "restricted" };
 
   if (input.projectId) {
     try {
@@ -75,6 +76,7 @@ export async function getProjectFormBootstrap(
   const [clients, users, projectRecord] = await Promise.all([
     db.query.client.findMany({
       columns: { id: true, name: true },
+      where: eq(client.tenantId, INSTANCE_TENANT_ID),
       orderBy: (table, { asc }) => [asc(table.name)],
     }),
     db.query.user.findMany({
@@ -99,7 +101,7 @@ export async function getProjectFormBootstrap(
             coverImageUrl: true,
             notes: true,
           },
-          where: eq(project.id, input.projectId),
+          where: and(eq(project.id, input.projectId), eq(project.tenantId, INSTANCE_TENANT_ID)),
         })
       : Promise.resolve(undefined),
   ]);
@@ -110,15 +112,11 @@ export async function getProjectFormBootstrap(
     status: "ready",
     canCreate,
     canUpdate,
-    clients,
+    clients: canCreate
+      ? clients
+      : clients.filter((candidate) => candidate.id === projectRecord?.clientId),
     projectManagers: users
-      .filter(
-        (candidate) =>
-          // Kandidat PM adalah pemegang peran bercakupan tertugas — properti
-          // peran, bukan namanya, sehingga peran kustom ikut memenuhi syarat.
-          (candidate.isActive && candidate.role.dataScope === "ASSIGNED") ||
-          candidate.id === projectRecord?.projectManagerId,
-      )
+      .filter((candidate) => isProjectManagerOption(candidate, [projectRecord?.projectManagerId]))
       .map(({ id, name }) => ({ id, name })),
     project: projectRecord
       ? {

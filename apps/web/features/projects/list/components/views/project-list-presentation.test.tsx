@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import ProjectsLoading from "@/app/projects/loading";
 import ProjectDetailLoading from "@/app/projects/[id]/loading";
+import { ProjectPlanningDesktopLoading } from "@/features/projects/detail/components/shared/project-planning-desktop-loading";
 import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 import { ProjectListCard } from "../cards/project-list-card";
 import { ProjectListSectionHeader, ProjectSearchAndFilters } from "./project-list-header";
@@ -42,6 +43,16 @@ function classTokensOf(html: string, text: string): readonly string[] {
 }
 
 describe("project list presentation", () => {
+  for (const kind of ["rap", "rab"] as const) {
+    test(`${kind.toUpperCase()} loading retains a complete accessible table scaffold`, () => {
+      const html = renderToStaticMarkup(<ProjectPlanningDesktopLoading kind={kind} />);
+      expect(html).toContain(`Memuat ${kind.toUpperCase()} proyek`);
+      expect(html).toContain('aria-busy="true"');
+      expect(html.match(/role="columnheader"/g)?.length).toBe(5);
+      expect(html.match(/role="rowheader"/g)?.length).toBe(10);
+      expect(html).not.toContain('type="button"');
+    });
+  }
   test("desktop list and detail loading follow compact table hierarchy while mobile keeps cover placeholders", () => {
     const list = renderToStaticMarkup(
       <WorkspacePresentationProvider presentation="desktop">
@@ -55,8 +66,11 @@ describe("project list presentation", () => {
     );
     expect(list).toContain('aria-busy="true"');
     expect(detail).toContain('aria-busy="true"');
-    expect(list).toContain("grid-cols-6");
-    expect(detail).toContain("grid-cols-6");
+    expect(list).toContain('role="grid"');
+    expect(list).toContain("Struktur daftar proyek sedang dimuat");
+    expect(list).toContain("Sisa budget");
+    expect(list).toContain('aria-hidden="true" inert=""');
+    expect(detail).toContain("kategori budget proyek sedang disiapkan");
     expect(list).not.toContain("aspect-4/3");
     expect(detail).not.toContain("aspect-square");
     const mobile = renderToStaticMarkup(<ProjectDetailLoading />);

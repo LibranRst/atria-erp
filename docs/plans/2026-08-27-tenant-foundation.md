@@ -21,15 +21,15 @@ sama dengan go-live project terbesar Dekoria.
 
 ### Ukuran masalahnya
 
-| Ukuran | Angka | Cara mengukur ulang |
-| --- | --- | --- |
-| Tabel di schema | 61 | `grep -c "= pgTable" db/schema/*.ts` |
-| Tabel yang butuh `tenant_id` | **53** | 61 dikurangi 8 (lihat "Yang tetap global") |
-| Titik query yang bergantung pada scoping | **865** | 559 `db.query.*` + 306 `db.select/insert/update/delete` |
-| Transaksi ber-lock yang menyentuh saldo | 44 | `grep -c 'for("update")'` |
-| Constraint unik yang harus jadi komposit | **16** (+1 menunggu keputusan) | lihat tabel di bawah |
-| Berkas yang menyentuh `bankAccount` | 76 | — |
-| Berkas yang menyentuh budget project | 65 | — |
+| Ukuran                                   | Angka                          | Cara mengukur ulang                                     |
+| ---------------------------------------- | ------------------------------ | ------------------------------------------------------- |
+| Tabel di schema                          | 61                             | `grep -c "= pgTable" db/schema/*.ts`                    |
+| Tabel yang butuh `tenant_id`             | **53**                         | 61 dikurangi 8 (lihat "Yang tetap global")              |
+| Titik query yang bergantung pada scoping | **865**                        | 559 `db.query.*` + 306 `db.select/insert/update/delete` |
+| Transaksi ber-lock yang menyentuh saldo  | 44                             | `grep -c 'for("update")'`                               |
+| Constraint unik yang harus jadi komposit | **16** (+1 menunggu keputusan) | lihat tabel di bawah                                    |
+| Berkas yang menyentuh `bankAccount`      | 76                             | —                                                       |
+| Berkas yang menyentuh budget project     | 65                             | —                                                       |
 
 Angka 865 itu yang menentukan pendekatan. Isolasi yang bergantung pada
 kedisiplinan menulis `WHERE tenant_id = ?` di 865 tempat akan gagal — bukan
@@ -42,11 +42,11 @@ perusahaan terbaca oleh kompetitornya.
 
 Tiga pola dipertimbangkan:
 
-| Pola | Ditolak/diterima | Alasan |
-| --- | --- | --- |
-| Database terpisah per tenant | **Ditolak** | Fitur C menuntut Dekoria membaca paket vendor. Data di database lain tidak bisa dibaca — tidak ada trik. Ditambah: N migrasi, N backup, N deploy, satu orang operator. |
-| Schema Postgres per tenant | **Ditolak** | Migrasi dikali N, dan query lintas-tenant kembali sulit. Menanggung biaya isolasi tanpa mendapat manfaat query. |
-| **Satu schema, kolom `tenant_id`, RLS** | **Diterima** | Satu migrasi, satu deploy, satu backup, dan query lintas-tenant untuk project kolaborasi menjadi query biasa. |
+| Pola                                    | Ditolak/diterima | Alasan                                                                                                                                                                 |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database terpisah per tenant            | **Ditolak**      | Fitur C menuntut Dekoria membaca paket vendor. Data di database lain tidak bisa dibaca — tidak ada trik. Ditambah: N migrasi, N backup, N deploy, satu orang operator. |
+| Schema Postgres per tenant              | **Ditolak**      | Migrasi dikali N, dan query lintas-tenant kembali sulit. Menanggung biaya isolasi tanpa mendapat manfaat query.                                                        |
+| **Satu schema, kolom `tenant_id`, RLS** | **Diterima**     | Satu migrasi, satu deploy, satu backup, dan query lintas-tenant untuk project kolaborasi menjadi query biasa.                                                          |
 
 Keputusan sebelumnya yang condong ke database terpisah **dicabut**. Pilihan itu
 masuk akal selama kebutuhan "Dekoria memantau paket vendor" belum ada; setelah
@@ -82,13 +82,13 @@ dibangun.
 
 Delapan tabel sengaja tidak mendapat `tenant_id`:
 
-| Tabel | Alasan |
-| --- | --- |
-| `user` | Identitas orang, bukan milik perusahaan. Satu orang bisa bekerja di dua perusahaan; keanggotaan dipisah ke `tenant_member`. |
-| `session`, `account`, `verification` | Internal Better Auth, menggantung pada `user`. |
-| `role`, `role_permission` | **Menunggu keputusan** — lihat "Pertanyaan terbuka". |
-| `project_cost_category` | Enum tetap (`MATERIAL`, `SUBCONTRACTOR`, `OPERATIONAL`, `OTHER`), bukan data perusahaan. |
-| `ai_user_preference` | Preferensi milik orang, bukan perusahaan. Berkunci `user_id`, tanpa kolom `id`. |
+| Tabel                                | Alasan                                                                                                                      |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `user`                               | Identitas orang, bukan milik perusahaan. Satu orang bisa bekerja di dua perusahaan; keanggotaan dipisah ke `tenant_member`. |
+| `session`, `account`, `verification` | Internal Better Auth, menggantung pada `user`.                                                                              |
+| `role`, `role_permission`            | **Menunggu keputusan** — lihat "Pertanyaan terbuka".                                                                        |
+| `project_cost_category`              | Enum tetap (`MATERIAL`, `SUBCONTRACTOR`, `OPERATIONAL`, `OTHER`), bukan data perusahaan.                                    |
+| `ai_user_preference`                 | Preferensi milik orang, bukan perusahaan. Berkunci `user_id`, tanpa kolom `id`.                                             |
 
 Dua tabel baru:
 
@@ -105,25 +105,25 @@ perusahaan — dan Better Auth harus dilawan untuk mencapainya.
 
 Enam belas pasti, satu menunggu keputusan peran.
 
-| # | Lokasi | Sekarang | Menjadi |
-| --- | --- | --- | --- |
-| 1 | `finance.ts:31` | `bank_account.account_number` | `(tenant_id, account_number)` |
-| 2 | `finance.ts:234` | `client_invoice.invoice_number` | `(tenant_id, invoice_number)` |
-| 3 | `finance.ts:308` | `vendor.email` | `(tenant_id, email)` |
-| 4 | `finance.ts:351` | `vendor_bill.bill_number` | `(tenant_id, bill_number)` |
-| 5 | `finance.ts:514` | `bank_statement_row.fingerprint` | `(tenant_id, fingerprint)` |
-| 6 | `projects.ts:27` | `client.email` | `(tenant_id, email)` |
-| 7 | `projects.ts:230` | `expense_category.code` | `(tenant_id, code)` |
-| 8 | `projects.ts:774` | `material_category.name` | `(tenant_id, name)` |
-| 9 | `materials.ts:67` | `inventory_location.name` | `(tenant_id, name)` |
-| 10 | `materials.ts:124` | `stock_transfer.transfer_number` | `(tenant_id, transfer_number)` |
-| 11 | `materials.ts:149` | `stock_count.count_number` | `(tenant_id, count_number)` |
-| 12 | `materials.ts:213` | `item_price_library.code` | `(tenant_id, code)` |
-| 13 | `materials.ts:360` | `inventory_opening_batch.batch_number` | `(tenant_id, batch_number)` |
-| 14 | `materials.ts:565` | `goods_receipt.receipt_number` | `(tenant_id, receipt_number)` |
-| 15 | `system.ts:264` | `app_config.key` | `(tenant_id, key)` |
-| 16 | `system.ts:183` | `ai_proposal_confirmation.tool_call_id` | `(tenant_id, tool_call_id)` |
-| 17 | `auth.ts:36`, `auth.ts:74` | `role.name`, `(role_id, permission_key)` | menunggu keputusan |
+| #   | Lokasi                     | Sekarang                                 | Menjadi                        |
+| --- | -------------------------- | ---------------------------------------- | ------------------------------ |
+| 1   | `finance.ts:31`            | `bank_account.account_number`            | `(tenant_id, account_number)`  |
+| 2   | `finance.ts:234`           | `client_invoice.invoice_number`          | `(tenant_id, invoice_number)`  |
+| 3   | `finance.ts:308`           | `vendor.email`                           | `(tenant_id, email)`           |
+| 4   | `finance.ts:351`           | `vendor_bill.bill_number`                | `(tenant_id, bill_number)`     |
+| 5   | `finance.ts:514`           | `bank_statement_row.fingerprint`         | `(tenant_id, fingerprint)`     |
+| 6   | `projects.ts:27`           | `client.email`                           | `(tenant_id, email)`           |
+| 7   | `projects.ts:230`          | `expense_category.code`                  | `(tenant_id, code)`            |
+| 8   | `projects.ts:774`          | `material_category.name`                 | `(tenant_id, name)`            |
+| 9   | `materials.ts:67`          | `inventory_location.name`                | `(tenant_id, name)`            |
+| 10  | `materials.ts:124`         | `stock_transfer.transfer_number`         | `(tenant_id, transfer_number)` |
+| 11  | `materials.ts:149`         | `stock_count.count_number`               | `(tenant_id, count_number)`    |
+| 12  | `materials.ts:213`         | `item_price_library.code`                | `(tenant_id, code)`            |
+| 13  | `materials.ts:360`         | `inventory_opening_batch.batch_number`   | `(tenant_id, batch_number)`    |
+| 14  | `materials.ts:565`         | `goods_receipt.receipt_number`           | `(tenant_id, receipt_number)`  |
+| 15  | `system.ts:264`            | `app_config.key`                         | `(tenant_id, key)`             |
+| 16  | `system.ts:183`            | `ai_proposal_confirmation.tool_call_id`  | `(tenant_id, tool_call_id)`    |
+| 17  | `auth.ts:36`, `auth.ts:74` | `role.name`, `(role_id, permission_key)` | menunggu keputusan             |
 
 Nomor 5 layak disorot. `bsr_fingerprint_uidx` adalah kunci deduplikasi impor
 rekening koran. Dua perusahaan bisa sah-sah saja menghasilkan fingerprint yang
@@ -225,18 +225,18 @@ diuji sekali.
 
 Project kolaborasi hidup di **tenant Dekoria**, bukan di tenant netral tersendiri
 — sesuai kenyataan bisnisnya, Dekoria penanggung jawab project, bukan peserta
-setara. Vendor mendapat *grant* per paket lewat `project_participant_grant`,
+setara. Vendor mendapat _grant_ per paket lewat `project_participant_grant`,
 satu kebijakan RLS tambahan di atas model yang sudah ada.
 
 **Kontrak data, dan ini batas keras:**
 
-| Masuk ruang bersama | Tidak pernah keluar dari tenant vendor |
-| --- | --- |
-| Nilai kontrak paket | Biaya aktual vendor |
-| Progres pengerjaan | Margin vendor |
-| Tagihan yang diajukan | Identitas pemasok vendor |
-| Pembayaran yang diterima | RAP internal vendor |
-| Foto lapangan, jadwal | — |
+| Masuk ruang bersama      | Tidak pernah keluar dari tenant vendor |
+| ------------------------ | -------------------------------------- |
+| Nilai kontrak paket      | Biaya aktual vendor                    |
+| Progres pengerjaan       | Margin vendor                          |
+| Tagihan yang diajukan    | Identitas pemasok vendor               |
+| Pembayaran yang diterima | RAP internal vendor                    |
+| Foto lapangan, jadwal    | —                                      |
 
 Kolom kanan bukan daftar "belum diimplementasikan". Itu daftar yang **tidak
 akan pernah** diimplementasikan, dan alasannya komersial sebelum teknis: tidak
@@ -289,14 +289,14 @@ Ketiganya di luar pekerjaan tenant, tetapi Fase 1 tidak boleh jalan tanpanya.
    ada di `lib/finance/ledger-invariants.ts`, dipecah dua lapis: `evaluate*` yang
    murni (bisa diuji tanpa database) dan `check*` tipis yang mengambil baris.
 
-   | # | Aturan |
-   | --- | --- |
-   | I1 | Saldo tiap `bank_account` = jumlah bersih `cash_transaction`-nya |
-   | I2 | `material_inventory.current_stock` = jumlah `stock_movement` per material×lokasi |
-   | I3 | Tiap `allocated_amount` = `ratio_percentage` × `internal_budget` |
-   | I4 | Tiap entri buku besar punya pasangan `audit_log` di `bank_account` |
-   | I5 | Pergerakan yang mengubah stok punya arah — `RESERVE` satu-satunya yang sah `NEUTRAL` |
-   | I6 | Tiap `vendor_payment` `COMPLETED` menunjuk `cash_transaction` yang ada |
+   | #   | Aturan                                                                               |
+   | --- | ------------------------------------------------------------------------------------ |
+   | I1  | Saldo tiap `bank_account` = jumlah bersih `cash_transaction`-nya                     |
+   | I2  | `material_inventory.current_stock` = jumlah `stock_movement` per material×lokasi     |
+   | I3  | Tiap `allocated_amount` = `ratio_percentage` × `internal_budget`                     |
+   | I4  | Tiap entri buku besar punya pasangan `audit_log` di `bank_account`                   |
+   | I5  | Pergerakan yang mengubah stok punya arah — `RESERVE` satu-satunya yang sah `NEUTRAL` |
+   | I6  | Tiap `vendor_payment` `COMPLETED` menunjuk `cash_transaction` yang ada               |
 
    Uang dan kuantitas dijumlahkan sebagai `bigint` sen lewat `parseNumericToCents`,
    bukan float — aturan yang sama dengan jalur mutasi saldo.
@@ -327,6 +327,7 @@ Ketiganya di luar pekerjaan tenant, tetapi Fase 1 tidak boleh jalan tanpanya.
    Catatan eksekusi: skrip dijalankan dengan kondisi resolusi `react-server`
    (`bun --conditions react-server`) karena `import "server-only"` melempar di
    luar Next.js. Kondisi itu memang yang benar secara semantik — ini kode server.
+
 3. ⚠️ **Point-in-time restore — LULUS SECARA MEKANIS, BELUM MEMADAI.**
    Dijalankan 2026-08-28 di project `atria-erp`: kedua uji lulus, 82 baris
    dipulihkan utuh, seluruhnya lewat `neonctl` dalam ±2 menit. **Tetapi retensi
@@ -341,10 +342,10 @@ Ketiganya di luar pekerjaan tenant, tetapi Fase 1 tidak boleh jalan tanpanya.
    `docs/guide/restore-drill.md`; `bun run db:restore-drill` menjalankan
    bagian yang bisa diotomatiskan. Dua uji harus lulus bersama:
 
-   | Uji | Membuktikan |
-   | --- | --- |
+   | Uji              | Membuktikan                                                                                                         |
+   | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
    | Perjalanan waktu | Tabel penanda **tidak ada** di branch hasil restore — pemulihan benar-benar mundur, bukan menyalin keadaan sekarang |
-   | Keutuhan data | Keenam invarian terpenuhi atas data hasil pemulihan, dengan jumlah baris di atas nol |
+   | Keutuhan data    | Keenam invarian terpenuhi atas data hasil pemulihan, dengan jumlah baris di atas nol                                |
 
    Uji pertama yang paling sering dilewati, dan ia yang membedakan "punya
    salinan" dari "bisa kembali ke titik sebelum kesalahan". Sisanya —
@@ -360,10 +361,10 @@ Ketiganya di luar pekerjaan tenant, tetapi Fase 1 tidak boleh jalan tanpanya.
 Sejak 2026-08-28, project Neon `atria-erp` (`rapid-mountain-50889409`, org
 `Dekoria`, pemilik `dekoria.office@gmail.com`) punya dua branch:
 
-| Branch | Id | Dipakai untuk |
-| --- | --- | --- |
-| `production` | `br-holy-frost-ao2muwah` | Data yang akan dipakai Polda. Jangan disambungkan ke dev server. |
-| `development` | `br-autumn-wind-aok3wub0` | Pengembangan sehari-hari. `apps/web/.env` menunjuk ke sini. |
+| Branch        | Id                        | Dipakai untuk                                                    |
+| ------------- | ------------------------- | ---------------------------------------------------------------- |
+| `production`  | `br-holy-frost-ao2muwah`  | Data yang akan dipakai Polda. Jangan disambungkan ke dev server. |
+| `development` | `br-autumn-wind-aok3wub0` | Pengembangan sehari-hari. `apps/web/.env` menunjuk ke sini.      |
 
 Keduanya berisi `atria_uat_guard`, `atria_uat_empty`, dan `neondb`. Branch Neon
 bersifat copy-on-write, jadi `development` lahir dengan seluruh isi `production`

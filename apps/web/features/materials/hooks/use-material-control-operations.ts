@@ -15,6 +15,7 @@ import {
   type MaterialMovementView,
   type MaterialOperationsDashboard,
   type ReceiptView,
+  type CountView,
 } from "@/app/actions/material/operations-dashboard";
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import { createStockTransfer } from "@/app/actions/material/warehouse-transfer";
@@ -44,12 +45,14 @@ type UseMaterialControlOperationsInput = {
   readonly data: MaterialOperationsDashboard;
   readonly action: WarehouseAction | null;
   readonly documentToken: string;
+  readonly onMutationComplete?: () => void;
 };
 
 export function useMaterialControlOperations({
   data,
   action,
   documentToken,
+  onMutationComplete,
 }: UseMaterialControlOperationsInput): {
   readonly pending: boolean;
   readonly detailMaterialId: string | null;
@@ -98,7 +101,7 @@ export function useMaterialControlOperations({
   readonly runTransfer: () => void;
   readonly addLocation: () => void;
   readonly initializeCount: (nextLocation: string) => void;
-  readonly loadCountDraft: (draftId: string) => void;
+  readonly loadCountDraft: (draftId: string, desktopDraft?: CountView) => void;
   readonly runCount: (mode: "SAVE" | "SUBMIT") => void;
   readonly runAdjust: () => void;
   readonly decide: () => void;
@@ -190,7 +193,7 @@ export function useMaterialControlOperations({
       params.set("action", actionId);
     }
     const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}`;
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
     router.replace(nextUrl);
   }
 
@@ -207,6 +210,7 @@ export function useMaterialControlOperations({
   }
 
   function finish(text: string, nextSuccess: OperationSuccess): void {
+    onMutationComplete?.();
     setMessage(text);
     setSuccess(nextSuccess);
     toast.success(text);
@@ -306,6 +310,7 @@ export function useMaterialControlOperations({
         return;
       }
       const successMsg = "Lokasi inventori dibuat dan stok awal material disiapkan.";
+      onMutationComplete?.();
       setMessage(successMsg);
       setNewLocationName("");
       toast.success(successMsg);
@@ -326,8 +331,11 @@ export function useMaterialControlOperations({
     );
   }
 
-  function loadCountDraft(draftId: string): void {
-    const draft = data.counts.find((row) => row.id === draftId && row.canEdit);
+  function loadCountDraft(draftId: string, desktopDraft?: CountView): void {
+    const draft =
+      desktopDraft?.id === draftId && desktopDraft.canEdit
+        ? desktopDraft
+        : data.counts.find((row) => row.id === draftId && row.canEdit);
     if (!draft) return;
     setStockCountId(draft.id);
     setDocumentNumber(draft.countNumber);
@@ -359,6 +367,7 @@ export function useMaterialControlOperations({
         toast.error(saved.error.message);
         return;
       }
+      if (mode === "SUBMIT") onMutationComplete?.();
       setStockCountId(saved.data.id);
       if (mode === "SAVE") {
         finish("Draft stock opname tersimpan.", {
@@ -454,6 +463,7 @@ export function useMaterialControlOperations({
         toast.error(result.error.message);
         return;
       }
+      onMutationComplete?.();
       setDecision(null);
       setReceiptDetail(null);
       const decisionMsg = "Status stock operation berhasil diperbarui.";

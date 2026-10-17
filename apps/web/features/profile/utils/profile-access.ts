@@ -17,7 +17,7 @@ export type ProfileAccessGroup = {
   readonly title: string;
   readonly description: string;
   readonly iconName: string;
-  /** Hanya izin yang benar-benar ditampilkan — kunci tertunda sudah dibuang. */
+  /** Hanya izin aktif yang benar-benar tersedia dalam workspace responsif. */
   readonly permissions: readonly ProfileAccessPermission[];
   readonly grantedCount: number;
   readonly totalCount: number;
@@ -31,6 +31,9 @@ export type ProfileAccessGroup = {
  * `docs/plans/2026-07-15-profile-main-surface-rework.md`). Menampilkannya berarti
  * menjanjikan akses ke layar yang tidak ada.
  *
+ * `use:desktop_admin` juga hanya tersimpan untuk kompatibilitas. Tampilan
+ * desktop responsif tersedia untuk semua peran; kunci lama bukan syarat akses.
+ *
  * Penyaringnya harus mengenai **pembilang dan penyebut** sekaligus. Sebelumnya
  * hanya pembilang yang disaring, sehingga Owner — yang memegang kedua kunci AI —
  * membaca "1/2" dan wajar mengira ada akses yang hilang.
@@ -38,7 +41,10 @@ export type ProfileAccessGroup = {
  * Ini penyaringan presentasi, bukan otoritas: layar peran tetap memuat kunci ini
  * dari katalog penuh supaya ia bisa dicabut.
  */
-const DEFERRED_PERMISSIONS: ReadonlySet<PermissionKey> = new Set<PermissionKey>(["view:ai_brief"]);
+const HIDDEN_PROFILE_PERMISSIONS: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
+  "view:ai_brief",
+  "use:desktop_admin",
+]);
 
 export function summarizeProfileAccess(
   permissions: readonly PermissionKey[],
@@ -47,7 +53,7 @@ export function summarizeProfileAccess(
 
   return PERMISSION_GROUPS.map((group) => {
     const visible = group.permissions
-      .filter((permission) => !DEFERRED_PERMISSIONS.has(permission))
+      .filter((permission) => !HIDDEN_PROFILE_PERMISSIONS.has(permission))
       .map((permission) => ({
         key: permission,
         label: PERMISSION_LABELS[permission],
@@ -63,7 +69,7 @@ export function summarizeProfileAccess(
       grantedCount: visible.filter((permission) => permission.granted).length,
       totalCount: visible.length,
     };
-  });
+  }).filter((group) => group.totalCount > 0);
 }
 
 export function countAccessibleProfileModules(groups: readonly ProfileAccessGroup[]): number {

@@ -1,5 +1,9 @@
 "use client";
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import type { ProjectOperationSource } from "@atria/core/types/project-operations";
+import { useActivityDetail } from "@/features/activity-detail/components/activity-detail-provider";
+import { ProjectPaymentsDesktop } from "./project-payments-desktop";
 import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
@@ -16,11 +20,11 @@ import { ProjectInvoicesSummary } from "./project-invoices-summary";
 import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoiceRemaining,
-  calculateInvoiceTotals,
+  calculateInvoiceSettlementStatus,
   defaultPaymentDate,
   formatShortRp,
 } from "../../utils/project-invoices-utils";
-import { type OperationSuccess, OperationSuccessDialog } from "@/components/ui";
+import { type OperationSuccess, OperationSuccessDialog, PageState } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { derivePaymentReference } from "@atria/core/finance/invoice-prefill";
 
@@ -49,6 +53,9 @@ interface ProjectInvoicesProps {
   userRole: string;
   contractValue: number;
   onNavigateClosing?: () => void;
+  source?: ProjectOperationSource;
+  locked?: boolean;
+  onWorkflowActiveChange?: (active: boolean) => void;
 }
 
 export function ProjectInvoices({
@@ -59,15 +66,23 @@ export function ProjectInvoices({
   bankAccounts,
   contractValue,
   onNavigateClosing,
+  source,
+  locked = false,
+  onWorkflowActiveChange,
 }: ProjectInvoicesProps): React.JSX.Element {
   const can = useCan();
+  const desktop = useWorkspacePresentation() === "desktop";
+  const { openActivityDetail } = useActivityDetail();
+  const sourceReady = !source || source.status === "ready";
+  const canCreateInvoice = can("create:client_invoice") && !locked && sourceReady;
+  const canRecordPayment = can("reconcile:client_invoice") && !locked && sourceReady;
   const router = useRouter();
   const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoiceItem | null>(null);
 
   // Create Invoice trigger
   const handleCreateInvoiceClick = React.useCallback((): void => {
-    updateUrlSearchParam("new-invoice", "true", "push");
-  }, []);
+    if (canCreateInvoice) updateUrlSearchParam("new-invoice", "true", "push");
+  }, [canCreateInvoice]);
 
   const [createError, setCreateError] = useState<string | null>(null);
   const [createSuccess, setCreateSuccess] = useState<string | null>(null);
@@ -107,11 +122,38 @@ export function ProjectInvoices({
   const [success, setSuccess] = useState<string | null>(null);
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
-  const canCreateInvoice = can("create:client_invoice");
-  const canRecordPayment = can("reconcile:client_invoice");
-  const { totalInvoiceAmount, totalPaidAmount, unpaidAmount } = calculateInvoiceTotals(invoices);
+  const settlement = calculateInvoiceSettlementStatus(invoices, contractValue);
+  const { totalInvoiceAmount, totalPaidAmount, unpaidAmount, activeInvoicesCount } = settlement;
+  const workflowActive =
+    Boolean(selectedInvoice) || isPending || schedulePending || Boolean(operationSuccess);
+  React.useEffect((): void => {
+    onWorkflowActiveChange?.(workflowActive);
+  }, [onWorkflowActiveChange, workflowActive]);
+  React.useEffect(() => (): void => onWorkflowActiveChange?.(false), [onWorkflowActiveChange]);
+  function handleOpenInvoice(invoice: ClientInvoiceItem): void {
+    const remaining = calculateInvoiceRemaining(invoice);
+    openActivityDetail(
+      { kind: "CLIENT_INVOICE", id: invoice.id },
+      canRecordPayment && remaining > 0 && invoice.status !== "VOID"
+        ? {
+            actions: {
+              primary: {
+                label: "Catat penerimaan",
+                onClick: (): void => handleRecordPaymentClick(invoice),
+              },
+            },
+          }
+        : invoice.status === "VOID"
+          ? { footerStatus: { label: "Invoice dibatalkan", tone: "neutral" } }
+          : remaining <= 0
+            ? { footerStatus: { label: "Invoice telah lunas", tone: "success" } }
+            : undefined,
+    );
+  }
 
   function handleGenerateSchedule(): void {
+    if (!canCreateInvoice || schedulePending || contractValue <= 0 || activeInvoicesCount > 0)
+      return;
     setCreateError(null);
     startScheduleTransition(async () => {
       const result = await generateClientInvoiceSchedule({
@@ -176,7 +218,8 @@ export function ProjectInvoices({
   );
 
   const handleRecordPaymentClick = (invoice: ClientInvoiceItem): void => {
-    if (!canRecordPayment) return;
+    if (!canRecordPayment || invoice.status === "VOID" || calculateInvoiceRemaining(invoice) <= 0)
+      return;
     const remaining = calculateInvoiceRemaining(invoice);
     const initialBank = bankAccounts[0];
     const initialBankName = initialBank?.bankName || initialBank?.name;
@@ -202,7 +245,8 @@ export function ProjectInvoices({
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!selectedInvoice || !canRecordPayment) return;
+    if (!selectedInvoice || !canRecordPayment || selectedInvoice.status === "VOID" || isPending)
+      return;
     if (!selectedBankId) {
       const message = "Silakan pilih rekening bank tujuan.";
       setError(message);
@@ -270,26 +314,72 @@ export function ProjectInvoices({
 
   return (
     <div className="space-y-sm">
-      <ProjectInvoicesSummary
-        canCreateInvoice={canCreateInvoice}
-        invoicesCount={invoices.length}
-        contractValue={contractValue}
-        schedulePending={schedulePending}
-        createError={createError}
-        createSuccess={createSuccess}
-        totalInvoiceAmount={totalInvoiceAmount}
-        totalPaidAmount={totalPaidAmount}
-        unpaidAmount={unpaidAmount}
-        onCreateInvoiceClick={handleCreateInvoiceClick}
-        onGenerateSchedule={handleGenerateSchedule}
-        onNavigateClosing={onNavigateClosing}
-      />
-
-      <ProjectInvoicesList
-        invoices={invoices}
-        canRecordPayment={canRecordPayment}
-        onRecordPayment={handleRecordPaymentClick}
-      />
+      {!sourceReady ? (
+        <PageState
+          compact
+          kind={
+            source?.status === "restricted"
+              ? "restricted"
+              : source?.status === "unavailable"
+                ? "error"
+                : "first-use"
+          }
+          title={
+            source?.status === "restricted"
+              ? "Pembayaran belum dapat diakses"
+              : source?.status === "unavailable"
+                ? "Data pembayaran belum dapat dimuat"
+                : "Data pembayaran belum tersedia"
+          }
+          description={
+            source?.message ?? "Coba muat ulang halaman atau periksa akses invoice proyek."
+          }
+        />
+      ) : (
+        <>
+          <div hidden={!desktop} inert={!desktop}>
+            <ProjectPaymentsDesktop
+              active={desktop}
+              invoices={invoices}
+              contractValue={contractValue}
+              canCreateInvoice={canCreateInvoice}
+              canRecordPayment={canRecordPayment}
+              locked={locked}
+              schedulePending={schedulePending}
+              createError={createError}
+              createSuccess={createSuccess}
+              onCreateInvoice={handleCreateInvoiceClick}
+              onGenerateSchedule={handleGenerateSchedule}
+              onRecordPayment={handleRecordPaymentClick}
+              onOpenInvoice={handleOpenInvoice}
+              onOpenReceipt={(id): void => openActivityDetail({ kind: "CLIENT_PAYMENT", id })}
+              onNavigateClosing={onNavigateClosing}
+            />
+          </div>
+          <div hidden={desktop} inert={desktop} className="space-y-sm">
+            <ProjectInvoicesSummary
+              canCreateInvoice={canCreateInvoice}
+              invoicesCount={activeInvoicesCount}
+              contractValue={contractValue}
+              schedulePending={schedulePending}
+              createError={createError}
+              createSuccess={createSuccess}
+              totalInvoiceAmount={totalInvoiceAmount}
+              totalPaidAmount={totalPaidAmount}
+              unpaidAmount={unpaidAmount}
+              settlement={settlement}
+              onCreateInvoiceClick={handleCreateInvoiceClick}
+              onGenerateSchedule={handleGenerateSchedule}
+              onNavigateClosing={onNavigateClosing}
+            />
+            <ProjectInvoicesList
+              invoices={invoices}
+              canRecordPayment={canRecordPayment}
+              onRecordPayment={handleRecordPaymentClick}
+            />
+          </div>
+        </>
+      )}
 
       <ClientPaymentSheet
         selectedInvoice={selectedInvoice}

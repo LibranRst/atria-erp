@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
 import { ActivityLine } from "./ai-activity";
+import { ChatBubble } from "./chat-bubble";
 import { REPLY_PHASE_LABEL, type ReplyPhase } from "../utils/reply-phase";
 
 export type PendingReplyIndicatorProps = {
@@ -12,6 +13,7 @@ export type PendingReplyIndicatorProps = {
   readonly visible: boolean;
   readonly contentVisible: boolean;
   readonly elapsedSeconds?: number;
+  readonly intent?: string;
 };
 
 /**
@@ -26,6 +28,7 @@ export function PendingReplyIndicator({
   visible,
   contentVisible,
   elapsedSeconds = 0,
+  intent,
 }: PendingReplyIndicatorProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
   const shown = visible && !contentVisible;
@@ -36,6 +39,8 @@ export function PendingReplyIndicator({
     <>
       <motion.div
         aria-hidden="true"
+        data-reply-introduction={intent ? "" : undefined}
+        data-visible={shown ? "true" : "false"}
         initial={false}
         animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : hiddenOffset }}
         transition={
@@ -47,17 +52,23 @@ export function PendingReplyIndicator({
                 ? transitionEaseSmooth
                 : { duration: 0 }
         }
-        className="pointer-events-none col-start-1 row-start-1 w-full self-start"
+        className={`pointer-events-none col-start-1 row-start-1 w-full self-start ${contentVisible ? "absolute inset-x-0 top-0" : ""}`}
       >
-        <ActivityLine
-          announce={false}
-          label={REPLY_PHASE_LABEL[displayedPhase]}
-          seconds={elapsedSeconds}
-        />
+        {intent ? (
+          <ChatBubble side="assistant">
+            <p className="text-row leading-relaxed text-on-surface">{intent}</p>
+          </ChatBubble>
+        ) : (
+          <ActivityLine
+            announce={false}
+            label={REPLY_PHASE_LABEL[displayedPhase]}
+            seconds={elapsedSeconds}
+          />
+        )}
       </motion.div>
 
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {shown ? REPLY_PHASE_LABEL[displayedPhase] : ""}
+        {shown ? (intent ?? REPLY_PHASE_LABEL[displayedPhase]) : ""}
       </span>
     </>
   );

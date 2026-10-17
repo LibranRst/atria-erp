@@ -61,6 +61,7 @@ export function MaterialDetailSheet({
             <Button
               type="button"
               onClick={editMaterial}
+              fullWidth
               className="flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-primary px-4 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               variant="primary"
             >

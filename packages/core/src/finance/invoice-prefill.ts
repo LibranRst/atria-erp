@@ -6,12 +6,7 @@
  */
 
 export type InvoiceStage =
-  | "DP"
-  | "PROGRESS_1"
-  | "PROGRESS_2"
-  | "PELUNASAN"
-  | "RETENTION"
-  | "AD_HOC";
+  "DP" | "PROGRESS_1" | "PROGRESS_2" | "PELUNASAN" | "RETENTION" | "AD_HOC";
 
 export type InvoicePreset = {
   readonly label: string;
@@ -138,9 +133,7 @@ export function deriveProjectCode(projectName: string): string {
   }
 
   // 2 kata: kata1 (2 huruf) + kata2 (1 huruf) atau sebaliknya
-  return (
-    significantTokens[0].slice(0, 2) + significantTokens[1].slice(0, 1)
-  ).toUpperCase();
+  return (significantTokens[0].slice(0, 2) + significantTokens[1].slice(0, 1)).toUpperCase();
 }
 
 /**
@@ -325,9 +318,7 @@ export function normalizeBankCode(bankName?: string | null): string {
  */
 export function deriveClientContextCode(clientName?: string | null): string {
   if (!clientName || !clientName.trim()) return "";
-  const cleaned = clientName
-    .replace(/^(bpk\.|ibu\.|bapak\.|pt\.|cv\.|tuan\.|ny\.)\s+/i, "")
-    .trim();
+  const cleaned = clientName.replace(/^(bpk\.|ibu\.|bapak\.|pt\.|cv\.|tuan\.|ny\.)\s+/i, "").trim();
   const words = cleaned.split(/\s+/).filter(Boolean);
   const firstWord = words[0]?.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "";
   return firstWord.slice(0, 7);
@@ -387,11 +378,11 @@ const KNOWN_VENDOR_CODES: Readonly<Record<string, { code: string; defaultSeq?: s
   "cahaya mas": { code: "CMP", defaultSeq: "001" },
   "sinar kaca": { code: "SK", defaultSeq: "001" },
   "batu prima": { code: "BPC", defaultSeq: "001" },
-  "hafele": { code: "HAFELE", defaultSeq: "001" },
+  hafele: { code: "HAFELE", defaultSeq: "001" },
   "marmer indah": { code: "MARMER", defaultSeq: "089" },
-  "marmer": { code: "MARMER", defaultSeq: "089" },
+  marmer: { code: "MARMER", defaultSeq: "089" },
   "kaca nusantara": { code: "KACA", defaultSeq: "441" },
-  "kaca": { code: "KACA", defaultSeq: "441" },
+  kaca: { code: "KACA", defaultSeq: "441" },
 };
 
 const VENDOR_STOPWORDS = new Set([
@@ -499,8 +490,7 @@ export function deriveSuggestedVendorBillNumber({
     return `INV-${vendorCode}-${year}-${seqStr}`;
   }
 
-  const seqStr =
-    sequence !== undefined ? String(Math.max(1, sequence)).padStart(3, "0") : "001";
+  const seqStr = sequence !== undefined ? String(Math.max(1, sequence)).padStart(3, "0") : "001";
 
   if (projectName && projectName.trim()) {
     const projectCode = deriveProjectCode(projectName);
@@ -630,6 +620,3 @@ export function deriveExpensePaymentReference({
 
   return `TRF-${bankCode}-${projectCode}-${tag}`;
 }
-
-
-

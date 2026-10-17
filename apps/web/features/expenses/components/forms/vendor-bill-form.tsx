@@ -84,14 +84,31 @@ export function VendorBillForm({
   const [drafts, setDrafts] = React.useState<readonly VendorBillDraftSummary[]>([]);
   const [addedVendors, setAddedVendors] = React.useState<readonly VendorBillFormVendor[]>([]);
   const [showVendorComposer, setShowVendorComposer] = React.useState(false);
-  const currentProjectId = React.useMemo(() => {
-    const parts = pathname.split("/");
-    const index = parts.indexOf("projects");
-    const candidate = index >= 0 ? parts[index + 1] : "";
-    return projects.some((project) => project.id === candidate) ? candidate : "";
-  }, [pathname, projects]);
-  const draft = useHybridVendorBillDraft(initialPayload(currentProjectId));
+  const parts = pathname.split("/");
+  const projectIndex = parts.indexOf("projects");
+  const currentProjectId = projectIndex >= 0 ? (parts[projectIndex + 1] ?? "") : "";
+  const draft = useHybridVendorBillDraft(
+    initialPayload(currentProjectId),
+    currentProjectId || undefined,
+  );
   const payload = draft.payload;
+  const resetDraft = draft.reset;
+  React.useEffect((): void => {
+    if (
+      open &&
+      currentProjectId &&
+      !draft.isDirty &&
+      !draft.draftId &&
+      payload.projectId !== currentProjectId
+    )
+      resetDraft(initialPayload(currentProjectId));
+  }, [open, currentProjectId, draft.isDirty, draft.draftId, payload.projectId, resetDraft]);
+  const projectContextMismatch = Boolean(
+    currentProjectId && payload.projectId !== currentProjectId,
+  );
+  const contextualDrafts = currentProjectId
+    ? drafts.filter((item) => item.payload.projectId === currentProjectId)
+    : drafts;
   const activeProject = projects.find((project) => project.id === payload.projectId);
   const categories =
     activeProject?.canonicalBudgets?.[0]?.categories
@@ -149,24 +166,27 @@ export function VendorBillForm({
   const canReview =
     Boolean(
       payload.vendorId &&
+      !projectContextMismatch &&
       payload.projectId &&
       payload.projectBudgetCategoryId &&
       payload.billNumber.trim() &&
       payload.dueDate,
     ) && amount > 0;
-  const disabledReason = !payload.projectId
-    ? "Pilih proyek."
-    : !payload.vendorId
-      ? "Pilih vendor."
-      : !payload.projectBudgetCategoryId
-        ? "Pilih kategori budget."
-        : !payload.billNumber.trim()
-          ? "Isi nomor tagihan."
-          : amount <= 0
-            ? "Nominal harus lebih besar dari Rp 0."
-            : !payload.dueDate
-              ? "Pilih tanggal jatuh tempo."
-              : undefined;
+  const disabledReason = projectContextMismatch
+    ? "Draft berasal dari proyek lain. Lanjutkan melalui halaman Pengeluaran atau buang draft secara eksplisit."
+    : !payload.projectId
+      ? "Pilih proyek."
+      : !payload.vendorId
+        ? "Pilih vendor."
+        : !payload.projectBudgetCategoryId
+          ? "Pilih kategori budget."
+          : !payload.billNumber.trim()
+            ? "Isi nomor tagihan."
+            : amount <= 0
+              ? "Nominal harus lebih besar dari Rp 0."
+              : !payload.dueDate
+                ? "Pilih tanggal jatuh tempo."
+                : undefined;
 
   const refreshDrafts = React.useCallback((): void => {
     startTransition(async () => {
@@ -185,6 +205,7 @@ export function VendorBillForm({
   }
 
   function applyProject(projectId: string): void {
+    if (currentProjectId && projectId !== currentProjectId) return;
     patch({
       projectId,
       projectBudgetCategoryId: "",
@@ -219,6 +240,12 @@ export function VendorBillForm({
       setError(response.error.message);
       return;
     }
+    if (currentProjectId && response.data.payload.projectId !== currentProjectId) {
+      setError(
+        "Draft berasal dari proyek lain. Buka melalui halaman Pengeluaran untuk melanjutkan.",
+      );
+      return;
+    }
     draft.hydrate(response.data);
     setReviewing(false);
   }
@@ -235,6 +262,10 @@ export function VendorBillForm({
   }
 
   async function saveAndClose(): Promise<void> {
+    if (projectContextMismatch) {
+      animatedClose.close();
+      return;
+    }
     const result = await draft.saveNow();
     if (!result.success) {
       setError(result.message);
@@ -410,6 +441,12 @@ export function VendorBillForm({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
+          {projectContextMismatch ? (
+            <FormRiskNotice tone="warning" title="Draft dari proyek lain">
+              Draft proyek lain tetap tersimpan di perangkat ini. Tutup form dan lanjutkan dari
+              halaman Pengeluaran, atau buang draft untuk mulai pada proyek ini.
+            </FormRiskNotice>
+          ) : null}
           {error ? (
             <div
               className="rounded-2xl bg-error-container/20 p-3 text-xs font-medium text-error"
@@ -438,14 +475,14 @@ export function VendorBillForm({
               </Button>
             </div>
           ) : null}
-          {!reviewing && drafts.length > 0 && !draft.draftId ? (
+          {!reviewing && contextualDrafts.length > 0 && !draft.draftId ? (
             <FormSection
               title="Draft aktif"
               helper="Lanjutkan tagihan yang pernah disimpan."
               presentation="plain"
             >
               <div className="divide-y divide-outline-variant/15 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle">
-                {drafts.slice(0, 5).map((item) => (
+                {contextualDrafts.slice(0, 5).map((item) => (
                   <div
                     key={item.id}
                     className="flex min-h-18 min-w-0 items-center gap-1 px-2 py-1.5"
@@ -571,7 +608,7 @@ export function VendorBillForm({
                 <AdaptiveSelect
                   label="Vendor"
                   value={payload.vendorId}
-                  disabled={pending}
+                  disabled={pending || projectContextMismatch}
                   onChange={(value) => patch({ vendorId: value })}
                   options={allVendors.map((vendor) => ({
                     value: vendor.id,
@@ -585,7 +622,7 @@ export function VendorBillForm({
                 <AdaptiveSelect
                   label="Proyek"
                   value={payload.projectId}
-                  disabled={pending}
+                  disabled={pending || Boolean(currentProjectId)}
                   onChange={(value) => {
                     if (payload.projectBudgetCategoryId && value !== payload.projectId)
                       setPendingProjectId(value);
@@ -600,7 +637,7 @@ export function VendorBillForm({
                 <AdaptiveSelect
                   label="Kategori Budget"
                   value={payload.projectBudgetCategoryId}
-                  disabled={pending || categories.length === 0}
+                  disabled={pending || projectContextMismatch || categories.length === 0}
                   placeholder={
                     !activeProject
                       ? "Pilih proyek terlebih dahulu"
@@ -657,7 +694,7 @@ export function VendorBillForm({
                 <FormField label="Nomor Tagihan" required>
                   <TextInput
                     value={payload.billNumber}
-                    disabled={pending}
+                    disabled={pending || projectContextMismatch}
                     onChange={(value) => patch({ billNumber: value })}
                     placeholder={
                       suggestedBillNumber
@@ -686,21 +723,21 @@ export function VendorBillForm({
                 <FormField label="Nominal Tagihan" required>
                   <MoneyInput
                     value={payload.amount}
-                    disabled={pending}
+                    disabled={pending || projectContextMismatch}
                     onChange={(value) => patch({ amount: value === "" ? "" : Number(value) })}
                   />
                 </FormField>
                 <DatePickerField
                   label="Tanggal Jatuh Tempo"
                   value={payload.dueDate}
-                  disabled={pending}
+                  disabled={pending || projectContextMismatch}
                   onChange={(value) => patch({ dueDate: value })}
                   required
                 />
                 <FormField label="Catatan" optional>
                   <Textarea
                     value={payload.notes}
-                    disabled={pending}
+                    disabled={pending || projectContextMismatch}
                     onChange={(value) => patch({ notes: value })}
                     rows={2}
                     placeholder="Detail untuk tim finance"

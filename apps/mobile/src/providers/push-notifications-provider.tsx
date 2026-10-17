@@ -133,7 +133,7 @@ export function PushNotificationsProvider({
       if (!active) return;
       Alert.alert(
         "Aktifkan notifikasi?",
-        "Atria dapat memberi tahu saat approval, pembayaran, atau material perlu tindakan.",
+        "Paduna Build dapat memberi tahu saat approval, pembayaran, atau material perlu tindakan.",
         [
           { text: "Nanti", style: "cancel" },
           {

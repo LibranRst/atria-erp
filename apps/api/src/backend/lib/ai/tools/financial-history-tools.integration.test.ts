@@ -117,32 +117,30 @@ describeIntegration("Financial history full aggregates and original-period bindi
         sourceType: "STOCK_USAGE",
         status: "APPROVED",
       };
-      await db
-        .insert(projectExpenses)
-        .values([
-          { ...base, amount: "400000.25", expenseDate: new Date("2026-09-30T17:00:00Z") },
-          { ...base, amount: "3.11", expenseDate: new Date("2026-09-30T16:59:59.999Z") },
-          { ...base, amount: "999.00", expenseDate: new Date(asOf) },
-          {
-            ...base,
-            amount: "1000000.07",
-            status: "INVENTORY_ASSET",
-            sourceType: "INVENTORY_PURCHASE",
-            expenseDate: new Date("2026-10-10T00:00:00Z"),
-          },
-          {
-            ...base,
-            amount: "11.12",
-            status: "SUBMITTED",
-            sourceType: "CASH_EXPENSE",
-            expenseDate: new Date("2026-10-10T00:00:00Z"),
-          },
-          ...Array.from({ length: 24 }, () => ({
-            ...base,
-            amount: "0.01",
-            expenseDate: new Date("2026-10-10T00:00:00Z"),
-          })),
-        ]);
+      await db.insert(projectExpenses).values([
+        { ...base, amount: "400000.25", expenseDate: new Date("2026-09-30T17:00:00Z") },
+        { ...base, amount: "3.11", expenseDate: new Date("2026-09-30T16:59:59.999Z") },
+        { ...base, amount: "999.00", expenseDate: new Date(asOf) },
+        {
+          ...base,
+          amount: "1000000.07",
+          status: "INVENTORY_ASSET",
+          sourceType: "INVENTORY_PURCHASE",
+          expenseDate: new Date("2026-10-10T00:00:00Z"),
+        },
+        {
+          ...base,
+          amount: "11.12",
+          status: "SUBMITTED",
+          sourceType: "CASH_EXPENSE",
+          expenseDate: new Date("2026-10-10T00:00:00Z"),
+        },
+        ...Array.from({ length: 24 }, () => ({
+          ...base,
+          amount: "0.01",
+          expenseDate: new Date("2026-10-10T00:00:00Z"),
+        })),
+      ]);
     }
     const [account] = await db
       .insert(bankAccount)

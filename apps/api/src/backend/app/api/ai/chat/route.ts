@@ -4,8 +4,26 @@ import { resolveActor, type Actor } from "@backend/server/actor";
 import { PRIVATE_ATTACHMENT_MAX_BYTES } from "@atria/core/media/private-attachment";
 import { sessionAccessFailure } from "@backend/lib/server/session-access";
 import { documentModel, requireDocumentProvider } from "@backend/lib/ai/document-model";
-import { resolveProviderChain } from "@backend/lib/ai/providers";
+import { resolveProviderChain, resolveChatModel } from "@backend/lib/ai/providers";
+import { classifyChatWorkload } from "@backend/lib/ai/chat-workload-policy";
+import {
+  documentReadFactStream,
+  isPlainDocumentReadQuestion,
+  isCompleteDocumentReadExtraction,
+  type CompleteDocumentReadExtraction,
+} from "@backend/lib/ai/document-read-fact-stream";
+import {
+  createOcrTextCacheKey,
+  immutableOcrTextCache,
+} from "@backend/lib/ai/ocr-text-artifact-cache";
+import type { ChatTiming } from "@backend/lib/ai/chat-timing";
 import { runChatStream } from "@backend/lib/ai/chat-stream";
+import { createChatTiming } from "@backend/lib/ai/chat-timing";
+import {
+  companyBudgetFactStream,
+  isCompanyBudgetDefaultsQuestion,
+} from "@backend/lib/ai/company-budget-fact-stream";
+import { availableAiCapabilities } from "@backend/lib/ai/tools/capability-catalog";
 import { requiredFreshRead } from "@backend/lib/ai/chat-context";
 import { db } from "@backend/db";
 import {
@@ -73,6 +91,11 @@ const requestSchema = z
 async function extractAttachmentContent(
   file: Awaited<ReturnType<typeof readPrivateAttachment>>,
   signal: AbortSignal,
+  actorScope: string,
+  question: string,
+  multipleFiles: boolean,
+  timing?: ChatTiming,
+  onExtraction?: (extraction: CompleteDocumentReadExtraction) => void,
 ): Promise<string | null> {
   const { fileName, mimeType } = file.row;
   const isExcel =
@@ -119,22 +142,65 @@ async function extractAttachmentContent(
       const base64Data = Buffer.from(arrayBuffer).toString("base64");
       const effectiveMime = mimeType || (isPdf ? "application/pdf" : "image/jpeg");
 
-      requireDocumentProvider();
-      const ocrResponse = await documentModel.models.generateContent({
-        config: { abortSignal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]) },
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: effectiveMime,
-            },
-          },
-          "Baca dan ekstrak seluruh teks serta tabel data dari dokumen/gambar ini (termasuk tanggal transaksi, nominal, keterangan, saldo, nama bank, atau nomor rekening jika ada). Sajikan teks dan seluruh tabel secara terstruktur, termasuk vendor, nomor invoice, rincian barang/jumlah/satuan/harga, total/pajak/diskon dan jatuh tempo bila ada. Sebutkan bagian yang ambigu atau tidak terbaca; jangan mengisi atau menebak nilai yang hilang.",
-        ],
+      const provider = requireDocumentProvider();
+      const workloadProfile = multipleFiles
+        ? "complex"
+        : isPlainDocumentReadQuestion(question)
+          ? "simple"
+          : classifyChatWorkload({ question, hasAttachments: true });
+      const model = resolveChatModel(provider, workloadProfile);
+      const endpoint = process.env.NINEROUTER_BASE_URL;
+      const safeEndpoint = endpoint ? new URL(endpoint) : undefined;
+      const key = createOcrTextCacheKey({
+        actorScope,
+        mimeType: effectiveMime,
+        bytes: file.bytes,
+        extractorVersion: "chat-full-document-ocr-v4",
+        modelSignature: JSON.stringify({
+          provider,
+          model: typeof model === "string" ? model : model.modelId,
+          workloadProfile,
+          effort: process.env.NINEROUTER_REASONING_EFFORT ?? "default",
+          endpoint: safeEndpoint ? `${safeEndpoint.origin}${safeEndpoint.pathname}` : "default",
+        }),
       });
+      let extractedText = immutableOcrTextCache.get(key, actorScope, signal);
+      let complete = extractedText !== undefined;
+      if (extractedText === undefined) {
+        const ocrResponse = await documentModel.models.generateContent({
+          config: {
+            abortSignal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
+            workloadProfile,
+            timing,
+          },
+          contents: [
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: effectiveMime,
+              },
+            },
+            isPlainDocumentReadQuestion(question)
+              ? "Salin seluruh teks dan seluruh tabel yang benar-benar tercetak pada gambar/dokumen ini secara terstruktur, dari awal sampai akhir. Pertahankan semua tanggal, satuan, tanda desimal dan nominal persis. Jawaban hanya berisi hasil pembacaan; jangan menambahkan penjelasan proses, schema, JSON, atau catatan teknis. Jangan menambah kolom atau informasi yang tidak tercetak dan jangan menghitung atau menebak nilai. Jika bagian yang tercetak ambigu atau tidak terbaca, nyatakan bagian itu dengan jelas."
+              : "Baca dan ekstrak seluruh teks serta tabel data dari dokumen/gambar ini (termasuk tanggal transaksi, nominal, keterangan, saldo, nama bank, atau nomor rekening jika ada). Sajikan teks dan seluruh tabel secara terstruktur, termasuk vendor, nomor invoice, rincian barang/jumlah/satuan/harga, total/pajak/diskon dan jatuh tempo bila ada. Sebutkan bagian yang ambigu atau tidak terbaca; jangan mengisi atau menebak nilai yang hilang.",
+          ],
+        });
 
-      const extractedText = ocrResponse.text;
+        extractedText = ocrResponse.text;
+        complete = ocrResponse.complete === true;
+        immutableOcrTextCache.set(
+          key,
+          actorScope,
+          {
+            status: ocrResponse.complete === true ? "complete" : "incomplete",
+            text: extractedText ?? "",
+          },
+          signal,
+        );
+      }
+      signal.throwIfAborted();
       if (extractedText?.trim()) {
+        onExtraction?.({ text: extractedText, complete });
         return `[Data Ekstraksi ${isPdf ? "Dokumen PDF" : "Gambar"}: ${fileName}]\n${boundedAttachmentPreview(extractedText, 300, 8000)}`;
       }
       if (isPdf) throw new Error(PDF_EXTRACTION_FAILURE);
@@ -154,6 +220,7 @@ function jsonError(status: number, message: string, extra?: Record<string, strin
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const timing = createChatTiming(request.signal);
   const session = await getServerSession();
   if (!session) {
     return jsonError(401, "Sesi tidak valid. Silakan masuk kembali.");
@@ -197,9 +264,11 @@ export async function POST(request: Request): Promise<Response> {
   const actor = await resolveActor();
   if (!actor) return jsonError(401, "Silakan masuk kembali.");
   const attachmentActor: Actor = actor;
+  timing?.mark("authorized");
   const requestDeadline = AbortSignal.any([request.signal, AbortSignal.timeout(50_000)]);
   const fileCache = new Map<string, Promise<Awaited<ReturnType<typeof readPrivateAttachment>>>>();
   const extractionCache = new Map<string, Promise<string | null>>();
+  const completeExtractions = new Map<string, CompleteDocumentReadExtraction>();
   let extractionTail: Promise<string | null> = Promise.resolve(null);
   function readFile(url: string): Promise<Awaited<ReturnType<typeof readPrivateAttachment>>> {
     const cached = fileCache.get(url);
@@ -214,7 +283,22 @@ export async function POST(request: Request): Promise<Response> {
     // The bounded PDF renderer admits one job at a time. Queue extraction within
     // this request and stop later jobs if an earlier PDF fails.
     const pending = extractionTail.then(async (): Promise<string | null> =>
-      extractAttachmentContent(await readFile(url), requestDeadline),
+      extractAttachmentContent(
+        await readFile(url),
+        requestDeadline,
+        attachmentActor.userId,
+        text || "Tolong periksa dan analisa berkas terlampir.",
+        attachments.length > 1,
+        timing,
+        (extraction): void => {
+          completeExtractions.set(url, extraction);
+          timing?.mark(
+            isCompleteDocumentReadExtraction(extraction)
+              ? "document-complete-clear"
+              : "document-needs-review",
+          );
+        },
+      ),
     );
     extractionCache.set(url, pending);
     extractionTail = pending;
@@ -243,6 +327,7 @@ export async function POST(request: Request): Promise<Response> {
     userMessageId ?? "",
   );
   const currentFileUrls = new Set(attachments.map((item) => item.url));
+  timing?.mark("history");
 
   const materialIntent =
     /(material|katalog)/i.test(effectiveText) &&
@@ -272,6 +357,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const userParts: UIMessage["parts"] = [{ type: "text", text: effectiveText }];
+  timing?.mark("attachments");
 
   for (const att of attachments) {
     userParts.push({
@@ -356,6 +442,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  timing?.mark("messages");
   try {
     conversation = await persistUserTurn({
       userId: session.user.id,
@@ -369,6 +456,7 @@ export async function POST(request: Request): Promise<Response> {
     return jsonError(503, "Pertanyaan belum dapat disimpan. Coba lagi.");
   }
   const roleAccess = await getRoleAccess(session.user.roleId);
+  timing?.mark("user-persisted");
   const toolContext: AiToolContext = {
     userId: session.user.id,
     roleName,
@@ -381,12 +469,86 @@ export async function POST(request: Request): Promise<Response> {
     getCompanyIdentity(),
     readCompanyBudgetPolicy(toolContext),
   ]);
+  timing?.mark("context");
+
+  const currentAttachment = attachments.length === 1 ? attachments[0] : undefined;
+  const currentExtraction = currentAttachment
+    ? completeExtractions.get(currentAttachment.url)
+    : undefined;
+  if (
+    currentAttachment &&
+    currentExtraction &&
+    isPlainDocumentReadQuestion(effectiveText) &&
+    isCompleteDocumentReadExtraction(currentExtraction)
+  ) {
+    const currentFile = await readFile(currentAttachment.url);
+    timing?.mark("first-answer");
+    return createUIMessageStreamResponse({
+      stream: documentReadFactStream({
+        question: effectiveText,
+        extraction: currentExtraction,
+        source: {
+          fileName: currentFile.row.fileName,
+          attachmentUrl: currentAttachment.url,
+          mimeType: currentFile.row.mimeType,
+        },
+        conversationId: conversation.id,
+        messages,
+        signal: requestDeadline,
+        save: async (message: UIMessage): Promise<void> => {
+          await appendMessage({
+            conversationId: conversation.id,
+            role: "assistant",
+            parts: message.parts,
+          });
+          timing?.mark("assistant-persisted");
+          timing?.finish("complete");
+        },
+      }),
+      headers: { "x-conversation-id": conversation.id },
+    });
+  }
+
+  if (
+    attachments.length === 0 &&
+    isCompanyBudgetDefaultsQuestion(effectiveText) &&
+    availableAiCapabilities(toolContext).some(
+      (capability) => capability.tool === "getCompanyBudgetDefaults",
+    )
+  ) {
+    timing?.mark("first-answer");
+    return createUIMessageStreamResponse({
+      stream: companyBudgetFactStream({
+        question: effectiveText,
+        policy: companyBudgetPolicy,
+        permissions: toolContext.permissions,
+        conversationId: conversation.id,
+        messages,
+        signal: requestDeadline,
+        save: async (message: UIMessage): Promise<void> => {
+          await appendMessage({
+            conversationId: conversation.id,
+            role: "assistant",
+            parts: message.parts,
+          });
+          timing?.mark("assistant-persisted");
+          timing?.finish("complete");
+        },
+      }),
+      headers: { "x-conversation-id": conversation.id },
+    });
+  }
   let verifiedOwnProfile: OwnProfileSnapshot | undefined;
+  const ownNameOnly =
+    /\bnama\b/i.test(effectiveText) &&
+    /\b(?:profil|akun)\s+(?:saya|aku)\b|\bnama\s+(?:saya|aku)\b/i.test(effectiveText) &&
+    !/\b(?:foto|avatar|gambar|staf|staff|karyawan)\b/i.test(effectiveText);
   if (
     requiredFreshRead([userMessage], ["getOwnProfileContext"]) &&
-    !/\b(siapkan|usulan|ubah|koreksi|edit|update|ganti|hapus|tambahkan)\b/i.test(
-      effectiveText.replace(/\bjangan\b[^.!?\n]*/gi, ""),
-    )
+    (ownNameOnly ||
+      !/\b(siapkan|usulan|ubah|koreksi|edit|update|ganti|hapus|tambahkan)\b/i.test(
+        effectiveText.replace(/\bjangan\b[^.!?\n]*/gi, ""),
+      ))
   ) {
     try {
       verifiedOwnProfile = await db.transaction(async (tx) =>
@@ -411,12 +573,16 @@ export async function POST(request: Request): Promise<Response> {
             role: "assistant",
             parts: message.parts,
           });
+          timing?.mark("assistant-persisted");
+          timing?.finish("complete");
         },
       }),
       headers: { "x-conversation-id": conversation.id },
     });
   }
   const { stream } = runChatStream({
+    timing,
+    hasAttachments: attachments.length > 0,
     signal: requestDeadline,
     userQuestion: effectiveText,
     messages,
@@ -427,6 +593,8 @@ export async function POST(request: Request): Promise<Response> {
     companyName: company.name,
     companyBudgetPolicy,
     verifiedOwnProfile,
+    prefilledOwnProfileName:
+      ownNameOnly && verifiedOwnProfile !== undefined && attachments.length === 0,
     onAssistantMessage: async ({ message, provider, inputTokens, outputTokens }) => {
       await appendMessage({
         conversationId: conversation.id,
@@ -436,6 +604,8 @@ export async function POST(request: Request): Promise<Response> {
         inputTokens,
         outputTokens,
       });
+      timing?.mark("assistant-persisted");
+      timing?.finish("complete");
     },
   });
 

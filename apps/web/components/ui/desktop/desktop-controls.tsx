@@ -16,7 +16,7 @@ import {
   type Key,
   type TextFieldProps,
 } from "@heroui/react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { buttonVariants } from "@heroui/styles";
 import { buttonTapActiveScale, transitionSpringSnappy } from "@/lib/utils/motion";
 import type { ButtonSize, ButtonVariant } from "../button/button";
@@ -33,15 +33,53 @@ import { DesktopSearchSelect } from "./desktop-search-select";
 const MotionHeroButton = motion.create(HeroButton);
 const MotionHeroSwitchThumb = motion.create(HeroSwitch.Thumb);
 
-/** FLIP follows HeroUI's size/RTL layout; Atria owns the motion after CSS transitions are scoped out. */
+/** Animate inside the track; projecting page layout would also animate its parent's vertical reflow. */
 export function DesktopSwitchThumb({ checked }: { readonly checked: boolean }): React.JSX.Element {
   const reducedMotion = useReducedMotion();
+  const [thumb, setThumb] = React.useState<HTMLSpanElement | null>(null);
+  const initialized = React.useRef(false);
+  const targetX = useMotionValue(0);
+  const inlineEndX = useMotionValue(0);
+  const springX = useSpring(targetX, transitionSpringSnappy);
+  const boundedX = useTransform((): number => {
+    const end = inlineEndX.get();
+    return Math.min(Math.max(springX.get(), Math.min(0, end)), Math.max(0, end));
+  });
+
+  React.useLayoutEffect((): (() => void) | undefined => {
+    const track = thumb?.parentElement;
+    if (!thumb || !track) return;
+    const measure = (): void => {
+      const thumbStyle = getComputedStyle(thumb);
+      const trackStyle = getComputedStyle(track);
+      const inset = Number.parseFloat(thumbStyle.marginInlineStart) || 0;
+      const trackWidth = Number.parseFloat(trackStyle.width) || track.clientWidth;
+      const thumbWidth = Number.parseFloat(thumbStyle.width) || thumb.offsetWidth;
+      const travel = Math.max(0, trackWidth - thumbWidth - inset * 2);
+      const end = trackStyle.direction === "rtl" ? -travel : travel;
+      inlineEndX.set(end);
+      targetX.set(checked ? end : 0);
+      if (!initialized.current || reducedMotion) {
+        springX.jump(targetX.get());
+        initialized.current = true;
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    observer.observe(thumb);
+    return (): void => observer.disconnect();
+  }, [thumb, checked, reducedMotion, inlineEndX, targetX, springX]);
+
   return (
     <MotionHeroSwitchThumb
+      ref={setThumb}
       initial={false}
-      layout={reducedMotion ? false : "position"}
-      layoutDependency={checked}
-      transition={reducedMotion ? { duration: 0 } : transitionSpringSnappy}
+      style={{
+        // Preserve HeroUI's checked endpoint until the DOM is ready to measure.
+        marginInlineStart: thumb ? "calc(var(--spacing) * 0.5)" : undefined,
+        x: reducedMotion ? targetX : boundedX,
+      }}
     />
   );
 }
@@ -64,6 +102,7 @@ export const desktopButtonVariant: Record<ButtonVariant, HeroButtonProps["varian
   secondary: "secondary",
   tertiary: "tertiary",
   quiet: "tertiary",
+  ghost: "ghost",
   critical: "danger",
   criticalQuiet: "danger-soft",
 };

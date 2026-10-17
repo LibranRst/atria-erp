@@ -2,7 +2,12 @@ import { cookies } from "@runtime/request-context";
 import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@backend/db";
-import { projectBudgetCategory, projectBudgets, rabEstimate } from "@backend/db/schema";
+import {
+  INSTANCE_TENANT_ID,
+  projectBudgetCategory,
+  projectBudgets,
+  rabEstimate,
+} from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { assertProjectAccess } from "@backend/lib/auth/scoping";
@@ -241,10 +246,14 @@ export async function buildProjectBudgetDashboard(
 ): Promise<ProjectBudgetDashboard | null> {
   const [budget, latestApprovedRab] = await Promise.all([
     db.query.projectBudgets.findFirst({
-      where: eq(projectBudgets.projectId, projectId),
+      where: and(
+        eq(projectBudgets.projectId, projectId),
+        eq(projectBudgets.tenantId, INSTANCE_TENANT_ID),
+      ),
       with: {
         project: true,
         categories: {
+          where: eq(projectBudgetCategory.tenantId, INSTANCE_TENANT_ID),
           with: {
             expenseCategory: true,
           },
@@ -252,7 +261,11 @@ export async function buildProjectBudgetDashboard(
       },
     }),
     db.query.rabEstimate.findFirst({
-      where: and(eq(rabEstimate.projectId, projectId), eq(rabEstimate.status, "APPROVED")),
+      where: and(
+        eq(rabEstimate.projectId, projectId),
+        eq(rabEstimate.status, "APPROVED"),
+        eq(rabEstimate.tenantId, INSTANCE_TENANT_ID),
+      ),
       with: { items: true },
       orderBy: [desc(rabEstimate.revision)],
     }),

@@ -3,6 +3,8 @@
 import React from "react";
 
 import { MetadataChip } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
 type SettingsHeaderProps = {
   readonly eyebrow?: string;
@@ -21,6 +23,7 @@ export function SettingsHeader({
   canManage,
   action,
 }: SettingsHeaderProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   return (
     <header className="min-w-0">
       <div className="flex min-w-0 items-center justify-between gap-3">
@@ -30,17 +33,21 @@ export function SettingsHeader({
               {eyebrow}
             </p>
           )}
-          <h1 className="text-[22px] leading-[1.15] font-semibold tracking-tight text-on-surface max-[360px]:text-[20px]">
-            {title}
-          </h1>
+          <h1 className="text-title font-semibold tracking-tight text-on-surface">{title}</h1>
           {description && (
-            <p className="mt-0.5 text-[11px] leading-[1.35] text-on-surface-variant">
+            <p
+              className={
+                desktop
+                  ? "mt-1 text-support text-on-surface-variant"
+                  : "mt-0.5 text-support text-on-surface-variant"
+              }
+            >
               {description}
             </p>
           )}
         </div>
         <MetadataChip className="font-extrabold tracking-[0.08em] uppercase">
-          {canManage === false ? "Hanya baca" : role}
+          {canManage === false ? "Hanya baca" : formatBusinessLabel(role)}
         </MetadataChip>
       </div>
       {action && <div className="mt-2 w-full">{action}</div>}

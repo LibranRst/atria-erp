@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
 import type { ExpenseReceiptAttachment } from "@/features/expenses/types/expense-form-types";
-import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { AppIcon, Button } from "@/components/ui";
 const MAX_RECEIPT_SIZE = 12 * 1024 * 1024;
 
@@ -33,6 +33,7 @@ export function ExpenseReceiptUpload({
 }: ExpenseReceiptUploadProps): React.JSX.Element {
   const [lastFile, setLastFile] = React.useState<File | null>(null);
   const busy = isUploading || isProcessingOCR;
+  const controlsDisabled = disabled || busy;
 
   function acceptFile(file: File | undefined): void {
     if (!file) return;
@@ -71,7 +72,7 @@ export function ExpenseReceiptUpload({
             <Button
               type="button"
               onClick={onClearReceipt}
-              disabled={disabled}
+              disabled={controlsDisabled}
               className="min-h-12 rounded-full px-3 text-xs font-bold text-error outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
               variant="tertiary"
             >
@@ -81,7 +82,7 @@ export function ExpenseReceiptUpload({
           <ReceiptUploadOption
             icon="swap_horiz"
             label="Ganti Gambar"
-            disabled={disabled}
+            disabled={controlsDisabled}
             onFile={acceptFile}
           />
         </div>
@@ -91,19 +92,19 @@ export function ExpenseReceiptUpload({
             <ReceiptUploadOption
               icon="photo_camera"
               label="Foto Nota"
-              disabled={!selectedProjectId || disabled}
+              disabled={!selectedProjectId || controlsDisabled}
               capture="environment"
               onFile={acceptFile}
             />
             <ReceiptUploadOption
               icon="photo_library"
               label="Pilih Gambar"
-              disabled={!selectedProjectId || disabled}
+              disabled={!selectedProjectId || controlsDisabled}
               onFile={acceptFile}
             />
           </div>
           {!selectedProjectId ? (
-            <p className="px-1 text-[11px] leading-[1.35] text-on-surface-variant">
+            <p className="px-1 text-meta text-on-surface-variant">
               Pilih proyek terlebih dahulu agar hasil scan memakai kategori yang benar.
             </p>
           ) : null}
@@ -136,6 +137,7 @@ export function ExpenseReceiptUpload({
           {lastFile ? (
             <Button
               type="button"
+              disabled={controlsDisabled}
               onClick={() => onSelectFile(lastFile)}
               className="min-h-10 shrink-0 rounded-full px-3 font-bold"
               variant="tertiary"
@@ -163,27 +165,34 @@ function ReceiptUploadOption({
   readonly capture?: "environment";
   readonly onFile: (file: File | undefined) => void;
 }): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
-    <motion.label
-      whileTap={disabled ? undefined : { scale: reduceMotion ? 1 : buttonTapActiveScale }}
-      transition={transitionSpringSnappy}
-      className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-3 text-on-surface shadow-surface ring-1 ring-ring-subtle focus-within:ring-2 focus-within:ring-focus-ring ${disabled ? "cursor-not-allowed opacity-45" : "cursor-pointer"}`}
-    >
-      <AppIcon name={icon} className="icon-md" />
-      <span className="truncate text-xs font-bold">{label}</span>
+    <div className="min-w-0">
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        disabled={disabled}
+        leadingIcon={<AppIcon name={icon} className="icon-md" />}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {label}
+      </Button>
       <input
+        ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/heic,image/heif,image/webp"
         capture={capture}
         disabled={disabled}
+        aria-label={label}
+        tabIndex={-1}
         className="sr-only"
         onChange={(event) => {
           onFile(event.target.files?.[0]);
           event.currentTarget.value = "";
         }}
       />
-    </motion.label>
+    </div>
   );
 }

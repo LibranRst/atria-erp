@@ -1,6 +1,7 @@
 import type { UIMessage } from "ai";
 import { z } from "zod";
 import type { ChatDraft } from "./workspace-session";
+import { hasCompletedAssistantResult } from "./assistant-result";
 
 export function restorePendingMessages(
   messages: readonly UIMessage[],
@@ -43,14 +44,6 @@ export function chatFailureMessage(error: Error, offline: boolean): string {
 export function unansweredTurn(messages: readonly UIMessage[]): UIMessage | null {
   const index = messages.findLastIndex((message) => message.role === "user");
   if (index < 0) return null;
-  const answered = messages
-    .slice(index + 1)
-    .some((message) =>
-      message.parts.some(
-        (part) =>
-          (part.type === "text" && part.text.trim().length > 0) ||
-          ("state" in part && part.state === "output-available"),
-      ),
-    );
+  const answered = messages.slice(index + 1).some(hasCompletedAssistantResult);
   return answered ? null : messages[index];
 }

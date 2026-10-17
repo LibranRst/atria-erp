@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { resolveWorkspacePresentation, type WorkspacePresentation } from "./workspace-routes";
 
 function subscribeViewport(listener: () => void): () => void {
@@ -14,6 +14,15 @@ function desktopViewport(): boolean {
 
 function serverViewport(): boolean {
   return false;
+}
+
+/** Match responsive layout visibility without resetting the owning workflow state. */
+export function useWorkspaceViewportAtLeast(minimumWidth: number): boolean {
+  const readViewport = useCallback(
+    (): boolean => window.innerWidth >= minimumWidth,
+    [minimumWidth],
+  );
+  return useSyncExternalStore(subscribeViewport, readViewport, serverViewport);
 }
 
 /** Viewport changes presentation only; there is no navigation or authorization side effect. */

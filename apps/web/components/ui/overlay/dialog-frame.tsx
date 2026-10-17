@@ -11,6 +11,7 @@ import { AppIcon } from "../icon/app-icon";
 import { OverlayLayerProvider } from "./overlay-layer-context";
 import {
   deactivateOverlay,
+  canRestoreOverlayFocus,
   isOverlayKeyHandled,
   isTopOverlay,
   lockBodyScroll,
@@ -40,6 +41,7 @@ type DialogFrameProps = {
   readonly morphPresent?: boolean;
   readonly morphClosedContent?: React.ReactNode;
   readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
   readonly open: boolean;
   readonly title: string;
   readonly description?: string;
@@ -55,7 +57,7 @@ type DialogFrameProps = {
   readonly bodyHeader?: React.ReactNode;
   readonly utility?: React.ReactNode;
   readonly detachedCloseButton?: boolean;
-  readonly presentation?: "default" | "choice" | "calendar";
+  readonly presentation?: "default" | "choice" | "calendar" | "document";
   readonly children?: React.ReactNode;
   readonly footer?: React.ReactNode;
   readonly onClose: () => void;
@@ -68,6 +70,7 @@ export function DialogFrame({
   morphPresent,
   morphClosedContent,
   returnFocusRef,
+  fallbackFocusRef,
   title,
   description,
   pending = false,
@@ -132,7 +135,10 @@ export function DialogFrame({
   React.useEffect(() => {
     if (!shouldRender || !portalNode) return undefined;
     const activeDialogId = dialogId;
+    const activeDialog = dialogRef.current;
+    activeDialog?.removeAttribute("data-atria-overlay-closing");
     const returnFocusTarget = returnFocusRef?.current;
+    const fallbackFocusTarget = fallbackFocusRef?.current;
     const previousFocus =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const layer = promoteOverlay(activeDialogId);
@@ -195,16 +201,24 @@ export function DialogFrame({
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
+      activeDialog?.setAttribute("data-atria-overlay-closing", "true");
       window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("keydown", onKeyDown);
       releaseViewport?.();
       deactivateOverlay(activeDialogId);
       releaseBodyScroll();
-      const trigger = returnFocusTarget;
-      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
-      else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      const target = [returnFocusTarget, previousFocus, fallbackFocusTarget].find(
+        (element): element is HTMLElement => Boolean(element && canRestoreOverlayFocus(element)),
+      );
+      const current = document.activeElement;
+      const readerMovedFocus =
+        current instanceof HTMLElement &&
+        current !== document.body &&
+        current !== target &&
+        canRestoreOverlayFocus(current);
+      if (target && !readerMovedFocus) target.focus({ preventScroll: true });
     };
-  }, [dialogId, portalNode, requestClose, returnFocusRef, shouldRender]);
+  }, [dialogId, portalNode, requestClose, returnFocusRef, fallbackFocusRef, shouldRender]);
 
   if (portalNode === null) return null;
 
@@ -216,8 +230,8 @@ export function DialogFrame({
   const maximumHeight = Math.max(
     0,
     Math.min(
-      viewportHeight * 0.78,
-      560,
+      viewportHeight * (presentation === "document" && desktop ? 0.94 : 0.78),
+      presentation === "document" && desktop ? 900 : 560,
       viewportHeight - (placement === "top" && topInset === "header" ? 72 : 16) - 16,
     ),
   );
@@ -285,6 +299,7 @@ export function DialogFrame({
               ref={dialogRef}
               tabIndex={-1}
               role={role}
+              data-atria-overlay-id={dialogId}
               data-atria-overlay-presentation={desktop ? "desktop" : "mobile"}
               aria-modal="true"
               aria-labelledby={titleId}
@@ -301,7 +316,7 @@ export function DialogFrame({
               transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
               onAnimationComplete={morphOrigin && !open ? () => onExitComplete?.() : undefined}
               style={{ maxHeight: maximumHeight }}
-              className={`pointer-events-none flex flex-col outline-none ${morphOrigin ? `absolute overflow-hidden rounded-owner ring-1 ring-ring-control ${open ? "bg-surface-container-low shadow-raised" : "bg-surface-container-lowest shadow-control"}` : `w-full ${calendarPresentation ? "max-w-85" : "max-w-90"}`} ${utility || detachedCloseButton ? "gap-2" : ""}`}
+              className={`pointer-events-none flex flex-col outline-none ${morphOrigin ? `absolute overflow-hidden rounded-owner ring-1 ring-ring-control ${open ? "bg-surface-container-low shadow-raised" : "bg-surface-container-lowest shadow-control"}` : `w-full ${calendarPresentation ? "max-w-85" : presentation === "document" && desktop ? "max-w-4xl" : "max-w-90"}`} ${utility || detachedCloseButton ? "gap-2" : ""}`}
             >
               {morphOrigin && morphClosedContent ? (
                 <motion.div

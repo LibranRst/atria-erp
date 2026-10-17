@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
@@ -12,6 +12,8 @@ import {
   materialMaster,
   user,
   vendor,
+  tenantMember,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import type { Actor } from "@backend/server/actor";
 import { OWNER_ROLE_ID, SYSTEM_ROLES } from "@atria/core/auth/role-constants";
@@ -66,54 +68,93 @@ export async function getOrganizationSetupOverviewUseCase(
       firstProject,
     ] = await Promise.all([
       db.query.appConfig.findMany({
-        where: inArray(appConfig.key, [
-          OWNER_ONBOARDING_V2_CONFIG_KEY,
-          OWNER_ONBOARDING_CONFIG_KEY,
-        ]),
+        where: and(
+          eq(appConfig.tenantId, INSTANCE_TENANT_ID),
+          inArray(appConfig.key, [OWNER_ONBOARDING_V2_CONFIG_KEY, OWNER_ONBOARDING_CONFIG_KEY]),
+        ),
         columns: { key: true, value: true },
       }),
       db.query.user.findMany({
-        where: eq(user.isActive, true),
+        where: and(
+          eq(user.isActive, true),
+          inArray(
+            user.id,
+            db
+              .select({ id: tenantMember.userId })
+              .from(tenantMember)
+              .where(
+                and(eq(tenantMember.tenantId, INSTANCE_TENANT_ID), eq(tenantMember.isActive, true)),
+              ),
+          ),
+        ),
         columns: { id: true, roleId: true },
       }),
-      db.query.vendor.findFirst({ where: eq(vendor.isActive, true), columns: { id: true } }),
+      db.query.vendor.findFirst({
+        where: and(eq(vendor.tenantId, INSTANCE_TENANT_ID), eq(vendor.isActive, true)),
+        columns: { id: true },
+      }),
       db.query.bankAccount.findFirst({
-        where: eq(bankAccount.isActive, true),
+        where: and(eq(bankAccount.tenantId, INSTANCE_TENANT_ID), eq(bankAccount.isActive, true)),
         columns: { id: true },
       }),
       db.query.inventoryLocation.findFirst({
-        where: eq(inventoryLocation.isActive, true),
+        where: and(
+          eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+          eq(inventoryLocation.isActive, true),
+        ),
         columns: { id: true },
       }),
       db.query.materialMaster.findFirst({
-        where: eq(materialMaster.isActive, true),
+        where: and(
+          eq(materialMaster.tenantId, INSTANCE_TENANT_ID),
+          eq(materialMaster.isActive, true),
+        ),
         columns: { id: true },
       }),
       db.query.itemPriceLibrary.findFirst({
-        where: eq(itemPriceLibrary.isActive, true),
+        where: and(
+          eq(itemPriceLibrary.tenantId, INSTANCE_TENANT_ID),
+          eq(itemPriceLibrary.isActive, true),
+        ),
         columns: { id: true },
       }),
       db.query.expenseCategory.findMany({
-        where: eq(expenseCategory.isActive, true),
+        where: and(
+          eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
+          eq(expenseCategory.isActive, true),
+        ),
         columns: { code: true },
       }),
       db.query.budgetAllocationSetting.findFirst({
-        where: eq(budgetAllocationSetting.isActive, true),
+        where: and(
+          eq(budgetAllocationSetting.tenantId, INSTANCE_TENANT_ID),
+          eq(budgetAllocationSetting.isActive, true),
+        ),
         columns: { id: true },
       }),
       db.query.inventoryOpeningBatch.findFirst({
-        where: eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+        where: and(
+          eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
+          eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+        ),
         columns: { id: true },
       }),
       db.query.inventoryOpeningBatch.findFirst({
-        where: eq(inventoryOpeningBatch.status, "POSTED"),
+        where: and(
+          eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
+          eq(inventoryOpeningBatch.status, "POSTED"),
+        ),
         columns: { id: true },
       }),
       db.query.inventoryOpeningBatch.findFirst({
-        where: eq(inventoryOpeningBatch.status, "REJECTED"),
+        where: and(
+          eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
+          eq(inventoryOpeningBatch.status, "REJECTED"),
+        ),
         columns: { id: true },
       }),
       db.query.project.findFirst({
+        where: (table, { eq }) => eq(table.tenantId, INSTANCE_TENANT_ID),
         columns: { id: true },
         orderBy: (table, { asc }) => [asc(table.createdAt)],
       }),

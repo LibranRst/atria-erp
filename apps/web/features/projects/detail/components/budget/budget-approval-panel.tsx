@@ -37,6 +37,7 @@ export function BudgetDraftActions({
             <Button
               type="button"
               onClick={() => setConfirmSubmit(false)}
+              fullWidth
               className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
               variant="secondary"
             >
@@ -45,6 +46,7 @@ export function BudgetDraftActions({
             <Button
               type="button"
               disabled={isPending}
+              fullWidth
               onClick={() => {
                 setConfirmSubmit(false);
                 onSubmitBudget();
@@ -114,6 +116,7 @@ export function BudgetApprovalPanel({
             <Button
               type="button"
               onClick={() => setConfirmApprove(false)}
+              fullWidth
               className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
               variant="secondary"
             >
@@ -122,6 +125,7 @@ export function BudgetApprovalPanel({
             <Button
               type="button"
               disabled={isPending}
+              fullWidth
               onClick={() => {
                 setConfirmApprove(false);
                 onApproveBudget();
@@ -165,6 +169,7 @@ export function BudgetApprovalPanel({
               <Button
                 type="button"
                 onClick={() => setShowRejectForm(false)}
+                fullWidth
                 className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold active:z-10 active:shadow-raised"
                 variant="secondary"
               >
@@ -173,6 +178,7 @@ export function BudgetApprovalPanel({
               <Button
                 type="submit"
                 disabled={isPending || rejectionNotes.trim().length < 3}
+                fullWidth
                 className="min-h-12 rounded-full bg-error px-4 text-xs font-bold text-white active:z-10 active:shadow-raised disabled:opacity-40"
                 variant="critical"
               >

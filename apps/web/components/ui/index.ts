@@ -90,6 +90,7 @@ export { RoutePageError, RoutePageLoading } from "./feedback/route-page-state";
 // Navigasi dan filter
 export { SegmentedTabs } from "./navigation/segmented-tabs";
 export type { SegmentedTabOption } from "./navigation/segmented-tabs";
+export { useListDetailFocus } from "./navigation/use-list-detail-focus";
 export { FilterPills } from "./navigation/filter-pills";
 export type { FilterPillOption } from "./navigation/filter-pills";
 export { ExclusiveSearchFilterBar } from "./navigation/exclusive-search-filter-bar";
@@ -204,6 +205,14 @@ export type {
 } from "./desktop/desktop-controls";
 export { DesktopTable } from "./desktop/desktop-table";
 export type { DesktopTableColumn, DesktopTableProps } from "./desktop/desktop-table";
+export { useDesktopTable, desktopTablePage } from "./desktop/use-desktop-table";
+export type {
+  DesktopTableSort,
+  DesktopTableOptions,
+  DesktopTableState,
+} from "./desktop/use-desktop-table";
+export { DesktopTablePagination } from "./desktop/desktop-table-pagination";
+export type { DesktopTablePaginationProps } from "./desktop/desktop-table-pagination";
 
 export { DesktopButtonLink } from "./desktop/desktop-button-link";
 export type { DesktopButtonLinkProps } from "./desktop/desktop-button-link";

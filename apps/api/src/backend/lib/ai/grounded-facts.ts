@@ -8,6 +8,8 @@ import { renderGroundedHistory } from "./grounded-history";
 import { isExpenseStatusQuestion, renderGroundedExpenseSection } from "./grounded-expenses";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { formatExactIdr, formatIdr } from "@atria/core/utils/money";
+import type { CardNarrative } from "@atria/core/ai/answer-presentation";
+import { selectVisibleBudgetCategories } from "@atria/core/ai/budget-card-presentation";
 import {
   getBankBalancesOutputSchema,
   getProjectBudgetOutputSchema,
@@ -34,8 +36,9 @@ export interface GroundedAnswer {
   readonly sources: readonly GroundedFactSource[];
   readonly coveredDomains: readonly GroundedFactDomain[];
   readonly missingDomains: readonly GroundedFactDomain[];
+  readonly cardNarratives?: readonly CardNarrative[];
 }
-type Section = { text: string; source: GroundedFactSource; complete: boolean };
+type Section = { text: string; cardText?: string; source: GroundedFactSource; complete: boolean };
 const objectSchema = z.record(z.string(), z.unknown());
 const numeric = z.union([z.number().finite(), z.string().regex(/^-?\d+(?:\.\d{1,2})?$/)]);
 const money = z.union([numeric, z.object({ amount: numeric })]);
@@ -276,7 +279,9 @@ function cashSection(question: string, observation: GroundedToolObservation): Se
     const target = normalize(question).match(/\brekening\s+(.+?)(?:\s+dan\s+|$)/)?.[1];
     const generic =
       !target ||
-      /^(?:aktif|perusahaan|gabungan|semua|seluruh|terbaru|sekarang|saat ini)$/.test(target);
+      /^(?:aktif|perusahaan|gabungan|semua|seluruh|terbaru|terkini|sekarang|saat ini)$/.test(
+        target,
+      );
     if (!generic && !explicitlyNamed.length) return null;
     if (
       !explicitlyNamed.length &&
@@ -285,6 +290,7 @@ function cashSection(question: string, observation: GroundedToolObservation): Se
     )
       return null;
     const rows = explicitlyNamed.length ? explicitlyNamed : value.accounts;
+    const firstAccount = rows[0];
     const combined = !explicitlyNamed.length;
     // The authoritative total is consumed as provided, never computed from a
     // narrowed search page. Check the all-account invariant before publishing.
@@ -297,6 +303,15 @@ function cashSection(question: string, observation: GroundedToolObservation): Se
           : "Saldo rekening yang diminta:",
         ...rows.map((a) => `- ${plain(a.accountName)} (${plain(a.bankName)}): ${idr(a.balance)}.`),
       ].join("\n"),
+      ...(firstAccount
+        ? {
+            cardText: combined
+              ? "Saldo seluruh rekening aktif sudah diperiksa. Rinciannya ada di kartu Saldo rekening."
+              : rows.length === 1
+                ? `Saldo ${plain(firstAccount.accountName)} (${plain(firstAccount.bankName)}): **${idr(firstAccount.balance)}**.`
+                : `Saldo gabungan ${rows.length} rekening ${namedBanks.length ? plain(firstAccount.bankName) : "yang diminta"}: **${idr(sumMoney(rows.map((a) => a.balance)))}**. Rincian tiap rekening ada di kartu Saldo rekening.`,
+          }
+        : {}),
       source: source(
         observation,
         rows.flatMap((a) => (a.accountId ? [a.accountId] : [])),
@@ -394,48 +409,74 @@ function budgetSection(
     );
     const requested = categories.filter((c) => selectedCategories.has(normalize(c.categoryName)));
     const visible = requested.length ? requested : categories;
-    const lines = [
+    const requestsCategoryDetails =
+      requested.length > 0 ||
+      /\b(?:semua kategori|seluruh kategori|setiap kategori|masing masing kategori|per kategori|rincian|rinci|detail|lengkap)\b/.test(
+        categoryQuestion,
+      );
+    const summary = [
       `**${plain(value.projectName)}**`,
       `Nilai kontrak ${idr(value.contractValue)} · plafon internal ${idr(value.internalBudget)}.`,
       `Status budget: ${formatBusinessLabel(value.budgetStatus)}.`,
       `Realisasi tercatat ${idr(sumMoney(categories.map((c) => c.actual)))} · sisa alokasi kategori ${idr(sumMoney(categories.map((c) => c.remaining)))}.`,
-      ...visible.map((c): string => {
+    ];
+    const categoryLine = (c: (typeof categories)[number]): string => {
+      const categoryPaid = paidCategories?.find((p) => p.categoryCode === c.categoryCode);
+      return `- ${plain(c.categoryName)}: alokasi ${idr(c.allocated)}; realisasi ${idr(c.actual)}; ${categoryPaid ? `kas dibayar ${idr(categoryPaid.paid)}; ` : ""}menunggu review ${idr(c.pending)}; sisa ${idr(c.remaining)} · ${quantity(c.usedPercentage)}% · ${formatBusinessLabel(c.status)}.`;
+    };
+    const shownCategoryCodes = new Set(
+      selectVisibleBudgetCategories(categories).shown.map((c) => c.categoryCode),
+    );
+    const lines = [...summary, ...visible.map(categoryLine)];
+    const cardLines = [
+      ...summary,
+      ...(requestsCategoryDetails ? visible : []).map((c): string => {
+        // The card omits payment and pending-review facts; keep those visible.
+        // Hidden rows still need their complete factual answer in the bubble.
+        if (!shownCategoryCodes.has(c.categoryCode)) return categoryLine(c);
         const categoryPaid = paidCategories?.find((p) => p.categoryCode === c.categoryCode);
-        return `- ${plain(c.categoryName)}: alokasi ${idr(c.allocated)}; realisasi ${idr(c.actual)}; ${categoryPaid ? `kas dibayar ${idr(categoryPaid.paid)}; ` : ""}menunggu review ${idr(c.pending)}; sisa ${idr(c.remaining)} · ${quantity(c.usedPercentage)}% · ${formatBusinessLabel(c.status)}.`;
+        return `- ${plain(c.categoryName)}: ${categoryPaid ? `kas dibayar ${idr(categoryPaid.paid)}; ` : ""}menunggu review ${idr(c.pending)}.`;
       }),
     ];
+    const cardOnlySummary = requestsCategoryDetails
+      ? []
+      : [`Menunggu review: ${idr(sumMoney(categories.map((c) => c.pending)))}.`];
+    const qualifications: string[] = [];
     const paid = paidCategories
       ? sumMoney(paidCategories.map((c) => c.paid))
       : money.safeParse(raw.paidAmount).data;
     const needsPaid = /\b(?:dibayar|dibayarkan|paid|kas keluar|sudah keluar)\b/.test(
       normalize(question),
     );
-    if (paid !== undefined) lines.push(`Kas dibayar: ${idr(paid)}.`);
+    if (paid !== undefined) qualifications.push(`Kas dibayar: ${idr(paid)}.`);
     else if (needsPaid)
-      lines.push(
+      qualifications.push(
         "Kas yang sudah dibayar belum terverifikasi dari pembacaan ini; realisasi budget berbeda dari kas dibayar.",
       );
     if (/\bsisa (?:budget|anggaran|plafon)(?: total| proyek)?\b/.test(normalize(question)))
-      lines.push(
+      qualifications.push(
         `Sisa plafon internal terhadap realisasi tercatat: ${idr(sumMoney([value.internalBudget, -sumMoney(categories.map((c) => c.actual))]))}. Sisa alokasi kategori hanya mencakup budget yang telah dialokasikan.`,
       );
     const wantsMargin = /\bmargin\b/.test(normalize(question));
     if (wantsMargin)
-      lines.push(
+      qualifications.push(
         `Selisih nilai kontrak terhadap realisasi tercatat: ${idr(sumMoney([value.contractValue, -sumMoney(categories.map((c) => c.actual))]))}. Ini belum merupakan margin akhir proyek.`,
       );
     const wantsRab = /\b(?:rab disetujui|approved rab|nilai rab)\b/.test(normalize(question));
     const rab = money.safeParse(raw.approvedRabValue).data;
     if (wantsRab)
-      lines.push(
+      qualifications.push(
         rab === undefined
           ? "Nilai RAB disetujui belum terverifikasi dari pembacaan ini."
           : `Nilai RAB disetujui: ${idr(rab)}.`,
       );
     if (/\b(?:progres|progress)\b/.test(normalize(question)))
-      lines.push(`Progres proyek: ${quantity(value.projectProgressPercentage)}%.`);
+      qualifications.push(`Progres proyek: ${quantity(value.projectProgressPercentage)}%.`);
     return {
-      text: lines.join("\n"),
+      text: [...lines, ...qualifications].join("\n"),
+      ...(categories.length > 0
+        ? { cardText: [...cardLines, ...cardOnlySummary, ...qualifications].join("\n") }
+        : {}),
       source: source(observation, [value.projectId]),
       complete:
         (!needsPaid || paid !== undefined) && !wantsMargin && (!wantsRab || rab !== undefined),
@@ -862,6 +903,19 @@ export function renderGroundedFacts(
     }
   }
   const errors = issues.length > 0;
+  const cardNarratives: CardNarrative[] = sections.flatMap((section): CardNarrative[] => {
+    const toolName = section.source.toolName;
+    if (!section.cardText || (toolName !== "getBankBalances" && toolName !== "getProjectBudget"))
+      return [];
+    return [
+      {
+        toolName,
+        toolCallId: section.source.toolCallId,
+        fullText: section.text,
+        cardText: section.cardText,
+      },
+    ];
+  });
   return {
     status:
       missing.length === 0 && !errors
@@ -877,5 +931,6 @@ export function renderGroundedFacts(
     sources: sections.map((s) => s.source),
     coveredDomains: covered,
     missingDomains: missing,
+    ...(cardNarratives.length > 0 ? { cardNarratives } : {}),
   };
 }

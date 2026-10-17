@@ -81,6 +81,7 @@ export function ValuePreviewStrip({
     readonly label: string;
     readonly value?: string;
     readonly amount?: number;
+    readonly fractionDigits?: 0 | 2;
     readonly tone?: FormRiskTone;
   }>;
   readonly lastItemFullWidth?: boolean;
@@ -106,6 +107,7 @@ export function ValuePreviewStrip({
             {typeof item.amount === "number" ? (
               <MoneyValue
                 amount={item.amount}
+                fractionDigits={item.fractionDigits}
                 variant="fullDynamic"
                 size="lg"
                 tone={

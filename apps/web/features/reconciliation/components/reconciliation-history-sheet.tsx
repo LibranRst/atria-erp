@@ -38,7 +38,10 @@ export function ReconciliationHistorySheet({
             confirmed
           />
 
-          <FormSection title="Catatan Atria" helper="Transaksi yang tercatat di dalam Atria.">
+          <FormSection
+            title="Catatan Paduna Build"
+            helper="Transaksi yang tercatat di dalam Paduna Build."
+          >
             <EvidenceDescription
               icon="receipt_long"
               title={presentedValue.cashDescription}

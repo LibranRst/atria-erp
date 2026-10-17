@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
+import { cardNarrativeSchema } from "@atria/core/ai/answer-presentation";
+import { getProjectBudgetOutputSchema } from "@atria/core/ai/tool-output";
 import {
   isGroundedFactQuestion,
   renderGroundedFacts,
@@ -120,6 +122,21 @@ function rab(): GroundedToolObservation {
 }
 
 describe("trusted current-run financial and stock facts", () => {
+  test("terkini denotes a current balance request while named account binding stays explicit", (): void => {
+    const answer = renderGroundedFacts(
+      "Periksa saldo rekening terkini dan tampilkan daftar rekeningnya. Jangan ubah data.",
+      [bank()],
+    );
+    expect(answer?.status).toBe("verified");
+    expect(answer?.text).toContain("2.000.000,32");
+    expect(answer?.sources[0]?.entityIds).toEqual([accountA, accountB]);
+    expect(renderGroundedFacts("Cek saldo rekening Tidak Ada terkini", [bank()])?.status).toBe(
+      "waiting",
+    );
+    expect(
+      renderGroundedFacts("Cek saldo Rekening QA Kedua terkini", [bank()])?.sources[0]?.entityIds,
+    ).toEqual([accountB]);
+  });
   test("classifier leaves proposals, mixed commands, advice, Settings and unrelated questions to their own workflow", () => {
     expect(
       isGroundedFactQuestion(
@@ -823,5 +840,218 @@ describe("trusted current-run financial and stock facts", () => {
       },
     );
     expect(renderGroundedFacts("Cek saldo perusahaan", [huge])?.status).toBe("error");
+  });
+});
+
+describe("card-aware factual presentation alternatives", () => {
+  test("company balances keep complete canonical facts and supply one nonnumeric card conclusion", () => {
+    const answer = renderGroundedFacts("Tampilkan ringkasan saldo kas bank perusahaan saat ini", [
+      bank(),
+    ]);
+    expect(answer?.status).toBe("verified");
+    expect(answer?.text).toContain("Rp 2.000.000,32");
+    expect(answer?.text).toContain("Rekening QA Utama");
+    expect(answer?.text).toContain("Rekening QA Kedua");
+    expect(answer?.cardNarratives).toHaveLength(1);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.toolName).toBe("getBankBalances");
+    expect(narrative.toolCallId).toBe("getBankBalances");
+    expect(answer?.text).toContain(narrative.fullText);
+    expect(narrative.cardText).toContain("Saldo rekening");
+    expect(narrative.cardText).not.toContain("Rp");
+    expect(narrative.cardText).not.toContain("Rekening QA");
+    expect(narrative.cardText).not.toContain("- ");
+    expect(answer?.sources[0]?.entityIds).toEqual([accountA, accountB]);
+  });
+
+  test("named account direct answers retain its exact balance and identity only", () => {
+    const answer = renderGroundedFacts("Berapa saldo Rekening QA Kedua?", [bank()]);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.cardText).toContain("Rekening QA Kedua");
+    expect(narrative.cardText).toContain("Rp 750.000,07");
+    expect(narrative.cardText).not.toContain("Rekening QA Utama");
+    expect(narrative.cardText).not.toContain("Rp 2.000.000,32");
+    expect(answer?.sources[0]?.entityIds).toEqual([accountB]);
+  });
+
+  test("a named bank covering several accounts keeps a scoped exact conclusion rather than a list", () => {
+    const cash = outputRecord(bank());
+    const read = observation(
+      "getBankBalances",
+      {},
+      {
+        ...cash,
+        accountCount: 3,
+        totalAvailable: money(2250000.32),
+        accounts: [
+          {
+            accountId: accountA,
+            accountName: "BCA Operasional",
+            bankName: "BCA",
+            balance: money(1250000.25),
+          },
+          {
+            accountId: accountB,
+            accountName: "BCA Giro",
+            bankName: "BCA",
+            balance: money(750000.07),
+          },
+          {
+            accountId: "00000000-0000-4000-8000-000000000009",
+            accountName: "Mandiri Operasional",
+            bankName: "Mandiri",
+            balance: money(250000),
+          },
+        ],
+      },
+    );
+    const answer = renderGroundedFacts("Berapa saldo bank BCA?", [read]);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.cardText).toContain("2 rekening BCA");
+    expect(narrative.cardText).toContain("Rp 2.000.000,32");
+    expect(narrative.cardText).not.toContain("BCA Operasional");
+    expect(narrative.cardText).not.toContain("BCA Giro");
+    expect(narrative.cardText).not.toContain("Mandiri");
+    expect(answer?.sources[0]?.entityIds).toEqual([accountA, accountB]);
+  });
+
+  test("empty or invalid balance payloads never replace their necessary answer with a card reference", () => {
+    const empty = renderGroundedFacts("Cek saldo perusahaan", [
+      observation(
+        "getBankBalances",
+        {},
+        {
+          scope: "Seluruh rekening aktif perusahaan ini",
+          accountCount: 0,
+          totalAvailable: money(0),
+          accounts: [],
+        },
+      ),
+    ]);
+    expect(empty?.status).toBe("verified");
+    expect(empty?.text).toContain("Saldo gabungan 0 rekening aktif");
+    expect(empty?.cardNarratives).toBeUndefined();
+    const invalid = renderGroundedFacts("Cek saldo perusahaan", [
+      observation("getBankBalances", {}, { ...outputRecord(bank()), accountCount: 3 }),
+    ]);
+    expect(invalid?.status).toBe("waiting");
+    expect(invalid?.cardNarratives).toBeUndefined();
+  });
+
+  test("mixed missing facts and permission errors remain beside the successful card-backed section", () => {
+    const answer = renderGroundedFacts("Cek saldo dan stok Panel QA di Gudang QA", [
+      bank(),
+      observation("getWarehouseContext", {}, { error: "Akses gudang ditolak." }),
+    ]);
+    expect(answer?.status).toBe("partial");
+    expect(answer?.text).toContain("Akses gudang ditolak");
+    expect(answer?.cardNarratives).toHaveLength(1);
+    expect(answer?.cardNarratives?.[0]?.toolName).toBe("getBankBalances");
+    expect(answer?.missingDomains).toContain("stock");
+    expect(
+      renderGroundedFacts("Cek stok Panel QA di Gudang QA", [stock()])?.cardNarratives,
+    ).toBeUndefined();
+    expect(
+      renderGroundedFacts("Cek status RAB Proyek QA", [rab()])?.cardNarratives,
+    ).toBeUndefined();
+  });
+
+  test("budget overview complements card rows with aggregate payment and pending-review facts", () => {
+    const answer = renderGroundedFacts("Cek budget Proyek QA", [budget()]);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.toolName).toBe("getProjectBudget");
+    expect(answer?.text).toContain(narrative.fullText);
+    expect(narrative.fullText).toContain("Material: alokasi Rp 60.000,23; realisasi Rp 15.000,11");
+    expect(narrative.cardText).not.toContain("Material: alokasi");
+    expect(narrative.cardText).not.toContain("Tukang: alokasi");
+    expect(narrative.cardText).not.toContain("Material:");
+    expect(narrative.cardText).not.toContain("Tukang:");
+    expect(narrative.cardText).toContain("Menunggu review: Rp 5.000,02");
+    expect(narrative.cardText).toContain("Kas dibayar: Rp 13.000,10");
+    expect(narrative.cardText).toContain("Nilai kontrak Rp 125.000,75");
+    expect(answer?.sources[0]?.entityIds).toEqual([projectId]);
+  });
+
+  test("a named visible category keeps payment and pending-review facts without repeating its card fields", () => {
+    const answer = renderGroundedFacts("Cek budget Material Proyek QA", [budget()]);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.cardText).toContain(
+      "Material: kas dibayar Rp 12.500,07; menunggu review Rp 5.000,02",
+    );
+    expect(narrative.cardText).not.toContain("Material: alokasi");
+    expect(narrative.cardText).not.toContain("Tukang:");
+    expect(narrative.cardText).toContain("Kas dibayar: Rp 13.000,10");
+    expect(answer?.text).toContain(narrative.fullText);
+  });
+
+  test("requested budget qualifications absent from the card are never lost", () => {
+    const read = observation(
+      "getProjectBudget",
+      { projectId },
+      {
+        ...outputRecord(budget()),
+        approvedRabValue: money(120000.33),
+      },
+    );
+    const answer = renderGroundedFacts(
+      "Cek budget Proyek QA, kas dibayar, RAB disetujui, margin dan progres",
+      [read],
+    );
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.cardText).toContain("Kas dibayar: Rp 13.000,10");
+    expect(narrative.cardText).toContain("Nilai RAB disetujui: Rp 120.000,33");
+    expect(narrative.cardText).toContain("Ini belum merupakan margin akhir proyek");
+    expect(narrative.cardText).toContain("Progres proyek: 42,5%");
+    expect(answer?.text).toContain(narrative.fullText);
+  });
+
+  test("explicitly requested safe categories hidden by the card retain their complete answer", () => {
+    const base = getProjectBudgetOutputSchema.parse(outputRecord(budget()));
+    const read = observation(
+      "getProjectBudget",
+      { projectId },
+      {
+        ...outputRecord(budget()),
+        categories: [
+          ...base.categories,
+          {
+            categoryCode: "OPERASIONAL",
+            categoryName: "Operasional",
+            allocated: money(30000.17),
+            actual: money(0),
+            pending: money(0),
+            remaining: money(30000.17),
+            usedPercentage: 0,
+            status: "SAFE",
+          },
+        ],
+      },
+    );
+    const answer = renderGroundedFacts("Cek budget Operasional Proyek QA", [read]);
+    const narrative = cardNarrativeSchema.parse(answer?.cardNarratives?.[0]);
+    expect(narrative.cardText).toContain("Operasional: alokasi Rp 30.000,17; realisasi Rp 0");
+    expect(narrative.cardText).toContain("sisa Rp 30.000,17");
+    expect(narrative.cardText).not.toContain("Material: alokasi");
+    expect(answer?.text).toContain(narrative.fullText);
+    const overview = renderGroundedFacts("Cek budget Proyek QA", [read]);
+    const overviewNarrative = cardNarrativeSchema.parse(overview?.cardNarratives?.[0]);
+    expect(overviewNarrative.cardText).not.toContain("Operasional:");
+    expect(overviewNarrative.cardText).not.toContain("Material:");
+    expect(overviewNarrative.cardText).not.toContain("Tukang:");
+    expect(overviewNarrative.cardText).toContain("Menunggu review: Rp 5.000,02");
+    expect(overview?.text).toContain("Operasional: alokasi Rp 30.000,17; realisasi Rp 0");
+    for (const question of [
+      "Cek budget semua kategori Proyek QA",
+      "Cek budget per kategori Proyek QA",
+      "Tampilkan rincian budget Proyek QA",
+    ]) {
+      const detailed = renderGroundedFacts(question, [read]);
+      const detailNarrative = cardNarrativeSchema.parse(detailed?.cardNarratives?.[0]);
+      expect(detailNarrative.cardText).toContain(
+        "Operasional: alokasi Rp 30.000,17; realisasi Rp 0",
+      );
+      expect(detailNarrative.cardText).toContain("sisa Rp 30.000,17");
+      expect(detailed?.text).toContain(detailNarrative.fullText);
+    }
   });
 });

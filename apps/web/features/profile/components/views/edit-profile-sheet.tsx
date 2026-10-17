@@ -58,12 +58,14 @@ export function EditProfileSheet({
   imageUrl,
   initials,
   onClose,
+  returnFocusRef,
 }: {
   readonly open: boolean;
   readonly displayName: string;
   readonly imageUrl?: string | null;
   readonly initials: string;
   readonly onClose: () => void;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -242,6 +244,7 @@ export function EditProfileSheet({
             : (nameError ?? "Nama tampilan wajib diisi.")
       }
       onClose={onClose}
+      returnFocusRef={returnFocusRef}
       onSubmit={() => void submit()}
     >
       <section className="flex flex-col items-center gap-3 pt-1" aria-label="Foto profil">

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useCan } from "@/components/auth/permissions-provider";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
@@ -73,6 +74,7 @@ export function TransferSheet({
   onSubmit,
 }: TransferSheetProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
+  const canCreateLocation = useCan()("manage:material_settings");
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const duplicateMaterial =
@@ -239,26 +241,30 @@ export function TransferSheet({
             {locations.length < 2 && (
               <section className="space-y-2.5">
                 <FormRiskNotice title="Lokasi transfer belum cukup" tone="warning">
-                  Tambahkan satu lokasi aktif lagi sebelum memindahkan stok.
+                  {canCreateLocation
+                    ? "Tambahkan satu lokasi aktif lagi sebelum memindahkan stok."
+                    : "Minta pengelola menambahkan satu lokasi aktif lagi sebelum memindahkan stok."}
                 </FormRiskNotice>
-                <div className="flex items-center gap-2">
-                  <TextInput
-                    value={newLocationName}
-                    onChange={onNewLocationNameChange}
-                    className="min-h-12 flex-1 bg-surface-container-lowest"
-                    placeholder="Nama lokasi baru"
-                    aria-label="Nama lokasi inventory baru"
-                  />
-                  <Button
-                    type="button"
-                    onClick={onAddLocation}
-                    disabled={pending || newLocationName.trim().length < 3}
-                    className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
-                    variant="primary"
-                  >
-                    Tambah
-                  </Button>
-                </div>
+                {canCreateLocation ? (
+                  <div className="flex items-center gap-2">
+                    <TextInput
+                      value={newLocationName}
+                      onChange={onNewLocationNameChange}
+                      className="min-h-12 flex-1 bg-surface-container-lowest"
+                      placeholder="Nama lokasi baru"
+                      aria-label="Nama lokasi inventory baru"
+                    />
+                    <Button
+                      type="button"
+                      onClick={onAddLocation}
+                      disabled={pending || newLocationName.trim().length < 3}
+                      className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+                      variant="primary"
+                    >
+                      Tambah
+                    </Button>
+                  </div>
+                ) : null}
               </section>
             )}
             <FormSection

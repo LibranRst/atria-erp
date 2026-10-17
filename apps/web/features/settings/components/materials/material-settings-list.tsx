@@ -7,63 +7,119 @@ import {
   DuotoneIconTile,
   GroupedSurface,
   DesktopTable,
+  DesktopTablePagination,
+  type DesktopTableColumn,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
 
+import {
+  settingsTablePageRows,
+  type SettingsTableState,
+} from "../../hooks/use-settings-table-state";
+
 type MaterialSettingsListProps = {
   readonly materials: readonly MaterialSettingRow[];
   readonly onSelect: (material: MaterialSettingRow) => void;
+  readonly table?: SettingsTableState<MaterialSettingRow>;
+  readonly emptyTitle?: string;
+  readonly emptyDescription?: string;
 };
+
+const materialColumns: readonly DesktopTableColumn<MaterialSettingRow>[] = [
+  {
+    key: "material",
+    label: "Material",
+    sortable: true,
+    sortValue: (material) => material.name,
+    render: (material) => (
+      <div>
+        <p className="font-semibold">{material.name}</p>
+        <p className="text-meta text-on-surface-variant">
+          {[material.code, material.brand, material.color].filter(Boolean).join(" · ") ||
+            "Identitas tambahan belum diisi"}
+        </p>
+      </div>
+    ),
+  },
+  {
+    key: "category",
+    label: "Kategori",
+    sortable: true,
+    sortValue: (material) => material.categoryName,
+    render: (material) => material.categoryName,
+  },
+  {
+    key: "unit",
+    label: "Satuan",
+    sortable: true,
+    sortValue: (material) => material.unit,
+    render: (material) => material.unit,
+  },
+  {
+    key: "vendor",
+    label: "Vendor default",
+    sortable: true,
+    sortValue: (material) => material.defaultVendorName ?? "",
+    render: (material) => material.defaultVendorName ?? "Belum ditentukan",
+  },
+  {
+    key: "locations",
+    label: "Lokasi default",
+    sortable: true,
+    sortValue: (material) => material.inventory.length,
+    render: (material) => `${material.inventory.length} lokasi`,
+  },
+  {
+    key: "status",
+    label: "Status",
+    sortable: true,
+    sortValue: (material) => Number(material.isActive),
+    render: (material) => (
+      <WorkspaceStatusLabel
+        label={material.isActive ? "Aktif" : "Arsip"}
+        tone={material.isActive ? "neutral" : "inactive"}
+      />
+    ),
+  },
+];
 
 export function MaterialSettingsList({
   materials,
   onSelect,
+  table,
+  emptyTitle,
+  emptyDescription,
 }: MaterialSettingsListProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   if (desktop)
     return (
       <DesktopTable
         ariaLabel="Material master"
-        rows={materials}
+        rows={table ? settingsTablePageRows(materials, materialColumns, table) : materials}
         rowKey={(material) => material.id}
         onRowAction={onSelect}
-        columns={[
-          {
-            key: "material",
-            label: "Material",
-            render: (material) => (
-              <div>
-                <p className="font-semibold">{material.name}</p>
-                <p className="text-meta text-on-surface-variant">
-                  {material.brand} · {material.color}
-                </p>
-              </div>
-            ),
-          },
-          { key: "category", label: "Kategori", render: (material) => material.categoryName },
-          { key: "unit", label: "Satuan", render: (material) => material.unit },
-          {
-            key: "vendor",
-            label: "Vendor default",
-            render: (material) => material.defaultVendorName ?? "Belum ditentukan",
-          },
-          {
-            key: "locations",
-            label: "Lokasi default",
-            render: (material) => `${material.inventory.length} lokasi`,
-          },
-          {
-            key: "status",
-            label: "Status",
-            render: (material) => (
-              <WorkspaceStatusLabel
-                label={material.isActive ? "Aktif" : "Arsip"}
-                tone={material.isActive ? "neutral" : "inactive"}
-              />
-            ),
-          },
-        ]}
+        emptyTitle={emptyTitle}
+        emptyDescription={emptyDescription}
+        columns={
+          table
+            ? materialColumns
+            : materialColumns.map((column) => ({ ...column, sortable: false }))
+        }
+        sortDescriptor={table?.sortDescriptor}
+        onSortChange={table?.onSortChange}
+        footer={
+          table ? (
+            <DesktopTablePagination
+              page={table.page}
+              pageSize={table.pageSize}
+              total={materials.length}
+              onPageChange={table.onPageChange}
+              onPageSizeChange={table.onPageSizeChange}
+              ariaLabel="Halaman material master"
+            />
+          ) : undefined
+        }
       />
     );
   return (

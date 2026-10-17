@@ -1,4 +1,5 @@
 "use client";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import type { InitialStockCandidate } from "@/app/actions/material/opening-inventory";
 import {
   AppIcon,
@@ -21,6 +22,7 @@ interface OpeningInventoryManualEntryProps {
   readonly onAddLine: () => void;
   readonly onRemoveLine: (key: string) => void;
   readonly onPatchLine: (key: string, patch: Partial<DraftLine>) => void;
+  readonly desktopLayout?: boolean;
 }
 
 export function OpeningInventoryManualEntry({
@@ -30,7 +32,9 @@ export function OpeningInventoryManualEntry({
   onAddLine,
   onRemoveLine,
   onPatchLine,
+  desktopLayout = false,
 }: OpeningInventoryManualEntryProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop" && desktopLayout;
   const selectedInventoryCount = new Set(
     lines.map((line) => line.materialInventoryId).filter(Boolean),
   ).size;
@@ -80,7 +84,7 @@ export function OpeningInventoryManualEntry({
         ) : undefined
       }
     >
-      <div className="space-y-3">
+      <div className={desktop ? "grid items-start gap-4 xl:grid-cols-2" : "space-y-3"}>
         {lines.map((line, index) => {
           const duplicate = duplicateIds.includes(line.materialInventoryId);
           const selectedInventory = eligibleInventory.find(

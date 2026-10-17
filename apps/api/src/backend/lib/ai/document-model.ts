@@ -1,6 +1,13 @@
 import { generateText, jsonSchema, Output, type UserModelMessage } from "ai";
-import { resolveChatModel, resolveProviderChain, type ChatProviderName } from "./providers";
-import { PDF_RENDER_LIMITS, renderPdfPages } from "./pdf-pages";
+import {
+  resolveChatModel,
+  resolveProviderChain,
+  type ChatProviderName,
+  type ChatWorkloadProfile,
+} from "./providers";
+import { PDF_RENDER_LIMITS } from "./pdf-pages";
+import { renderImmutablePdfPages } from "./pdf-page-artifact-cache";
+import type { ChatTiming } from "./chat-timing";
 
 export type DocumentContentPart =
   string | { readonly inlineData: { readonly data: string; readonly mimeType: string } };
@@ -11,6 +18,8 @@ export interface DocumentContentRequest {
     readonly abortSignal?: AbortSignal;
     readonly responseMimeType?: "application/json";
     readonly responseJsonSchema?: Exclude<Parameters<typeof jsonSchema>[0], () => unknown>;
+    readonly workloadProfile?: ChatWorkloadProfile;
+    readonly timing?: ChatTiming;
   };
 }
 
@@ -18,6 +27,8 @@ export interface DocumentContentResponse {
   readonly text?: string;
   readonly usageMetadata?: { readonly totalTokenCount?: number };
   readonly modelVersion?: string;
+  /** A length-limited or unfinished model response cannot become reusable OCR. */
+  readonly complete?: boolean;
 }
 export class DocumentContentError extends Error {
   constructor(readonly code: "TIMEOUT" | "UNAVAILABLE") {
@@ -66,7 +77,6 @@ async function generateDocumentContent(
   input: DocumentContentRequest,
 ): Promise<DocumentContentResponse> {
   const provider = requireDocumentProvider();
-  const model = resolveChatModel(provider);
   const signal = input.config?.abortSignal ?? AbortSignal.timeout(40_000);
   if (signal.aborted) throw new Error("Permintaan AI dibatalkan atau melewati batas waktu.");
   const schema = input.config?.responseJsonSchema;
@@ -93,7 +103,10 @@ async function generateDocumentContent(
     ) {
       // The selected gateway drops native PDF parts. Send complete locally
       // rendered page images instead; a renderer limit fails the whole draft.
-      const rendered = await renderPdfPages(Buffer.from(part.inlineData.data, "base64"), signal);
+      const rendered = await renderImmutablePdfPages(
+        Buffer.from(part.inlineData.data, "base64"),
+        signal,
+      );
       accountBytes(rendered.byteLength);
       parts.push(
         `Dokumen PDF memiliki ${rendered.total} halaman. Baca semua halaman secara berurutan.`,
@@ -114,6 +127,16 @@ async function generateDocumentContent(
     }
   }
   if (signal.aborted) throw new Error("Permintaan AI dibatalkan atau melewati batas waktu.");
+  const imageParts = parts.filter((part) => typeof part !== "string");
+  const workloadProfile =
+    input.config?.workloadProfile === "simple" &&
+    (imageParts.length > 1 ||
+      imageParts.some((part) => part.inlineData.mimeType === "application/pdf"))
+      ? "complex"
+      : input.config?.workloadProfile;
+  // A requested fast single-document read cannot silently apply low effort to
+  // multiple rendered pages/images. Native PDF page counts remain unknown here.
+  const model = resolveChatModel(provider, workloadProfile);
   if (wantsJson && provider === "NINEROUTER") {
     // The gateway's Antigravity translator does not forward response_format.
     // Make the JSON contract explicit; consumers still validate it with Zod.
@@ -132,6 +155,15 @@ async function generateDocumentContent(
       abortSignal: signal,
       maxRetries: 0,
       maxOutputTokens: 8_192,
+      onLanguageModelCallEnd: (event): void => {
+        input.config?.timing?.model({
+          model: event.modelId,
+          durationMs: Math.round(event.performance.responseTimeMs),
+          firstOutputMs: event.performance.timeToFirstOutputMs,
+          inputTokens: event.usage.inputTokens,
+          outputTokens: event.usage.outputTokens,
+        });
+      },
     });
     // Reading output triggers the SDK's structured JSON parser. Consumers retain
     // their domain Zod validation and existing draft-only result contracts.
@@ -143,6 +175,7 @@ async function generateDocumentContent(
       text,
       usageMetadata: { totalTokenCount: result.usage.totalTokens ?? 0 },
       modelVersion: typeof model === "string" ? model : model.modelId,
+      complete: result.finishReason === "stop",
     };
   } catch {
     // Provider exceptions can embed headers, prompts and document bytes. Do not

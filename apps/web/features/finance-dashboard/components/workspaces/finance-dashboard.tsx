@@ -22,6 +22,7 @@ import {
   GroupedSurface,
   InlineStateRow,
   MoneyValue,
+  PageState,
   PageHeader,
   SegmentedTabs,
 } from "@/components/ui";
@@ -63,6 +64,8 @@ function DashboardTabsNav({
     readonly label: string;
     readonly count?: number;
     readonly icon: React.ReactNode;
+    readonly disabled?: boolean;
+    readonly unavailableReason?: string;
   }> = [
     {
       value: "overview",
@@ -82,6 +85,8 @@ function DashboardTabsNav({
     {
       value: "budget",
       label: "Budget",
+      disabled: !can("view:budget"),
+      unavailableReason: !can("view:budget") ? "Memerlukan izin melihat budget." : undefined,
       count: data.dashboardTabs.counts.budget > 0 ? data.dashboardTabs.counts.budget : undefined,
       icon: <AppIcon name="monitoring" className="icon-sm" />,
     },
@@ -99,6 +104,8 @@ function DashboardTabsNav({
     {
       value: "materials",
       label: "Material",
+      disabled: !can("view:inventory"),
+      unavailableReason: !can("view:inventory") ? "Memerlukan izin melihat persediaan." : undefined,
       count:
         data.dashboardTabs.counts.materials > 0 ? data.dashboardTabs.counts.materials : undefined,
       icon: <AppIcon name="inventory_2" className="h-3.75 w-3.75" />,
@@ -197,7 +204,7 @@ export function FinancialPosition({
           </div>
           <div className="flex flex-row items-end justify-between">
             <p
-              className={`mt-1 font-sans text-lg font-extrabold tracking-[-0.025em] tabular-nums max-[430px]:text-[16px] ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
+              className={`mt-1 font-sans text-lg font-extrabold tracking-[-0.025em] tabular-nums max-[430px]:text-base max-[430px]:leading-7 ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
             >
               {summary.usedPercentage.toFixed(1)}%
             </p>
@@ -290,7 +297,15 @@ export function FinanceDashboard({
 }): React.JSX.Element {
   const can = useCan();
   const tabParam = useUrlSearchParam("tab");
-  const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(data.generatedAt);
+  const [readRevision, setReadRevision] = React.useState(0);
+  const invalidateDesktopReads = React.useCallback(
+    (): void => setReadRevision((value) => value + 1),
+    [],
+  );
+  const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(
+    data.generatedAt,
+    invalidateDesktopReads,
+  );
   const [referenceDate] = React.useState(() => new Date());
   const [approvalQueue, recordDecision] = useDashboardApprovalQueue(
     data.dashboardDetails.approvals,
@@ -298,7 +313,10 @@ export function FinanceDashboard({
   );
   const activeTab = parseDashboardTab(tabParam, can("view:approval_queue"));
   const desktop = useWorkspacePresentation() === "desktop";
-  const desktopQuery = useDesktopDashboardData(activeTab, data.generatedAt);
+  const desktopQuery = useDesktopDashboardData(activeTab, data.generatedAt, {
+    generation: `${data.generatedAt.toISOString()}:${readRevision}`,
+    suspended: refreshing,
+  });
   const today = referenceDate.toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -320,6 +338,7 @@ export function FinanceDashboard({
         data={data}
         financialPosition={<FinancialPosition summary={data.summary} />}
         setup={setup}
+        trend={desktopQuery.trend}
       />
     ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab
@@ -407,7 +426,17 @@ export function FinanceDashboard({
         refreshing={refreshing}
         onRefresh={refresh}
       />
-      <div>{tabContent}</div>
+      <div>
+        {desktop && desktopQuery.restricted ? (
+          <PageState
+            kind="restricted"
+            title="Akses tab tidak tersedia"
+            description={desktopQuery.error ?? "Izin Dashboard tidak tersedia."}
+          />
+        ) : (
+          tabContent
+        )}
+      </div>
     </div>
   );
 }

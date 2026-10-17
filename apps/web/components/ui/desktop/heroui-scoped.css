@@ -3458,8 +3458,16 @@
   line-height: 20px;
 }
 
-[data-atria-admin] .atria-desktop-button:not([data-atria-variant="critical"], [data-atria-variant="criticalQuiet"]) {
+[data-atria-admin] .atria-desktop-button:not([data-atria-variant="critical"], [data-atria-variant="criticalQuiet"], [data-atria-variant="ghost"]) {
   --tw-shadow: var(--atria-action-shadow);
+  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+[data-atria-admin] .atria-desktop-button[data-atria-variant="ghost"] {
+  --button-bg: transparent;
+  --button-bg-hover: var(--surface-container-low);
+  --button-fg: var(--on-surface);
+  --tw-shadow: 0 0 #0000;
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
 
@@ -3547,6 +3555,16 @@
 [data-atria-admin] .atria-desktop-field[data-grouped="true"] {
   min-height: 32px;
   padding-inline: 0;
+}
+
+[data-atria-admin] .atria-desktop-quantity-stepper {
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  min-height: 40px;
+}
+
+[data-atria-admin] .atria-desktop-quantity-stepper[data-grouped="true"] {
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  min-height: 32px;
 }
 
 [data-atria-admin] .atria-desktop-field .atria-embedded-field {
@@ -3696,8 +3714,12 @@
     min-height: 48px;
   }
 
-  [data-atria-admin] .atria-desktop-button,[data-atria-admin]  .atria-desktop-input,[data-atria-admin]  .atria-desktop-select-trigger,[data-atria-admin]  .atria-desktop-filter-trigger,[data-atria-admin]  .autocomplete__popover .search-field__group,[data-atria-admin]  .atria-desktop-field,[data-atria-admin]  .atria-desktop-tabs .tabs__tab,[data-atria-admin]  .atria-desktop-menu .menu-item,[data-atria-admin]  .list-box-item {
+  [data-atria-admin] .atria-desktop-button,[data-atria-admin]  .atria-desktop-input,[data-atria-admin]  .atria-desktop-select-trigger,[data-atria-admin]  .atria-desktop-filter-trigger,[data-atria-admin]  .autocomplete__popover .search-field__group,[data-atria-admin]  .atria-desktop-field,[data-atria-admin]  .atria-desktop-field[data-grouped="true"],[data-atria-admin]  .atria-grouped-select .atria-desktop-select-trigger,[data-atria-admin]  .atria-desktop-quantity-stepper,[data-atria-admin]  .atria-desktop-quantity-stepper[data-grouped="true"],[data-atria-admin]  .atria-desktop-tabs .tabs__tab,[data-atria-admin]  .atria-desktop-menu .menu-item,[data-atria-admin]  .list-box-item {
     min-height: 48px;
+  }
+
+  [data-atria-admin] .atria-desktop-quantity-stepper,[data-atria-admin]  .atria-desktop-quantity-stepper[data-grouped="true"] {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
   }
 
   [data-atria-admin] .atria-desktop-button.button--icon-only {

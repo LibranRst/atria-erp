@@ -1,4 +1,5 @@
 import type { ApprovalDetail } from "./approval-types";
+import { getApprovalBudgetImpact, RISK_LIMIT_THRESHOLD } from "./budget-indicator";
 import { dashboardDueDayOffset } from "./dashboard-overview";
 
 export type ApprovalQueueSummary = {
@@ -9,9 +10,16 @@ export type ApprovalQueueSummary = {
 };
 
 export function approvalIsCritical(item: ApprovalDetail): boolean {
-  const nextSpent = item.actualSpent + item.amount;
-  const utilization = item.allocatedAmount > 0 ? (nextSpent / item.allocatedAmount) * 100 : 0;
-  return item.priority === "CRITICAL" || item.budgetOverrun || utilization >= 100;
+  const impact = getApprovalBudgetImpact(
+    item.allocatedAmount,
+    item.actualSpent,
+    item.consumesBudgetActual ? item.amount : 0,
+  );
+  return (
+    item.priority === "CRITICAL" ||
+    item.budgetOverrun ||
+    impact.afterPercentage >= RISK_LIMIT_THRESHOLD
+  );
 }
 
 export function approvalIsWaitingLong(item: ApprovalDetail, now: Date): boolean {

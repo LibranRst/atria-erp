@@ -3,7 +3,11 @@ import { db } from "@backend/db";
 import { aiRun, attachment, project } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@backend/lib/auth";
-import { documentModel, type DocumentContentRequest, type DocumentContentResponse } from "@backend/lib/ai/document-model";
+import {
+  documentModel,
+  type DocumentContentRequest,
+  type DocumentContentResponse,
+} from "@backend/lib/ai/document-model";
 import { processReceipt } from "@backend/app/actions/ai/process-receipt";
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { describeIntegration } from "@backend/lib/testing/integration-db";
@@ -147,7 +151,9 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
 
   afterAll(
     withTestRequest(async (): Promise<void> => {
-      await db.delete(aiRun).where(eq(aiRun.payload, JSON.stringify({ receiptImageUrl: receiptUrl })));
+      await db
+        .delete(aiRun)
+        .where(eq(aiRun.payload, JSON.stringify({ receiptImageUrl: receiptUrl })));
       await db.delete(attachment).where(eq(attachment.id, attachmentId));
       for (const [key, value] of Object.entries(originalDocumentEnvironment)) {
         if (value === undefined) delete process.env[key];
@@ -171,7 +177,9 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
           const response = await processReceipt(receiptUrl);
           expect(response.success).toBe(false);
           expect(fetched).toBe(before);
-          expect((await db.query.aiRun.findMany({ columns: { id: true } })).length).toBe(runs.length);
+          expect((await db.query.aiRun.findMany({ columns: { id: true } })).length).toBe(
+            runs.length,
+          );
         } finally {
           process.env.AI_APPROVED_PROVIDERS = "NINEROUTER";
         }
@@ -206,7 +214,10 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
         expect(data.items[0].itemName).toBe("Semen Tiga Roda 50kg");
         expect(lastDocumentRequest).toBeDefined();
         expect(lastDocumentRequest?.contents[0]).toMatchObject({
-          inlineData: { mimeType: "image/jpeg", data: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).toString("base64") },
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).toString("base64"),
+          },
         });
         expect(lastDocumentRequest?.config?.responseJsonSchema).toMatchObject({ type: "object" });
         expect(lastDocumentRequest?.config?.abortSignal).toBeInstanceOf(AbortSignal);
@@ -245,18 +256,18 @@ describeIntegration("Atria ERP AI Layer Integration - TSK-009", () => {
         mockUserSession(PM_BUDI_USER);
 
         documentModel.models.generateContent = async (): Promise<DocumentContentResponse> => {
-            return {
-              text: JSON.stringify({
-                vendorName: "",
-                transactionDate: "bukan-tanggal-iso",
-                totalAmount: -1,
-                items: [],
-              }),
-              usageMetadata: {
-                totalTokenCount: 42,
-              },
-            };
+          return {
+            text: JSON.stringify({
+              vendorName: "",
+              transactionDate: "bukan-tanggal-iso",
+              totalAmount: -1,
+              items: [],
+            }),
+            usageMetadata: {
+              totalTokenCount: 42,
+            },
           };
+        };
 
         try {
           const res = await processReceipt(receiptUrl);

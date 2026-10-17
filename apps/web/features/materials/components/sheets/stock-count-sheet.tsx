@@ -25,6 +25,7 @@ import {
 } from "@/features/materials/utils/material-ui-utils";
 
 type StockCountSheetProps = {
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
   readonly open: boolean;
   readonly pending: boolean;
   readonly inventory: MaterialOperationsDashboard["inventory"];
@@ -64,6 +65,7 @@ export function StockCountSheet({
   onClose,
   onSaveDraft,
   onSubmit,
+  returnFocusRef,
 }: StockCountSheetProps): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
@@ -107,6 +109,7 @@ export function StockCountSheet({
   return (
     <>
       <WorkflowFormSheet
+        returnFocusRef={returnFocusRef}
         desktopSize="wide"
         desktopFooterPlacement="aside"
         desktopAsideSummary={

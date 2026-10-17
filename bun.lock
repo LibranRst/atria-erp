@@ -269,6 +269,7 @@
   ],
   "patchedDependencies": {
     "expo-constants@57.0.11": "patches/expo-constants@57.0.11.patch",
+    "expo-modules-jsi@57.0.4": "patches/expo-modules-jsi@57.0.4.patch",
   },
   "overrides": {
     "react-native-css-interop": "0.2.6",

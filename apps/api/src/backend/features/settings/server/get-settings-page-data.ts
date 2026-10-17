@@ -17,6 +17,39 @@ import type { ApprovalThresholdSettings } from "@backend/server/usecases/setting
 import type { SettingsOverview } from "@backend/app/actions/settings/system";
 import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import type { SettingsTab } from "@backend/features/settings/utils/settings-tabs-config";
+import type { ActionResponse } from "@atria/core/types/action-response";
+import type { SettingsReadSource, SettingsReadSources } from "@atria/core/settings/read-sources";
+
+async function readSource<T>(
+  read: () => Promise<ActionResponse<T>>,
+  message: string,
+): Promise<ActionResponse<T>> {
+  try {
+    return await read();
+  } catch (error: unknown) {
+    const code =
+      error instanceof Error && error.message.startsWith("FORBIDDEN")
+        ? "FORBIDDEN"
+        : error instanceof Error && error.message.startsWith("UNAUTHORIZED")
+          ? "UNAUTHORIZED"
+          : "INTERNAL_SERVER_ERROR";
+    return { success: false, error: { code, message } };
+  }
+}
+
+function sourceState<T>(result: ActionResponse<T>): SettingsReadSource {
+  return result.success
+    ? { status: "ready" }
+    : {
+        status:
+          result.error.code === "FORBIDDEN"
+            ? "restricted"
+            : result.error.code === "UNAUTHORIZED"
+              ? "unauthorized"
+              : "unavailable",
+        message: result.error.message,
+      };
+}
 
 export type SettingsPageData =
   | {
@@ -28,6 +61,7 @@ export type SettingsPageData =
       readonly initialStock: readonly InitialStockCandidate[];
       readonly openingBatches: readonly InventoryOpeningBatchView[];
       readonly approvalThresholds: ApprovalThresholdSettings | null;
+      readonly sources: SettingsReadSources;
     }
   | {
       readonly status: "unauthorized" | "restricted" | "error";
@@ -51,20 +85,23 @@ export async function getSettingsPageData(
     openingBatches,
     approvalThresholds,
   ] = await Promise.all([
-    getSettingsOverview(),
-    getPricingTemplates(true),
-    getAdministrationOverview(),
-    getOrganizationSetupOverview(),
+    readSource(getSettingsOverview, "Pengaturan belum dapat dimuat. Coba lagi."),
+    readSource(() => getPricingTemplates(true), "Library harga belum dapat dimuat. Coba lagi."),
+    readSource(getAdministrationOverview, "Data administrasi belum dapat dimuat. Coba lagi."),
+    readSource(getOrganizationSetupOverview, "Kesiapan organisasi belum dapat dimuat. Coba lagi."),
     loadInitialStock
-      ? getInitialStockCandidates()
+      ? readSource(getInitialStockCandidates, "Daftar stok awal belum dapat dimuat. Coba lagi.")
       : Promise.resolve({ success: true as const, data: [] as readonly InitialStockCandidate[] }),
     loadInitialStock
-      ? getInventoryOpeningBatches()
+      ? readSource(
+          getInventoryOpeningBatches,
+          "Pengajuan saldo awal belum dapat dimuat. Coba lagi.",
+        )
       : Promise.resolve({
           success: true as const,
           data: [] as readonly InventoryOpeningBatchView[],
         }),
-    getApprovalThresholdSettings(),
+    readSource(getApprovalThresholdSettings, "Ambang persetujuan belum dapat dimuat. Coba lagi."),
   ]);
 
   if (!settings.success) {
@@ -82,7 +119,12 @@ export async function getSettingsPageData(
 
   if (!templates.success) {
     return {
-      status: templates.error.code === "UNAUTHORIZED" ? "unauthorized" : "error",
+      status:
+        templates.error.code === "UNAUTHORIZED"
+          ? "unauthorized"
+          : templates.error.code === "FORBIDDEN"
+            ? "restricted"
+            : "error",
       message: templates.error.message,
       source: "library",
     };
@@ -97,5 +139,12 @@ export async function getSettingsPageData(
     initialStock: initialStock.success ? initialStock.data : [],
     openingBatches: openingBatches.success ? openingBatches.data : [],
     approvalThresholds: approvalThresholds.success ? approvalThresholds.data : null,
+    sources: {
+      administration: sourceState(administration),
+      setup: sourceState(setup),
+      initialStock: loadInitialStock ? sourceState(initialStock) : { status: "not-requested" },
+      openingBatches: loadInitialStock ? sourceState(openingBatches) : { status: "not-requested" },
+      approvalThresholds: sourceState(approvalThresholds),
+    },
   };
 }

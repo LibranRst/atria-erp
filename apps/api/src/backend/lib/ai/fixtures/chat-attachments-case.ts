@@ -102,6 +102,9 @@ mock.module("@backend/lib/ai/document-model", (): Record<string, unknown> => ({
 }));
 mock.module("@backend/lib/ai/providers", (): Record<string, unknown> => ({
   resolveProviderChain: (): readonly ("NINEROUTER" | "GEMINI")[] => [selectedProvider],
+  // The route now includes the effective model ID in its immutable OCR cache key.
+  // No generation goes through this identity-only provider mock.
+  resolveChatModel: (): { readonly modelId: string } => ({ modelId: "synthetic-document-model" }),
 }));
 mock.module("@backend/lib/ai/gemini", (): Record<string, unknown> => ({
   GEMINI_OCR_MODEL: "forbidden-direct-provider",
@@ -129,7 +132,7 @@ mock.module("@backend/server/usecases/media/private-attachments", (): Record<str
   },
 }));
 mock.module("@backend/server/actor", (): Record<string, unknown> => ({
-  resolveActor: async (): Promise<{ id: string }> => ({ id: userId }),
+  resolveActor: async (): Promise<{ id: string; userId: string }> => ({ id: userId, userId }),
 }));
 mock.module("@backend/lib/server/session", (): Record<string, unknown> => ({
   getServerSession: async (): Promise<object | null> =>

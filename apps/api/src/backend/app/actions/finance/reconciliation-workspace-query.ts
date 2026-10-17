@@ -1,4 +1,4 @@
-import { asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 
 import {
   findSuggestedTransactionId,
@@ -6,7 +6,14 @@ import {
 } from "@backend/app/actions/finance/reconciliation-action-utils";
 import type { ReconciliationWorkspace } from "@backend/app/actions/finance/reconciliation-workspace-types";
 import { db } from "@backend/db";
-import { bankAccount, bankStatementRow, cashTransaction, projectCost } from "@backend/db/schema";
+import {
+  bankAccount,
+  bankStatementImport,
+  bankStatementRow,
+  cashTransaction,
+  projectCost,
+} from "@backend/db/schema";
+import { INSTANCE_TENANT_ID } from "@backend/db/schema/tenant-constants";
 import { normalizeCashDirection } from "@atria/core/finance/cash-direction";
 import type { ActionResponse } from "@atria/core/types/action-response";
 
@@ -16,26 +23,51 @@ export async function getReconciliationWorkspace(): Promise<
   const authResult = await requireReconciliationUser();
   if (!authResult.success) return authResult;
   try {
+    const ownAccounts = db
+      .select({ id: bankAccount.id })
+      .from(bankAccount)
+      .where(eq(bankAccount.tenantId, INSTANCE_TENANT_ID));
+    const ownImports = db
+      .select({ id: bankStatementImport.id })
+      .from(bankStatementImport)
+      .where(
+        and(
+          eq(bankStatementImport.tenantId, INSTANCE_TENANT_ID),
+          inArray(bankStatementImport.bankAccountId, ownAccounts),
+        ),
+      );
     const [accounts, transactions, statementRows, historyRows, historyCountRows] =
       await Promise.all([
         db.query.bankAccount.findMany({
-          where: eq(bankAccount.isActive, true),
+          where: and(eq(bankAccount.isActive, true), eq(bankAccount.tenantId, INSTANCE_TENANT_ID)),
           orderBy: [asc(bankAccount.name)],
         }),
         db.query.cashTransaction.findMany({
-          where: eq(cashTransaction.reconciled, false),
+          where: and(
+            eq(cashTransaction.reconciled, false),
+            eq(cashTransaction.tenantId, INSTANCE_TENANT_ID),
+            inArray(cashTransaction.bankAccountId, ownAccounts),
+          ),
           with: { bankAccount: true, reconciliationExceptionBy: true },
           orderBy: [desc(cashTransaction.createdAt)],
           limit: 100,
         }),
         db.query.bankStatementRow.findMany({
-          where: eq(bankStatementRow.isReconciled, false),
+          where: and(
+            eq(bankStatementRow.isReconciled, false),
+            eq(bankStatementRow.tenantId, INSTANCE_TENANT_ID),
+            inArray(bankStatementRow.importId, ownImports),
+          ),
           with: { import: { with: { bankAccount: true } } },
           orderBy: [asc(bankStatementRow.transactionDate)],
           limit: 100,
         }),
         db.query.bankStatementRow.findMany({
-          where: eq(bankStatementRow.isReconciled, true),
+          where: and(
+            eq(bankStatementRow.isReconciled, true),
+            eq(bankStatementRow.tenantId, INSTANCE_TENANT_ID),
+            inArray(bankStatementRow.importId, ownImports),
+          ),
           with: {
             import: { with: { bankAccount: true } },
             matchedCashTransaction: { with: { reconciledBy: true } },
@@ -46,7 +78,13 @@ export async function getReconciliationWorkspace(): Promise<
         db
           .select({ value: count() })
           .from(bankStatementRow)
-          .where(eq(bankStatementRow.isReconciled, true)),
+          .where(
+            and(
+              eq(bankStatementRow.isReconciled, true),
+              eq(bankStatementRow.tenantId, INSTANCE_TENANT_ID),
+              inArray(bankStatementRow.importId, ownImports),
+            ),
+          ),
       ]);
     const projectCostReferenceIds = transactions.flatMap((transaction) =>
       transaction.referenceType === "project_cost" && transaction.referenceId
@@ -55,19 +93,24 @@ export async function getReconciliationWorkspace(): Promise<
     );
     const projectCostSources = projectCostReferenceIds.length
       ? await db.query.projectCost.findMany({
-          where: inArray(projectCost.id, projectCostReferenceIds),
+          where: and(
+            inArray(projectCost.id, projectCostReferenceIds),
+            eq(projectCost.tenantId, INSTANCE_TENANT_ID),
+          ),
           with: { project: true },
         })
       : [];
     const projectCostSourceById = new Map(
-      projectCostSources.map((cost) => [
-        cost.id,
-        {
-          label: "Pengeluaran Lapangan" as const,
-          projectName: cost.project.name,
-          description: cost.description,
-        },
-      ]),
+      projectCostSources
+        .filter((cost) => cost.project.tenantId === INSTANCE_TENANT_ID)
+        .map((cost) => [
+          cost.id,
+          {
+            label: "Pengeluaran Lapangan" as const,
+            projectName: cost.project.name,
+            description: cost.description,
+          },
+        ]),
     );
     return {
       success: true,
@@ -124,7 +167,12 @@ export async function getReconciliationWorkspace(): Promise<
         history: historyRows
           .flatMap((row) => {
             const transaction = row.matchedCashTransaction;
-            if (!transaction?.reconciliationDate || !transaction.reconciledBy) return [];
+            if (
+              !transaction?.reconciliationDate ||
+              !transaction.reconciledBy ||
+              transaction.tenantId !== INSTANCE_TENANT_ID
+            )
+              return [];
             return [
               {
                 id: row.id,

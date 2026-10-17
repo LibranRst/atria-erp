@@ -1,3 +1,7 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { ProfileDesktopSkeleton } from "@/features/profile/components/views/profile-desktop-skeleton";
 import { ProfileWorkspaceLayout } from "@/features/profile/components/views/profile-workspace-layout";
 
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
@@ -32,6 +36,8 @@ function AccessRowSkeleton(): React.JSX.Element {
 }
 
 export default function ProfileLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop) return <ProfileDesktopSkeleton />;
   return (
     <ProfileWorkspaceLayout>
       <header className="space-y-2" aria-label="Memuat profil" role="status">

@@ -28,6 +28,82 @@ function render(message: UIMessage, isStreaming = true): string {
 }
 
 describe("ChatMessage assistant content", () => {
+  test("a displayed cash card owns its rows while the final bubble uses the verified complement", () => {
+    const fullText =
+      "Saldo lengkap perusahaan:\n- Kas Audit Satu: Rp 100.000.\n- Kas Audit Dua: Rp 200.000.";
+    const cardText =
+      "Posisi kas terkini sudah diperiksa. Rincian per rekening ada pada kartu Saldo rekening.";
+    const message: UIMessage = {
+      id: "card-complement",
+      role: "assistant",
+      parts: [
+        { type: "text", text: `Data dari pembacaan terbaru:\n\n${fullText}` },
+        {
+          type: "tool-getBankBalances",
+          toolCallId: "cash-read",
+          state: "output-available",
+          input: {},
+          output: {
+            scope: "Seluruh rekening aktif perusahaan ini",
+            accountCount: 2,
+            totalAvailable: { amount: 300000, formatted: "Rp 300.000" },
+            accounts: [
+              {
+                accountId: "00000000-0000-4000-8000-000000000001",
+                accountName: "Kas Audit Satu",
+                bankName: "Bank QA",
+                balance: { amount: 100000, formatted: "Rp 100.000" },
+              },
+              {
+                accountId: "00000000-0000-4000-8000-000000000002",
+                accountName: "Kas Audit Dua",
+                bankName: "Bank QA",
+                balance: { amount: 200000, formatted: "Rp 200.000" },
+              },
+            ],
+          },
+        },
+        {
+          type: "data-grounded-facts",
+          data: {
+            status: "verified",
+            sources: [
+              {
+                toolName: "getBankBalances",
+                toolCallId: "cash-read",
+                entityIds: ["cash-a", "cash-b"],
+                query: {},
+              },
+            ],
+            cardNarratives: [
+              { toolName: "getBankBalances", toolCallId: "cash-read", fullText, cardText },
+            ],
+          },
+        },
+      ],
+    };
+    const html = render(message, false);
+    expect(html).toContain(cardText);
+    expect(html).not.toContain("Saldo lengkap perusahaan:");
+    expect(html).toContain("Kas Audit Satu");
+    expect(html).toContain("Kas Audit Dua");
+    expect(message.parts[0]).toEqual({
+      type: "text",
+      text: `Data dari pembacaan terbaru:\n\n${fullText}`,
+    });
+
+    const streaming = render(message, true);
+    expect(streaming).toContain("Saldo lengkap perusahaan:");
+    expect(streaming).not.toContain(cardText);
+
+    const noUsableCard: UIMessage = {
+      ...message,
+      parts: message.parts.filter((part) => part.type !== "tool-getBankBalances"),
+    };
+    expect(render(noUsableCard, false)).toContain("Saldo lengkap perusahaan:");
+    expect(render(noUsableCard, false)).not.toContain(cardText);
+  });
+
   test("tidak membuat placeholder atau bubble untuk pesan asisten kosong", () => {
     const html = render(assistant([]));
 

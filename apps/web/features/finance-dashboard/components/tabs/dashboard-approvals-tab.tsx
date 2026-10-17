@@ -268,6 +268,7 @@ export function ApprovalsTab({
       <MediaPreviewDialog
         open={activeImage !== null}
         title="Bukti pengajuan"
+        purpose="document"
         imageUrl={activeImage}
         alt="Bukti pengajuan"
         onClose={() => setActiveImage(null)}

@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
-import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import {
+  useWorkspaceControlPresentation,
+  useWorkspacePresentation,
+} from "@/lib/navigation/workspace-presentation";
 
 import {
   AppIcon,
-  DesktopTable,
   EmptyState,
   GroupedSurface,
   MoneyValue,
@@ -23,6 +24,8 @@ import type {
   VendorListPayment,
 } from "@/features/expenses/types/vendor-bill-list-types";
 import { VendorBillCard, VendorPaymentCard } from "./vendor-bill-cards";
+import { VendorDesktopWorkspace } from "./vendor-desktop-workspace";
+import { useExpenseDesktopQuery } from "../../hooks/use-expense-desktop-query";
 
 type BillFilter = "ACTIVE" | "PAID" | "ALL";
 type PaymentFilter = "ACTIVE" | "COMPLETED" | "ALL";
@@ -47,9 +50,11 @@ export function VendorBillListContent({
   vendorPayments,
   canCreateVendorBill,
   isOwnerOrFinance,
+  canPayVendorBill,
   onAddBill,
   onSchedule,
   onDisburse,
+  pending = false,
 }: {
   readonly leadingContent?: React.ReactNode;
   readonly projectId?: string;
@@ -57,14 +62,23 @@ export function VendorBillListContent({
   readonly vendorPayments: readonly VendorListPayment[];
   readonly canCreateVendorBill: boolean;
   readonly isOwnerOrFinance: boolean;
+  readonly canPayVendorBill: boolean;
   readonly onAddBill: () => void;
   readonly onSchedule: (bill: VendorListBill) => void;
   readonly onDisburse: (payment: VendorListPayment) => void;
+  readonly pending?: boolean;
 }): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
+  const desktopControls = useWorkspaceControlPresentation() === "desktop";
+  const showDesktop = desktop || desktopControls;
+  const queryState = useExpenseDesktopQuery(projectId, "vendor");
   const [selectedBillId, setSelectedBillId] = React.useState<string | null>(null);
   const [selectedPaymentId, setSelectedPaymentId] = React.useState<string | null>(null);
-  const [subTab, setSubTab] = React.useState<VendorBillSubTab>("BILLS");
+  const subTab: VendorBillSubTab =
+    queryState.read("view", "BILLS") === "PAYMENTS" ? "PAYMENTS" : "BILLS";
+  const setSubTab = (value: VendorBillSubTab): void => {
+    queryState.update({ view: value });
+  };
   const [billFilter, setBillFilter] = React.useState<BillFilter>("ACTIVE");
   const [paymentFilter, setPaymentFilter] = React.useState<PaymentFilter>("ACTIVE");
   const [visibleLimit, setVisibleLimit] = React.useState(20);
@@ -95,194 +109,153 @@ export function VendorBillListContent({
     return true;
   });
 
-  const selectedBill = filteredBills.find((bill) => bill.id === selectedBillId) ?? filteredBills[0];
-  const selectedPayment =
-    filteredPayments.find((payment) => payment.id === selectedPaymentId) ?? filteredPayments[0];
-
   return (
     <>
-      <div className="space-y-3" data-expense-overview-cluster>
-        {leadingContent}
-        <SummarySurface
-          ariaLabel="Posisi tagihan vendor"
-          eyebrow="Tagihan vendor"
-          icon="request_quote"
-          status={
-            openBillCount > 0 ? `${openBillCount} tagihan terbuka` : "Tidak ada tagihan terbuka"
-          }
-          statusTone={openBillCount > 0 ? "warning" : "positive"}
-          action={
-            projectId && canCreateVendorBill ? (
-              <Button
-                type="button"
-                onClick={onAddBill}
-                className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
-                variant="secondary"
-                size="mini"
-              >
-                <AppIcon name="add" className="icon-xs leading-none" />
-                Tambah
-              </Button>
-            ) : undefined
-          }
-        >
-          <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
-            <div className="min-w-0 flex-1">
-              <p className="text-eyebrow font-semibold text-on-surface-variant/60">
-                Total tagihan tercatat
-              </p>
-              <MoneyValue
-                amount={totalBillAmount}
-                variant="fullDynamic"
-                size="lg"
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 p-2">
-            <SummaryFact label="Dalam antrean" amount={scheduledAmount} />
-            <SummaryFact label="Sudah dibayar" amount={paidAmount} />
-          </div>
-        </SummarySurface>
-      </div>
-
-      <div className="space-y-2.5">
-        <SegmentedTabs
-          value={subTab}
-          onChange={(value) => {
-            preserveScrollPosition();
-            setSubTab(value);
-            setVisibleLimit(20);
-          }}
-          ariaLabel="Tampilan tagihan vendor"
-          density="compact"
-          options={[
-            {
-              value: "BILLS",
-              label: "Tagihan",
-              count: openBillCount,
-              icon: <AppIcon name="request_quote" className="icon-sm leading-none" />,
-            },
-            {
-              value: "PAYMENTS",
-              label: "Rencana Bayar",
-              count: vendorPayments.filter((payment) => payment.status !== "COMPLETED").length,
-              icon: <AppIcon name="payments" className="icon-sm leading-none" />,
-            },
-          ]}
+      {leadingContent}
+      <div hidden={!showDesktop} inert={!showDesktop}>
+        <VendorDesktopWorkspace
+          projectId={projectId}
+          vendorBills={vendorBills}
+          vendorPayments={vendorPayments}
+          subTab={subTab}
+          onSubTabChange={setSubTab}
+          selectedBillId={selectedBillId}
+          selectedPaymentId={selectedPaymentId}
+          onSelectBill={setSelectedBillId}
+          onSelectPayment={setSelectedPaymentId}
+          canPay={canPayVendorBill}
+          canCreateVendorBill={canCreateVendorBill}
+          onAddBill={onAddBill}
+          onSchedule={onSchedule}
+          onDisburse={onDisburse}
+          pending={pending}
         />
-        {subTab === "BILLS" ? (
-          <SegmentedTabs
-            value={billFilter}
-            onChange={(value) => {
-              preserveScrollPosition();
-              setBillFilter(value);
-              setVisibleLimit(20);
-            }}
-            ariaLabel="Filter status tagihan"
-            density="compact"
-            options={[
-              { value: "ACTIVE", label: "Belum Lunas", count: openBillCount },
-              {
-                value: "PAID",
-                label: "Lunas",
-                count: vendorBills.filter((bill) => bill.status === "PAID").length,
-              },
-              { value: "ALL", label: "Semua", count: vendorBills.length },
-            ]}
-          />
-        ) : (
-          <SegmentedTabs
-            value={paymentFilter}
-            onChange={(value) => {
-              preserveScrollPosition();
-              setPaymentFilter(value);
-              setVisibleLimit(20);
-            }}
-            ariaLabel="Filter status rencana bayar"
-            density="compact"
-            options={[
-              {
-                value: "ACTIVE",
-                label: "Belum Cair",
-                count: vendorPayments.filter((payment) => payment.status !== "COMPLETED").length,
-              },
-              {
-                value: "COMPLETED",
-                label: "Selesai Cair",
-                count: vendorPayments.filter((payment) => payment.status === "COMPLETED").length,
-              },
-              { value: "ALL", label: "Semua", count: vendorPayments.length },
-            ]}
-          />
-        )}
       </div>
-
-      <div ref={resultsRef} style={resultsStyle}>
-        {subTab === "BILLS" ? (
-          <div className="space-y-3">
-            <SectionHeader
-              title="Daftar tagihan"
-              count={filteredBills.length}
-              countLabel="Tagihan"
-            />
-            {desktop ? (
-              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
-                <DesktopTable
-                  ariaLabel="Tagihan vendor"
-                  rows={filteredBills.slice(0, visibleLimit)}
-                  rowKey={(bill) => bill.id}
-                  selectedRowKey={selectedBill?.id}
-                  onRowAction={(bill) => setSelectedBillId(bill.id)}
-                  columns={[
-                    {
-                      key: "bill",
-                      label: "Tagihan",
-                      render: (bill) => (
-                        <div>
-                          <p className="font-semibold">{bill.billNumber}</p>
-                          <p className="text-meta text-on-surface-variant">
-                            {bill.vendor?.name} · {bill.project?.name}
-                          </p>
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "amount",
-                      label: "Nilai",
-                      align: "end",
-                      render: (bill) => (
-                        <MoneyValue amount={Number(bill.amount)} variant="compact" size="sm" />
-                      ),
-                    },
-                    {
-                      key: "due",
-                      label: "Jatuh tempo",
-                      render: (bill) =>
-                        new Date(bill.dueDate).toLocaleDateString("id-ID", {
-                          timeZone: "Asia/Jakarta",
-                        }),
-                    },
-                    {
-                      key: "status",
-                      label: "Status",
-                      render: (bill) => formatBusinessLabel(bill.status),
-                    },
-                  ]}
+      <div hidden={showDesktop} inert={showDesktop} className="space-y-4">
+        <div className="space-y-3" data-expense-overview-cluster>
+          <SummarySurface
+            ariaLabel="Posisi tagihan vendor"
+            eyebrow="Tagihan vendor"
+            icon="request_quote"
+            status={
+              openBillCount > 0 ? `${openBillCount} tagihan terbuka` : "Tidak ada tagihan terbuka"
+            }
+            statusTone={openBillCount > 0 ? "warning" : "positive"}
+            action={
+              projectId && canCreateVendorBill ? (
+                <Button
+                  type="button"
+                  onClick={onAddBill}
+                  className="relative inline-flex h-8 items-center justify-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14]"
+                  variant="secondary"
+                  size="mini"
+                >
+                  <AppIcon name="add" className="icon-xs leading-none" />
+                  Tambah
+                </Button>
+              ) : undefined
+            }
+          >
+            <div className="flex items-end justify-between gap-4 px-3.5 pt-3.5 pb-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-semibold text-on-surface-variant/60">
+                  Total tagihan tercatat
+                </p>
+                <MoneyValue
+                  amount={totalBillAmount}
+                  variant="fullDynamic"
+                  size="lg"
+                  className="mt-1"
                 />
-                {selectedBill ? (
-                  <section aria-label="Detail tagihan" className="min-w-0 xl:sticky xl:top-24">
-                    <GroupedSurface>
-                      <VendorBillCard
-                        bill={selectedBill}
-                        isOwnerOrFinance={isOwnerOrFinance}
-                        onScheduleClick={onSchedule}
-                      />
-                    </GroupedSurface>
-                  </section>
-                ) : null}
               </div>
-            ) : (
+            </div>
+            <div className="grid grid-cols-2 gap-2 p-2">
+              <SummaryFact label="Dalam antrean" amount={scheduledAmount} />
+              <SummaryFact label="Sudah dibayar" amount={paidAmount} />
+            </div>
+          </SummarySurface>
+        </div>
+
+        <div className="space-y-2.5">
+          <SegmentedTabs
+            value={subTab}
+            onChange={(value) => {
+              preserveScrollPosition();
+              setSubTab(value);
+              setVisibleLimit(20);
+            }}
+            ariaLabel="Tampilan tagihan vendor"
+            density="compact"
+            options={[
+              {
+                value: "BILLS",
+                label: "Tagihan",
+                count: openBillCount,
+                icon: <AppIcon name="request_quote" className="icon-sm leading-none" />,
+              },
+              {
+                value: "PAYMENTS",
+                label: "Rencana Bayar",
+                count: vendorPayments.filter((payment) => payment.status !== "COMPLETED").length,
+                icon: <AppIcon name="payments" className="icon-sm leading-none" />,
+              },
+            ]}
+          />
+          {subTab === "BILLS" ? (
+            <SegmentedTabs
+              value={billFilter}
+              onChange={(value) => {
+                preserveScrollPosition();
+                setBillFilter(value);
+                setVisibleLimit(20);
+              }}
+              ariaLabel="Filter status tagihan"
+              density="compact"
+              options={[
+                { value: "ACTIVE", label: "Belum Lunas", count: openBillCount },
+                {
+                  value: "PAID",
+                  label: "Lunas",
+                  count: vendorBills.filter((bill) => bill.status === "PAID").length,
+                },
+                { value: "ALL", label: "Semua", count: vendorBills.length },
+              ]}
+            />
+          ) : (
+            <SegmentedTabs
+              value={paymentFilter}
+              onChange={(value) => {
+                preserveScrollPosition();
+                setPaymentFilter(value);
+                setVisibleLimit(20);
+              }}
+              ariaLabel="Filter status rencana bayar"
+              density="compact"
+              options={[
+                {
+                  value: "ACTIVE",
+                  label: "Belum Cair",
+                  count: vendorPayments.filter((payment) => payment.status !== "COMPLETED").length,
+                },
+                {
+                  value: "COMPLETED",
+                  label: "Selesai Cair",
+                  count: vendorPayments.filter((payment) => payment.status === "COMPLETED").length,
+                },
+                { value: "ALL", label: "Semua", count: vendorPayments.length },
+              ]}
+            />
+          )}
+        </div>
+
+        <div ref={resultsRef} style={resultsStyle}>
+          {subTab === "BILLS" ? (
+            <div className="space-y-3">
+              <SectionHeader
+                title="Daftar tagihan"
+                count={filteredBills.length}
+                countLabel="Tagihan"
+              />
               <GroupedSurface>
                 {filteredBills.length === 0 ? (
                   <EmptyState
@@ -303,79 +276,17 @@ export function VendorBillListContent({
                   </div>
                 )}
               </GroupedSurface>
-            )}
-            {filteredBills.length > visibleLimit ? (
-              <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
-            ) : null}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <SectionHeader
-              title="Rencana pembayaran"
-              count={filteredPayments.length}
-              countLabel="Pembayaran"
-            />
-            {desktop ? (
-              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.65fr)]">
-                <DesktopTable
-                  ariaLabel="Rencana pembayaran vendor"
-                  rows={filteredPayments.slice(0, visibleLimit)}
-                  rowKey={(payment) => payment.id}
-                  selectedRowKey={selectedPayment?.id}
-                  onRowAction={(payment) => setSelectedPaymentId(payment.id)}
-                  columns={[
-                    {
-                      key: "bill",
-                      label: "Pembayaran",
-                      render: (payment) => (
-                        <div>
-                          <p className="font-semibold">{payment.vendorBill?.billNumber}</p>
-                          <p className="text-meta text-on-surface-variant">
-                            {payment.vendorBill?.vendor?.name} · {payment.bankAccount?.name}
-                          </p>
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "amount",
-                      label: "Nilai",
-                      align: "end",
-                      render: (payment) => (
-                        <MoneyValue
-                          amount={Number(payment.amountPaid)}
-                          variant="compact"
-                          size="sm"
-                        />
-                      ),
-                    },
-                    {
-                      key: "date",
-                      label: "Tanggal",
-                      render: (payment) =>
-                        new Date(payment.paymentDate).toLocaleDateString("id-ID", {
-                          timeZone: "Asia/Jakarta",
-                        }),
-                    },
-                    {
-                      key: "status",
-                      label: "Status",
-                      render: (payment) => formatBusinessLabel(payment.status),
-                    },
-                  ]}
-                />
-                {selectedPayment ? (
-                  <section aria-label="Detail pembayaran" className="min-w-0 xl:sticky xl:top-24">
-                    <GroupedSurface>
-                      <VendorPaymentCard
-                        payment={selectedPayment}
-                        isOwnerOrFinance={isOwnerOrFinance}
-                        onDisburseClick={onDisburse}
-                      />
-                    </GroupedSurface>
-                  </section>
-                ) : null}
-              </div>
-            ) : (
+              {filteredBills.length > visibleLimit ? (
+                <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <SectionHeader
+                title="Rencana pembayaran"
+                count={filteredPayments.length}
+                countLabel="Pembayaran"
+              />
               <GroupedSurface>
                 {filteredPayments.length === 0 ? (
                   <EmptyState
@@ -396,12 +307,12 @@ export function VendorBillListContent({
                   </div>
                 )}
               </GroupedSurface>
-            )}
-            {filteredPayments.length > visibleLimit ? (
-              <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
-            ) : null}
-          </div>
-        )}
+              {filteredPayments.length > visibleLimit ? (
+                <BatchButton onClick={() => setVisibleLimit((current) => current + 20)} />
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

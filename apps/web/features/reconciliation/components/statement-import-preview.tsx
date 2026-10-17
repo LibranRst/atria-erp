@@ -5,6 +5,8 @@ import {
   AppIcon,
   Button,
   DesktopTable,
+  DesktopTablePagination,
+  desktopTablePage,
   IconButton,
   MoneyValue,
   type DesktopTableColumn,
@@ -25,11 +27,19 @@ export function StatementImportPreview({
   pending,
   onToggleDirection,
   onRemove,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
 }: {
   readonly rows: readonly StatementPreviewRow[];
   readonly pending: boolean;
   readonly onToggleDirection: (index: number) => void;
   readonly onRemove: (index: number) => void;
+  readonly page: number;
+  readonly pageSize: 10 | 25 | 50;
+  readonly onPageChange: (page: number) => void;
+  readonly onPageSizeChange: (pageSize: 10 | 25 | 50) => void;
 }): React.JSX.Element {
   const columns: readonly DesktopTableColumn<IndexedRow>[] = [
     {
@@ -49,7 +59,13 @@ export function StatementImportPreview({
       label: "Nominal",
       align: "end",
       reviewWidth: 24,
-      render: (row) => <MoneyValue amount={row.amount} variant="compactWithFull" />,
+      render: (row) => (
+        <MoneyValue
+          amount={row.amount}
+          fractionDigits={Number.isInteger(row.amount) ? 0 : 2}
+          variant="compactWithFull"
+        />
+      ),
     },
     {
       key: "direction",
@@ -78,13 +94,33 @@ export function StatementImportPreview({
       ),
     },
   ];
+  const table = desktopTablePage(
+    rows.map((row, index) => ({ ...row, index })),
+    columns,
+    (row) => String(row.index),
+    { column: "source", direction: "ascending" },
+    page,
+    pageSize,
+  );
   return (
     <DesktopTable
       ariaLabel="Pratinjau mutasi rekening koran"
       reviewPresentation="desktop"
-      rows={rows.map((row, index) => ({ ...row, index }))}
+      rows={table.rows}
       columns={columns}
       rowKey={(row) => String(row.index)}
+      footer={
+        <DesktopTablePagination
+          ariaLabel="Halaman pratinjau mutasi"
+          page={table.page}
+          pageSize={pageSize}
+          total={table.total}
+          onPageChange={onPageChange}
+          onPageSizeChange={(size): void => {
+            onPageSizeChange(size === 25 || size === 50 ? size : 10);
+          }}
+        />
+      }
     />
   );
 }

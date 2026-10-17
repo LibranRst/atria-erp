@@ -10,18 +10,14 @@ describe("Button motion and active scale-up contract (iOS 27 style)", () => {
   });
 
   test("Button renders with active elevation classes", () => {
-    const html = renderToStaticMarkup(
-      <Button variant="primary">Simpan</Button>,
-    );
+    const html = renderToStaticMarkup(<Button variant="primary">Simpan</Button>);
 
     expect(html).toContain("active:shadow-raised");
     expect(html).toContain("active:z-10");
   });
 
   test("IconButton renders with active elevation and z-index classes", () => {
-    const html = renderToStaticMarkup(
-      <IconButton label="Tutup" icon={<span>x</span>} />,
-    );
+    const html = renderToStaticMarkup(<IconButton label="Tutup" icon={<span>x</span>} />);
 
     expect(html).toContain("active:shadow-raised");
     expect(html).toContain("active:z-10");
@@ -52,9 +48,7 @@ describe("Button motion and active scale-up contract (iOS 27 style)", () => {
   });
 
   test("SectionAction includes active:scale-[1.05] and active:shadow-raised", () => {
-    const html = renderToStaticMarkup(
-      <SectionAction label="Lihat Semua" href="/details" />,
-    );
+    const html = renderToStaticMarkup(<SectionAction label="Lihat Semua" href="/details" />);
 
     expect(html).toContain("active:scale-[1.05]");
     expect(html).toContain("active:shadow-raised");

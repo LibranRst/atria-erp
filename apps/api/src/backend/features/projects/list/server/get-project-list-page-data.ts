@@ -1,5 +1,14 @@
 import { actorCan } from "@backend/lib/auth/permissions";
 import { db } from "@backend/db";
+import {
+  client,
+  INSTANCE_TENANT_ID,
+  project,
+  projectBudgets,
+  projectBudgetCategory,
+} from "@backend/db/schema";
+import { buildProjectBudgetDashboardFromBudget } from "@backend/app/actions/project/excel-budget-utils";
+import { and, eq } from "drizzle-orm";
 import type {
   ClientData,
   FinancialHealth,
@@ -11,6 +20,7 @@ import { scopeProjectQuery } from "@backend/lib/auth/scoping";
 
 import { resolveEffectiveProjectHealth } from "@atria/core/project/effective-health";
 import type { Actor } from "@backend/server/actor";
+import { isProjectManagerOption } from "@backend/server/usecases/project/project-manager-options";
 
 export type ProjectListReadyData = {
   readonly status: "ready";
@@ -55,16 +65,20 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
   // Scope proyek tetap ditegakkan server: PM hanya menerima proyek miliknya,
   // dan peran tanpa akses menerima filter yang mengembalikan nol baris.
   const projectFilter = await scopeProjectQuery(actor.userId, roleName);
+  const canCreateProject = actorCan(actor, "create:project");
+  const canEditProject = canCreateProject || actorCan(actor, "update:budget");
 
   const [projects, clients, users] = await Promise.all([
     db.query.project.findMany({
-      where: projectFilter || undefined,
+      where: and(eq(project.tenantId, INSTANCE_TENANT_ID), projectFilter),
       with: {
-        client: true,
+        client: { columns: { name: true, tenantId: true } },
         projectManager: true,
         canonicalBudgets: {
+          where: eq(projectBudgets.tenantId, INSTANCE_TENANT_ID),
           with: {
             categories: {
+              where: eq(projectBudgetCategory.tenantId, INSTANCE_TENANT_ID),
               with: {
                 expenseCategory: true,
               },
@@ -74,40 +88,43 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
       },
       orderBy: (table, { desc }) => [desc(table.createdAt)],
     }),
-    db.query.client.findMany({
-      orderBy: (table, { asc }) => [asc(table.name)],
-    }),
-    db.query.user.findMany({
-      orderBy: (table, { asc }) => [asc(table.name)],
-    }),
+    canEditProject
+      ? db.query.client.findMany({
+          columns: { id: true, name: true },
+          where: eq(client.tenantId, INSTANCE_TENANT_ID),
+          orderBy: (table, { asc }) => [asc(table.name)],
+        })
+      : Promise.resolve([]),
+    canEditProject
+      ? db.query.user.findMany({
+          columns: { id: true, name: true, isActive: true },
+          with: { role: { columns: { dataScope: true } } },
+          orderBy: (table, { asc }) => [asc(table.name)],
+        })
+      : Promise.resolve([]),
   ]);
+  const currentManagerIds = projects.map((row) => row.projectManagerId);
 
   return {
     status: "ready",
     projects: projects.map((projectRow) => {
       const contractValue = Number(projectRow.totalContractValue);
       const budget = projectRow.canonicalBudgets[0] ?? null;
+      const dashboard = budget
+        ? buildProjectBudgetDashboardFromBudget({ ...budget, project: { name: projectRow.name } })
+        : null;
       const categories = budget?.categories ?? [];
-      const actualCost = categories.reduce(
-        (total, category) => total + Number(category.actualAmount),
-        0,
-      );
-      const internalBudget = Number(budget?.internalBudget ?? 0);
-      const remainingBudget = internalBudget - actualCost;
-      const usedPercentage = internalBudget > 0 ? (actualCost / internalBudget) * 100 : 0;
-      const projectedMarginPercentage =
-        contractValue > 0
-          ? ((contractValue - Math.max(internalBudget, actualCost)) / contractValue) * 100
-          : 0;
-      const targetMarginPercentage =
-        contractValue > 0 ? (Number(budget?.targetGrossAmount ?? 0) / contractValue) * 100 : 0;
+      const actualCost = dashboard?.actualCost ?? 0;
+      const internalBudget = dashboard?.internalBudget ?? 0;
+      const remainingBudget = dashboard?.remainingBudget ?? 0;
+      const usedPercentage = dashboard?.usedPercentage ?? 0;
       const health = resolveEffectiveProjectHealth({
         storedHealth: projectRow.financialHealth,
         remainingBudget,
         usedPercentage,
         categoryStatuses: categories.map((category) => category.status),
-        projectedMarginPercentage,
-        targetMarginPercentage,
+        projectedMarginPercentage: dashboard?.projectedMarginPercentage,
+        targetMarginPercentage: dashboard?.targetGrossPercentage,
       });
 
       return {
@@ -128,16 +145,29 @@ export async function getProjectListPageData(actor: Actor): Promise<ProjectListP
         coverImageUrl: projectRow.coverImageUrl,
         notes: projectRow.notes,
         budgetStatus: budget?.status ?? "TIDAK ADA",
+        budgetId: budget?.id ?? null,
         actualCost,
         internalBudget,
         usedPercentage,
         remainingBudget,
-        clientName: projectRow.client?.name ?? "-",
+        paidCost: dashboard?.paidCost ?? 0,
+        pendingCost: dashboard?.pendingCost ?? 0,
+        projectedMarginAmount: dashboard?.projectedMarginAmount ?? null,
+        projectedMarginPercentage: dashboard?.projectedMarginPercentage ?? null,
+        targetGrossPercentage: dashboard?.targetGrossPercentage ?? null,
+        clientName:
+          projectRow.client?.tenantId === INSTANCE_TENANT_ID ? projectRow.client.name : "-",
         pmName: projectRow.projectManager?.name ?? "Belum ditugaskan",
       };
     }),
-    clients: clients.map((client) => ({ id: client.id, name: client.name })),
-    users: users.map((user) => ({ id: user.id, name: user.name })),
+    clients: clients
+      .filter(
+        (candidate) => canCreateProject || projects.some((row) => row.clientId === candidate.id),
+      )
+      .map((client) => ({ id: client.id, name: client.name })),
+    users: users
+      .filter((user) => isProjectManagerOption(user, currentManagerIds))
+      .map((user) => ({ id: user.id, name: user.name })),
     isAllowedToCreate: actorCan(actor, "create:project"),
   };
 }

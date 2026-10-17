@@ -6,6 +6,8 @@ import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/re
 import { db } from "@backend/db";
 import { projectMaterialProjection } from "@atria/core/material/project-material-projection";
 import {
+  INSTANCE_TENANT_ID,
+  projectRap,
   auditLog,
   materialCategory,
   materialInventory,
@@ -13,9 +15,16 @@ import {
   projectRapItem,
   stockMovement,
 } from "@backend/db/schema";
-import { and, eq } from "drizzle-orm";
-import { assertPermission } from "@backend/lib/auth/permissions";
+import { and, eq, inArray } from "drizzle-orm";
+import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
+import { getRoleAccessByName } from "@backend/lib/auth/role-access";
+import {
+  materialProjectReferenceScope,
+  type MaterialReadActor,
+} from "@backend/server/usecases/material/material-read-scope";
 import { ActionResponse } from "@atria/core/types/action-response";
+import type { MaterialShortageRow } from "@atria/core/material/material-shortage";
+export type { MaterialShortageRow } from "@atria/core/material/material-shortage";
 import {
   AdjustMaterialStockInput,
   CreateMaterialCategoryInput,
@@ -163,7 +172,16 @@ export async function getMaterialInventory(
   try {
     await assertPermission(sessionResult.data.user, "view:inventory");
 
-    const filters = [];
+    const filters = [
+      eq(materialInventory.tenantId, INSTANCE_TENANT_ID),
+      inArray(
+        materialInventory.materialId,
+        db
+          .select({ id: materialMaster.id })
+          .from(materialMaster)
+          .where(eq(materialMaster.tenantId, INSTANCE_TENANT_ID)),
+      ),
+    ];
     if (validation.data.materialId)
       filters.push(eq(materialInventory.materialId, validation.data.materialId));
     if (validation.data.locationId)
@@ -302,21 +320,6 @@ export async function adjustMaterialStock(
   return result;
 }
 
-export interface MaterialShortageRow {
-  readonly projectRapItemId: string;
-  readonly projectRapId: string;
-  readonly materialId: string | null;
-  readonly materialName: string;
-  readonly area: string;
-  readonly requiredQuantity: number;
-  readonly bufferQuantity: number;
-  readonly totalQuantity: number;
-  readonly availableStock: number;
-  readonly needToBuy: number;
-  readonly estimatedTotalCost: number;
-  readonly status: string;
-}
-
 export async function getMaterialShortages(
   projectRapId?: string,
 ): Promise<ActionResponse<MaterialShortageRow[]>> {
@@ -326,14 +329,35 @@ export async function getMaterialShortages(
   try {
     await assertPermission(sessionResult.data.user, "view:rap");
 
+    const access = await getRoleAccessByName(await resolveRoleName(sessionResult.data.user.roleId));
+    const actor: MaterialReadActor = {
+      userId: sessionResult.data.user.id,
+      permissions: access?.permissions ?? [],
+      dataScope: access?.dataScope ?? "NONE",
+    };
     const rapItems = await db.query.projectRapItem.findMany({
-      where: projectRapId ? eq(projectRapItem.projectRapId, projectRapId) : undefined,
+      where: and(
+        eq(projectRapItem.tenantId, INSTANCE_TENANT_ID),
+        projectRapId ? eq(projectRapItem.projectRapId, projectRapId) : undefined,
+        inArray(
+          projectRapItem.projectRapId,
+          db
+            .select({ id: projectRap.id })
+            .from(projectRap)
+            .where(
+              and(
+                eq(projectRap.tenantId, INSTANCE_TENANT_ID),
+                materialProjectReferenceScope(projectRap.projectId, actor),
+              ),
+            ),
+        ),
+      ),
       with: {
-        rap: true,
-        stockMovements: true,
+        rap: { with: { project: { columns: { id: true, name: true } } } },
+        stockMovements: { where: eq(stockMovement.tenantId, INSTANCE_TENANT_ID) },
         material: {
           with: {
-            inventory: true,
+            inventory: { where: eq(materialInventory.tenantId, INSTANCE_TENANT_ID) },
           },
         },
       },
@@ -356,6 +380,9 @@ export async function getMaterialShortages(
         return {
           projectRapItemId: item.id,
           projectRapId: item.projectRapId,
+          projectId: item.rap.projectId,
+          projectName: item.rap.project?.name ?? null,
+          unit: item.unit || null,
           materialId: item.materialId,
           materialName: item.material?.name ?? item.name,
           area: item.area,

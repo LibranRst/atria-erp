@@ -30,7 +30,7 @@ ulang:
    rekonsiliasi bersifat append-only.
 3. **Anti-eskalasi selamat, maknanya tidak.** `findEscalation` memeriksa id
    aktor, dan aktornya tetap manusia. Tetapi aturan itu mengasumsikan pemberi
-   adalah yang *memikirkan* pemberiannya; ketika model yang menyusun, kesadaran
+   adalah yang _memikirkan_ pemberiannya; ketika model yang menyusun, kesadaran
    itu menguap dan pemeriksaannya tidak bisa mendeteksinya.
 4. **Bias sistematis ke arah memberi.** Pemicu tersering adalah "si A tidak
    bisa X", dan jalan paling membantu bagi model adalah mengusulkan pemberian.
@@ -55,11 +55,11 @@ karena sedang bingung. Konteks tool dipindahkan ke `getRoleAccess(roleId)`.
 
 Ketiganya read-only dan tunduk pada `read-only.test.ts`.
 
-| Tool | Gerbang | Menjawab |
-| --- | --- | --- |
-| `explainUserAccess` | diri sendiri bebas; orang lain butuh `manage:users` atau `manage:roles` | "saya boleh apa saja", "kenapa Budi tidak bisa mencairkan?" |
-| `whoCanDo` | `manage:roles` | "siapa yang bisa menyetujui budget?" |
-| `analyzeRoleChangeImpact` | `manage:roles` | "kalau `pay:cost` dicabut dari Finance Admin, apa yang berhenti?" |
+| Tool                      | Gerbang                                                                 | Menjawab                                                          |
+| ------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `explainUserAccess`       | diri sendiri bebas; orang lain butuh `manage:users` atau `manage:roles` | "saya boleh apa saja", "kenapa Budi tidak bisa mencairkan?"       |
+| `whoCanDo`                | `manage:roles`                                                          | "siapa yang bisa menyetujui budget?"                              |
+| `analyzeRoleChangeImpact` | `manage:roles`                                                          | "kalau `pay:cost` dicabut dari Finance Admin, apa yang berhenti?" |
 
 `analyzeRoleChangeImpact` tidak menulis apa pun. Ia melaporkan: jumlah dan nama
 pemegang peran, izin yang benar-benar berubah (bukan no-op), modul yang

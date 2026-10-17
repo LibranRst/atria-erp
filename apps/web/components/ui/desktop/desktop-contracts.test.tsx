@@ -101,6 +101,7 @@ test("desktop action and switch use the HeroUI interaction contract without losi
   expect(html).toContain('value="save"');
   expect(html).toContain('role="switch"');
   expect(html).toContain('checked=""');
+  expect(html).not.toContain("margin-inline-start");
 });
 
 test("shared desktop controls use native compact size variants without inheriting mobile geometry", () => {

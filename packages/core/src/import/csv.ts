@@ -44,3 +44,20 @@ export function parseCsvTable(source: string): CsvTable {
     rows,
   };
 }
+
+/** Strict operational imports must not silently shift or discard source cells. */
+export function parseStrictCsvTable(source: string): CsvTable {
+  const table = parseCsvTable(source);
+  const headers = new Set<string>();
+  for (const header of table.headers) {
+    if (headers.has(header)) throw new Error(`Kolom CSV duplikat: ${header || "tanpa nama"}.`);
+    headers.add(header);
+  }
+  for (const [index, row] of table.rows.entries()) {
+    if (row.length !== table.headers.length)
+      throw new Error(
+        `Baris ${index + 2}: jumlah kolom tidak sesuai header (${row.length} dari ${table.headers.length}). Periksa pemisah dan gunakan tanda kutip untuk nilai yang mengandung koma.`,
+      );
+  }
+  return table;
+}

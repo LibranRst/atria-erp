@@ -288,7 +288,7 @@ export async function resolveClientInvoice(
     occurredAt: row.createdAt.toISOString(),
     actorName: audit?.actorName ?? "Sistem",
     facts: [
-      fact("Tahap", textValue(row.stage)),
+      fact("Tahap", textValue(formatBusinessLabel(row.stage))),
       fact("Nilai invoice", moneyValue(Number(row.amount))),
       fact("Sudah diterima", moneyValue(paid)),
       fact("Sisa piutang", moneyValue(Math.max(0, Number(row.amount) - paid))),

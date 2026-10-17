@@ -22,6 +22,10 @@ import {
   Button,
 } from "@/components/ui";
 import { derivePaymentReference } from "@atria/core/finance/invoice-prefill";
+import {
+  calculateInvoicePaidAmount,
+  calculateInvoiceRemaining,
+} from "../../utils/project-invoices-utils";
 import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
 export function ClientPaymentSheet({
   selectedInvoice,
@@ -106,8 +110,8 @@ export function ClientPaymentSheet({
   if (!invoice) return null;
   const invoiceAmount = Number(invoice.amount);
   const paidAmount = Number(amountPaid || 0);
-  const paidBefore = invoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
-  const remaining = Math.max(0, invoiceAmount - paidBefore);
+  const paidBefore = calculateInvoicePaidAmount(invoice);
+  const remaining = calculateInvoiceRemaining(invoice);
   const accountBefore = Number(selectedAccount?.balance ?? 0);
   const overpayment = paidAmount > remaining;
   const remainingAfter = Math.max(0, remaining - paidAmount);
@@ -337,7 +341,7 @@ export function ClientPaymentSheet({
                           />
                         )}
                       </div>
-                      <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                      <p className="mt-0.5 truncate text-meta text-on-surface-variant">
                         Sebelumnya Rp {remaining.toLocaleString("id-ID")}
                       </p>
                     </div>
@@ -354,7 +358,7 @@ export function ClientPaymentSheet({
                           className="font-bold text-on-surface"
                         />
                       </div>
-                      <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+                      <p className="mt-0.5 truncate text-meta text-on-surface-variant">
                         {paidBefore > 0
                           ? `Sudah diterima Rp ${paidBefore.toLocaleString("id-ID")}`
                           : "Termin pertama"}
@@ -388,7 +392,7 @@ export function ClientPaymentSheet({
                   label="Status Invoice"
                   value={
                     remainingAfter === 0 ? (
-                      <span className="font-bold text-success">Lunas (PAID)</span>
+                      <span className="font-bold text-success">Lunas</span>
                     ) : (
                       <span className="font-bold text-on-surface">Terbayar Sebagian</span>
                     )

@@ -152,4 +152,19 @@ describe("iOS grouped form presentation", () => {
     expect(html).toContain("grid-cols-1");
     expect(html).not.toContain("grid-cols-2");
   });
+
+  test("value previews retain explicit source cents without changing incumbent rounding", () => {
+    const precise = renderToStaticMarkup(
+      <ValuePreviewStrip
+        items={[{ label: "Subtotal klien", amount: 1234567.25, fractionDigits: 2 }]}
+      />,
+    );
+    const incumbent = renderToStaticMarkup(
+      <ValuePreviewStrip items={[{ label: "Subtotal klien", amount: 1234567.25 }]} />,
+    );
+
+    expect(precise).toContain("1.234.567,25");
+    expect(incumbent).toContain("1.234.567");
+    expect(incumbent).not.toContain("1.234.567,25");
+  });
 });

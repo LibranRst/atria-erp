@@ -74,9 +74,11 @@ export function CompactFormDialog({
   actions,
   showCloseButton = false,
   onClose,
+  returnFocusRef,
 }: DialogShellProps & {
   readonly actions: React.ReactNode;
   readonly showCloseButton?: boolean;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   return (
     <DialogFrame
@@ -86,6 +88,7 @@ export function CompactFormDialog({
       pending={pending}
       showCloseButton={showCloseButton}
       footer={actions}
+      returnFocusRef={returnFocusRef}
       onClose={onClose}
     >
       {children}
@@ -216,10 +219,12 @@ export function SuccessDialog({
         secondaryLabel && onSecondary ? (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" onClick={onSecondary}>
+              <Button variant="secondary" fullWidth onClick={onSecondary}>
                 {secondaryLabel}
               </Button>
-              <Button onClick={primaryAction}>{primaryLabel}</Button>
+              <Button fullWidth onClick={primaryAction}>
+                {primaryLabel}
+              </Button>
             </div>
             {tertiaryLabel && onTertiary ? (
               <Button variant="tertiary" fullWidth onClick={onTertiary}>
@@ -252,6 +257,8 @@ export function SuccessDialog({
 export type ConfirmationDialogTone = "default" | "warning" | "danger";
 
 type ConfirmationDialogCommonProps = {
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
   readonly open: boolean;
   readonly title: string;
   readonly description?: string;
@@ -314,6 +321,8 @@ export function ConfirmationDialog(props: ConfirmationDialogProps): React.JSX.El
       icon={<AppIcon name={iconName} className="icon-xl" aria-hidden="true" />}
       showCloseButton={false}
       footer={footer}
+      returnFocusRef={props.returnFocusRef}
+      fallbackFocusRef={props.fallbackFocusRef}
       onClose={props.onClose}
     >
       {props.children ? (

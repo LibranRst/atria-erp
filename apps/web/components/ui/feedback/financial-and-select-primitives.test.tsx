@@ -33,7 +33,13 @@ describe("financial and select primitives", () => {
     expect(html).toContain("cursor-default");
 
     const disabledTooltipHtml = renderToStaticMarkup(
-      <MoneyValue amount={-1_017_050_000} variant="compact" size="sm" tone="danger" showTooltip={false} />,
+      <MoneyValue
+        amount={-1_017_050_000}
+        variant="compact"
+        size="sm"
+        tone="danger"
+        showTooltip={false}
+      />,
     );
     expect(disabledTooltipHtml).not.toContain("touch-manipulation");
   });

@@ -98,7 +98,7 @@ export function PageState({
           whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           onClick={onAction}
-          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:shadow-raised active:z-10"
+          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised"
         >
           {actionLabel}
         </motion.button>

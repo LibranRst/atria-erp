@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 
 import { AppIcon, ButtonLink, GroupedSurface, StatusBadge } from "@/components/ui";
 import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 export function OrganizationSetupCard({
   overview,
@@ -10,6 +13,7 @@ export function OrganizationSetupCard({
   readonly overview: OrganizationSetupOverview;
   readonly density: "dashboard" | "settings";
 }): React.JSX.Element | null {
+  const compactDesktop = useWorkspacePresentation() === "desktop" && density === "settings";
   const quickStartIncomplete = overview.quickStart.state.status !== "COMPLETED";
   const setupFullyReady = !quickStartIncomplete && overview.allRequiredReady;
   const missing = overview.requiredTotal - overview.requiredReadyCount;
@@ -58,15 +62,25 @@ export function OrganizationSetupCard({
   const total = quickStartIncomplete ? overview.quickStart.progress.total : overview.requiredTotal;
 
   return (
-    <GroupedSurface as="section">
-      <div className={density === "dashboard" ? "space-y-3 p-4" : "space-y-3 p-3.5"}>
+    <GroupedSurface as="section" variant={compactDesktop ? "desktopPanel" : "default"}>
+      <div
+        className={
+          compactDesktop
+            ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3"
+            : density === "dashboard"
+              ? "space-y-3 p-4"
+              : "space-y-3 p-3.5"
+        }
+      >
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-icon bg-surface-container-low text-on-surface">
+          <span
+            className={`flex shrink-0 items-center justify-center bg-surface-container-low text-on-surface ${compactDesktop ? "h-8 w-8 rounded-full" : "h-10 w-10 rounded-icon"}`}
+          >
             <AppIcon name={setupFullyReady ? "verified" : "task_alt"} className="icon-lg" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 text-row font-bold text-on-surface">{title}</span>
+              <span className="min-w-0 flex-1 text-row font-semibold text-on-surface">{title}</span>
               {setupFullyReady ? <StatusBadge tone="completed" label="Siap" /> : null}
             </span>
             <span className="mt-0.5 block text-meta text-on-surface-variant">{detail}</span>
@@ -74,7 +88,7 @@ export function OrganizationSetupCard({
         </div>
 
         <div
-          className="flex gap-1.5"
+          className={compactDesktop ? "hidden" : "flex gap-1.5"}
           role="progressbar"
           aria-label={quickStartIncomplete ? "Kemajuan quick start" : "Kesiapan operasional"}
           aria-valuemin={0}
@@ -102,7 +116,11 @@ export function OrganizationSetupCard({
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-meta font-semibold text-on-surface-variant">
+          <span
+            className={
+              compactDesktop ? "hidden" : "text-meta font-semibold text-on-surface-variant"
+            }
+          >
             {current}/{total} {quickStartIncomplete ? "tahap" : "wajib"}
           </span>
           <ButtonLink href={href} variant="secondary" size="compact">

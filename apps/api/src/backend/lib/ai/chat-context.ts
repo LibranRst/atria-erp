@@ -1,4 +1,4 @@
-import type { UIMessage } from "ai";
+import { getToolName, isToolUIPart, type UIMessage } from "ai";
 import type { ChatProviderName } from "./providers";
 import { AI_CAPABILITIES } from "./tools/capability-catalog";
 import { isFinancialHistoryQuestion } from "@atria/core/ai/financial-history";
@@ -184,24 +184,110 @@ function textOf(message: UIMessage | undefined): string {
   );
 }
 
+const RECENT_GENERATION_USER_TURNS = 4;
+
+function historicalReadCanBeRemoved(part: UIMessage["parts"][number]): boolean {
+  if (!isToolUIPart(part) || part.state !== "output-available") return false;
+  const name = getToolName(part);
+  if (name === "requestUserInput" || AI_CAPABILITIES[name]?.mode !== "read") return false;
+  if (
+    part.approval ||
+    part.providerExecuted ||
+    part.callProviderMetadata !== undefined ||
+    part.resultProviderMetadata !== undefined
+  )
+    return false;
+  const output = part.output;
+  if (!successfulReadOutput(output) || typeof output !== "object" || output === null) return false;
+  // A read may also return an interactive artifact or a server-owned receipt.
+  // Retain its complete input/output rather than infer that the workflow ended.
+  return !(
+    "proposal" in output ||
+    "confirmation" in output ||
+    "isConfirmedByUser" in output ||
+    ("status" in output && output.status === "INPUT_REQUESTED") ||
+    ("toolFailed" in output && output.toolFailed === true)
+  );
+}
+
+function messageHasProviderMetadata(message: UIMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      ("providerMetadata" in part && part.providerMetadata !== undefined) ||
+      (isToolUIPart(part) &&
+        (("callProviderMetadata" in part && part.callProviderMetadata !== undefined) ||
+          ("resultProviderMetadata" in part && part.resultProviderMetadata !== undefined))),
+  );
+}
+
+function recentGenerationStart(messages: readonly UIMessage[]): number {
+  let turns = 0;
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].role === "user" && ++turns === RECENT_GENERATION_USER_TURNS) return index;
+  }
+  return 0;
+}
+
+export function expectedSingleFamilyProposalTools(
+  question: string,
+  available: readonly string[],
+): string[] {
+  const intent = question.replace(/\bjangan\b[^.!?\n]*/gi, "");
+  const families = FAMILIES.filter((family) => family.pattern.test(intent));
+  if (families.length !== 1) return [];
+  const expected = new Set(families.flatMap((family) => family.tools));
+  return available.filter(
+    (name) =>
+      expected.has(name) &&
+      AI_CAPABILITIES[name]?.mode === "proposal" &&
+      name !== "proposeMaterialMaster",
+  );
+}
+
 export function generationMessages(
   messages: readonly UIMessage[],
   provider: ChatProviderName = "NINEROUTER",
 ): UIMessage[] {
   // Native providers may require their original reasoning/signature sequence.
   if (provider !== "NINEROUTER") return [...messages];
-  return messages.map((message) =>
-    message.role !== "assistant"
-      ? message
-      : {
-          ...message,
-          parts: message.parts.filter(
-            (part) =>
-              part.type !== "step-start" &&
-              (part.type !== "reasoning" || part.providerMetadata !== undefined),
-          ),
-        },
-  );
+  const latestText = textOf(messages.findLast((message) => message.role === "user"));
+  // Ordered/older references can depend on list results outside the recent window.
+  // Fall back to the complete tool history rather than guess the selected entity.
+  const refersToOlderResults =
+    /\b(pertama|paling awal|awal percakapan|daftar sebelumnya|daftar tadi|hasil sebelumnya|riwayat tadi|first|earlier list|at the beginning)\b/i.test(
+      latestText,
+    );
+  const recentStart = refersToOlderResults ? 0 : recentGenerationStart(messages);
+  const metadataBoundMessages = new Set(messages.filter(messageHasProviderMetadata));
+  const protectedCalls = new Set<string>();
+  for (const [index, message] of messages.entries())
+    for (const part of message.parts)
+      if (
+        isToolUIPart(part) &&
+        (index >= recentStart ||
+          message.role !== "assistant" ||
+          metadataBoundMessages.has(message) ||
+          !historicalReadCanBeRemoved(part))
+      )
+        protectedCalls.add(part.toolCallId);
+  return messages
+    .map((message, index) =>
+      message.role !== "assistant"
+        ? message
+        : {
+            ...message,
+            parts: message.parts.filter(
+              (part) =>
+                part.type !== "step-start" &&
+                (part.type !== "reasoning" || part.providerMetadata !== undefined) &&
+                (index >= recentStart ||
+                  metadataBoundMessages.has(message) ||
+                  !historicalReadCanBeRemoved(part) ||
+                  (isToolUIPart(part) && protectedCalls.has(part.toolCallId))),
+            ),
+          },
+    )
+    .filter((message) => message.role !== "assistant" || message.parts.length > 0);
 }
 
 export function initialActiveTools(
@@ -236,7 +322,7 @@ export function initialActiveTools(
   if (!families.length) return [...available];
   const intent = text.replace(/\bjangan\b[^.!?\n]*/gi, "");
   const readOnly =
-    /^\s*(?:(?:tolong|coba|please)\s+)?(?:berapa|siapa|cek|periksa|lihat|tampilkan|bandingkan|jelaskan|apa|bagaimana|ambil data|ringkas)\b/i.test(
+    /^\s*(?:(?:tolong|coba|please)\s+)?(?:berapa|siapa|cek|periksa|lihat|tampilkan|bandingkan|jelaskan|apa|bagaimana|ambil data|ringkas|baca|sebutkan)\b/i.test(
       intent,
     ) &&
     !/\b(siapkan|buat|catat|ubah|koreksi|hapus|bayar|ajukan|setujui|tolak|terapkan|impor|import|aktifkan|nonaktifkan|transfer|finalisasi|kunci|revisi|edit|update|create|approve|reject|submit|record|pay|usulan|draft|draf|ekspor|export)\b/i.test(

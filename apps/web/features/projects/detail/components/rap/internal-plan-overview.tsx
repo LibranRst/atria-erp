@@ -1,12 +1,15 @@
 "use client";
 
 import React from "react";
+import { RapDesktopWorkspace } from "./rap-desktop-workspace";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, SegmentedTabs, DesktopTable, MoneyValue, Button } from "@/components/ui";
+import { AppIcon, Badge, SegmentedTabs, Button, MoneyValue } from "@/components/ui";
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
+import { countMaterialsNeedingPurchase } from "./rap-desktop-model";
+import { sumPackageCost } from "../../utils/rap-setup-utils";
 import type {
   RapView,
   RabEstimateView,
@@ -14,13 +17,12 @@ import type {
   RapOverviewFilter,
 } from "../shared/rap-rab-manager";
 
-export function InternalPlanOverview({
+function InternalPlanMobile({
   rap,
   plannedCost,
   tukangPlanItems,
   subconPlanItems,
   packageItemCount,
-  needToBuy,
   canEditRap,
   rabEstimate,
   setInternalRevisionOpen,
@@ -43,7 +45,8 @@ export function InternalPlanOverview({
   readonly setRapDetailItemId: (id: string | null) => void;
   readonly setPackageDetailItemId: (id: string | null) => void;
 }): React.JSX.Element {
-  const desktop = useWorkspacePresentation() === "desktop";
+  const totalPlan = plannedCost + sumPackageCost(tukangPlanItems) + sumPackageCost(subconPlanItems);
+  const neededMaterials = countMaterialsNeedingPurchase(rap.items);
   return (
     <>
       <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
@@ -52,20 +55,23 @@ export function InternalPlanOverview({
             <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
               Total rencana internal
             </p>
-            <p className="mt-1 font-mono text-[22px] font-bold">
-              {formatRp(
-                plannedCost +
-                  tukangPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0) +
-                  subconPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0),
-              )}
-            </p>
+            <MoneyValue
+              amount={totalPlan}
+              variant="compactWithFull"
+              fractionDigits={Number.isInteger(totalPlan) ? 0 : 2}
+              tone="inverse"
+              size="2xl"
+              className="mt-1"
+            />
           </div>
           <Badge status="APPROVED">Terkunci</Badge>
         </div>
-        <div className="mt-4 flex justify-between border-t border-white/12 pt-4 text-meta text-white/70">
+        <div className="mt-4 flex justify-between gap-2 border-t border-white/12 pt-4 text-meta text-white/70">
           <span>{rap.items.length} material</span>
           <span>{packageItemCount} paket</span>
-          <span>{needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}</span>
+          <span className="text-right">
+            {neededMaterials > 0 ? `${neededMaterials} material perlu dibeli` : "Material siap"}
+          </span>
         </div>
         {canEditRap && rabEstimate?.status === "APPROVED" && (
           <Button
@@ -109,153 +115,80 @@ export function InternalPlanOverview({
               : "Paket Subcon"
         }
       >
-        {desktop ? (
-          rapOverviewFilter === "MATERIAL" ? (
-            <DesktopTable
-              ariaLabel="RAP material"
-              rows={rap.items}
-              rowKey={(item) => item.id}
-              onRowAction={(item) => setRapDetailItemId(item.id)}
-              columns={[
-                {
-                  key: "material",
-                  label: "Material",
-                  render: (item) => (
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-meta text-on-surface-variant">{item.area}</p>
-                    </div>
-                  ),
-                },
-                {
-                  key: "qty",
-                  label: "Kebutuhan",
-                  align: "end",
-                  render: (item) => `${item.totalQuantity} ${item.unit}`,
-                },
-                {
-                  key: "stock",
-                  label: "Tersedia / perlu beli",
-                  align: "end",
-                  render: (item) => `${item.availableStock} / ${item.needToBuy} ${item.unit}`,
-                },
-                {
-                  key: "plan",
-                  label: "Rencana biaya",
-                  align: "end",
-                  render: (item) => (
-                    <MoneyValue
-                      amount={Number(item.estimatedTotalCost)}
-                      variant="compact"
-                      size="sm"
-                    />
-                  ),
-                },
-                {
-                  key: "actual",
-                  label: "Realisasi material",
-                  align: "end",
-                  render: (item) => (
-                    <MoneyValue amount={item.actualMaterialCost} variant="compact" size="sm" />
-                  ),
-                },
-                {
-                  key: "status",
-                  label: "Kondisi",
-                  render: (item) => formatBusinessLabel(item.status),
-                },
-              ]}
-            />
-          ) : (
-            <DesktopTable
-              ariaLabel={rapOverviewFilter === "TUKANG" ? "Paket Tukang" : "Paket Subcon"}
-              rows={rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems}
-              rowKey={(item) => item.id}
-              onRowAction={(item) => setPackageDetailItemId(item.id)}
-              columns={[
-                {
-                  key: "package",
-                  label: "Paket",
-                  render: (item) => (
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-meta text-on-surface-variant">{item.area}</p>
-                    </div>
-                  ),
-                },
-                {
-                  key: "vendor",
-                  label: "Vendor",
-                  render: (item) => item.vendorName ?? "Belum ditentukan",
-                },
-                {
-                  key: "cost",
-                  label: "Rencana biaya",
-                  align: "end",
-                  render: (item) => (
-                    <MoneyValue
-                      amount={Number(item.estimatedTotalCost)}
-                      variant="compact"
-                      size="sm"
-                    />
-                  ),
-                },
-                {
-                  key: "status",
-                  label: "Status",
-                  render: (item) => formatBusinessLabel(item.status),
-                },
-              ]}
-            />
-          )
-        ) : (
-          <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low">
-            {rapOverviewFilter === "MATERIAL"
-              ? rap.items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setRapDetailItemId(item.id)}
-                    className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold">{item.name}</span>
-                      <span className="block text-meta text-on-surface-variant">
-                        {item.area} - {item.totalQuantity} {item.unit}
-                      </span>
+        <div className="divide-y divide-outline-variant/25 overflow-hidden rounded-inset bg-surface-container-low">
+          {rapOverviewFilter === "MATERIAL"
+            ? rap.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setRapDetailItemId(item.id)}
+                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold">{item.name}</span>
+                    <span className="block text-meta text-on-surface-variant">
+                      {item.area} - {item.totalQuantity} {item.unit}
                     </span>
-                    <span className="financial-amount max-w-[38%] shrink-0 text-right font-mono text-meta font-bold wrap-anywhere wrap-break-word">
+                  </span>
+                  <span className="financial-amount max-w-[38%] shrink-0 text-right font-mono text-meta font-bold wrap-anywhere wrap-break-word">
+                    {formatShortRp(Number(item.estimatedTotalCost))}
+                  </span>
+                </button>
+              ))
+            : (rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setPackageDetailItemId(item.id)}
+                  className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold">{item.name}</span>
+                    <span className="block text-meta text-on-surface-variant">
+                      {item.area}
+                      {item.vendorName ? ` - ${item.vendorName}` : ""}
+                    </span>
+                  </span>
+                  <span className="max-w-[38%] shrink-0 text-right">
+                    <span className="financial-amount block font-mono text-meta font-bold wrap-anywhere wrap-break-word">
                       {formatShortRp(Number(item.estimatedTotalCost))}
                     </span>
-                  </button>
-                ))
-              : (rapOverviewFilter === "TUKANG" ? tukangPlanItems : subconPlanItems).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setPackageDetailItemId(item.id)}
-                    className="flex min-h-16 w-full items-center gap-3 p-3 text-left outline-none focus-visible:bg-white/65 active:bg-white/65"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold">{item.name}</span>
-                      <span className="block text-meta text-on-surface-variant">
-                        {item.area}
-                        {item.vendorName ? ` - ${item.vendorName}` : ""}
-                      </span>
+                    <span className="block text-eyebrow font-bold text-primary">
+                      {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
                     </span>
-                    <span className="max-w-[38%] shrink-0 text-right">
-                      <span className="financial-amount block font-mono text-meta font-bold wrap-anywhere wrap-break-word">
-                        {formatShortRp(Number(item.estimatedTotalCost))}
-                      </span>
-                      <span className="block text-eyebrow font-bold text-primary">
-                        {item.status === "ACTIVE" ? "Siap" : formatBusinessLabel(item.status)}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-          </div>
-        )}
+                  </span>
+                </button>
+              ))}
+        </div>
       </NativePanel>
+    </>
+  );
+}
+
+export function InternalPlanOverview(
+  props: React.ComponentProps<typeof InternalPlanMobile>,
+): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  return (
+    <>
+      <div hidden={desktop} inert={desktop} className="space-y-4">
+        <InternalPlanMobile {...props} />
+      </div>
+      <div hidden={!desktop} inert={!desktop}>
+        <RapDesktopWorkspace
+          rap={props.rap}
+          plannedCost={props.plannedCost}
+          tukangPlanItems={props.tukangPlanItems}
+          subconPlanItems={props.subconPlanItems}
+          canEditRap={props.canEditRap}
+          onMaterialOpen={props.setRapDetailItemId}
+          onPackageOpen={props.setPackageDetailItemId}
+          overviewFilter={props.rapOverviewFilter}
+          onOverviewFilterChange={props.setRapOverviewFilter}
+          canRevise={props.rabEstimate?.status === "APPROVED"}
+          onRevise={(): void => props.setInternalRevisionOpen(true)}
+        />
+      </div>
     </>
   );
 }

@@ -1,7 +1,15 @@
 "use client";
+
+import { z } from "zod";
 import React from "react";
+import {
+  useCan,
+  useCurrentUserProfile,
+  usePermissions,
+} from "@/components/auth/permissions-provider";
 import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { useBrowserUrlSearchParam, updateBrowserUrl } from "@/lib/utils/use-url-search-param";
+import { useRetainedQueryPages } from "@/lib/utils/use-retained-query-pages";
 import { readDesktopDashboard, readDesktopCashFlow } from "./desktop-read-client";
 import {
   dashboardDesktopInputSchema,
@@ -10,17 +18,77 @@ import {
 } from "@atria/core/finance/dashboard-desktop";
 import type { DashboardCashFlowTrend } from "@atria/core/finance/dashboard-cash-flow";
 import type { DashboardPageTab } from "@atria/core/finance/dashboard-overview";
+import type { ActionResponse } from "@atria/core/types/action-response";
 
+type RetainedDashboardData = DashboardDesktopData | DashboardCashFlowTrend;
+type DashboardSlot = DashboardDesktopInput["tab"] | "trend-6" | "trend-12";
+const dashboardSlots: readonly DashboardSlot[] = [
+  "approvals",
+  "budget",
+  "cash",
+  "materials",
+  "trend-6",
+  "trend-12",
+];
+const dashboardQuerySchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("table"), input: dashboardDesktopInputSchema }),
+  z.object({ kind: z.literal("trend"), months: z.union([z.literal(6), z.literal(12)]) }),
+]);
+async function readDashboardQuery(key: string): Promise<ActionResponse<RetainedDashboardData>> {
+  const request = dashboardQuerySchema.parse(JSON.parse(key));
+  return request.kind === "trend"
+    ? readDesktopCashFlow(request.months)
+    : readDesktopDashboard(request.input);
+}
+
+export type DesktopDashboardTrendQuery = {
+  readonly months: 6 | 12;
+  readonly data: DashboardCashFlowTrend | null;
+  readonly loading: boolean;
+  readonly error: string | null;
+  readonly change: (value: string) => void;
+  readonly reload: () => void;
+};
 export type DesktopDashboardQuery = {
   readonly input: DashboardDesktopInput;
   readonly data: DashboardDesktopData | null;
   readonly loading: boolean;
   readonly error: string | null;
+  readonly restricted: boolean;
   readonly update: (patch: Partial<DashboardDesktopInput>) => void;
   readonly reload: () => void;
+  readonly trend: DesktopDashboardTrendQuery;
 };
-export function useDesktopDashboardData(tab: DashboardPageTab, stamp: Date): DesktopDashboardQuery {
+export function useDesktopDashboardData(
+  tab: DashboardPageTab,
+  stamp: Date,
+  options: { readonly generation?: object | string | number; readonly suspended?: boolean } = {},
+): DesktopDashboardQuery {
   const desktop = useWorkspacePresentation() === "desktop";
+  const can = useCan();
+  const user = useCurrentUserProfile();
+  const permissions = usePermissions();
+  const globalAccess = can("view:ledger") && user?.dataScope === "GLOBAL";
+  const allowed =
+    globalAccess &&
+    (tab === "approvals"
+      ? can("view:approval_queue")
+      : tab === "budget"
+        ? can("view:budget")
+        : tab === "materials"
+          ? can("view:inventory")
+          : true);
+  const fingerprint = JSON.stringify([
+    user?.id,
+    user?.sessionId,
+    user?.dataScope,
+    [...permissions].sort(),
+  ]);
+  const sourceGeneration = options.generation ?? stamp.toISOString();
+  const generation = React.useMemo(
+    () => ({ sourceGeneration, fingerprint }),
+    [sourceGeneration, fingerprint],
+  );
   const page = useBrowserUrlSearchParam(`${tab}-page`),
     size = useBrowserUrlSearchParam(`${tab}-pageSize`),
     search = useBrowserUrlSearchParam(`${tab}-search`),
@@ -28,6 +96,7 @@ export function useDesktopDashboardData(tab: DashboardPageTab, stamp: Date): Des
     bucket = useBrowserUrlSearchParam(`${tab}-bucket`),
     sort = useBrowserUrlSearchParam(`${tab}-sort`),
     direction = useBrowserUrlSearchParam(`${tab}-direction`);
+  const months = useBrowserUrlSearchParam("trendMonths") === "12" ? 12 : 6;
   const tableTab = tab === "approvals" || tab === "cash" || tab === "materials" ? tab : "budget";
   const parsed = dashboardDesktopInputSchema.safeParse({
     tab: tableTab,
@@ -40,44 +109,21 @@ export function useDesktopDashboardData(tab: DashboardPageTab, stamp: Date): Des
     direction: direction ?? "ascending",
   });
   const input = parsed.success ? parsed.data : dashboardDesktopInputSchema.parse({ tab: tableTab });
-  const key = JSON.stringify(input),
-    enabled = desktop && tab !== "overview" && tab !== "accounts";
-  const [revision, setRevision] = React.useState(0);
-  const [state, setState] = React.useState<{
-    key: string;
-    data: DashboardDesktopData | null;
-    error: string | null;
-    loading: boolean;
-  }>({ key: "", data: null, error: null, loading: true });
-  const generatedAt = stamp.toISOString();
-  const requestKey = `${key}:${generatedAt}:${revision}`;
-  React.useEffect(() => {
-    if (!enabled) return;
-    let current = true;
-    const request: DashboardDesktopInput = dashboardDesktopInputSchema.parse(JSON.parse(key));
-    void readDesktopDashboard(request)
-      .then((result) => {
-        if (!current) return;
-        setState({
-          key: requestKey,
-          data: result.success ? result.data : null,
-          error: result.success ? null : result.error.message,
-          loading: false,
-        });
-      })
-      .catch(() => {
-        if (current)
-          setState({
-            key: requestKey,
-            data: null,
-            error: "Daftar belum dapat dimuat. Coba lagi.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [enabled, key, requestKey]);
+  const overview = tab === "overview";
+  const enabled = desktop && tab !== "accounts" && allowed;
+  const slot: DashboardSlot = overview ? (months === 12 ? "trend-12" : "trend-6") : tableTab;
+  const query = useRetainedQueryPages<DashboardSlot, RetainedDashboardData>({
+    slots: dashboardSlots,
+    slot,
+    queryKey: JSON.stringify(overview ? { kind: "trend", months } : { kind: "table", input }),
+    generation,
+    enabled,
+    suspended: options.suspended,
+    read: readDashboardQuery,
+    errorMessage: overview
+      ? "Tren kas belum dapat dimuat."
+      : "Daftar belum dapat dimuat. Coba lagi.",
+  });
   const update = (patch: Partial<DashboardDesktopInput>): void => {
     const url = new URL(window.location.href);
     for (const [field, value] of Object.entries({ ...patch, page: patch.page ?? 1 }))
@@ -86,70 +132,33 @@ export function useDesktopDashboardData(tab: DashboardPageTab, stamp: Date): Des
   };
   return {
     input,
-    data: state.key === requestKey ? state.data : null,
-    loading: enabled && state.key !== requestKey,
-    error: state.key === requestKey ? state.error : null,
+    data:
+      allowed && query.data && "tab" in query.data && query.data.tab === tableTab
+        ? query.data
+        : null,
+    loading: enabled && !overview && query.loading,
+    error: !allowed
+      ? "Izin untuk membuka bagian Dashboard ini tidak tersedia."
+      : !overview
+        ? query.error
+        : null,
+    restricted: !allowed,
     update,
-    reload: () => setRevision((v) => v + 1),
-  };
-}
-
-export function useDashboardCashFlow(stamp: Date): {
-  readonly months: 6 | 12;
-  readonly data: DashboardCashFlowTrend | null;
-  readonly loading: boolean;
-  readonly error: string | null;
-  readonly change: (value: string) => void;
-  readonly reload: () => void;
-} {
-  const months = useBrowserUrlSearchParam("trendMonths") === "12" ? 12 : 6;
-  const [revision, setRevision] = React.useState(0);
-  const [state, setState] = React.useState<{
-    requestKey: string;
-    months: 6 | 12;
-    data: DashboardCashFlowTrend | null;
-    loading: boolean;
-    error: string | null;
-  }>({ requestKey: "", months, data: null, loading: true, error: null });
-  const generatedAt = stamp.toISOString();
-  const requestKey = `${months}:${generatedAt}:${revision}`;
-  React.useEffect(() => {
-    let current = true;
-    void readDesktopCashFlow(months)
-      .then((result) => {
-        if (current)
-          setState({
-            requestKey,
-            months,
-            data: result.success ? result.data : null,
-            loading: false,
-            error: result.success ? null : result.error.message,
-          });
-      })
-      .catch(() => {
-        if (current)
-          setState({
-            requestKey,
-            months,
-            data: null,
-            loading: false,
-            error: "Tren kas belum dapat dimuat.",
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [months, requestKey]);
-  return {
-    months,
-    data: state.requestKey === requestKey ? state.data : null,
-    loading: state.requestKey !== requestKey,
-    error: state.requestKey === requestKey ? state.error : null,
-    change: (value: string): void => {
-      const url = new URL(window.location.href);
-      url.searchParams.set("trendMonths", value === "12" ? "12" : "6");
-      updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
+    reload: query.reload,
+    trend: {
+      months,
+      data:
+        allowed && query.data && "months" in query.data && query.data.months === months
+          ? query.data
+          : null,
+      loading: enabled && overview && query.loading,
+      error: overview ? query.error : null,
+      change: (value: string): void => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("trendMonths", value === "12" ? "12" : "6");
+        updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
+      },
+      reload: query.reload,
     },
-    reload: () => setRevision((v) => v + 1),
   };
 }

@@ -17,6 +17,8 @@ import { EditProfileSheet } from "./edit-profile-sheet";
 type ProfileActions = {
   readonly openEditProfile: () => void;
   readonly openChangePassword: () => void;
+  readonly identityReturnFocusRef: React.RefObject<HTMLElement | null>;
+  readonly securityReturnFocusRef: React.RefObject<HTMLElement | null>;
 };
 
 const ProfileActionsContext = React.createContext<ProfileActions | null>(null);
@@ -51,9 +53,13 @@ export function ProfileActionsProvider({
    */
   const [editSession, setEditSession] = React.useState(0);
   const [passwordSession, setPasswordSession] = React.useState(0);
+  const identityReturnFocusRef = React.useRef<HTMLElement | null>(null);
+  const securityReturnFocusRef = React.useRef<HTMLElement | null>(null);
 
   const actions = React.useMemo<ProfileActions>(
     () => ({
+      identityReturnFocusRef,
+      securityReturnFocusRef,
       openEditProfile: () => {
         setEditSession((current) => current + 1);
         setOpenSheet("edit");
@@ -78,11 +84,13 @@ export function ProfileActionsProvider({
         imageUrl={imageUrl}
         initials={initials}
         onClose={close}
+        returnFocusRef={identityReturnFocusRef}
       />
       <ChangePasswordSheet
         key={`password-${passwordSession}`}
         open={openSheet === "password"}
         onClose={close}
+        returnFocusRef={securityReturnFocusRef}
       />
     </ProfileActionsContext.Provider>
   );

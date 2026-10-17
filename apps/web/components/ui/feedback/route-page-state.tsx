@@ -22,10 +22,7 @@ export function RoutePageError({
   readonly error?: Error & { readonly digest?: string };
   readonly reset: () => void;
 }): React.JSX.Element | null {
-  if (
-    error?.digest?.startsWith("NEXT_REDIRECT") ||
-    error?.message?.includes("NEXT_REDIRECT")
-  ) {
+  if (error?.digest?.startsWith("NEXT_REDIRECT") || error?.message?.includes("NEXT_REDIRECT")) {
     return null;
   }
 

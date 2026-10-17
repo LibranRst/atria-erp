@@ -325,40 +325,59 @@ export async function optimizeLogoDataUrl(
   dataUrl: string,
   maxWidth = 400,
   maxHeight = 160,
+  signal?: AbortSignal,
 ): Promise<string> {
-  if (
-    typeof window === "undefined" ||
-    !dataUrl ||
-    dataUrl.startsWith("data:image/svg+xml") ||
-    !dataUrl.startsWith("data:image/")
-  ) {
+  if (typeof window === "undefined" || !dataUrl || !dataUrl.startsWith("data:image/")) {
     return dataUrl;
   }
-  return new Promise((resolve) => {
+  if (signal?.aborted) throw new DOMException("Pembacaan logo dibatalkan.", "AbortError");
+  const requiresPng = /^data:image\/(?:svg\+xml|webp)(?:;|,)/i.test(dataUrl);
+  return new Promise((resolve, reject): void => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      let { width, height } = img;
-      if (width <= maxWidth && height <= maxHeight) {
-        resolve(dataUrl);
-        return;
-      }
-      const ratio = Math.min(maxWidth / width, maxHeight / height);
-      width = Math.round(width * ratio);
-      height = Math.round(height * ratio);
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        resolve(dataUrl);
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/png", 0.9));
+    const cleanup = (): void => {
+      img.onload = null;
+      img.onerror = null;
+      signal?.removeEventListener("abort", abort);
     };
-    img.onerror = () => resolve(dataUrl);
+    const abort = (): void => {
+      cleanup();
+      img.src = "";
+      reject(new DOMException("Pembacaan logo dibatalkan.", "AbortError"));
+    };
+    img.crossOrigin = "anonymous";
+    img.onload = (): void => {
+      try {
+        let { width, height } = img;
+        if (width <= 0 || height <= 0) throw new Error("Ukuran logo tidak valid.");
+        if (!requiresPng && width <= maxWidth && height <= maxHeight) {
+          cleanup();
+          resolve(dataUrl);
+          return;
+        }
+        const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+        width = Math.max(1, Math.round(width * ratio));
+        height = Math.max(1, Math.round(height * ratio));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Logo belum dapat diproses di peramban ini.");
+        // Keep the transparent canvas; every accepted vector/WebP becomes a stored,
+        // workbook-compatible PNG instead of silently losing its image on reload.
+        ctx.drawImage(img, 0, 0, width, height);
+        const normalized = canvas.toDataURL("image/png");
+        cleanup();
+        resolve(normalized);
+      } catch (error: unknown) {
+        cleanup();
+        reject(error);
+      }
+    };
+    img.onerror = (): void => {
+      cleanup();
+      reject(new Error("Logo tidak dapat dibaca. Pilih gambar yang valid."));
+    };
+    signal?.addEventListener("abort", abort, { once: true });
     img.src = dataUrl;
   });
 }
@@ -403,7 +422,10 @@ export async function buildRabStyledWorkbook(
 
   // Embed logo image in Excel if user uploaded a PNG/JPEG logo
   if (cfg.logoType === "image" && cfg.logoDataUrl) {
-    const match = cfg.logoDataUrl.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
+    const logoDataUrl = /^data:image\/(?:svg\+xml|webp)(?:;|,)/i.test(cfg.logoDataUrl)
+      ? await optimizeLogoDataUrl(cfg.logoDataUrl)
+      : cfg.logoDataUrl;
+    const match = logoDataUrl.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
     if (match && match[2]) {
       try {
         const ext = match[1] === "jpg" ? "jpeg" : (match[1] as "png" | "jpeg");

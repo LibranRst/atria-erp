@@ -21,17 +21,19 @@ Quick start selesai saat proyek Draft nyata berhasil dibuat. Membuka `/onboardin
 Dashboard menampilkan kartu kesiapan organisasi selama masih ada requirement wajib yang belum terpenuhi. View permanennya berada di **Pengaturan → Kesiapan** (`/settings?tab=readiness`).
 
 ### Requirement Wajib:
+
 - **Tim Inti**: Akun aktif Finance Admin, Project Manager, dan Purchasing.
 - **Rekening Perusahaan**: Minimal satu rekening bank/kas perusahaan aktif dengan saldo awal.
 - **Fondasi Material**: Minimal satu lokasi gudang dan satu Material Master aktif.
 - **Keputusan Saldo Awal Stok**: Batch stok fisik awal sudah disetujui & diposting (maker-checker flow) atau Owner/Purchasing menyatakan tidak ada stok lama.
 
 ### Data yang Direkomendasikan:
+
 - **Vendor Master**: Pemasok bahan baku dan subkontraktor spesialis.
 - **Library Item & Harga**: Template harga komponen RAP dan RAB klien.
-*(Vendor dan Library tidak mengurangi persentase kesiapan wajib).*
+  _(Vendor dan Library tidak mengurangi persentase kesiapan wajib)._
 
-CTA bersifat *role-aware*: Owner mengelola keseluruhan, Finance meninjau saldo awal/rekening sesuai izin, Purchasing mengelola material dan stok, sedangkan peran tanpa izin hanya membaca status.
+CTA bersifat _role-aware_: Owner mengelola keseluruhan, Finance meninjau saldo awal/rekening sesuai izin, Purchasing mengelola material dan stok, sedangkan peran tanpa izin hanya membaca status.
 
 ## 3. Guard Operasional
 
@@ -43,7 +45,7 @@ CTA bersifat *role-aware*: Owner mengelola keseluruhan, Finance meninjau saldo a
 ## 4. UAT Minimum First-Run
 
 - Jalankan fresh install pada viewport mobile 320, 360, 390, dan 430 px.
-- Uji jeda/lanjutkan (*pause & resume*) pada langkah default finansial dan proyek pertama.
+- Uji jeda/lanjutkan (_pause & resume_) pada langkah default finansial dan proyek pertama.
 - Pastikan nilai project & RAB disetujui wajib positif dan klien wajib dipilih/dibuat.
 - Klik ganda saat pembuatan proyek tidak boleh membuat proyek duplikat (idempotent guard).
 - Verifikasi kartu Dashboard hilang setelah seluruh requirement wajib siap, sementara tab Pengaturan tetap dapat diakses untuk evaluasi berkala.

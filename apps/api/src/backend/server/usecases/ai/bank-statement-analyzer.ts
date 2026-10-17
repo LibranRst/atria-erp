@@ -186,7 +186,9 @@ export function parseCurrencyNumber(val: unknown): number | null {
     clean = clean.replace(",", ".");
   }
 
-  const num = Number(clean.replace(/[^\d.-]/g, ""));
+  clean = clean.replace(/\s+/g, "");
+  if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(clean)) return null;
+  const num = Number(clean);
   return Number.isFinite(num) ? num : null;
 }
 
@@ -410,8 +412,25 @@ export function tryParseGenericBankTabular(
     const row = rawRows[i];
     if (!row || !Array.isArray(row)) continue;
 
+    if (row.every((cell) => String(cell ?? "").trim() === "")) continue;
+    const sourceRow = i + 1;
+    const invalid = (message: string): never => {
+      throw new Error(`Baris ${sourceRow}: ${message}`);
+    };
     const rawDateVal = String(row[colDate] ?? "").trim();
-    if (!rawDateVal) continue;
+    const header = rawRows[headerIndex] ?? [];
+    if (
+      [colDate, colDesc].every(
+        (column) =>
+          String(row[column] ?? "")
+            .trim()
+            .toLowerCase() ===
+          String(header[column] ?? "")
+            .trim()
+            .toLowerCase(),
+      )
+    )
+      continue;
 
     // Abaikan baris ringkasan di bawah tabel (contoh: Total, Saldo Awal, Saldo Akhir)
     const lowerRawDate = rawDateVal.toLowerCase();
@@ -424,7 +443,8 @@ export function tryParseGenericBankTabular(
     }
 
     const rawDesc = String(row[colDesc] ?? "").trim();
-    if (!rawDesc) continue;
+    if (!rawDateVal) invalid("tanggal mutasi belum diisi.");
+    if (!rawDesc) invalid("deskripsi mutasi belum diisi.");
 
     let amount = 0;
     let type: "INFLOW" | "OUTFLOW" = "INFLOW";
@@ -433,6 +453,17 @@ export function tryParseGenericBankTabular(
     if (colInflow !== -1 && colOutflow !== -1) {
       const inVal = parseCurrencyNumber(row[colInflow]);
       const outVal = parseCurrencyNumber(row[colOutflow]);
+      const absent = (value: unknown): boolean =>
+        ["", "-", "--"].includes(String(value ?? "").trim());
+      if (
+        (!absent(row[colInflow]) && inVal === null) ||
+        (!absent(row[colOutflow]) && outVal === null)
+      )
+        invalid("nominal debit atau kredit tidak valid.");
+      if ((inVal !== null && inVal < 0) || (outVal !== null && outVal < 0))
+        invalid("kolom debit/kredit harus berisi nominal positif.");
+      if (inVal && inVal > 0 && outVal && outVal > 0)
+        invalid("isi tepat satu nominal debit atau kredit, bukan keduanya.");
 
       if (inVal && inVal > 0) {
         amount = inVal;
@@ -464,6 +495,10 @@ export function tryParseGenericBankTabular(
           ) {
             type = "OUTFLOW";
           } else {
+            if (typeStr)
+              invalid(
+                `arah dana “${typeStr}” tidak dikenali. Gunakan arah masuk atau keluar yang jelas.`,
+              );
             type = amtVal >= 0 ? "INFLOW" : "OUTFLOW";
           }
         } else {
@@ -472,15 +507,29 @@ export function tryParseGenericBankTabular(
       }
     }
 
-    if (hasValidAmount && amount > 0) {
-      parsedRows.push({
-        rowNumber: parsedRows.length + 1,
-        transactionDate: normalizeDateToIso(rawDateVal),
-        description: rawDesc,
-        amount,
-        type,
-      });
-    }
+    if (!hasValidAmount || amount <= 0)
+      invalid("nominal mutasi harus lebih dari nol dan dapat dibaca.");
+    const transactionDate = ((): string => {
+      try {
+        return normalizeDateToIso(rawDateVal);
+      } catch {
+        return invalid("tanggal mutasi tidak dapat dibaca.");
+      }
+    })();
+    const validation = statementMutationSchema.safeParse({
+      transactionDate,
+      description: rawDesc,
+      amount,
+      type,
+    });
+    if (!validation.success) invalid("periksa tanggal, deskripsi, nominal, dan arah mutasi.");
+    parsedRows.push({
+      rowNumber: sourceRow,
+      transactionDate,
+      description: rawDesc,
+      amount,
+      type,
+    });
   }
 
   if (parsedRows.length === 0) return null;

@@ -1,6 +1,6 @@
 import { roleNameHasPermission } from "@backend/lib/auth/role-access";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { getMaterialInventory } from "@backend/app/actions/material/inventory";
 import { getSessionUser } from "@backend/app/actions/material/inventory-utils";
@@ -10,7 +10,12 @@ import type {
   InventoryOpeningBatchView,
 } from "@backend/app/actions/material/opening-inventory-types";
 import { db } from "@backend/db";
-import { inventoryOpeningBatch } from "@backend/db/schema";
+import {
+  inventoryOpeningBatch,
+  inventoryOpeningItem,
+  stockMovement,
+  INSTANCE_TENANT_ID,
+} from "@backend/db/schema";
 import { assertPermission, resolveRoleName } from "@backend/lib/auth/permissions";
 import { getOpeningInventoryIneligibleReason } from "@atria/core/material/opening-inventory-eligibility";
 import type { ActionResponse } from "@atria/core/types/action-response";
@@ -23,12 +28,21 @@ export async function getInitialStockCandidates(): Promise<
   if (!inventory.success) return inventory;
   const [movements, pendingBatches] = await Promise.all([
     db.query.stockMovement.findMany({
+      where: eq(stockMovement.tenantId, INSTANCE_TENANT_ID),
       columns: { materialId: true, inventoryLocationId: true },
     }),
     db.query.inventoryOpeningBatch.findMany({
-      where: eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+      where: and(
+        eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
+        eq(inventoryOpeningBatch.status, "PENDING_APPROVAL"),
+      ),
       columns: { id: true },
-      with: { items: { columns: { materialInventoryId: true } } },
+      with: {
+        items: {
+          where: eq(inventoryOpeningItem.tenantId, INSTANCE_TENANT_ID),
+          columns: { materialInventoryId: true },
+        },
+      },
     }),
   ]);
   const moved = new Set(movements.map((row) => `${row.materialId}:${row.inventoryLocationId}`));
@@ -122,6 +136,7 @@ export async function previewInitialStockImport(
       materialInventoryId: match.inventoryId,
       materialName: match.materialName,
       locationName: match.locationName,
+      unit: match.unit,
       quantity: row.quantity,
       unitCost: row.unitCost,
     });
@@ -138,22 +153,25 @@ export async function getInventoryOpeningBatches(): Promise<
   const roleName = await resolveRoleName(session.data.user.roleId);
   const canReverse = await roleNameHasPermission(roleName, "reverse:opening_inventory");
   const rows = await db.query.inventoryOpeningBatch.findMany({
+    where: eq(inventoryOpeningBatch.tenantId, INSTANCE_TENANT_ID),
     with: {
       requestedBy: { columns: { name: true } },
       approvedBy: { columns: { name: true } },
       reversedBy: { columns: { name: true } },
       items: {
+        where: eq(inventoryOpeningItem.tenantId, INSTANCE_TENANT_ID),
         with: {
           inventory: {
             columns: {
               id: true,
+              tenantId: true,
               currentStock: true,
               reservedStock: true,
               averageCost: true,
             },
             with: {
-              material: { columns: { name: true, unit: true } },
-              location: { columns: { name: true } },
+              material: { columns: { name: true, unit: true, tenantId: true } },
+              location: { columns: { name: true, tenantId: true } },
             },
           },
         },
@@ -165,26 +183,33 @@ export async function getInventoryOpeningBatches(): Promise<
     success: true,
     data: rows.map((row) => {
       const { requestedBy, approvedBy, reversedBy, items: openingItems, ...batch } = row;
-      const items = openingItems.map((item) => {
-        const quantity = Number(item.quantity);
-        const unitCost = Number(item.unitCost);
-        return {
-          id: item.id,
-          materialInventoryId: item.materialInventoryId,
-          materialName: item.inventory.material.name,
-          locationName: item.inventory.location.name,
-          unit: item.inventory.material.unit,
-          quantity,
-          unitCost,
-          totalValue: quantity * unitCost,
-          currentStock: Number(item.inventory.currentStock),
-          reservedStock: Number(item.inventory.reservedStock),
-          availableStock:
-            Number(item.inventory.currentStock) - Number(item.inventory.reservedStock),
-          averageCost: Number(item.inventory.averageCost),
-          stockMovementId: item.stockMovementId,
-        };
-      });
+      const items = openingItems
+        .filter(
+          (item) =>
+            item.inventory.tenantId === INSTANCE_TENANT_ID &&
+            item.inventory.material.tenantId === INSTANCE_TENANT_ID &&
+            item.inventory.location.tenantId === INSTANCE_TENANT_ID,
+        )
+        .map((item) => {
+          const quantity = Number(item.quantity);
+          const unitCost = Number(item.unitCost);
+          return {
+            id: item.id,
+            materialInventoryId: item.materialInventoryId,
+            materialName: item.inventory.material.name,
+            locationName: item.inventory.location.name,
+            unit: item.inventory.material.unit,
+            quantity,
+            unitCost,
+            totalValue: quantity * unitCost,
+            currentStock: Number(item.inventory.currentStock),
+            reservedStock: Number(item.inventory.reservedStock),
+            availableStock:
+              Number(item.inventory.currentStock) - Number(item.inventory.reservedStock),
+            averageCost: Number(item.inventory.averageCost),
+            stockMovementId: item.stockMovementId,
+          };
+        });
       return {
         ...batch,
         requestedByName: requestedBy.name,

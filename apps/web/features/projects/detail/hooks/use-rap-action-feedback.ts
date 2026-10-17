@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export function useRapActionFeedback(): {
@@ -12,14 +12,6 @@ export function useRapActionFeedback(): {
 } {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (success) toast.success(success);
-  }, [success]);
-
-  useEffect(() => {
-    if (error) toast.error(error);
-  }, [error]);
 
   return {
     error,

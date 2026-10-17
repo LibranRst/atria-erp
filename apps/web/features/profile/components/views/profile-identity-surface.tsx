@@ -37,57 +37,54 @@ export function ProfileIdentitySurface({
   const actions = useProfileActions();
   const desktop = useWorkspacePresentation() === "desktop";
 
-  if (desktop)
-    return (
-      <GroupedSurface aria-label="Identitas akun" className="space-y-5 p-5">
-        <div className="space-y-3">
-          <UserAvatar
-            imageUrl={imageUrl}
-            initials={initials}
-            displayName={displayName}
-            renderPx={64}
-          />
-          <div className="min-w-0">
-            <h2 className="text-title font-bold wrap-anywhere text-on-surface">{displayName}</h2>
-            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
-              {displayEmail}
-            </p>
-          </div>
+  const desktopContent = (
+    <GroupedSurface className="space-y-5 p-5">
+      <div className="space-y-3">
+        <UserAvatar
+          imageUrl={imageUrl}
+          initials={initials}
+          displayName={displayName}
+          renderPx={64}
+        />
+        <div className="min-w-0">
+          <h2 className="text-title font-bold wrap-anywhere text-on-surface">{displayName}</h2>
+          <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">{displayEmail}</p>
         </div>
-        <dl className="space-y-3 border-t border-outline-variant/20 pt-4">
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-support text-on-surface-variant">Peran</dt>
-            <dd className="text-support font-semibold text-on-surface">{roleLabel}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-support text-on-surface-variant">Status akun</dt>
-            <dd>
-              <StatusBadge
-                label={isActive ? "Aktif" : "Nonaktif"}
-                tone={isActive ? "healthy" : "critical"}
-              />
-            </dd>
-          </div>
-        </dl>
-        <p className="text-support text-on-surface-variant">
-          <span className="font-semibold text-on-surface">
-            {accessibleModuleCount} dari {moduleCount}
-          </span>{" "}
-          modul tersedia
-        </p>
-        {actions ? (
-          <Button
-            fullWidth
-            size="compact"
-            variant="primary"
-            onClick={actions.openEditProfile}
-            leadingIcon={<AppIcon name="edit" className="icon-md" />}
-          >
-            Ubah profil
-          </Button>
-        ) : null}
-      </GroupedSurface>
-    );
+      </div>
+      <dl className="space-y-3 border-t border-outline-variant/20 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <dt className="text-support text-on-surface-variant">Peran</dt>
+          <dd className="text-support font-semibold text-on-surface">{roleLabel}</dd>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <dt className="text-support text-on-surface-variant">Status akun</dt>
+          <dd>
+            <StatusBadge
+              label={isActive ? "Aktif" : "Nonaktif"}
+              tone={isActive ? "healthy" : "critical"}
+            />
+          </dd>
+        </div>
+      </dl>
+      <p className="text-support text-on-surface-variant">
+        <span className="font-semibold text-on-surface">
+          {accessibleModuleCount} dari {moduleCount}
+        </span>{" "}
+        modul tersedia
+      </p>
+      {actions ? (
+        <Button
+          fullWidth
+          size="compact"
+          variant="primary"
+          onClick={actions.openEditProfile}
+          leadingIcon={<AppIcon name="edit" className="icon-md" />}
+        >
+          Ubah profil
+        </Button>
+      ) : null}
+    </GroupedSurface>
+  );
 
   const avatar = (
     <UserAvatar
@@ -99,11 +96,8 @@ export function ProfileIdentitySurface({
     />
   );
 
-  return (
-    <section
-      aria-label="Identitas akun"
-      className="relative isolate overflow-hidden rounded-owner bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5"
-    >
+  const mobileContent = (
+    <div className="relative isolate overflow-hidden rounded-owner bg-white/90 p-4 shadow-surface ring-1 ring-ring-subtle backdrop-blur-xl max-[430px]:rounded-3xl max-[430px]:p-3.5">
       <span
         className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white"
         aria-hidden="true"
@@ -171,6 +165,17 @@ export function ProfileIdentitySurface({
           <AppIcon name="verified_user" className="icon-md leading-none" />
         </span>
       </div>
+    </div>
+  );
+
+  return (
+    <section
+      ref={actions?.identityReturnFocusRef}
+      aria-label="Identitas akun"
+      tabIndex={-1}
+      className="min-w-0 rounded-owner outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+    >
+      {desktop ? desktopContent : mobileContent}
     </section>
   );
 }

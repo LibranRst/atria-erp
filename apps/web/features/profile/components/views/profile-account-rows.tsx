@@ -43,35 +43,42 @@ export function ProfileAccountRows(): React.JSX.Element | null {
   const actions = useProfileActions();
   const desktop = useWorkspacePresentation() === "desktop";
   if (!actions) return null;
-  if (desktop)
-    return (
-      <div className="flex min-h-14 items-center justify-between gap-4 px-3.5 py-3 pointer-coarse:min-h-16">
-        <div className="min-w-0">
-          <p className="text-row font-semibold text-on-surface">Password</p>
-          <p className="mt-0.5 text-support text-on-surface-variant">
-            Perangkat lain akan keluar setelah diubah.
-          </p>
-        </div>
-        <Button size="compact" variant="secondary" onClick={actions.openChangePassword}>
-          Ganti password
-        </Button>
-      </div>
-    );
-
+  const { securityReturnFocusRef, openChangePassword, openEditProfile } = actions;
   return (
-    <>
-      <ActionRow
-        icon="edit"
-        title="Ubah profil"
-        description="Ganti foto dan nama tampilan."
-        onClick={actions.openEditProfile}
-      />
-      <ActionRow
-        icon="password"
-        title="Ganti password"
-        description="Perangkat lain akan keluar otomatis."
-        onClick={actions.openChangePassword}
-      />
-    </>
+    <section
+      ref={securityReturnFocusRef}
+      aria-label="Keamanan akun"
+      tabIndex={-1}
+      className="min-w-0 divide-y divide-outline-variant/20 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+    >
+      {desktop ? (
+        <div className="flex min-h-14 items-center justify-between gap-4 px-3.5 py-3 pointer-coarse:min-h-16">
+          <div className="min-w-0">
+            <p className="text-row font-semibold text-on-surface">Password</p>
+            <p className="mt-0.5 text-support text-on-surface-variant">
+              Perangkat lain akan keluar setelah diubah.
+            </p>
+          </div>
+          <Button size="compact" variant="secondary" onClick={openChangePassword}>
+            Ganti password
+          </Button>
+        </div>
+      ) : (
+        <>
+          <ActionRow
+            icon="edit"
+            title="Ubah profil"
+            description="Ganti foto dan nama tampilan."
+            onClick={openEditProfile}
+          />
+          <ActionRow
+            icon="password"
+            title="Ganti password"
+            description="Perangkat lain akan keluar otomatis."
+            onClick={openChangePassword}
+          />
+        </>
+      )}
+    </section>
   );
 }

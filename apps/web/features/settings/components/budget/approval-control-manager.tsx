@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { updateApprovalThresholds } from "@/app/actions/settings/approval-thresholds";
 import {
+  AppIcon,
   FormField,
   FactRow,
   FormSection,
@@ -84,30 +85,60 @@ export function ApprovalControlManager({
         canManage ? <SectionAction label="Ubah ambang" onClick={() => setOpen(true)} /> : undefined
       }
     >
-      <GroupedSurface>
-        <RowGroup>
-          <InlineStateRow
-            icon="verified_user"
-            title="Ambang keputusan Owner"
-            description="Pengajuan yang mencapai nominal ini berhenti untuk diputus Owner."
-          />
-          <ThresholdRow
-            title="Pengeluaran lapangan"
-            description="Biaya yang diajukan dari lokasi proyek."
-            amount={fieldCostCents / 100}
-          />
-          <ThresholdRow
-            title="Pembayaran vendor"
-            description="Pencairan tagihan supplier dan subcon."
-            amount={vendorPaymentCents / 100}
-          />
-          <InlineStateRow
-            icon="info"
-            title="Berlaku untuk pengajuan berikutnya"
-            description="Pengajuan yang sudah menunggu keputusan tidak berpindah jalur."
-          />
-        </RowGroup>
-      </GroupedSurface>
+      {desktop ? (
+        <GroupedSurface variant="desktopPanel" className="p-4">
+          <div className="flex items-start gap-2">
+            <AppIcon name="verified_user" className="mt-0.5 icon-sm shrink-0" />
+            <p className="text-support text-on-surface-variant">
+              Pengajuan yang mencapai nominal ambang memerlukan keputusan Owner. Nol berarti setiap
+              pengajuan terkait.
+            </p>
+          </div>
+          <div className="my-4 grid grid-cols-2 divide-x divide-outline-variant/20">
+            <ThresholdRow
+              desktop
+              title="Pengeluaran lapangan"
+              description="Biaya yang diajukan dari lokasi proyek."
+              amount={fieldCostCents / 100}
+            />
+            <ThresholdRow
+              desktop
+              title="Pembayaran vendor"
+              description="Pencairan tagihan supplier dan subcon."
+              amount={vendorPaymentCents / 100}
+            />
+          </div>
+          <p className="border-t border-outline-variant/20 pt-3 text-support text-on-surface-variant">
+            Berlaku untuk pengajuan berikutnya. Pengajuan yang sudah menunggu keputusan tetap
+            memakai jalur persetujuan awal.
+          </p>
+        </GroupedSurface>
+      ) : (
+        <GroupedSurface>
+          <RowGroup>
+            <InlineStateRow
+              icon="verified_user"
+              title="Ambang keputusan Owner"
+              description="Pengajuan yang mencapai nominal ini berhenti untuk diputus Owner."
+            />
+            <ThresholdRow
+              title="Pengeluaran lapangan"
+              description="Biaya yang diajukan dari lokasi proyek."
+              amount={fieldCostCents / 100}
+            />
+            <ThresholdRow
+              title="Pembayaran vendor"
+              description="Pencairan tagihan supplier dan subcon."
+              amount={vendorPaymentCents / 100}
+            />
+            <InlineStateRow
+              icon="info"
+              title="Berlaku untuk pengajuan berikutnya"
+              description="Pengajuan yang sudah menunggu keputusan tidak berpindah jalur."
+            />
+          </RowGroup>
+        </GroupedSurface>
+      )}
 
       <OperationalFormSheet
         desktopSize="wide"
@@ -199,18 +230,41 @@ function ThresholdRow({
   title,
   description,
   amount,
+  desktop = false,
 }: {
   readonly title: string;
   readonly description: string;
   readonly amount: number;
+  readonly desktop?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3">
+    <div
+      className={
+        desktop
+          ? "flex min-w-0 flex-col gap-2 px-4 first:pl-0 last:pr-0"
+          : "flex min-h-16 min-w-0 items-center gap-3 px-3.5 py-3"
+      }
+    >
       <div className="min-w-0 flex-1">
         <p className="text-row font-bold text-on-surface">{title}</p>
-        <p className="mt-1 text-[10px] leading-[1.35] text-on-surface-variant">{description}</p>
+        <p
+          className={
+            desktop
+              ? "mt-1 text-support text-on-surface-variant"
+              : "mt-1 text-meta text-on-surface-variant"
+          }
+        >
+          {description}
+        </p>
       </div>
-      <MoneyValue amount={amount} variant="fullDynamic" align="right" className="max-w-[45%]" />
+      <MoneyValue
+        amount={amount}
+        variant="fullDynamic"
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
+        align={desktop ? "left" : "right"}
+        size={desktop ? "md" : undefined}
+        className={desktop ? undefined : "max-w-[45%]"}
+      />
     </div>
   );
 }

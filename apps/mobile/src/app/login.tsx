@@ -7,6 +7,7 @@ import { Button, FormField, FormSection, TextInput } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/providers/auth-provider";
 import { theme } from "@/theme";
+import { PadunaLogo } from "@/components/brand/paduna-logo";
 
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -37,7 +38,7 @@ export default function LoginScreen(): React.JSX.Element {
 
       await refresh();
     } catch {
-      setErrorMessage("Server Atria tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
+      setErrorMessage("Server Paduna Build tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -60,11 +61,9 @@ export default function LoginScreen(): React.JSX.Element {
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.brandMark} accessibilityLabel="Atria ERP">
-          <Text style={styles.brandLetter}>A</Text>
-        </View>
+        <PadunaLogo />
         <View style={styles.header}>
-          <Text style={styles.title}>Masuk ke Atria</Text>
+          <Text style={styles.title}>Masuk ke Paduna Build</Text>
           <Text style={styles.description}>
             Lanjutkan kontrol budget proyek, biaya, dan material dari perangkat ini.
           </Text>
@@ -125,20 +124,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.spacing.lg,
     paddingHorizontal: theme.spacing.marginMobile,
-  },
-  brandMark: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radii.icon,
-    backgroundColor: theme.colors.primary,
-  },
-  brandLetter: {
-    color: theme.colors.onPrimary,
-    fontFamily: theme.fonts.extrabold,
-    fontSize: 23,
-    lineHeight: 27,
   },
   header: { maxWidth: 360, gap: theme.spacing.xs },
   title: {

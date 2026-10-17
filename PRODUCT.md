@@ -1,4 +1,4 @@
-# Product
+# Product: Paduna Build
 
 <!-- impeccable:product-schema 1 -->
 
@@ -15,15 +15,15 @@ web
 
 ## Product Purpose
 
-Display identity: **Paduna Build**, part of Paduna. This release renames the web product while preserving the existing project-finance/material scope, technical package/auth/tenant identifiers, and company identity on client documents.
-
-Paduna Build is Dekoria's internal Project Finance & Material Control System for interior design/build work. It upgrades Dekoria's existing workbook-informed Project Budget workflow into a structured system covering project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and (deferred) owner-readable AI summaries. Success means the Owner can read financial and material position in under 30 seconds, and Finance/Purchasing/PM roles can do their category-scoped jobs without manual chat follow-up or spreadsheet reconciliation.
+Paduna Build is Paduna's Project Finance & Material Control product, developed from Dekoria's interior design/build workflows. Paduna is the selected brand name, replacing Atria for current brand work. It upgrades Dekoria's existing workbook-informed Project Budget workflow into a structured system covering project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and (deferred) owner-readable AI summaries. Success means the Owner can read financial and material position in under 30 seconds, and Finance/Purchasing/PM roles can do their category-scoped jobs without manual chat follow-up or spreadsheet reconciliation.
 
 ## Positioning
 
 **Project Budget Control upgraded into a real ERP with material stock visibility.** Dekoria can already track project value, budget, category spend, and remaining budget in a finance-spreadsheet pattern — that familiar flow is preserved, not replaced. What a generic ERP, accounting tool, or spreadsheet cannot truthfully claim: category expense tracking (especially Material) is structurally connected to RAP material planning, stock levels, reservation/use, leftover, purchase need, and margin risk — inside the same mobile-first flow field staff already use, with an immutable cash-ledger/audit trail (Option A ledger model) underneath every balance-changing action.
 
 ## Operating Context
+
+Brand and product family (selected as the main brand on 17 October 2026): **Paduna** is the umbrella brand for business operations software. **Paduna Build** names the current product in this repository and retains its existing project budget, expense, material, inventory and margin scope. **Paduna Office** is a separate planned product for broader company operations, initially informed by a prospective cable-business customer; its module scope is still to be validated. The products develop and release independently for now. Future integration is a direction, not an implemented shared platform or a commitment to one codebase/database. HR, payroll and full manufacturing/production planning are not added to Build by this branding decision. Existing Atria technical names, package names, identifiers and runtime metadata remain compatibility or rollout concerns; do not rename them automatically. Canonical brand decisions and SVGs live under `docs/brand/paduna/`; the Atria guides are historical references. The approved Temu symbol, Manrope and ink/terracotta palette carry forward. The brand name is selected; domain and trademark availability are not established by this decision.
 
 - Used by field PMs and Owners on mobile phones at project sites, and by Finance/Purchasing at desks; mobile-first is a hard requirement, desktop is supported for heavier administration only.
 - Preserves an existing lineage: `Project Budget Setup -> Expense Tracker by Category -> Budget Dashboard -> Category Usage -> Remaining Budget -> Margin Visibility`, extended with `Material category -> RAP/Material Plan -> Inventory Check -> Purchase Need -> Stock Movement -> Material Budget and Margin Risk`.
@@ -59,7 +59,7 @@ Terminology: RAP (internal execution/material plan, cost baseline once locked), 
 - An empty-DB UAT walkthrough exists at `docs/guide/financial_workflow_guide.md`.
 - Prior page/workflow audits exist under `docs/guide/*_audit_*.md` — treat as historical findings, not current state, unless corroborated by current code.
 - No production customer data, testimonials, or external case studies exist — this is a pre-launch internal tool; do not fabricate any.
-- No Dekoria brand kit (logo, brand colors, brand voice) exists beyond `app/favicon.ico`; the app's visual identity is defined entirely by its own design system (see Brand Commitments).
+- Paduna's provisional product-family naming, approved Temu identity and source SVGs are recorded under `docs/brand/paduna/`. Dekoria's company identity remains separate, including its own logo on client-facing documents.
 
 ## Product Principles
 
@@ -75,10 +75,10 @@ Field PMs and Owners use this primarily one-handed, outdoors, on phones — esta
 
 ## Brand Commitments
 
-No external Dekoria brand kit exists (no logo/brand colors/voice beyond the product's own UI). The product has, however, made a deliberate, already-adopted design commitment: the interface should feel like a premium **native iOS-style** experience (see `DESIGN.md`) — borrowing iOS visual/interaction conventions (materials, motion, control language) as the app's identity — without a distinct, diverging Android design language. The Next.js web product uses one session and canonical routes for mobile and compact desktop presentation. At >=1024px all authenticated roles receive desktop layout within their domain permissions/project scope; native fallback can retain mobile presentation. Both inherit Atria identity and business rules. The Expo client remains a separate native presentation of those rules.
+Paduna is the umbrella brand; Paduna Build is this product. The approved Temu symbol, Manrope wordmark and ink/terracotta palette carry across the product family. Product labels distinguish Build from the separately planned Paduna Office. The candidate tagline "Proyek terkendali. Kerja lebih tenang." belongs to Build and remains unconfirmed; no umbrella or Office tagline is selected. Paduna identity never replaces the user's company identity on client-facing RAB/proposal documents. The interface should feel like a premium **native iOS-style** experience (see `DESIGN.md`) — borrowing iOS visual/interaction conventions (materials, motion, control language) as the app's identity — without a distinct, diverging Android design language. The Next.js web product uses one session and canonical routes for mobile and compact desktop presentation. At >=1024px all authenticated roles receive desktop layout within their domain permissions/project scope; native fallback can retain mobile presentation. Both inherit Paduna identity and business rules. The Expo client remains a separate native presentation of those rules.
 
 ## Desktop administration
 
-The current direction is one responsive `apps/web` application, one existing web session and canonical URLs. Every authenticated role receives desktop presentation at >=1024px, with its own domain permissions and project scope unchanged. Desktop inherits Atria's Manrope, ink/terracotta and semantic surfaces while HeroUI supplies compact controls/tables through shared UI. Resize updates layout without navigating or losing drafts, selection or active dialog ownership; native browser fallback remains mobile through `surface=mobile`.
+The current direction is one responsive `apps/web` application, one existing web session and canonical URLs. Every authenticated role receives desktop presentation at >=1024px, with its own domain permissions and project scope unchanged. Desktop inherits Paduna's Manrope, ink/terracotta and semantic surfaces while HeroUI supplies compact controls/tables through shared UI. Resize updates layout without navigating or losing drafts, selection or active dialog ownership; native browser fallback remains mobile through `surface=mobile`.
 
 The first combined shell + Dashboard/Proyek/Budget slice is reviewed before remaining desktop module acceptance. The previously built standalone app is transitional and will be removed after the accepted merge; its separate cookies/default theme do not replace web's session/design. Historical desktop grants and migration records are retained without being a presentation gate. No new bulk payments/approvals, finance/material calculations or AI CFO are introduced. See `docs/plans/2026-10-06-unified-responsive-web.md`.

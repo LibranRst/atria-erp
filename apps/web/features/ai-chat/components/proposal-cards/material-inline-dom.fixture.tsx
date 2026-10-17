@@ -72,9 +72,19 @@ const selections: {
   input: ReturnType<typeof materialSelectionSchema.parse>;
   resolve: (result: ActionResponse<MaterialDraftView>) => void;
 }[] = [];
+const progressReads: {
+  readonly draftId: string;
+  readonly resolve: (result: ActionResponse<MaterialDraftView>) => void;
+}[] = [];
+let deferProgressReads = false;
 mock.module("@/app/actions/ai/material-master", () => ({
   startAiMaterialAnalysis: async () => ({ success: true, data: draft }),
-  getAiMaterialDraft: async () => ({ success: true, data: draft }),
+  getAiMaterialDraft: (input: {
+    readonly draftId: string;
+  }): Promise<ActionResponse<MaterialDraftView>> =>
+    deferProgressReads
+      ? new Promise((resolve) => progressReads.push({ draftId: input.draftId, resolve }))
+      : Promise.resolve({ success: true, data: draft }),
   patchAiMaterialDraft: async (input: unknown) => {
     patches.push(input);
     const parsed = materialPatchSchema.parse(input);
@@ -399,6 +409,109 @@ assert.deepEqual(
   draft.payload.rows.filter((row) => row.selected).map((row) => row.fields.name),
   ["Panel kedua koreksi", "Panel 3"],
 );
+
+const pollTimers: { readonly id: number; readonly tick: () => void; cleared: boolean }[] = [];
+const nativeSetInterval = window.setInterval.bind(window);
+const nativeClearInterval = window.clearInterval.bind(window);
+Object.defineProperty(window, "setInterval", {
+  configurable: true,
+  writable: true,
+  value: (handler: TimerHandler, timeout?: number, ...args: unknown[]): number => {
+    if (timeout !== 2500) return nativeSetInterval(handler, timeout, ...args);
+    assert.equal(typeof handler, "function");
+    const timer = {
+      id: 10000 + pollTimers.length,
+      tick: (): void => {
+        if (typeof handler === "function") handler(...args);
+      },
+      cleared: false,
+    };
+    pollTimers.push(timer);
+    return timer.id;
+  },
+});
+Object.defineProperty(window, "clearInterval", {
+  configurable: true,
+  writable: true,
+  value: (timerId: number | undefined): void => {
+    const timer = pollTimers.find((entry) => entry.id === timerId);
+    if (timer) timer.cleared = true;
+    else nativeClearInterval(timerId);
+  },
+});
+draft = {
+  ...draft,
+  revision: 100,
+  payload: {
+    ...draft.payload,
+    analysisStatus: "QUEUED",
+    progress: 0,
+    rows: draft.payload.rows.map((row) => ({ ...row, selected: true })),
+  },
+};
+deferProgressReads = true;
+await act(async () =>
+  root.render(<MaterialMasterProposalCard key="poll" conversationId={id} toolCallId="poll" />),
+);
+assert.equal(pollTimers.length, 1, "queued analysis starts one polling interval");
+assert.match(host.textContent ?? "", /0 baris diproses/);
+await act(async () =>
+  root.render(
+    <MaterialMasterProposalCard key="poll" conversationId={id} toolCallId="poll" isStreaming />,
+  ),
+);
+await act(async () =>
+  root.render(<MaterialMasterProposalCard key="poll" conversationId={id} toolCallId="poll" />),
+);
+assert.equal(pollTimers.length, 1, "unrelated renders preserve the polling cadence");
+await act(async () => {
+  pollTimers[0]!.tick();
+  pollTimers[0]!.tick();
+});
+assert.equal(progressReads.length, 2);
+assert.equal(progressReads[0]!.draftId, id);
+draft = {
+  ...draft,
+  revision: 101,
+  payload: { ...draft.payload, analysisStatus: "PROCESSING", progress: 1 },
+};
+await act(async () => progressReads[0]!.resolve({ success: true, data: draft }));
+assert.equal(pollTimers[0]!.cleared, true, "a status transition disposes the old interval");
+assert.equal(pollTimers.length, 2);
+assert.match(host.textContent ?? "", /1 baris diproses/);
+await act(async () =>
+  progressReads[1]!.resolve({
+    success: true,
+    data: { ...draft, revision: 102, payload: { ...draft.payload, analysisStatus: "FAILED" } },
+  }),
+);
+assert.match(
+  host.textContent ?? "",
+  /1 baris diproses/,
+  "a late response from the disposed interval is ignored",
+);
+assert.doesNotMatch(host.textContent ?? "", /Analisis perlu dicoba ulang/);
+await act(async () => pollTimers[1]!.tick());
+draft = {
+  ...draft,
+  revision: 103,
+  payload: { ...draft.payload, analysisStatus: "READY", progress: 3 },
+};
+await act(async () => progressReads[2]!.resolve({ success: true, data: draft }));
+assert.match(host.textContent ?? "", /Semua 3 material dipilih/);
+assert.equal(pollTimers[1]!.cleared, true, "ready analysis stops polling");
+assert.equal(pollTimers.filter((timer) => !timer.cleared).length, 0);
+draft = { ...draft, revision: 104, payload: { ...draft.payload, analysisStatus: "PROCESSING" } };
+await act(async () =>
+  root.render(
+    <MaterialMasterProposalCard key="poll-unmount" conversationId={id} toolCallId="poll-unmount" />,
+  ),
+);
+assert.equal(pollTimers.length, 3);
 await act(async () => root.unmount());
+assert.equal(pollTimers[2]!.cleared, true, "unmount cleans up an active polling interval");
+window.setInterval = nativeSetInterval;
+window.clearInterval = nativeClearInterval;
+assert.equal(saves.length, 0, "polling never creates business records");
 await browserWindow.happyDOM.close();
 console.log("Material inline DOM passed");

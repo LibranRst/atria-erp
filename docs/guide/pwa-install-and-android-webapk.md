@@ -10,13 +10,13 @@ manifest, ikon, atau aplikasinya.
 
 ## Ringkasan cepat
 
-| Langkah | Perintah |
-| --- | --- |
-| Buka tunnel HTTPS | `cloudflared tunnel --url http://localhost:3300` |
-| Salin host tunnelnya | mis. `https://<kata>-<kata>-<kata>.trycloudflare.com` |
-| Build produksi dengan origin tunnel (inline) | `TUNNEL=https://<host-tunnel> BETTER_AUTH_URL=$TUNNEL NEXT_PUBLIC_APP_URL=$TUNNEL bun run build` |
-| Sajikan di port 3300 dengan origin tunnel (inline) | `TUNNEL=https://<host-tunnel> BETTER_AUTH_URL=$TUNNEL PORT=3300 bun run start` |
-| Buka di ponsel | buka `https://<host-tunnel>/login` di Chrome Android |
+| Langkah                                            | Perintah                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Buka tunnel HTTPS                                  | `cloudflared tunnel --url http://localhost:3300`                                                 |
+| Salin host tunnelnya                               | mis. `https://<kata>-<kata>-<kata>.trycloudflare.com`                                            |
+| Build produksi dengan origin tunnel (inline)       | `TUNNEL=https://<host-tunnel> BETTER_AUTH_URL=$TUNNEL NEXT_PUBLIC_APP_URL=$TUNNEL bun run build` |
+| Sajikan di port 3300 dengan origin tunnel (inline) | `TUNNEL=https://<host-tunnel> BETTER_AUTH_URL=$TUNNEL PORT=3300 bun run start`                   |
+| Buka di ponsel                                     | buka `https://<host-tunnel>/login` di Chrome Android                                             |
 
 Origin tunnel diberikan sebagai **variabel shell inline**, dan **tidak pernah**
 dituliskan ke `.env`, `.env.local`, atau berkas `.env*` mana pun. Rinciannya di
@@ -25,7 +25,7 @@ bawah.
 ## Mengapa HTTPS wajib
 
 WebAPK hanya bisa dicetak dari **secure context**. Chrome menolak mencetak WebAPK
-bila origin-nya tidak aman, dan diam-diam turun ke *shortcut* biasa. Karena itu:
+bila origin-nya tidak aman, dan diam-diam turun ke _shortcut_ biasa. Karena itu:
 
 - `bun run dev` memakai `scripts/dev-lan.mjs`, yang memilih alamat LAN
   (`http://192.168.x.x:3000`). Alamat itu **tidak pernah** bisa dipakai untuk
@@ -37,7 +37,7 @@ bila origin-nya tidak aman, dan diam-diam turun ke *shortcut* biasa. Karena itu:
   komputer Anda. Karena itu perlu tunnel HTTPS.
 - `https://atria-erp.vercel.app` adalah origin produksi yang sungguhan, tetapi
   saat panduan ini ditulis ia belum menyajikan berkas PWA sama sekali — lihat
-  bagian *Perbaikan produksi yang sebenarnya* di bawah.
+  bagian _Perbaikan produksi yang sebenarnya_ di bawah.
 
 Ringkasnya: **tunnel HTTPS adalah cara membawa secure context ke ponsel.**
 
@@ -78,7 +78,7 @@ berbayar; URL acak (`--url 'https://'`) juga berbayar.
 
 ngrok paket gratis menampilkan halaman peringatan "You are about to visit…" di
 depan **trafik HTML peramban**. Dokumentasi resminya (`ERR_NGROK_6024` dan
-*Free Plan Limits*) menyebut dua cara melewatinya: mengirim header
+_Free Plan Limits_) menyebut dua cara melewatinya: mengirim header
 `ngrok-skip-browser-warning`, atau memakai User-Agent non-standar. Chrome tidak
 mengirim keduanya, dan halaman itu muncul sekali per domain (lalu ditekan cookie
 selama 7 hari).
@@ -90,15 +90,16 @@ Apakah ini merusak pemasangan PWA? Yang bisa dipastikan secara terukur:
   dengan Chrome 152 ber-UA Android pada server uji: hanya permintaan dokumen
   yang membawa `Sec-Fetch-Mode: navigate`.
 
-  | Permintaan | `Accept` | `Sec-Fetch-Dest` | `Sec-Fetch-Mode` |
-  | --- | --- | --- | --- |
-  | dokumen (`/login`) | `text/html,application/xhtml+xml,…` | `document` | `navigate` |
-  | `/manifest.webmanifest` | `*/*` | `manifest` | `cors` |
-  | `/notification-sw.js` | `*/*` | `serviceworker` | `same-origin` |
-  | `/icons/*.png` | `image/avif,image/webp,…,image/*,*/*` | `image` | `no-cors` |
+  | Permintaan              | `Accept`                              | `Sec-Fetch-Dest` | `Sec-Fetch-Mode` |
+  | ----------------------- | ------------------------------------- | ---------------- | ---------------- |
+  | dokumen (`/login`)      | `text/html,application/xhtml+xml,…`   | `document`       | `navigate`       |
+  | `/manifest.webmanifest` | `*/*`                                 | `manifest`       | `cors`           |
+  | `/notification-sw.js`   | `*/*`                                 | `serviceworker`  | `same-origin`    |
+  | `/icons/*.png`          | `image/avif,image/webp,…,image/*,*/*` | `image`          | `no-cors`        |
 
   Hanya baris pertama yang merupakan navigasi. Manifest tetap dibaca sebagai
   JSON.
+
 - Namun halaman perantara **akan** muncul saat pertama kali membuka aplikasi di
   ponsel, sebelum cookie-nya tertanam. Itu mengganggu, meski tidak mematikan
   pemasangan.
@@ -181,7 +182,7 @@ belakang tunnel.
 > **Jangan pernah menaruh origin tunnel di `.env.local`.** Itu satu-satunya cara
 > membuat jalur tunnel merusak `bun run dev`. Bila login lokal tiba-tiba gagal
 > setelah pekerjaan tunnel, periksa `.env.local` terhadap origin tunnel yang
-> tertinggal (lihat bagian *Pemecahan masalah*).
+> tertinggal (lihat bagian _Pemecahan masalah_).
 
 ## Langkah lengkap
 
@@ -323,13 +324,13 @@ dibuktikan di ponsel.
 
 ## Shortcut vs WebAPK
 
-| | Shortcut ("Add to Home screen") | WebAPK ("Install app") |
-| --- | --- | --- |
-| Launcher | ikon kecil dengan **lencana Chrome** | ikon penuh, **tanpa** lencana |
-| Toolbar | membuka di dalam tab Chrome | tanpa address bar |
-| Daftar aplikasi | tidak muncul | muncul di Settings → Apps |
-| Deep link | tidak ditangani | menangkap URL dalam `scope` |
-| Jejak paket | tidak ada | terdaftar di `chrome://webapks` |
+|                 | Shortcut ("Add to Home screen")      | WebAPK ("Install app")          |
+| --------------- | ------------------------------------ | ------------------------------- |
+| Launcher        | ikon kecil dengan **lencana Chrome** | ikon penuh, **tanpa** lencana   |
+| Toolbar         | membuka di dalam tab Chrome          | tanpa address bar               |
+| Daftar aplikasi | tidak muncul                         | muncul di Settings → Apps       |
+| Deep link       | tidak ditangani                      | menangkap URL dalam `scope`     |
+| Jejak paket     | tidak ada                            | terdaftar di `chrome://webapks` |
 
 Cara membedakan yang paling cepat ada di **menu Chrome**: buka menu, dan baca
 labelnya. `Install app` / `Pasang aplikasi` berarti Chrome siap mencetak WebAPK.
@@ -408,7 +409,7 @@ keduanya harus dibereskan:
 Setelah keduanya dibereskan, pengujian yang sama dapat dijalankan langsung
 terhadap `https://atria-erp.vercel.app` tanpa tunnel. Untuk prasyarat PWA di sisi
 produksi (VAPID, penjadwalan worker, header CDN), rujuk
-`docs/guide/vercel-deployment.md` — khususnya bagian *Prasyarat PWA dan push* —
+`docs/guide/vercel-deployment.md` — khususnya bagian _Prasyarat PWA dan push_ —
 agar isinya tidak terduplikasi di dua tempat dan tidak saling bertentangan.
 
 ## Daftar periksa pra-terbang

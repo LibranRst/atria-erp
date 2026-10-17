@@ -1,8 +1,15 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { SettingsDesktopSkeleton } from "@/features/settings/components/shared/settings-desktop-skeleton";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function SettingsLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop) return <SettingsDesktopSkeleton />;
   return (
     <div
       className="space-y-sm pb-32 max-[430px]:-mx-1 max-[430px]:pb-28 md:pb-12"

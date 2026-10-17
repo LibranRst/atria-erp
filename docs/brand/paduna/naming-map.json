@@ -1,0 +1,220 @@
+{
+  "version": "1.0.0",
+  "status": "targets-planned-not-applied",
+  "projectDisplayName": "Paduna Build",
+  "currentRepositoryDirectory": "atria-erp",
+  "targetRepository": "paduna-build",
+  "plannedOfficeRepository": "paduna-office",
+  "internalNamespaceOwnership": "Internal convention only; public scope ownership not asserted",
+  "entries": [
+    {
+      "layer": "workspace-package",
+      "path": "package.json",
+      "field": "name",
+      "current": "atria-monorepo",
+      "target": "paduna-build-workspace",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "apps/admin/package.json",
+      "field": "name",
+      "current": "@atria/admin",
+      "target": "@paduna/build-admin",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "apps/api/package.json",
+      "field": "name",
+      "current": "@atria/api",
+      "target": "@paduna/build-api",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "apps/mobile/package.json",
+      "field": "name",
+      "current": "@atria/mobile",
+      "target": "@paduna/build-mobile",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "apps/web/package.json",
+      "field": "name",
+      "current": "@atria/web",
+      "target": "@paduna/build-web",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "packages/api-client/package.json",
+      "field": "name",
+      "current": "@atria/api-client",
+      "target": "@paduna/build-api-client",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "packages/core/package.json",
+      "field": "name",
+      "current": "@atria/core",
+      "target": "@paduna/build-core",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "packages/icons/package.json",
+      "field": "name",
+      "current": "@atria/icons",
+      "target": "@paduna/icons",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "workspace-package",
+      "path": "packages/tokens/package.json",
+      "field": "name",
+      "current": "@atria/tokens",
+      "target": "@paduna/tokens",
+      "phase": "workspace-migration-planned"
+    },
+    {
+      "layer": "project",
+      "path": "render-frontend-qa.yaml",
+      "field": "repo",
+      "current": "https://github.com/LibranRst/atria-erp",
+      "target": "paduna-build (repo target; remote owner/URL to verify)",
+      "phase": "repository-rename-planned"
+    },
+    {
+      "layer": "web",
+      "path": "apps/web/app/layout.tsx",
+      "field": "title / applicationName / appleWebApp.title",
+      "current": "Atria",
+      "target": "Paduna Build",
+      "phase": "display-rollout-planned"
+    },
+    {
+      "layer": "pwa",
+      "path": "apps/web/app/manifest.ts",
+      "field": "name / short_name",
+      "current": "Atria ERP / Atria",
+      "target": "Paduna Build / Paduna Build",
+      "phase": "display-rollout-planned"
+    },
+    {
+      "layer": "pwa",
+      "path": "apps/web/app/manifest.ts",
+      "field": "id / start_url / scope",
+      "current": "each value is /",
+      "target": "preserve current values",
+      "phase": "compatibility-review"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "expo.name",
+      "current": "Atria ERP",
+      "target": "Paduna Build",
+      "phase": "display-rollout-planned"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "expo.slug",
+      "current": "atria-erp",
+      "target": "paduna-build (verify project association first)",
+      "phase": "native-migration-planned"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "expo.scheme",
+      "current": "atria",
+      "target": "padunabuild + legacy atria compatibility",
+      "phase": "auth-deeplink-migration-planned"
+    },
+    {
+      "layer": "auth",
+      "path": "apps/api/src/backend/lib/auth.ts",
+      "field": "NATIVE_ORIGINS",
+      "current": "atria://",
+      "target": "preserve legacy; add verified new scheme with client rollout",
+      "phase": "auth-deeplink-migration-planned"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "expo.ios.bundleIdentifier",
+      "current": "com.anonymous.atria-erp",
+      "target": "not decided; review distribution identity and owned domain",
+      "phase": "separate-identity-decision"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "expo.ios.icon",
+      "current": "./assets/expo.icon",
+      "target": "retain Composer project; import supplied foreground",
+      "phase": "native-asset-rollout-planned"
+    },
+    {
+      "layer": "mobile",
+      "path": "apps/mobile/app.json",
+      "field": "permission copy",
+      "current": "Izinkan Atria ...",
+      "target": "Izinkan Paduna Build ... (retain action context)",
+      "phase": "display-rollout-planned"
+    },
+    {
+      "layer": "admin-transition",
+      "path": "apps/admin/app/layout.tsx",
+      "field": "metadata title",
+      "current": "Atria Admin",
+      "target": "Paduna Build - Admin (during transition only)",
+      "phase": "display-rollout-planned"
+    },
+    {
+      "layer": "deployment-config",
+      "path": "render.yaml",
+      "field": "service name",
+      "current": "atria-pilot-api",
+      "target": "paduna-build-api (verify cloud target)",
+      "phase": "external-service-planned"
+    },
+    {
+      "layer": "deployment-config",
+      "path": "render-frontend-qa.yaml",
+      "field": "service name",
+      "current": "atria-dekoria",
+      "target": "paduna-build-web (verify tenant/deployment role)",
+      "phase": "external-service-planned"
+    },
+    {
+      "layer": "environment",
+      "path": "netlify.toml",
+      "field": "NEXT_PUBLIC_ATRIA_PILOT_MODE",
+      "current": "existing ATRIA prefix",
+      "target": "preserve until explicit per-variable mapping",
+      "phase": "compatibility-review"
+    },
+    {
+      "layer": "native-module",
+      "path": "apps/mobile/modules/atria-native-dock/expo-module.config.json",
+      "field": "module identity",
+      "current": "atria-native-dock",
+      "target": "retain until coordinated native symbol/module migration",
+      "phase": "compatibility-review"
+    }
+  ],
+  "services": ["paduna-build-web", "paduna-build-api", "paduna-build-worker"],
+  "preserveUntilMigration": [
+    "auth/session cookies and storage",
+    "ATRIA environment consumers",
+    "native identity/signing",
+    "PWA id/start_url/scope",
+    "database and audit identifiers",
+    "customer company and project names"
+  ]
+}

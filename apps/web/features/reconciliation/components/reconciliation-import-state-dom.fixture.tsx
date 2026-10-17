@@ -140,6 +140,14 @@ assert.match(summary(), /1 mutasi/);
 assert.match(summary(), /Dana masuk/);
 assert.match(summary(), /Rp 0/);
 await act(async (): Promise<void> => {
+  click("Ganti berkas");
+});
+assert.match(summary(), /Belum dibaca/, "Changing the file resets source readiness");
+assert.doesNotMatch(summary(), /0 mutasi|Dana masuk|Dana keluar/);
+assert.equal(host.querySelector('input[type="file"]')?.getAttribute("disabled"), null);
+await choose("tanggal,deskripsi,dana_masuk,dana_keluar\n2026-10-13,Pembayaran vendor,,123000\n");
+assert.match(summary(), /1 mutasi/, "A replacement file can be read through the same owner");
+await act(async (): Promise<void> => {
   const remove = host.querySelector<HTMLButtonElement>('button[title="Hapus baris ini"]');
   assert(remove);
   remove.click();

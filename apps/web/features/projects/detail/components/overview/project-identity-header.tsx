@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import { AppIcon, DetailSheet, Button, StatusBadge } from "@/components/ui";
+import type { ProjectBudgetSource } from "../../types/project-tabs-types";
 import {
   useWorkspacePresentation,
   useWorkspaceControlPresentation,
@@ -46,6 +47,7 @@ export type IdentityProject = {
 
 export function ProjectIdentityHeader({
   project,
+  budgetSource,
   effectiveHealth,
   healthReasons,
   canEdit = false,
@@ -53,6 +55,7 @@ export function ProjectIdentityHeader({
   onAssignPm,
 }: {
   readonly project: IdentityProject;
+  readonly budgetSource?: ProjectBudgetSource;
   readonly effectiveHealth: EffectiveProjectHealth;
   readonly healthReasons: readonly EffectiveProjectHealthReason[];
   readonly canEdit?: boolean;
@@ -66,9 +69,9 @@ export function ProjectIdentityHeader({
   return (
     <>
       {desktop ? (
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
+        <header className="grid min-w-0 items-start gap-3 select-text xl:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-title font-semibold tracking-tight wrap-anywhere text-on-surface">
               {project.name}
             </h1>
             <p className="mt-1 text-support text-on-surface-variant">
@@ -82,18 +85,31 @@ export function ProjectIdentityHeader({
               {project.roomArea ? ` · ${project.roomArea}` : ""}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 xl:max-w-104 xl:justify-end">
             <StatusBadge label={projectStatusLabel(project.status)} tone="neutral" />
-            <StatusBadge
-              label={projectHealthLabel(effectiveHealth)}
-              tone={
-                effectiveHealth === "CRITICAL"
-                  ? "critical"
-                  : effectiveHealth === "WARNING"
-                    ? "warning"
-                    : "healthy"
-              }
-            />
+            {budgetSource && budgetSource.status !== "ready" ? (
+              <StatusBadge
+                label={
+                  budgetSource.status === "missing"
+                    ? "Budget belum terbentuk"
+                    : budgetSource.status === "restricted"
+                      ? "Budget terbatas"
+                      : "Budget belum dimuat"
+                }
+                tone="neutral"
+              />
+            ) : (
+              <StatusBadge
+                label={projectHealthLabel(effectiveHealth)}
+                tone={
+                  effectiveHealth === "CRITICAL"
+                    ? "critical"
+                    : effectiveHealth === "WARNING"
+                      ? "warning"
+                      : "healthy"
+                }
+              />
+            )}
             {canEdit && !project.projectManager && onAssignPm ? (
               <Button size="compact" variant="secondary" onClick={onAssignPm}>
                 Tugaskan PM

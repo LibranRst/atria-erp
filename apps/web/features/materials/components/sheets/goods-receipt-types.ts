@@ -45,6 +45,7 @@ export type GoodsReceiptSheetProps = {
   readonly vendorBills: readonly GoodsReceiptVendorBillOption[];
   readonly compact?: boolean;
   readonly showTrigger?: boolean;
+  readonly onMutationComplete?: () => void;
 };
 
 export const goodsReceiptMoney = new Intl.NumberFormat("id-ID", {

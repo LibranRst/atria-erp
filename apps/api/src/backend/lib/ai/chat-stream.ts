@@ -8,7 +8,10 @@ import {
 import type { UIMessage, UIMessageChunk } from "ai";
 
 import { buildSystemPrompt } from "./prompts";
-import { shouldStopAfterFinalFollowUps } from "./chat-stop-conditions";
+import {
+  shouldStopAfterFinalFollowUps,
+  shouldStopAfterReadyProposal,
+} from "./chat-stop-conditions";
 import {
   isFallbackWorthyError,
   resolveChatModel,
@@ -18,14 +21,27 @@ import {
 import { buildAiTools } from "./tools";
 import { providerTools } from "./tool-schema-compatibility";
 import {
+  INTRODUCTION_INSTRUCTION,
+  INTRODUCTION_PART_ID,
+  IntroductionArgumentReader,
+  introductionTools,
+} from "./chat-introduction";
+import {
   generationMessages,
   initialActiveTools,
   stepActiveTools,
   freshReadActiveTools,
   successfulReadOutput,
   requiredFreshReads,
+  expectedSingleFamilyProposalTools,
 } from "./chat-context";
 import type { AiToolContext } from "./tools/context";
+import type { ChatTiming } from "./chat-timing";
+import {
+  classifyChatWorkload,
+  isLiteralOwnNameOnlyEdit,
+  selectChatStepProfile,
+} from "./chat-workload-policy";
 import type { AiPreferenceInput } from "@atria/core/validations/ai-preference";
 import { parseFinancialHistoryRequest } from "@atria/core/ai/financial-history";
 import { isExpenseStatusQuestion } from "./grounded-expenses";
@@ -73,6 +89,9 @@ export type ChatStreamInput = {
   readonly preference: AiPreferenceInput;
   readonly companyName: string;
   readonly signal?: AbortSignal;
+  readonly timing?: ChatTiming;
+  readonly hasAttachments?: boolean;
+  readonly prefilledOwnProfileName?: boolean;
   readonly onAssistantMessage: (event: {
     message: UIMessage;
     provider: ChatProviderName;
@@ -112,7 +131,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
       ? { ...message, parts: [{ type: "text" as const, text: question }] }
       : message,
   );
-  let completedGrounded:
+  let completedResponse:
     | {
         provider: ChatProviderName;
         inputTokens?: number;
@@ -120,6 +139,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
       }
     | undefined;
   let unverifiedAnswer = false;
+  let failureReported = false;
   const failureMessage = (): string =>
     unverifiedAnswer
       ? "Jawaban belum dapat diverifikasi. Coba lagi untuk membaca data terbaru."
@@ -128,21 +148,17 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         : CHAT_FAILURE_MESSAGE;
 
   const stream = createUIMessageStream({
-    ...(grounded
-      ? {
-          originalMessages: input.messages,
-          onEnd: async ({
-            responseMessage,
-            isAborted,
-          }: {
-            responseMessage: UIMessage;
-            isAborted: boolean;
-          }): Promise<void> => {
-            if (completedGrounded && !isAborted && !signal.aborted)
-              await input.onAssistantMessage({ message: responseMessage, ...completedGrounded });
-          },
-        }
-      : {}),
+    originalMessages: input.messages,
+    onEnd: async ({
+      responseMessage,
+      isAborted,
+    }: {
+      responseMessage: UIMessage;
+      isAborted: boolean;
+    }): Promise<void> => {
+      if (completedResponse && !isAborted && !signal.aborted)
+        await input.onAssistantMessage({ message: responseMessage, ...completedResponse });
+    },
     execute: async ({ writer }) => {
       signal.throwIfAborted();
       if (providers.length === 0) {
@@ -169,11 +185,19 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
         const buffered: UIMessageChunk[] = [];
         let modelHasResponded = false;
         let streamError: unknown = null;
+        let currentStep = 0;
+        let sawFatalError = false;
+        const introductionReader = new IntroductionArgumentReader();
+        const firstStepCalls = new Set<string>();
+        let streamedStep = -1;
 
         try {
-          const registered = providerTools(
-            buildAiTools({ ...input.toolContext, userQuestion: question, asOf }),
-            provider,
+          const registered = introductionTools(
+            providerTools(
+              buildAiTools({ ...input.toolContext, userQuestion: question, asOf }),
+              provider,
+            ),
+            () => currentStep === 0,
           );
           // A pure factual turn cannot execute a proposal even if the model
           // requests one after discovery. Restrict the actual execution registry.
@@ -200,7 +224,14 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
             ? available.includes("getFinancialHistory")
               ? ["getFinancialHistory"]
               : []
-            : initial;
+            : initial.filter(
+                (name) =>
+                  !(
+                    name === "getOwnProfileContext" &&
+                    input.prefilledOwnProfileName &&
+                    input.verifiedOwnProfile
+                  ),
+              );
           let requestedDiscovery = false;
           const requiredReads = (
             historical
@@ -214,14 +245,42 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 : requiredFreshReads(intentMessages, active)
           ).filter((name) => !(name === "getOwnProfileContext" && input.verifiedOwnProfile));
           let factsReady = requiredReads.length === 0;
+          const proposalTools = new Set(expectedSingleFamilyProposalTools(question, initial));
+          const literalOwnNameEdit =
+            input.prefilledOwnProfileName === true &&
+            input.verifiedOwnProfile !== undefined &&
+            !input.hasAttachments &&
+            isLiteralOwnNameOnlyEdit(question) &&
+            proposalTools.size === 1 &&
+            proposalTools.has("proposeOwnProfile");
+          const profile = literalOwnNameEdit
+            ? "simple"
+            : classifyChatWorkload({
+                question,
+                hasAttachments: input.hasAttachments,
+                activeTools: active,
+              });
+          const generationModel = resolveChatModel(provider, profile);
           const result = streamText({
             abortSignal: signal,
+            onLanguageModelCallEnd: (event): void => {
+              input.timing?.model({
+                model: event.modelId,
+                durationMs: Math.round(event.performance.responseTimeMs),
+                firstOutputMs: event.performance.timeToFirstOutputMs,
+                inputTokens: event.usage.inputTokens,
+                outputTokens: event.usage.outputTokens,
+              });
+            },
+            onToolExecutionEnd: (event): void => {
+              input.timing?.tool(event.toolCall.toolName, event.toolExecutionMs);
+            },
             // The SDK default logs provider exceptions, including request details.
             // Error propagation still reaches the handlers below.
             onError: ({ error }): void => {
               streamError = error;
             },
-            model: resolveChatModel(provider),
+            model: generationModel,
             system:
               buildSystemPrompt(
                 provider,
@@ -230,7 +289,9 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 input.preference,
                 input.companyName,
                 input.companyBudgetPolicy,
+                active,
               ) +
+              `\n${INTRODUCTION_INSTRUCTION}` +
               (input.verifiedOwnProfile
                 ? `\nPROFIL AKTUAL TERVERIFIKASI PADA PERMINTAAN INI (dibaca ulang dari database untuk akun sesi): ${JSON.stringify(input.verifiedOwnProfile)}. Gunakan snapshot ini untuk jawaban nama/foto aktual; nilai after usulan lama tidak menggantikannya. Ini pembacaan data, bukan usulan atau bukti penyimpanan.`
                 : "") +
@@ -238,7 +299,10 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 ? "\nGILIRAN PEMBACAAN FAKTA: ambil semua data terkini yang diminta melalui tool baca sesuai izin. Jawaban angka/status disusun server dari hasil tool. Jangan membuat usulan, memakai angka dari riwayat, atau memilih entitas ambigu. Bila perlu pilihan, baca kandidat lalu minta pengguna memilih."
                 : ""),
             messages: await convertToModelMessages(
-              generationMessages(input.messages, provider).map((msg) => ({
+              generationMessages(
+                literalOwnNameEdit && latestUser ? [latestUser] : input.messages,
+                provider,
+              ).map((msg) => ({
                 ...msg,
                 parts: msg.parts.filter((part) => {
                   if (part.type !== "file") return true;
@@ -272,7 +336,8 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                     return { ...toolCall, toolName: "getAvailableActions", input: "{}" };
                   }
                 : undefined,
-            prepareStep: ({ steps }) => {
+            prepareStep: ({ steps, stepNumber }) => {
+              currentStep = stepNumber;
               const called = steps.flatMap((step) => step.toolCalls.map((call) => call.toolName));
               const readResults = steps.flatMap((step) => step.toolResults);
               const successful = readResults.filter((result) =>
@@ -326,7 +391,22 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 (!requiredReads.includes("getInventoryLocations") ||
                   hasFreshInventory ||
                   successful.some((result) => result.toolName === "requestUserInput"));
+              const stepProfile =
+                provider === "NINEROUTER"
+                  ? selectChatStepProfile({
+                      profile,
+                      stepNumber,
+                      question,
+                      activeTools: active,
+                      hasAttachments: input.hasAttachments,
+                      historical,
+                    })
+                  : profile;
               return {
+                model:
+                  stepProfile === profile
+                    ? generationModel
+                    : resolveChatModel(provider, stepProfile),
                 ...(requiredRead
                   ? { toolChoice: { type: "tool" as const, toolName: requiredRead } }
                   : {}),
@@ -343,6 +423,12 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
             },
             stopWhen: [
               stepCountIs(MAX_STEPS),
+              ({ steps }) =>
+                provider === "NINEROUTER" &&
+                !grounded &&
+                (profile === "bounded" || literalOwnNameEdit) &&
+                factsReady &&
+                shouldStopAfterReadyProposal(question, steps, proposalTools),
               ({ steps }) => shouldStopAfterFinalFollowUps(steps),
               ({ steps }) =>
                 Boolean(historicalRequest?.error) &&
@@ -374,23 +460,11 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
               if (!grounded) streamError = err;
               return failureMessage();
             },
-            onEnd: async ({ responseMessage }) => {
-              if (grounded || unverifiedAnswer || !factsReady) return;
-              try {
-                const usage = await result.usage;
-                await input.onAssistantMessage({
-                  message: responseMessage,
-                  provider,
-                  inputTokens: usage?.inputTokens,
-                  outputTokens: usage?.outputTokens,
-                });
-              } catch {
-                // Abaikan jika pembacaan usage gagal saat stream terputus
-              }
-            },
           });
 
           for await (const chunk of uiStream) {
+            if (chunk.type === "start-step") streamedStep += 1;
+            if (chunk.type === "error") sawFatalError = true;
             // Emit a provider failure once through the outer stream. Forwarding
             // it here and throwing after completion would duplicate the error.
             if (grounded && chunk.type === "error")
@@ -422,7 +496,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 });
             }
             if (grounded && ["text-start", "text-delta", "text-end"].includes(chunk.type)) continue;
-            if (grounded && chunk.type === "finish") {
+            if (chunk.type === "finish") {
               finalChunk = chunk;
               continue;
             }
@@ -447,7 +521,22 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
               }
               buffered.length = 0;
             }
+            if (chunk.type === "tool-input-start" && streamedStep === 0)
+              firstStepCalls.add(chunk.toolCallId);
+            if (chunk.type === "tool-input-delta" && firstStepCalls.has(chunk.toolCallId)) {
+              const text = introductionReader.add(chunk.toolCallId, chunk.inputTextDelta);
+              if (text) {
+                writer.write({
+                  type: "data-assistant-introduction",
+                  id: INTRODUCTION_PART_ID,
+                  data: { text },
+                });
+                input.timing?.mark("first-introduction");
+              }
+            }
             writer.write(chunk);
+            if (chunk.type === "text-delta" && chunk.delta.trim())
+              input.timing?.mark("first-answer");
           }
           // SDK abort may close normally without an error chunk. A deadline must
           // still reach the client, so it never looks like an empty success.
@@ -463,6 +552,7 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
             writer.write({ type: "start-step" });
             writer.write({ type: "text-start", id: textId });
             writer.write({ type: "text-delta", id: textId, delta: answer.text });
+            input.timing?.mark("first-answer");
             writer.write({ type: "text-end", id: textId });
             writer.write({
               type: "data-grounded-facts",
@@ -471,11 +561,12 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                 sources: answer.sources,
                 coveredDomains: answer.coveredDomains,
                 missingDomains: answer.missingDomains,
+                ...(answer.cardNarratives ? { cardNarratives: answer.cardNarratives } : {}),
               },
             });
             writer.write({ type: "finish-step" });
             const usage = await result.usage;
-            completedGrounded = {
+            completedResponse = {
               provider,
               inputTokens: usage?.inputTokens,
               outputTokens: usage?.outputTokens,
@@ -484,6 +575,14 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
           } else if (!factsReady) {
             unverifiedAnswer = true;
             throw new Error("Fresh source reads incomplete");
+          } else if (!sawFatalError && !unverifiedAnswer) {
+            const usage = await result.usage;
+            completedResponse = {
+              provider,
+              inputTokens: usage?.inputTokens,
+              outputTokens: usage?.outputTokens,
+            };
+            writer.write(finalChunk ?? { type: "finish", finishReason: "stop" });
           }
           return;
         } catch (error) {
@@ -502,7 +601,11 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
       throw lastError ?? new Error("Semua penyedia AI gagal merespons.");
     },
     onError: () => {
-      console.error("AI chat stream gagal.");
+      if (!failureReported) {
+        failureReported = true;
+        input.timing?.finish("error");
+        console.error("AI chat stream gagal.");
+      }
       return failureMessage();
     },
   });

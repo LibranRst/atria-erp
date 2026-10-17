@@ -99,9 +99,9 @@ describe("short-lived upload tickets", () => {
     const ticket = signUploadTicket(input, identity, secret, 1000);
     expect(verifyUploadTicket(ticket, secret, 1001).projectId).toBe(projectId);
     for (const malformed of ["", "not-an-id", `${projectId}extra`, projectId.replace(/1$/, "z")]) {
-      expect(privateAttachmentUploadSchema.safeParse({ ...input, projectId: malformed }).success).toBe(
-        false,
-      );
+      expect(
+        privateAttachmentUploadSchema.safeParse({ ...input, projectId: malformed }).success,
+      ).toBe(false);
       expect(uploadTicketInputSchema.safeParse({ ...input, projectId: malformed }).success).toBe(
         false,
       );

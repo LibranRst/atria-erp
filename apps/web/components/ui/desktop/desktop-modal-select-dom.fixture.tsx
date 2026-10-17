@@ -254,12 +254,31 @@ const host = document.createElement("div");
 document.body.append(host);
 const root = createRoot(host);
 async function settle(): Promise<void> {
+  // Flush committed effects and focus frames without waiting for unrelated
+  // sheet entrance animations. Exit-dependent behavior is awaited explicitly.
   await act(async (): Promise<void> => {
-    await new Promise<void>((resolve) => setTimeout(resolve, 650));
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
   });
-  await act(async (): Promise<void> => {
-    await new Promise<void>((resolve) => setTimeout(resolve, 25));
-  });
+}
+async function waitFor(label: string, ready: () => boolean): Promise<void> {
+  const deadline = Date.now() + 2500;
+  while (!ready()) {
+    assert.ok(Date.now() < deadline, `Timed out waiting for ${label}`);
+    await settle();
+  }
+}
+function menuClosed(): boolean {
+  return document.querySelector('[role="listbox"], [role="menu"]') === null;
+}
+function referenceFocused(): boolean {
+  return (
+    menuClosed() &&
+    document
+      .querySelector('[aria-label="Referensi baru audit"]')
+      ?.contains(document.activeElement) === true
+  );
 }
 async function click(element: HTMLElement): Promise<void> {
   await act(async (): Promise<void> => {
@@ -371,6 +390,7 @@ try {
     "opening a nested selection keeps its parent ContextPopover open inside two sheets",
   );
   await click(option("Tukang"));
+  await waitFor("nested selection exit before toggling its parent", menuClosed);
   assert.equal(selectedValue, "tukang");
   assert.equal(
     contextTrigger.getAttribute("aria-expanded"),
@@ -399,6 +419,7 @@ try {
   );
   assert.ok(document.body.textContent?.includes("Referensi belum tersedia."));
   await click(button("Tambah referensi"));
+  await waitFor("creatable selection exit and new reference focus", referenceFocused);
   assert.equal(createCalls, 1);
   assert.equal(document.querySelectorAll('[role="dialog"]').length, 3);
   assert.equal(
@@ -417,6 +438,7 @@ try {
   );
   await type(customInput, "lembar");
   await click(option("Gunakan “lembar”"));
+  await waitFor("custom selection exit", menuClosed);
   assert.equal(selectedValue, "lembar");
   assert.ok(trigger().textContent?.includes("lembar"));
 
@@ -472,6 +494,7 @@ try {
   await click(locked);
   assert.equal(selectedValue, "");
   await click(option("Tanpa tautan"));
+  await waitFor("empty sentinel selection exit before reopening", menuClosed);
   assert.equal(
     trigger().textContent?.includes("Tanpa tautan"),
     true,
@@ -480,13 +503,17 @@ try {
   await click(trigger());
   await click(option("Tukang"));
   assert.equal(selectedValue, "tukang");
+  await waitFor("normal selection exit before reopening", menuClosed);
   await click(trigger());
   const listbox = document.querySelector('[role="listbox"]');
   assert.ok(listbox instanceof HTMLElement);
   await act(async (): Promise<void> => {
     listbox.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   });
-  await settle();
+  await waitFor(
+    "Escape menu exit and invoker focus",
+    () => menuClosed() && document.activeElement?.id === "audit-select",
+  );
   assert.equal(document.querySelectorAll('[role="listbox"]').length, 0);
   assert.equal(document.activeElement?.id, "audit-select");
   assert.equal(outerDismissals, 0);
@@ -508,6 +535,7 @@ try {
   await render("action-menu");
   await click(trigger());
   await click(option("Tambah referensi"));
+  await waitFor("action menu exit and new reference focus", referenceFocused);
   assert.equal(createCalls, 1);
   assert.equal(
     document.querySelector('[aria-label="Referensi baru audit"]')?.contains(document.activeElement),
@@ -518,6 +546,13 @@ try {
   await render("selection-dialog");
   await click(trigger());
   await click(option("Tukang"));
+  await waitFor(
+    "selection exit and confirmation focus",
+    () =>
+      menuClosed() &&
+      document.querySelector('[role="alertdialog"]')?.contains(document.activeElement) === true,
+  );
+  await settle();
   const confirmation = document.querySelector('[role="alertdialog"]');
   assert.ok(confirmation instanceof HTMLElement);
   assert.ok(confirmation.textContent?.includes("Konfirmasi perubahan"));

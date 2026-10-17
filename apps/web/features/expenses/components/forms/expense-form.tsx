@@ -59,6 +59,7 @@ interface ExpenseFormProps {
   readonly projects: ExpenseFormProject[];
   readonly inventoryLocations?: InventoryLocationOption[];
   readonly requestedDraftId?: string | null;
+  readonly entryIntent?: "manual" | "receipt";
 }
 
 export function ExpenseForm({
@@ -67,6 +68,7 @@ export function ExpenseForm({
   projects,
   inventoryLocations = [],
   requestedDraftId = null,
+  entryIntent = "manual",
 }: ExpenseFormProps): React.JSX.Element {
   const router = useRouter();
   const desktop = useWorkspacePresentation() === "desktop";
@@ -80,8 +82,29 @@ export function ExpenseForm({
   const draft = useHybridExpenseDraft(
     createBlankExpenseDraft(safeRouteProjectId),
     !requestedDraftId,
+    safeRouteProjectId || undefined,
   );
   const hydrateDraft = draft.hydrate;
+  const resetDraft = draft.reset;
+  React.useEffect((): void => {
+    if (
+      open &&
+      safeRouteProjectId &&
+      !requestedDraftId &&
+      !draft.isDirty &&
+      !draft.draftId &&
+      draft.payload.projectId !== safeRouteProjectId
+    )
+      resetDraft(createBlankExpenseDraft(safeRouteProjectId));
+  }, [
+    open,
+    safeRouteProjectId,
+    requestedDraftId,
+    draft.isDirty,
+    draft.draftId,
+    draft.payload.projectId,
+    resetDraft,
+  ]);
   const [loadedDraftId, setLoadedDraftId] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
   const [processingOcr, setProcessingOcr] = React.useState(false);
@@ -120,13 +143,22 @@ export function ExpenseForm({
         setFormError(response.error.message);
         return;
       }
+      if (safeRouteProjectId && response.data.payload.projectId !== safeRouteProjectId) {
+        setFormError(
+          "Draft berasal dari proyek lain. Buka melalui halaman Pengeluaran untuk melanjutkan.",
+        );
+        return;
+      }
       hydrateDraft(response.data);
     });
     return () => {
       cancelled = true;
     };
-  }, [hydrateDraft, open, requestedDraftId]);
+  }, [hydrateDraft, open, requestedDraftId, safeRouteProjectId]);
 
+  const projectContextMismatch = Boolean(
+    safeRouteProjectId && draft.payload.projectId !== safeRouteProjectId,
+  );
   const selectedProject = projects.find((project) => project.id === draft.payload.projectId);
   const budgetCategories =
     selectedProject?.canonicalBudgets?.[0]?.categories
@@ -145,14 +177,19 @@ export function ExpenseForm({
   const loadingDraft = Boolean(open && requestedDraftId && loadedDraftId !== requestedDraftId);
   const busy = loadingDraft || uploading || processingOcr || submitting || discarding;
   const canReview =
-    Boolean(draft.payload.projectId) && selectedProjectApproved && incompleteCount === 0;
-  const reviewDisabledReason = !draft.payload.projectId
-    ? "Pilih proyek agar kategori budget dan jalur approval dapat disiapkan."
-    : !selectedProjectApproved
-      ? "Budget proyek belum disetujui. Pengeluaran belum dapat diajukan."
-      : incompleteCount > 0
-        ? `${incompleteCount} item masih perlu dilengkapi.`
-        : undefined;
+    Boolean(draft.payload.projectId) &&
+    !projectContextMismatch &&
+    selectedProjectApproved &&
+    incompleteCount === 0;
+  const reviewDisabledReason = projectContextMismatch
+    ? "Draft berasal dari proyek lain. Lanjutkan melalui halaman Pengeluaran atau buang draft secara eksplisit."
+    : !draft.payload.projectId
+      ? "Pilih proyek agar kategori budget dan jalur approval dapat disiapkan."
+      : !selectedProjectApproved
+        ? "Budget proyek belum disetujui. Pengeluaran belum dapat diajukan."
+        : incompleteCount > 0
+          ? `${incompleteCount} item masih perlu dilengkapi.`
+          : undefined;
 
   const projectOptions = projects.map((project) => {
     const approved = project.canonicalBudgets?.[0]?.status === "APPROVED";
@@ -218,6 +255,7 @@ export function ExpenseForm({
   }
 
   function requestProjectChange(projectId: string): void {
+    if (safeRouteProjectId && projectId !== safeRouteProjectId) return;
     if (
       draft.payload.projectId &&
       draft.payload.projectId !== projectId &&
@@ -233,6 +271,12 @@ export function ExpenseForm({
     const response = await getExpenseDraft({ draftId: id });
     if (!response.success) {
       setFormError(response.error.message);
+      return;
+    }
+    if (safeRouteProjectId && response.data.payload.projectId !== safeRouteProjectId) {
+      setFormError(
+        "Draft berasal dari proyek lain. Buka melalui halaman Pengeluaran untuk melanjutkan.",
+      );
       return;
     }
     hydrateDraft(response.data);
@@ -313,7 +357,7 @@ export function ExpenseForm({
   }
 
   async function submitDraft(): Promise<void> {
-    if (submitting) return;
+    if (submitting || !canReview) return;
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setFormError("Hubungkan kembali perangkat sebelum mengajukan pengeluaran.");
       return;
@@ -356,6 +400,10 @@ export function ExpenseForm({
   }
 
   async function saveAndClose(): Promise<void> {
+    if (projectContextMismatch) {
+      closeForm();
+      return;
+    }
     const result = await draft.saveNow();
     if (!result.success && result.reason !== "offline") {
       if (result.reason === "conflict") setConflictOpen(true);
@@ -527,7 +575,9 @@ export function ExpenseForm({
             ? "Tinjau Pengeluaran"
             : requestedDraftId
               ? "Lanjutkan Draft"
-              : "Tambah Pengeluaran"
+              : entryIntent === "receipt"
+                ? "Scan nota pengeluaran"
+                : "Tambah Pengeluaran"
         }
         primaryLabel={reviewOpen ? "Ajukan" : "Tinjau"}
         secondaryLabel={reviewOpen ? "Ubah" : "Simpan"}
@@ -562,6 +612,12 @@ export function ExpenseForm({
         onSecondary={() => (reviewOpen ? setReviewOpen(false) : void saveAndClose())}
       >
         <div className="space-y-5">
+          {projectContextMismatch ? (
+            <ExpenseFormNotice tone="warning" icon="info">
+              Draft proyek lain tetap tersimpan di perangkat ini. Tutup form dan lanjutkan dari
+              halaman Pengeluaran, atau buang draft untuk mulai pada proyek ini.
+            </ExpenseFormNotice>
+          ) : null}
           {formError ? (
             <ExpenseFormNotice tone="error" icon="error">
               {formError}
@@ -595,13 +651,23 @@ export function ExpenseForm({
             />
           ) : (
             <>
+              {entryIntent === "receipt" ? (
+                <p className="px-1 text-support text-on-surface-variant">
+                  Pilih proyek, lalu unggah gambar nota untuk membaca item. Tinjau hasilnya sebelum
+                  mengajukan pengeluaran.
+                </p>
+              ) : null}
               {!reviewOpen &&
               drafts.length > 0 &&
               !requestedDraftId &&
               !loadedDraftId &&
               !draft.draftId ? (
                 <ExpenseActiveDrafts
-                  drafts={drafts}
+                  drafts={
+                    safeRouteProjectId
+                      ? drafts.filter((item) => item.projectId === safeRouteProjectId)
+                      : drafts
+                  }
                   onLoad={(id) => void loadDraft(id)}
                   onDiscard={setPendingDiscardDraftId}
                 />
@@ -617,7 +683,7 @@ export function ExpenseForm({
                 budgetCategories={budgetCategories}
                 inventoryLocations={inventoryLocations}
                 incompleteCount={incompleteCount}
-                busy={busy}
+                busy={busy || projectContextMismatch}
                 uploading={uploading}
                 processingOcr={processingOcr}
                 uploadError={uploadError}

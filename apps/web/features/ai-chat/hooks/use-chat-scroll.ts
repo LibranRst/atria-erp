@@ -83,9 +83,11 @@ export type ChatScroll = {
   readonly viewportRef: React.RefObject<HTMLDivElement | null>;
   /** Pembungkus seluruh isi; tinggi dinamisnya dipantau selama jawaban mengalir. */
   readonly contentRef: React.RefObject<HTMLDivElement | null>;
+  /** Align opened history briefly; do not opt into following a response. */
+  readonly openAtBottom: () => void;
   /** Lompat ke dasar percakapan dan aktifkan kembali pengikutan. */
   readonly jumpToBottom: () => void;
-  /** Ikuti dasar jawaban jika pengguna belum berpindah membaca riwayat. */
+  /** Follow growing content up to the newest question unless the reader opted into its end. */
   readonly followStream: (behavior?: ScrollBehavior) => void;
   /** Memasang kembali pengikutan, dipakai saat pengguna mengirim pertanyaan baru. */
   readonly resumeFollowing: () => void;
@@ -95,9 +97,11 @@ export type ChatScroll = {
 /**
  * Pengaturan gulir percakapan AI.
  *
- * Pengikutan berjalan selama pengguna berada di dasar percakapan. Gerakan
- * membaca ke atas menghentikannya sampai pengguna kembali ke dasar atau
- * menekan tombol jawaban terbaru.
+ * Respons baru mengikuti pertanyaan terbaru sampai inset baca paling atas.
+ * Membaca ke atas menghentikannya. Kembali ke dasar melalui gerakan pengguna
+ * atau tombol jawaban terbaru mengaktifkan pengikutan dasar secara eksplisit.
+ * Pembukaan riwayat hanya menyelaraskan dasar sebentar; pertumbuhan saat idle
+ * memperbarui affordance tanpa memindahkan pembaca.
  */
 export function useChatScroll(isStreaming: boolean): ChatScroll {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
@@ -132,33 +136,43 @@ export function useChatScroll(isStreaming: boolean): ChatScroll {
     });
   }, []);
   const resumeFollowing = React.useCallback(() => {
+    cancel();
     followingRef.current = true;
     followMode.current = "question";
     setAway(false);
-  }, []);
-  const jumpToBottom = React.useCallback(() => {
-    cancel();
-    resumeFollowing();
-    followMode.current = "bottom";
-    const node = viewportRef.current,
-      content = contentRef.current;
-    if (!node) return;
-    const snap = (): void => {
-      if (followingRef.current) node.scrollTop = target(node);
-    };
-    snap();
-    if (!content) return;
-    const observer = new ResizeObserver(snap);
-    observer.observe(content);
-    const timer = setTimeout(() => {
-      observer.disconnect();
-      settle.current = null;
-    }, SETTLE_WINDOW_MS);
-    settle.current = () => {
-      observer.disconnect();
-      clearTimeout(timer);
-    };
-  }, [cancel, resumeFollowing, target]);
+  }, [cancel]);
+  const alignAtBottom = React.useCallback(
+    (follow: boolean): void => {
+      cancel();
+      followingRef.current = follow;
+      followMode.current = follow ? "bottom" : "question";
+      setAway(false);
+      const node = viewportRef.current,
+        content = contentRef.current;
+      if (!node) return;
+      let active = true;
+      const snap = (): void => {
+        if (active) node.scrollTop = bottom(node);
+      };
+      snap();
+      if (!content) return;
+      const observer = new ResizeObserver(snap);
+      observer.observe(content);
+      const timer = setTimeout(() => {
+        active = false;
+        observer.disconnect();
+        settle.current = null;
+      }, SETTLE_WINDOW_MS);
+      settle.current = () => {
+        active = false;
+        observer.disconnect();
+        clearTimeout(timer);
+      };
+    },
+    [bottom, cancel],
+  );
+  const openAtBottom = React.useCallback((): void => alignAtBottom(false), [alignAtBottom]);
+  const jumpToBottom = React.useCallback((): void => alignAtBottom(true), [alignAtBottom]);
   const followStream = React.useCallback(
     (behavior: ScrollBehavior = "auto"): void => {
       if (!followingRef.current) return;
@@ -166,21 +180,27 @@ export function useChatScroll(isStreaming: boolean): ChatScroll {
       frame.current = requestAnimationFrame(() => {
         frame.current = null;
         const node = viewportRef.current;
-        if (node) node.scrollTo({ top: Math.max(node.scrollTop, target(node)), behavior });
+        if (node && followingRef.current) {
+          node.scrollTo({ top: target(node), behavior });
+          setAway(bottom(node) - node.scrollTop > FOLLOW_THRESHOLD_PX);
+        }
       });
     },
-    [cancel, target],
+    [bottom, cancel, target],
   );
   React.useEffect(() => {
     const node = viewportRef.current;
     if (!node) return;
     let touchY: number | null = null;
+    let userScrollingDown = false;
     const pause = (): void => {
+      userScrollingDown = false;
       followingRef.current = false;
       cancel();
     };
     const wheel = (event: WheelEvent): void => {
       if (isUpwardGesture(event.deltaY)) pause();
+      else if (event.deltaY > GESTURE_DEADZONE_PX) userScrollingDown = true;
     };
     const start = (event: TouchEvent): void => {
       touchY = event.touches[0]?.clientY ?? null;
@@ -188,20 +208,31 @@ export function useChatScroll(isStreaming: boolean): ChatScroll {
     const move = (event: TouchEvent): void => {
       const y = event.touches[0]?.clientY ?? null;
       if (y !== null && touchY !== null && isUpwardGesture(touchY - y)) pause();
+      else if (y !== null && touchY !== null && touchY - y > GESTURE_DEADZONE_PX)
+        userScrollingDown = true;
       touchY = y;
     };
     const key = (event: KeyboardEvent): void => {
       const origin = event.target instanceof HTMLElement ? event.target : null;
       if (isUpwardScrollKey(event.key, origin)) pause();
+      else if (
+        ["ArrowDown", "PageDown", "End"].includes(event.key) &&
+        (!origin || origin === document.body || node.contains(origin)) &&
+        (!origin ||
+          (!origin.isContentEditable && !["INPUT", "TEXTAREA", "SELECT"].includes(origin.tagName)))
+      )
+        userScrollingDown = true;
     };
     const pointer = (): void => {
-      if (isStreaming) pause();
+      // A reader interaction also cancels a pending history-opening alignment.
+      pause();
     };
     const scroll = (): void => {
       const atBottom = bottom(node) - node.scrollTop <= FOLLOW_THRESHOLD_PX;
       setAway(!atBottom);
-      if (atBottom) {
-        if (node.scrollTop - target(node) > FOLLOW_THRESHOLD_PX) followMode.current = "bottom";
+      if (atBottom && userScrollingDown) {
+        userScrollingDown = false;
+        followMode.current = "bottom";
         followingRef.current = true;
       } else if (!isStreaming) followingRef.current = false;
     };
@@ -219,17 +250,26 @@ export function useChatScroll(isStreaming: boolean): ChatScroll {
       node.removeEventListener("scroll", scroll);
       document.removeEventListener("keydown", key);
     };
-  }, [bottom, cancel, isStreaming, target]);
+  }, [bottom, cancel, isStreaming]);
   React.useEffect(() => {
     const node = viewportRef.current,
       content = contentRef.current;
     if (!node || !content) return;
     const observer = new ResizeObserver(() => {
-      if (followingRef.current) node.scrollTop = Math.max(node.scrollTop, target(node));
+      // Idle growth updates the latest-answer affordance without moving the reader.
+      if (isStreaming && followingRef.current) node.scrollTop = target(node);
       setAway(bottom(node) - node.scrollTop > FOLLOW_THRESHOLD_PX);
     });
     observer.observe(content);
     return () => observer.disconnect();
-  }, [bottom, target]);
-  return { viewportRef, contentRef, jumpToBottom, followStream, resumeFollowing, awayFromBottom };
+  }, [bottom, isStreaming, target]);
+  return {
+    viewportRef,
+    contentRef,
+    openAtBottom,
+    jumpToBottom,
+    followStream,
+    resumeFollowing,
+    awayFromBottom,
+  };
 }

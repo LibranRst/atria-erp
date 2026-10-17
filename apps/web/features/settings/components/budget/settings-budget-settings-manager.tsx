@@ -15,6 +15,8 @@ import {
   AppIcon,
   Button,
   ConfirmationDialog,
+  DesktopTable,
+  type DesktopTableColumn,
   FactRow,
   FormDisclosure,
   FormField,
@@ -310,300 +312,489 @@ export function SettingsBudgetSettingsManager({
       editingCategory.description !== editingCategoryBaseline.description),
   );
 
-  return (
-    <section className="min-w-0 space-y-sm">
-      <SettingsInverseSurface label="Ringkasan formula budget">
-        <div className="flex items-start justify-between gap-4">
+  const allocationColumns: readonly DesktopTableColumn<BudgetAllocationCategoryRow>[] = [
+    {
+      key: "category",
+      label: "Kategori",
+      render: (category) => {
+        const description = categories.find(
+          (row) => row.id === category.expenseCategoryId || row.code === category.code,
+        )?.description;
+        return (
           <div className="min-w-0">
-            <p className="text-eyebrow font-bold tracking-[0.16em] text-white/58 uppercase">
-              Batas budget internal
-            </p>
-            <p className="financial-amount mt-1 text-[34px] leading-none font-extrabold tracking-[-0.04em] text-white tabular-nums max-[430px]:text-[30px]">
-              {percent(setting.budgetCapRatio)}
-            </p>
-          </div>
-          <WorkspaceStatusLabel
-            label={canManageBudget ? "Proyek baru" : "Hanya baca"}
-            tone="inverse"
-          />
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          <div className="min-w-0 rounded-inset bg-white/8 p-3">
-            <p className="text-eyebrow font-bold tracking-[0.12em] text-white/55 uppercase">
-              Target margin
-            </p>
-            <p className="financial-amount mt-1 text-base font-extrabold text-white tabular-nums">
-              {percent(1 - setting.budgetCapRatio)}
-            </p>
-          </div>
-          <div className="min-w-0 rounded-inset bg-white/8 p-3">
-            <p className="text-eyebrow font-bold tracking-[0.12em] text-white/55 uppercase">
-              Buffer kategori
-            </p>
-            <p
-              className={`financial-amount mt-1 text-base font-extrabold tabular-nums ${overLimit ? "text-error" : "text-white"}`}
-            >
-              {overLimit ? "Melebihi batas" : percent(Math.max(0, 1 - allocation))}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3.5 rounded-inset bg-white/8 p-3 ring-1 ring-white/6">
-          <div className="flex items-center justify-between gap-3 text-meta font-medium text-white/72">
-            <span>Teralokasi {percent(allocation)}</span>
-            <span>Sisa {percent(Math.max(0, 1 - allocation))}</span>
-          </div>
-          <div
-            className="mt-2 flex h-2 overflow-hidden rounded-full bg-white/10"
-            role="img"
-            aria-label={`Alokasi kategori ${percent(allocation)}. Buffer ${percent(Math.max(0, 1 - allocation))}.`}
-          >
-            <span
-              className={overLimit ? "bg-error" : "bg-white"}
-              style={{ width: `${allocationWidth}%` }}
-            />
-            {!overLimit && bufferWidth > 0 ? (
-              <span className="bg-white/25" style={{ width: `${bufferWidth}%` }} />
-            ) : null}
-          </div>
-          {overLimit ? (
-            <p className="mt-2 flex items-center gap-1.5 text-meta font-bold text-error">
-              <AppIcon name="warning" className="icon-xs" aria-hidden="true" />
-              Total alokasi harus kembali ke 100% atau kurang.
-            </p>
-          ) : null}
-        </div>
-        <p className="mt-3 px-1 text-meta leading-[1.35] text-white/55">
-          Perubahan default hanya berlaku saat proyek baru dibuat.
-        </p>
-      </SettingsInverseSurface>
-
-      <FormDisclosure
-        title="Uji nominal proyek"
-        description="Nilai lokal, tidak disimpan."
-        icon={<AppIcon name="tune" className="icon-sm" />}
-        variant="compact"
-        expanded={simulationOpen}
-        onToggle={() => setSimulationOpen((current) => !current)}
-      >
-        <div className="pt-1">
-          <FormSection presentation="grouped">
-            <FormField
-              label="Nilai proyek simulasi"
-              htmlFor="settings-budget-simulation"
-              helper="Nilai ini hanya membantu membaca hasil rasio dalam rupiah."
-            >
-              <MoneyInput
-                id="settings-budget-simulation"
-                value={sampleValue}
-                onChange={(value) => setSampleValue(Number(value || 0))}
-              />
-            </FormField>
-            <div className="p-3">
-              <ValuePreviewStrip
-                items={[
-                  { label: "Budget internal simulasi", amount: internalBudget },
-                  { label: "Target margin simulasi", amount: targetMarginAmount },
-                  {
-                    label: "Buffer belum dialokasikan",
-                    amount: bufferAmount,
-                    tone: overLimit ? "danger" : undefined,
-                  },
-                ]}
-                lastItemFullWidth
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold">{category.name}</p>
+              <WorkspaceStatusLabel
+                label={category.isEnabled ? "Aktif" : "Nonaktif"}
+                tone={category.isEnabled ? "neutral" : "inactive"}
               />
             </div>
-          </FormSection>
-        </div>
-      </FormDisclosure>
+            {description ? (
+              <p className="mt-0.5 max-w-64 text-support text-on-surface-variant">{description}</p>
+            ) : null}
+          </div>
+        );
+      },
+    },
+    {
+      key: "ratio",
+      label: "Alokasi",
+      align: "end",
+      render: (category) => (
+        <span className="font-semibold tabular-nums">
+          {percent(category.isEnabled ? category.ratioPercentage : 0)}
+        </span>
+      ),
+    },
+    {
+      key: "simulation",
+      label: "Simulasi",
+      align: "end",
+      render: (category) => {
+        const amount = internalBudget * (category.isEnabled ? category.ratioPercentage : 0);
+        return (
+          <MoneyValue
+            amount={amount}
+            variant="fullDynamic"
+            fractionDigits={Number.isInteger(amount) ? 0 : 2}
+            size="sm"
+            align="right"
+          />
+        );
+      },
+    },
+    {
+      key: "detail",
+      label: "Rincian",
+      align: "end",
+      render: (category) => (
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          aria-label={`Buka detail kategori ${category.name}`}
+          onClick={() => openCategoryEditor(category)}
+        >
+          Detail
+        </Button>
+      ),
+    },
+  ];
 
-      <MainSection
-        title="Formula"
-        titleAction={
-          canManageBudget ? undefined : <WorkspaceStatusLabel label="Hanya baca" tone="inactive" />
-        }
-        action={
-          canManageBudget && !allocationEditing ? (
-            <SectionAction
-              label="Ubah formula"
-              onClick={() => {
-                resetFormulaDraft();
-                setFormulaOpen(true);
-              }}
+  return (
+    <section className={desktop ? "min-w-0 space-y-4" : "min-w-0 space-y-sm"}>
+      {desktop ? (
+        <GroupedSurface variant="desktopPanel" className="p-4">
+          <div className="grid grid-cols-4 divide-x divide-outline-variant/20">
+            <BudgetDefaultMetric
+              label="Batas budget internal"
+              value={percent(setting.budgetCapRatio)}
             />
-          ) : undefined
-        }
-      >
-        <GroupedSurface>
-          <RowGroup>
-            <FormulaRow label="Nama preset" value={setting.name} />
-            <FormulaRow label="Batas budget internal" value={percent(setting.budgetCapRatio)} />
-            <FormulaRow label="Target margin kotor" value={percent(1 - setting.budgetCapRatio)} />
-            <FormulaRow label="Catatan" value={setting.notes?.trim() || "Tidak ada catatan"} />
-          </RowGroup>
+            <BudgetDefaultMetric
+              label="Target margin kotor"
+              value={percent(1 - setting.budgetCapRatio)}
+            />
+            <BudgetDefaultMetric
+              label="Alokasi kategori"
+              value={percent(allocation)}
+              danger={overLimit}
+            />
+            <BudgetDefaultMetric
+              label="Buffer kategori"
+              value={overLimit ? "Melebihi batas" : percent(Math.max(0, 1 - allocation))}
+              danger={overLimit}
+            />
+          </div>
+          <p className="mt-3 flex items-start gap-2 text-support text-on-surface-variant">
+            <AppIcon name={overLimit ? "warning" : "info"} className="mt-0.5 icon-xs shrink-0" />
+            {overLimit
+              ? "Total alokasi harus kembali ke 100% atau kurang."
+              : "Default berlaku untuk proyek baru. Budget proyek yang sudah dibuat tetap memakai pengaturannya."}
+          </p>
         </GroupedSurface>
-      </MainSection>
-
-      <MainSection
-        title="Alokasi"
-        action={
-          canManageBudget ? (
-            <SectionAction
-              label={allocationEditing ? "Batal" : "Ubah alokasi"}
-              onClick={() => {
-                if (allocationEditing) cancelAllocationEdit();
-                else {
-                  setAllocationDraft(setting.categories);
-                  setAllocationError(null);
-                  setAllocationEditing(true);
-                }
-              }}
+      ) : (
+        <SettingsInverseSurface label="Ringkasan formula budget">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-eyebrow font-bold tracking-[0.16em] text-white/58 uppercase">
+                Batas budget internal
+              </p>
+              <p className="financial-amount text-display mt-1 font-extrabold text-white tabular-nums">
+                {percent(setting.budgetCapRatio)}
+              </p>
+            </div>
+            <WorkspaceStatusLabel
+              label={canManageBudget ? "Proyek baru" : "Hanya baca"}
+              tone="inverse"
             />
-          ) : undefined
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <div className="min-w-0 rounded-inset bg-white/8 p-3">
+              <p className="text-eyebrow font-bold tracking-[0.12em] text-white/55 uppercase">
+                Target margin
+              </p>
+              <p className="financial-amount mt-1 text-base font-extrabold text-white tabular-nums">
+                {percent(1 - setting.budgetCapRatio)}
+              </p>
+            </div>
+            <div className="min-w-0 rounded-inset bg-white/8 p-3">
+              <p className="text-eyebrow font-bold tracking-[0.12em] text-white/55 uppercase">
+                Buffer kategori
+              </p>
+              <p
+                className={`financial-amount mt-1 text-base font-extrabold tabular-nums ${overLimit ? "text-error" : "text-white"}`}
+              >
+                {overLimit ? "Melebihi batas" : percent(Math.max(0, 1 - allocation))}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3.5 rounded-inset bg-white/8 p-3 ring-1 ring-white/6">
+            <div className="flex items-center justify-between gap-3 text-meta font-medium text-white/72">
+              <span>Teralokasi {percent(allocation)}</span>
+              <span>Sisa {percent(Math.max(0, 1 - allocation))}</span>
+            </div>
+            <div
+              className="mt-2 flex h-2 overflow-hidden rounded-full bg-white/10"
+              role="img"
+              aria-label={`Alokasi kategori ${percent(allocation)}. Buffer ${percent(Math.max(0, 1 - allocation))}.`}
+            >
+              <span
+                className={overLimit ? "bg-error" : "bg-white"}
+                style={{ width: `${allocationWidth}%` }}
+              />
+              {!overLimit && bufferWidth > 0 ? (
+                <span className="bg-white/25" style={{ width: `${bufferWidth}%` }} />
+              ) : null}
+            </div>
+            {overLimit ? (
+              <p className="mt-2 flex items-center gap-1.5 text-meta font-bold text-error">
+                <AppIcon name="warning" className="icon-xs" aria-hidden="true" />
+                Total alokasi harus kembali ke 100% atau kurang.
+              </p>
+            ) : null}
+          </div>
+          <p className="mt-3 px-1 text-meta leading-[1.35] text-white/55">
+            Perubahan default hanya berlaku saat proyek baru dibuat.
+          </p>
+        </SettingsInverseSurface>
+      )}
+
+      <div
+        className={
+          desktop
+            ? "grid min-w-0 grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)] items-start gap-4"
+            : "flex min-w-0 flex-col gap-3"
         }
       >
-        <GroupedSurface>
-          <RowGroup>
-            {visibleCategories.map((category, index) => {
-              const enabled = category.isEnabled;
-              const categoryAmount = internalBudget * (enabled ? category.ratioPercentage : 0);
-
-              if (allocationEditing) {
-                return (
-                  <div key={category.id} className="min-w-0">
-                    <SwitchRow
-                      className="px-3.5 py-3"
-                      checked={enabled}
-                      onChange={() =>
-                        setAllocationDraft((current) =>
-                          current.map((row, rowIndex) =>
-                            rowIndex === index ? { ...row, isEnabled: !row.isEnabled } : row,
-                          ),
-                        )
-                      }
-                      title={category.name}
-                      description={
-                        enabled
-                          ? `Dialokasikan ${percent(category.ratioPercentage)}`
-                          : "Tidak ikut dalam pembagian default"
-                      }
-                      trailing={
-                        <SectionAction
-                          label="Detail"
-                          mode="text-only"
-                          onClick={() => openCategoryEditor(category)}
-                        />
-                      }
-                      switchLabel={`${enabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
+        <div
+          className={desktop ? "col-start-2 row-start-1 flex min-w-0 flex-col gap-4" : "contents"}
+        >
+          <div className={desktop ? "order-2 min-w-0" : "order-1 min-w-0"}>
+            <FormDisclosure
+              title="Uji nominal proyek"
+              description="Nilai lokal, tidak disimpan."
+              icon={<AppIcon name="tune" className="icon-sm" />}
+              variant="compact"
+              expanded={simulationOpen}
+              onToggle={() => setSimulationOpen((current) => !current)}
+            >
+              <div className="pt-1">
+                <FormSection presentation="grouped">
+                  <FormField
+                    label="Nilai proyek simulasi"
+                    htmlFor="settings-budget-simulation"
+                    helper="Nilai ini hanya membantu membaca hasil rasio dalam rupiah."
+                  >
+                    <MoneyInput
+                      id="settings-budget-simulation"
+                      value={sampleValue}
+                      onChange={(value) => setSampleValue(Number(value || 0))}
                     />
-                    {enabled ? (
-                      <div className="flex min-w-0 items-center gap-3 px-3.5 pb-3">
-                        <div className="min-w-0 flex-1">
-                          <NumericInput
-                            min={0}
-                            max={100}
-                            value={ratioToPercentInput(category.ratioPercentage)}
-                            onChange={(value) =>
+                  </FormField>
+                  <div className="p-3">
+                    <ValuePreviewStrip
+                      items={[
+                        { label: "Budget internal simulasi", amount: internalBudget },
+                        { label: "Target margin simulasi", amount: targetMarginAmount },
+                        {
+                          label: "Buffer belum dialokasikan",
+                          amount: bufferAmount,
+                          tone: overLimit ? "danger" : undefined,
+                        },
+                      ]}
+                      lastItemFullWidth
+                    />
+                  </div>
+                </FormSection>
+              </div>
+            </FormDisclosure>
+          </div>
+
+          <MainSection
+            className={desktop ? "order-1" : "order-2"}
+            title="Formula"
+            titleAction={
+              canManageBudget ? undefined : (
+                <WorkspaceStatusLabel label="Hanya baca" tone="inactive" />
+              )
+            }
+            action={
+              canManageBudget && !allocationEditing ? (
+                <SectionAction
+                  label="Ubah formula"
+                  onClick={() => {
+                    resetFormulaDraft();
+                    setFormulaOpen(true);
+                  }}
+                />
+              ) : undefined
+            }
+          >
+            <GroupedSurface variant={desktop ? "desktopPanel" : "default"}>
+              <RowGroup>
+                <FormulaRow desktop={desktop} label="Nama preset" value={setting.name} />
+                <FormulaRow
+                  desktop={desktop}
+                  label="Batas budget internal"
+                  value={percent(setting.budgetCapRatio)}
+                />
+                <FormulaRow
+                  desktop={desktop}
+                  label="Target margin kotor"
+                  value={percent(1 - setting.budgetCapRatio)}
+                />
+                <FormulaRow
+                  desktop={desktop}
+                  label="Catatan"
+                  value={setting.notes?.trim() || "Tidak ada catatan"}
+                />
+              </RowGroup>
+            </GroupedSurface>
+          </MainSection>
+        </div>
+
+        <div
+          className={desktop ? "col-start-1 row-start-1 flex min-w-0 flex-col gap-4" : "contents"}
+        >
+          <MainSection
+            className={desktop ? "min-w-0" : "order-3"}
+            title="Alokasi"
+            action={
+              canManageBudget ? (
+                <SectionAction
+                  label={allocationEditing ? "Batal" : "Ubah alokasi"}
+                  onClick={() => {
+                    if (allocationEditing) cancelAllocationEdit();
+                    else {
+                      setAllocationDraft(setting.categories);
+                      setAllocationError(null);
+                      setAllocationEditing(true);
+                    }
+                  }}
+                />
+              ) : undefined
+            }
+          >
+            {desktop && !allocationEditing ? (
+              <div className="space-y-2">
+                <div className="space-y-1 px-1">
+                  <p className="text-support text-on-surface-variant">
+                    Persentase dari budget internal. Nilai rupiah memakai simulasi proyek, bukan
+                    saldo proyek.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-support text-on-surface-variant">
+                    <span>Nilai proyek simulasi</span>
+                    <MoneyValue
+                      amount={sampleValue}
+                      variant="fullDynamic"
+                      fractionDigits={Number.isInteger(sampleValue) ? 0 : 2}
+                      size="xs"
+                    />
+                  </div>
+                </div>
+                <DesktopTable
+                  ariaLabel="Default alokasi kategori budget"
+                  columns={allocationColumns}
+                  rows={visibleCategories}
+                  rowKey={(category) => category.id}
+                  emptyTitle="Kategori alokasi belum tersedia"
+                  emptyDescription="Default kategori belum dapat ditampilkan."
+                />
+              </div>
+            ) : (
+              <GroupedSurface variant={desktop ? "desktopPanel" : "default"}>
+                <RowGroup>
+                  {visibleCategories.map((category, index) => {
+                    const enabled = category.isEnabled;
+                    const categoryAmount =
+                      internalBudget * (enabled ? category.ratioPercentage : 0);
+
+                    if (allocationEditing) {
+                      return (
+                        <div
+                          key={category.id}
+                          className={
+                            desktop
+                              ? "grid min-w-0 grid-cols-[minmax(0,1fr)_180px] items-center"
+                              : "min-w-0"
+                          }
+                        >
+                          <SwitchRow
+                            className="px-3.5 py-3"
+                            checked={enabled}
+                            onChange={() =>
                               setAllocationDraft((current) =>
                                 current.map((row, rowIndex) =>
-                                  rowIndex === index
-                                    ? {
-                                        ...row,
-                                        ratioPercentage: Number(value || 0) / 100,
-                                      }
-                                    : row,
+                                  rowIndex === index ? { ...row, isEnabled: !row.isEnabled } : row,
                                 ),
                               )
                             }
-                            suffix="%"
+                            title={category.name}
+                            description={
+                              enabled
+                                ? `Dialokasikan ${percent(category.ratioPercentage)}`
+                                : "Tidak ikut dalam pembagian default"
+                            }
+                            trailing={
+                              <SectionAction
+                                label="Detail"
+                                mode="text-only"
+                                onClick={() => openCategoryEditor(category)}
+                              />
+                            }
+                            switchLabel={`${enabled ? "Nonaktifkan" : "Aktifkan"} ${category.name}`}
                           />
+                          {enabled ? (
+                            <div
+                              className={
+                                desktop
+                                  ? "flex min-w-0 items-center gap-2 px-3.5 py-3"
+                                  : "flex min-w-0 items-center gap-3 px-3.5 pb-3"
+                              }
+                            >
+                              <div className="min-w-0 flex-1">
+                                <NumericInput
+                                  aria-label={`Alokasi ${category.name}`}
+                                  min={0}
+                                  max={100}
+                                  value={ratioToPercentInput(category.ratioPercentage)}
+                                  onChange={(value) =>
+                                    setAllocationDraft((current) =>
+                                      current.map((row, rowIndex) =>
+                                        rowIndex === index
+                                          ? {
+                                              ...row,
+                                              ratioPercentage: Number(value || 0) / 100,
+                                            }
+                                          : row,
+                                      ),
+                                    )
+                                  }
+                                  suffix="%"
+                                />
+                              </div>
+                              <span
+                                className={
+                                  desktop
+                                    ? "sr-only"
+                                    : "max-w-[42%] text-right text-meta leading-tight text-on-surface-variant"
+                                }
+                              >
+                                dari budget internal
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
-                        <span className="max-w-[42%] text-right text-meta leading-tight text-on-surface-variant">
-                          dari budget internal
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => openCategoryEditor(category)}
+                        className="flex min-h-19 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/75"
+                        aria-label={`Buka detail kategori ${category.name}`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-row font-bold text-on-surface">
+                            {category.name}
+                          </span>
+                          <span className="mt-1 block text-meta text-on-surface-variant">
+                            {enabled
+                              ? `Aktif · ${percent(category.ratioPercentage)} dari budget internal`
+                              : "Nonaktif · Tidak ikut pembagian default"}
+                          </span>
                         </span>
-                      </div>
-                    ) : null}
-                  </div>
-                );
+                        <span className="max-w-[38%] shrink-0 text-right">
+                          <span className="block text-eyebrow font-bold tracking-wide text-on-surface-variant/65 uppercase">
+                            Simulasi
+                          </span>
+                          <MoneyValue
+                            amount={categoryAmount}
+                            variant="compact"
+                            size="xs"
+                            align="right"
+                            className={enabled ? "text-on-surface" : "text-on-surface-variant/55"}
+                          />
+                        </span>
+                        <WorkspaceRowChevron />
+                      </button>
+                    );
+                  })}
+                </RowGroup>
+              </GroupedSurface>
+            )}
+          </MainSection>
+
+          {allocationEditing ? (
+            <div
+              className={
+                desktop
+                  ? "sticky bottom-4 z-10 flex min-w-0 items-center justify-between gap-4 rounded-desktop-panel bg-surface-container-lowest p-3 shadow-raised ring-1 ring-ring-subtle"
+                  : "sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-10 order-4 min-w-0 space-y-2 rounded-owner bg-white p-3 shadow-raised ring-1 ring-ring-subtle"
               }
-
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => openCategoryEditor(category)}
-                  className="flex min-h-19 w-full min-w-0 items-center gap-3 px-3.5 py-3 text-left outline-none focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/75"
-                  aria-label={`Buka detail kategori ${category.name}`}
+            >
+              {allocationError ? (
+                <p
+                  className="flex items-start gap-1.5 px-1 text-meta font-bold text-error"
+                  role="alert"
                 >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-row font-bold text-on-surface">
-                      {category.name}
-                    </span>
-                    <span className="mt-1 block text-meta text-on-surface-variant">
-                      {enabled
-                        ? `Aktif · ${percent(category.ratioPercentage)} dari budget internal`
-                        : "Nonaktif · Tidak ikut pembagian default"}
-                    </span>
-                  </span>
-                  <span className="max-w-[38%] shrink-0 text-right">
-                    <span className="block text-eyebrow font-bold tracking-wide text-on-surface-variant/65 uppercase">
-                      Simulasi
-                    </span>
-                    <MoneyValue
-                      amount={categoryAmount}
-                      variant="compact"
-                      size="xs"
-                      align="right"
-                      className={enabled ? "text-on-surface" : "text-on-surface-variant/55"}
-                    />
-                  </span>
-                  <WorkspaceRowChevron />
-                </button>
-              );
-            })}
-          </RowGroup>
-        </GroupedSurface>
-      </MainSection>
-
-      {allocationEditing ? (
-        <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-10 min-w-0 space-y-2 rounded-owner bg-white p-3 shadow-raised ring-1 ring-ring-subtle">
-          {allocationError ? (
-            <p
-              className="flex items-start gap-1.5 px-1 text-meta font-bold text-error"
-              role="alert"
-            >
-              <AppIcon name="warning" className="mt-0.5 icon-xs shrink-0" aria-hidden="true" />
-              {allocationError}
-            </p>
-          ) : (
-            <p
-              className={`flex items-center gap-1.5 px-1 text-meta ${overLimit ? "font-bold text-error" : "font-medium text-on-surface-variant"}`}
-              role={overLimit ? "alert" : "status"}
-            >
-              <AppIcon
-                name={overLimit ? "warning" : "info"}
-                className="icon-xs"
-                aria-hidden="true"
-              />
-              {overLimit
-                ? `Total ${percent(allocation)} melebihi batas 100%.`
-                : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
-            </p>
-          )}
-          <Button
-            type="button"
-            fullWidth
-            pending={allocationPending}
-            pendingLabel="Menyimpan alokasi…"
-            disabled={!allocationDirty || overLimit}
-            onClick={() => setConfirmAllocationSave(true)}
-            leadingIcon={<AppIcon name="save" className="icon-sm" />}
-          >
-            Simpan alokasi
-          </Button>
+                  <AppIcon name="warning" className="mt-0.5 icon-xs shrink-0" aria-hidden="true" />
+                  {allocationError}
+                </p>
+              ) : (
+                <p
+                  className={`flex items-center gap-1.5 px-1 text-meta ${overLimit ? "font-bold text-error" : "font-medium text-on-surface-variant"}`}
+                  role={overLimit ? "alert" : "status"}
+                >
+                  <AppIcon
+                    name={overLimit ? "warning" : "info"}
+                    className="icon-xs"
+                    aria-hidden="true"
+                  />
+                  {overLimit
+                    ? `Total ${percent(allocation)} melebihi batas 100%.`
+                    : `Teralokasi ${percent(allocation)} · Buffer ${percent(Math.max(0, 1 - allocation))}`}
+                </p>
+              )}
+              <Button
+                type="button"
+                fullWidth={!desktop}
+                pending={allocationPending}
+                pendingLabel="Menyimpan alokasi…"
+                disabled={!allocationDirty || overLimit}
+                onClick={() => setConfirmAllocationSave(true)}
+                leadingIcon={<AppIcon name="save" className="icon-sm" />}
+              >
+                Simpan alokasi
+              </Button>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
 
       <OperationalFormSheet
         desktopSize="wide"
@@ -854,16 +1045,46 @@ export function SettingsBudgetSettingsManager({
 function FormulaRow({
   label,
   value,
+  desktop = false,
 }: {
   readonly label: string;
   readonly value: string;
+  readonly desktop?: boolean;
 }): React.JSX.Element {
   return (
-    <div className="flex min-h-14 items-center justify-between gap-4 px-3.5 py-3">
+    <div
+      className={
+        desktop
+          ? "flex min-h-10 items-start justify-between gap-4 px-4 py-2.5"
+          : "flex min-h-14 items-center justify-between gap-4 px-3.5 py-3"
+      }
+    >
       <span className="shrink-0 text-support text-on-surface-variant">{label}</span>
       <span className="min-w-0 text-right text-support font-bold wrap-break-word text-on-surface">
         {value}
       </span>
+    </div>
+  );
+}
+
+function BudgetDefaultMetric({
+  label,
+  value,
+  danger = false,
+}: {
+  readonly label: string;
+  readonly value: string;
+  readonly danger?: boolean;
+}): React.JSX.Element {
+  return (
+    <div className="min-w-0 px-4 first:pl-0 last:pr-0">
+      <p className="text-support text-on-surface-variant">{label}</p>
+      <p
+        className={`mt-1 flex items-center gap-1.5 text-section font-semibold tabular-nums ${danger ? "text-error" : "text-on-surface"}`}
+      >
+        {danger ? <AppIcon name="warning" className="icon-sm shrink-0" /> : null}
+        {value}
+      </p>
     </div>
   );
 }

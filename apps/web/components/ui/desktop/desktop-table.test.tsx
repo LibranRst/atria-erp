@@ -39,6 +39,27 @@ describe("desktop HeroUI adapters", () => {
     expect(html).toContain('data-atria-variant="primary"');
   });
 
+  test("controlled context selection retains current-row and React Aria selection semantics", () => {
+    const html = renderToStaticMarkup(
+      <DesktopTable
+        ariaLabel="Tagihan vendor"
+        columns={columns}
+        rows={[
+          { id: "one", name: "Menteng", amount: 5000 },
+          { id: "two", name: "Cipete", amount: 7000 },
+        ]}
+        rowKey={(row): string => row.id}
+        selectedRowKey="two"
+        onRowAction={(): void => undefined}
+      />,
+    );
+    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('aria-current="true"');
+    expect(html.match(/Ditampilkan dalam rincian/g)?.length).toBe(1);
+    expect(html).toContain("Menteng");
+    expect(html).toContain("Cipete");
+  });
+
   test("keeps one keyboard focus stop and honors an explicit reference id", () => {
     const html = renderToStaticMarkup(
       <DesktopButton id="workspace-switch">Tampilan ringkas</DesktopButton>,

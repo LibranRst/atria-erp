@@ -196,7 +196,12 @@ describe("Expenses Dashboard visual language", () => {
       notes: null,
       vendor: { id: "v-1", name: "PT Surya Abadi" },
       project: { id: "proj-1", name: "Villa Ubud" },
-      budgetItem: { id: "item-1", name: "Material Kayu", allocatedAmount: "50000000", actualSpent: "25000000" },
+      budgetItem: {
+        id: "item-1",
+        name: "Material Kayu",
+        allocatedAmount: "50000000",
+        actualSpent: "25000000",
+      },
       payments: [],
     };
 
@@ -238,10 +243,7 @@ describe("Expenses Dashboard visual language", () => {
     };
 
     const html = renderToStaticMarkup(
-      <VendorPaymentDisburseContextCard
-        payment={mockPayment}
-        amount={10000000}
-      />,
+      <VendorPaymentDisburseContextCard payment={mockPayment} amount={10000000} />,
     );
 
     expect(html).toContain("Pencairan Tagihan");
@@ -312,4 +314,3 @@ describe("Expenses Dashboard visual language", () => {
     expect(lineEditorSource).not.toContain("<FieldContextLine");
   });
 });
-

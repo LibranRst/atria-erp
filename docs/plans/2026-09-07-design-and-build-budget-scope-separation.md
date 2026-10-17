@@ -8,17 +8,20 @@ Domain: **Project Finance, Budget Control & RAB/RAP Integration**
 
 ## 1. Latar Belakang & Masalah (Problem Statement)
 
-Pada industri *Interior Design & Build* (seperti Dekoria), kontrak proyek sering kali merupakan paket terpadu (*hybrid*) yang memuat dua komponen fundamental:
+Pada industri _Interior Design & Build_ (seperti Dekoria), kontrak proyek sering kali merupakan paket terpadu (_hybrid_) yang memuat dua komponen fundamental:
+
 1. **Porsi Jasa Keahlian / Profesional (Design & Management Fee)**:
-   - Jasa Desain 3D photorealistic, gambar kerja workshop (*shop drawing*), supervisi berkala, dan fee manajemen proyek.
+   - Jasa Desain 3D photorealistic, gambar kerja workshop (_shop drawing_), supervisi berkala, dan fee manajemen proyek.
    - **Karakteristik biaya**: Memiliki modal material fisik **Rp0** (karena dikerjakan oleh tim in-house arsitek/desainer). Sebagian besar nilai ini adalah **Laba Kotor (Gross Margin) / Kontribusi Overhead Studio**.
 2. **Porsi Produksi & Pengerjaan Fisik (Fit-Out & Construction)**:
    - Pembuatan kabinet multipleks, pelapisan HPL, borongan tukang kayu/finishing, serta vendor spesialis marmer/kaca.
-   - **Karakteristik biaya**: Memiliki modal riil *Cost of Goods Sold* (COGS) di kategori `MATERIAL`, `TUKANG`, dan `SUBCON`.
+   - **Karakteristik biaya**: Memiliki modal riil _Cost of Goods Sold_ (COGS) di kategori `MATERIAL`, `TUKANG`, dan `SUBCON`.
 
 ### Masalah yang Terjadi Saat Ini
-Dalam implementasi saat ini, rumus plafon anggaran Atria ERP menerapkan **Batas Budget Internal (Cap 90%)** dan **Rasio Kategori (Material 38%, Tukang 28%, dll.)** secara *pukul rata* ke **seluruh nilai kontrak**:
-- Pada proyek *Studio Bassura City Unit 18B*, nilai kontrak disepakati **Rp50.000.000**.
+
+Dalam implementasi saat ini, rumus plafon anggaran Atria ERP menerapkan **Batas Budget Internal (Cap 90%)** dan **Rasio Kategori (Material 38%, Tukang 28%, dll.)** secara _pukul rata_ ke **seluruh nilai kontrak**:
+
+- Pada proyek _Studio Bassura City Unit 18B_, nilai kontrak disepakati **Rp50.000.000**.
 - Dari angka tersebut, kebutuhan fisik riil (RAP) sebenarnya hanya **Rp25.265.000** (Material Rp7,26jt, Tukang Rp10jt, Subcon Rp8jt).
 - Di penawaran klien (RAB), selisih nilai sebesar **Rp21.927.778** dimasukkan sebagai item manual: `Jasa Desain 3D, Shop Drawing, Supervisi & Manajemen Proyek`.
 - **Dampak Negatif**:
@@ -39,7 +42,9 @@ Dalam implementasi saat ini, rumus plafon anggaran Atria ERP menerapkan **Batas 
 ## 3. Arsitektur Teknis & Solusi Desain
 
 ### 3.1 Klasifikasi Tipe Item Manual pada RAB (`itemType` / `isProductionCost`)
+
 Pada tabel `rab_estimate_item`, baris yang bertipe `MANUAL_CLIENT_LINE` diberi klasifikasi sifat biaya:
+
 - **`COMMERCIAL_FEE` / `PROFESSIONAL_SERVICE` (Non-Fisik / Jasa)**:
   - Contoh: Jasa Desain 3D, Supervisi, Project Management Fee, Diskon Komersial.
   - Sifat: $0\%$ biaya belanja lapangan. Menambah nilai kontrak ke klien, tetapi **TIDAK** menambah pagu belanja Material/Tukang.
@@ -64,20 +69,22 @@ TOTAL KONTRAK KLIEN (RAB Approved Value)
 ```
 
 #### Kalkulasi Baru:
+
 1. **Basis Anggaran Produksi**:
    $$\text{Production Base} = \sum \text{Item RAP Material} + \sum \text{Item Category Plan} + \sum \text{Manual Item (Fisik)}$$
    Di Bassura City: $\text{Production Base} = \mathbf{\text{Rp28.072.222}}$
 2. **Plafon Biaya Produksi Internal**:
    $$\text{Internal Budget} = \text{Production Base} \times 90\% = \mathbf{\text{Rp25.265.000}}$$
 3. **Plafon Kategori Pengeluaran**:
-   - Material (38% dari Basis Produksi): $\mathbf{\text{Rp9.600.000}}$ *(Sangat pas dengan RAP Rp7,26jt!)*
-   - Tukang (40% dari Basis Produksi): $\mathbf{\text{Rp10.100.000}}$ *(Sangat pas dengan RAP Rp10jt!)*
-   - Subcon (22% dari Basis Produksi): $\mathbf{\text{Rp5.565.000}}$ *(Pas dengan subcon!)*
+   - Material (38% dari Basis Produksi): $\mathbf{\text{Rp9.600.000}}$ _(Sangat pas dengan RAP Rp7,26jt!)_
+   - Tukang (40% dari Basis Produksi): $\mathbf{\text{Rp10.100.000}}$ _(Sangat pas dengan RAP Rp10jt!)_
+   - Subcon (22% dari Basis Produksi): $\mathbf{\text{Rp5.565.000}}$ _(Pas dengan subcon!)_
 4. **Target Gross Margin Perusahaan**:
-   $$\begin{aligned}
+   $$ \begin{aligned}
    \text{Target Gross Amount} &= \text{Total Kontrak} - \text{Internal Budget} \\
    &= \text{Rp50.000.000} - \text{Rp25.265.000} = \mathbf{\text{Rp24.735.000}}\ (\mathbf{49,47\%})
    \end{aligned}$$
+   $$
 
 ---
 
@@ -85,8 +92,8 @@ TOTAL KONTRAK KLIEN (RAB Approved Value)
 
 1. **Sheet Modal "Tambah Baris Manual RAB"**:
    - Ditambahkan selector tipe baris:
-     - 🔘 **Jasa Desain / Manajemen Fee** *(Rekomendasi untuk penyeimbang margin, tidak menaikkan pagu belanja material/tukang)*.
-     - 🔘 **Pekerjaan Fisik Tambahan** *(Memerlukan belanja material/tukang tambahan)*.
+     - 🔘 **Jasa Desain / Manajemen Fee** _(Rekomendasi untuk penyeimbang margin, tidak menaikkan pagu belanja material/tukang)_.
+     - 🔘 **Pekerjaan Fisik Tambahan** _(Memerlukan belanja material/tukang tambahan)_.
 2. **Tab Ringkasan Finansial Proyek (`/projects/[id]?tab=summary`)**:
    - Ditampilkan kartu metrik yang jelas:
      - **Nilai Kontrak Klien**: Rp50.000.000

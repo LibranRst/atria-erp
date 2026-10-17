@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, isNull, or, type SQL } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
@@ -9,6 +9,8 @@ import {
   itemPriceLibrary,
   materialCategory,
   materialMaster,
+  materialInventory,
+  INSTANCE_TENANT_ID,
   vendor,
 } from "@backend/db/schema";
 import { resolveRoleName } from "@backend/lib/auth/permissions";
@@ -40,6 +42,75 @@ import {
   type SessionUser,
 } from "./system-utils";
 
+function materialReadScope(): SQL | undefined {
+  return and(
+    eq(materialMaster.tenantId, INSTANCE_TENANT_ID),
+    inArray(
+      materialMaster.categoryId,
+      db
+        .select({ id: materialCategory.id })
+        .from(materialCategory)
+        .where(eq(materialCategory.tenantId, INSTANCE_TENANT_ID)),
+    ),
+    or(
+      isNull(materialMaster.defaultVendorId),
+      inArray(
+        materialMaster.defaultVendorId,
+        db.select({ id: vendor.id }).from(vendor).where(eq(vendor.tenantId, INSTANCE_TENANT_ID)),
+      ),
+    ),
+  );
+}
+
+function inventoryReadScope(): SQL | undefined {
+  return and(
+    eq(materialInventory.tenantId, INSTANCE_TENANT_ID),
+    inArray(
+      materialInventory.locationId,
+      db
+        .select({ id: inventoryLocation.id })
+        .from(inventoryLocation)
+        .where(eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID)),
+    ),
+  );
+}
+
+function libraryReadScope(): SQL | undefined {
+  return and(
+    eq(itemPriceLibrary.tenantId, INSTANCE_TENANT_ID),
+    inArray(
+      itemPriceLibrary.expenseCategoryId,
+      db
+        .select({ id: expenseCategory.id })
+        .from(expenseCategory)
+        .where(eq(expenseCategory.tenantId, INSTANCE_TENANT_ID)),
+    ),
+    or(
+      isNull(itemPriceLibrary.materialId),
+      inArray(
+        itemPriceLibrary.materialId,
+        db
+          .select({ id: materialMaster.id })
+          .from(materialMaster)
+          .where(eq(materialMaster.tenantId, INSTANCE_TENANT_ID)),
+      ),
+    ),
+  );
+}
+
+function allocationReadScope(): SQL | undefined {
+  return and(
+    eq(budgetAllocationSettingCategory.tenantId, INSTANCE_TENANT_ID),
+    inArray(
+      budgetAllocationSettingCategory.expenseCategoryId,
+      db
+        .select({ id: expenseCategory.id })
+        .from(expenseCategory)
+        .where(eq(expenseCategory.tenantId, INSTANCE_TENANT_ID)),
+    ),
+  );
+}
+
 export async function getItemPriceLibrary(
   input: GetItemPriceLibraryInput = {},
 ): Promise<ActionResponse<readonly ItemPriceLibraryRow[]>> {
@@ -66,6 +137,7 @@ export async function getItemPriceLibrary(
   if (accessError) return accessError;
 
   const filters = [
+    libraryReadScope(),
     validation.data.includeInactive ? undefined : eq(itemPriceLibrary.isActive, true),
     validation.data.expenseCategoryId
       ? eq(itemPriceLibrary.expenseCategoryId, validation.data.expenseCategoryId)
@@ -109,18 +181,24 @@ export async function getSettingsHubOverview(): Promise<ActionResponse<SettingsH
 
   const [setting, categories, items, materials] = await Promise.all([
     db.query.budgetAllocationSetting.findFirst({
-      where: eq(budgetAllocationSetting.isActive, true),
-      with: { categories: true },
+      where: and(
+        eq(budgetAllocationSetting.tenantId, INSTANCE_TENANT_ID),
+        eq(budgetAllocationSetting.isActive, true),
+      ),
+      with: { categories: { where: allocationReadScope() } },
     }),
     db.query.expenseCategory.findMany({
-      where: eq(expenseCategory.isActive, true),
+      where: and(
+        eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
+        eq(expenseCategory.isActive, true),
+      ),
     }),
     db.query.itemPriceLibrary.findMany({
-      where: eq(itemPriceLibrary.isActive, true),
+      where: and(libraryReadScope(), eq(itemPriceLibrary.isActive, true)),
       columns: { id: true },
     }),
     db.query.materialMaster.findMany({
-      where: eq(materialMaster.isActive, true),
+      where: and(materialReadScope(), eq(materialMaster.isActive, true)),
       columns: { id: true },
     }),
   ]);
@@ -148,9 +226,13 @@ export async function getBudgetSettings(): Promise<ActionResponse<BudgetSettings
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const setting = await db.query.budgetAllocationSetting.findFirst({
-    where: eq(budgetAllocationSetting.isActive, true),
+    where: and(
+      eq(budgetAllocationSetting.tenantId, INSTANCE_TENANT_ID),
+      eq(budgetAllocationSetting.isActive, true),
+    ),
     with: {
       categories: {
+        where: allocationReadScope(),
         with: { expenseCategory: true },
         orderBy: [asc(budgetAllocationSettingCategory.sortOrder)],
       },
@@ -171,6 +253,7 @@ export async function getExpenseCategorySettings(): Promise<
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const categories = await db.query.expenseCategory.findMany({
+    where: eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
     orderBy: [asc(expenseCategory.sortOrder)],
   });
   return {
@@ -187,17 +270,21 @@ export async function getItemLibrarySettings(): Promise<ActionResponse<ItemLibra
   if (!authResult.success) return authResult;
   const [categories, items, materials, vendors] = await Promise.all([
     db.query.expenseCategory.findMany({
+      where: eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
       orderBy: [asc(expenseCategory.sortOrder)],
     }),
     db.query.itemPriceLibrary.findMany({
+      where: libraryReadScope(),
       with: { expenseCategory: true, material: true },
       orderBy: [asc(itemPriceLibrary.itemCategory), asc(itemPriceLibrary.name)],
     }),
     db.query.materialMaster.findMany({
+      where: materialReadScope(),
       columns: { id: true, name: true, isActive: true },
       orderBy: [asc(materialMaster.name)],
     }),
     db.query.vendor.findMany({
+      where: eq(vendor.tenantId, INSTANCE_TENANT_ID),
       columns: { id: true, name: true },
       orderBy: [asc(vendor.name)],
     }),
@@ -218,17 +305,27 @@ export async function getMaterialSettings(): Promise<ActionResponse<MaterialSett
   const authResult = await authorizeSettingsRead();
   if (!authResult.success) return authResult;
   const [categories, vendors, locations, materials] = await Promise.all([
-    db.query.materialCategory.findMany({ orderBy: [asc(materialCategory.name)] }),
-    db.query.vendor.findMany({ orderBy: [asc(vendor.name)] }),
+    db.query.materialCategory.findMany({
+      where: eq(materialCategory.tenantId, INSTANCE_TENANT_ID),
+      orderBy: [asc(materialCategory.name)],
+    }),
+    db.query.vendor.findMany({
+      where: eq(vendor.tenantId, INSTANCE_TENANT_ID),
+      orderBy: [asc(vendor.name)],
+    }),
     db.query.inventoryLocation.findMany({
-      where: eq(inventoryLocation.isActive, true),
+      where: and(
+        eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+        eq(inventoryLocation.isActive, true),
+      ),
       orderBy: [asc(inventoryLocation.name)],
     }),
     db.query.materialMaster.findMany({
+      where: materialReadScope(),
       with: {
         category: true,
         defaultVendor: true,
-        inventory: { with: { location: true } },
+        inventory: { where: inventoryReadScope(), with: { location: true } },
       },
       orderBy: [asc(materialMaster.name)],
     }),
@@ -276,32 +373,51 @@ export async function getSettingsOverview(): Promise<ActionResponse<SettingsOver
   const [setting, categories, libraryRows, materialCategories, vendors, locations, materials] =
     await Promise.all([
       db.query.budgetAllocationSetting.findFirst({
-        where: eq(budgetAllocationSetting.isActive, true),
+        where: and(
+          eq(budgetAllocationSetting.tenantId, INSTANCE_TENANT_ID),
+          eq(budgetAllocationSetting.isActive, true),
+        ),
         with: {
           categories: {
+            where: allocationReadScope(),
             with: { expenseCategory: true },
             orderBy: [asc(budgetAllocationSettingCategory.sortOrder)],
           },
         },
       }),
       db.query.expenseCategory.findMany({
+        where: eq(expenseCategory.tenantId, INSTANCE_TENANT_ID),
         orderBy: [asc(expenseCategory.sortOrder)],
       }),
       db.query.itemPriceLibrary.findMany({
+        where: libraryReadScope(),
         with: { expenseCategory: true, material: true },
         orderBy: [asc(itemPriceLibrary.itemCategory), asc(itemPriceLibrary.name)],
       }),
-      db.query.materialCategory.findMany({ orderBy: [asc(materialCategory.name)] }),
-      db.query.vendor.findMany({ orderBy: [asc(vendor.name)] }),
+      db.query.materialCategory.findMany({
+        where: eq(materialCategory.tenantId, INSTANCE_TENANT_ID),
+        orderBy: [asc(materialCategory.name)],
+      }),
+      db.query.vendor.findMany({
+        where: eq(vendor.tenantId, INSTANCE_TENANT_ID),
+        orderBy: [asc(vendor.name)],
+      }),
       db.query.inventoryLocation.findMany({
-        where: eq(inventoryLocation.isActive, true),
+        where: and(
+          eq(inventoryLocation.tenantId, INSTANCE_TENANT_ID),
+          eq(inventoryLocation.isActive, true),
+        ),
         orderBy: [asc(inventoryLocation.name)],
       }),
       db.query.materialMaster.findMany({
+        where: materialReadScope(),
         with: {
           category: true,
           defaultVendor: true,
-          inventory: { with: { location: true } },
+          inventory: {
+            where: inventoryReadScope(),
+            with: { location: true },
+          },
         },
         orderBy: [asc(materialMaster.name)],
       }),

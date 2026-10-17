@@ -10,6 +10,7 @@ import {
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
   FormField,
+  FormRiskNotice,
   FormSection,
   MoneyInput,
   MoneyValue,
@@ -45,6 +46,7 @@ export function RapMaterialFormDrawer({
   formTotalQty,
   formNeedToBuy,
   formEstimatedTotal,
+  error,
 }: {
   readonly showRapForm: boolean;
   readonly closeRapForm: () => void;
@@ -61,6 +63,7 @@ export function RapMaterialFormDrawer({
   readonly formTotalQty: number;
   readonly formNeedToBuy: number;
   readonly formEstimatedTotal: number;
+  readonly error?: string | null;
 }): React.JSX.Element | null {
   const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
@@ -68,6 +71,9 @@ export function RapMaterialFormDrawer({
     editingRapItemId ?? "new-rap-material",
     JSON.stringify(rapForm),
   );
+  function updateRapForm(value: React.SetStateAction<RapFormState>): void {
+    if (!isPending) setRapForm(value);
+  }
   if (!rap) return null;
 
   return (
@@ -131,6 +137,15 @@ export function RapMaterialFormDrawer({
       submitLabel={editingRapItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
+      error={
+        error ? (
+          <div role="alert">
+            <FormRiskNotice title="Material RAP belum tersimpan" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : undefined
+      }
       disabled={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity}
       disabledReason={
         !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
@@ -204,7 +219,10 @@ export function RapMaterialFormDrawer({
                 <AdaptiveSelect
                   label="Gunakan template Library"
                   value={rapForm.templateId}
-                  onChange={handleRapTemplateChange}
+                  disabled={isPending}
+                  onChange={(value): void => {
+                    if (!isPending) handleRapTemplateChange(value);
+                  }}
                   options={[
                     {
                       value: "",
@@ -229,7 +247,10 @@ export function RapMaterialFormDrawer({
             <AdaptiveSelect
               label="Material Master"
               value={rapForm.materialId}
-              onChange={handleMaterialChange}
+              disabled={isPending}
+              onChange={(value): void => {
+                if (!isPending) handleMaterialChange(value);
+              }}
               options={[
                 { value: "", label: "Isi manual / belum pilih material" },
                 ...materials.map((material) => ({
@@ -248,31 +269,35 @@ export function RapMaterialFormDrawer({
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
             <ComboboxField
+              disabled={isPending}
               label="Area / Ruangan"
               value={rapForm.area}
-              onChange={(value) => setRapForm((curr) => ({ ...curr, area: value }))}
+              onChange={(value) => updateRapForm((curr) => ({ ...curr, area: value }))}
               options={COMMON_ROOM_OPTIONS}
               placeholder="Contoh: Dapur"
             />
             <ComboboxField
+              disabled={isPending}
               label="Satuan"
               value={rapForm.unit}
-              onChange={(value) => setRapForm((curr) => ({ ...curr, unit: value }))}
+              onChange={(value) => updateRapForm((curr) => ({ ...curr, unit: value }))}
               options={COMMON_UNIT_OPTIONS}
               placeholder="Contoh: lembar"
             />
             <FormField label="Nama Material">
               <TextInput
+                disabled={isPending}
                 value={rapForm.name}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, name: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, name: value }))}
                 placeholder="Contoh: Multipleks 18mm"
               />
             </FormField>
             <FormField label="Deskripsi Internal">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={rapForm.description}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, description: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, description: value }))}
                 placeholder="Spesifikasi atau penggunaan"
               />
             </FormField>
@@ -285,17 +310,21 @@ export function RapMaterialFormDrawer({
             <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
               <FormField label="Jumlah">
                 <NumericInput
+                  disabled={isPending}
                   value={rapForm.requiredQuantity}
                   min={0}
-                  onChange={(value) => setRapForm((curr) => ({ ...curr, requiredQuantity: value }))}
+                  onChange={(value) =>
+                    updateRapForm((curr) => ({ ...curr, requiredQuantity: value }))
+                  }
                   suffix={rapForm.unit || undefined}
                 />
               </FormField>
               <FormField label="Biaya per Satuan">
                 <MoneyInput
+                  disabled={isPending}
                   value={rapForm.estimatedUnitCost}
                   onChange={(value) =>
-                    setRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))
+                    updateRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))
                   }
                   showPreview={false}
                 />
@@ -307,17 +336,19 @@ export function RapMaterialFormDrawer({
               helper="Tambahan kuantitas untuk antisipasi pemborosan/waste."
             >
               <NumericInput
+                disabled={isPending}
                 value={rapForm.bufferQuantity}
                 min={0}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, bufferQuantity: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, bufferQuantity: value }))}
                 suffix={rapForm.unit || undefined}
               />
             </FormField>
             <AdaptiveSelect
               label="Sumber Pemenuhan"
+              disabled={isPending}
               value={rapForm.source}
               onChange={(value) =>
-                setRapForm((curr) => ({
+                updateRapForm((curr) => ({
                   ...curr,
                   source: value as RapFormState["source"],
                 }))
@@ -331,9 +362,10 @@ export function RapMaterialFormDrawer({
             />
             <FormField label="Catatan Internal">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={rapForm.internalNote}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, internalNote: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, internalNote: value }))}
                 placeholder="Tidak tampil ke klien"
               />
             </FormField>

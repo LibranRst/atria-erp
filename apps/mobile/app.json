@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Atria ERP",
+    "name": "Paduna Build",
     "slug": "atria-erp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#F5F5F7",
+        "backgroundColor": "#B84B2C",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -40,13 +40,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Izinkan Atria memakai kamera untuk memindai bukti transaksi."
+          "cameraPermission": "Izinkan Paduna Build memakai kamera untuk memindai bukti transaksi."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Izinkan Atria memilih foto bukti transaksi."
+          "photosPermission": "Izinkan Paduna Build memilih foto bukti transaksi."
         }
       ],
       [
@@ -54,14 +54,19 @@
         {
           "backgroundColor": "#F5F5F7",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 76,
+          "dark": {
+            "backgroundColor": "#181817",
+            "image": "./assets/images/splash-icon-dark.png"
+          }
         }
       ],
       [
         "expo-notifications",
         {
           "color": "#b84b2c",
-          "defaultChannel": "operasional"
+          "defaultChannel": "operasional",
+          "icon": "./assets/images/notification-icon.png"
         }
       ],
       "@react-native-community/datetimepicker"

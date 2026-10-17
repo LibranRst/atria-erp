@@ -19,11 +19,11 @@ Validate tap timing, loading, warm/cold reopen, footer/keyboard clearance, large
 
 Installed iPhone 17 Pro / iOS 26.5, 402pt logical width, existing development client:
 
-| Project opening | Native transition start after tap | Transition end | Bootstrap data ready |
-| --- | ---: | ---: | ---: |
-| Baseline warm open | 368ms | 878ms | 440ms |
-| Maximum detent + deferred controls | 212ms | 724ms | 405ms |
-| Delayed bootstrap fixture | 156ms | 669ms | 1857ms |
+| Project opening                    | Native transition start after tap | Transition end | Bootstrap data ready |
+| ---------------------------------- | --------------------------------: | -------------: | -------------------: |
+| Baseline warm open                 |                             368ms |          878ms |                440ms |
+| Maximum detent + deferred controls |                             212ms |          724ms |                405ms |
+| Delayed bootstrap fixture          |                             156ms |          669ms |               1857ms |
 
 The actual native opening assertion failed above 250ms on the baseline and passed after the change. The slow-response fixture additionally forced the loading branch to stay mounted until after the animation; the ready form then appeared correctly. The fixture, all debug accessibility values, and the timing probe were removed. Production-code reopen visibly starts with a sheet shell, then shows the controls.
 

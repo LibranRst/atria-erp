@@ -57,7 +57,7 @@ export function WorkspaceModuleHeader({
           onClick={onAction}
           whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
           transition={transitionSpringSnappy}
-          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] active:shadow-raised active:z-10 disabled:opacity-35"
+          className="relative inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-accent/8 px-3 text-meta font-semibold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:bg-accent/[0.14] active:shadow-raised disabled:opacity-35"
         >
           <AppIcon name="add" className="icon-xs" aria-hidden="true" />
           {actionLabel}
@@ -95,7 +95,9 @@ export function WorkspaceStatusLabel({
   );
 }
 
-export function WorkspaceRowChevron({ className }: { readonly className?: string } = {}): React.JSX.Element {
+export function WorkspaceRowChevron({
+  className,
+}: { readonly className?: string } = {}): React.JSX.Element {
   return (
     <AppIcon
       name="chevron_right"

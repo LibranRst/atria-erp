@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useRef, useMemo, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useMemo,
+  useEffect,
+  useState,
+} from "react";
 import { AccessibilityInfo, Platform, findNodeHandle } from "react-native";
 import type { ScrollView, TextInput, View } from "react-native";
 import { createSheetControlState } from "./sheet-control-state";
@@ -119,46 +127,49 @@ export function useSheetFormFields(): SheetFormFields {
     const field = fields.current.get(id) ?? {};
     fields.current.set(id, { ...field, input: input ?? undefined });
   }, []);
-  const focus = useCallback((id: string): void => {
-    cancelReadingPosition();
-    const request = ++focusRequest.current;
-    void Promise.resolve(revealers.current.get(id)?.())
-      .then(() => {
-        requestAnimationFrame((): void => {
-          if (request !== focusRequest.current) return;
-          const field = fields.current.get(id);
-          const nativeScroll = scroll.current?.getNativeScrollRef();
-          if (!field?.view) return;
-          const focusControl = (): void => {
-            if (field.input) field.input.focus();
-            else {
-              const handle = findNodeHandle(field.view ?? null);
-              if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
-            }
-          };
-          if (!nativeScroll) {
-            focusControl();
-            return;
-          }
-          field.view.measureInWindow((_x, y): void => {
-            nativeScroll.measureInWindow((_sx, scrollY): void => {
-              if (request !== focusRequest.current) return;
-              scroll.current?.scrollTo({
-                y: sheetScrollTarget({
-                  offset: scrollOffset.current,
-                  delta: y - scrollY - topInset.current - 12,
-                  topInset: topInset.current,
-                  maximumOffset: getScrollBounds().maximum,
-                }),
-                animated: false,
-              });
+  const focus = useCallback(
+    (id: string): void => {
+      cancelReadingPosition();
+      const request = ++focusRequest.current;
+      void Promise.resolve(revealers.current.get(id)?.())
+        .then(() => {
+          requestAnimationFrame((): void => {
+            if (request !== focusRequest.current) return;
+            const field = fields.current.get(id);
+            const nativeScroll = scroll.current?.getNativeScrollRef();
+            if (!field?.view) return;
+            const focusControl = (): void => {
+              if (field.input) field.input.focus();
+              else {
+                const handle = findNodeHandle(field.view ?? null);
+                if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
+              }
+            };
+            if (!nativeScroll) {
               focusControl();
+              return;
+            }
+            field.view.measureInWindow((_x, y): void => {
+              nativeScroll.measureInWindow((_sx, scrollY): void => {
+                if (request !== focusRequest.current) return;
+                scroll.current?.scrollTo({
+                  y: sheetScrollTarget({
+                    offset: scrollOffset.current,
+                    delta: y - scrollY - topInset.current - 12,
+                    topInset: topInset.current,
+                    maximumOffset: getScrollBounds().maximum,
+                  }),
+                  animated: false,
+                });
+                focusControl();
+              });
             });
           });
-        });
-      })
-      .catch(() => undefined);
-  }, [cancelReadingPosition, getScrollBounds]);
+        })
+        .catch(() => undefined);
+    },
+    [cancelReadingPosition, getScrollBounds],
+  );
   const registerReveal = useCallback(
     (id: string, reveal: () => void | Promise<void>): (() => void) => {
       revealers.current.set(id, reveal);
@@ -175,56 +186,65 @@ export function useSheetFormFields(): SheetFormFields {
     receivedScrollOffset.current = true;
     scrollOffset.current = offset;
   }, []);
-  const setScrollGeometry = useCallback((geometry: Partial<ScrollGeometry>): void => {
-    scrollGeometry.current = { ...scrollGeometry.current, ...geometry };
-    updateContentMinimumHeight();
-  }, [updateContentMinimumHeight]);
-  const setScrollTopInset = useCallback((inset: number): void => {
-    topInset.current = Math.max(0, inset);
-    if (!receivedScrollOffset.current) scrollOffset.current = -topInset.current;
-    updateContentMinimumHeight();
-  }, [updateContentMinimumHeight]);
-  const shiftScroll = useCallback((delta: number): void => {
-    cancelReadingPosition();
-    scroll.current?.scrollTo({
-      y: sheetScrollTarget({
-        offset: scrollOffset.current,
-        delta,
-        topInset: topInset.current,
-        maximumOffset: getScrollBounds().maximum,
-      }),
-      animated: false,
-    });
-  }, [cancelReadingPosition, getScrollBounds]);
-  const captureReadingPosition = useCallback((
-    fieldId?: string,
-    options?: { readonly restoreScroll?: boolean },
-  ): (() => void) => {
-    const request = ++readingRequest.current;
-    const captured = sheetClampScrollOffset(scrollOffset.current, getScrollBounds());
-    if (Platform.OS === "ios") {
-      preservedOffset.current = captured;
-      // Reserve the currently visible viewport before a selection removes rows.
+  const setScrollGeometry = useCallback(
+    (geometry: Partial<ScrollGeometry>): void => {
+      scrollGeometry.current = { ...scrollGeometry.current, ...geometry };
       updateContentMinimumHeight();
-    }
-    return (): void => {
-      if (request !== readingRequest.current) return;
-      readingRequest.current += 1;
-      restoreSheetReadingPosition({
-        captured,
-        current: scrollOffset.current,
-        bounds: Platform.OS === "ios" ? getScrollBounds() : undefined,
-        restoreScroll: options?.restoreScroll,
-        screenReaderEnabled: screenReaderEnabled.current,
-        scrollTo: (y) => scroll.current?.scrollTo({ y, animated: false }),
-        restoreAccessibilityFocus: () => {
-          const view = fieldId ? fields.current.get(fieldId)?.view : undefined;
-          const handle = view ? findNodeHandle(view) : null;
-          if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
-        },
+    },
+    [updateContentMinimumHeight],
+  );
+  const setScrollTopInset = useCallback(
+    (inset: number): void => {
+      topInset.current = Math.max(0, inset);
+      if (!receivedScrollOffset.current) scrollOffset.current = -topInset.current;
+      updateContentMinimumHeight();
+    },
+    [updateContentMinimumHeight],
+  );
+  const shiftScroll = useCallback(
+    (delta: number): void => {
+      cancelReadingPosition();
+      scroll.current?.scrollTo({
+        y: sheetScrollTarget({
+          offset: scrollOffset.current,
+          delta,
+          topInset: topInset.current,
+          maximumOffset: getScrollBounds().maximum,
+        }),
+        animated: false,
       });
-    };
-  }, [getScrollBounds, updateContentMinimumHeight]);
+    },
+    [cancelReadingPosition, getScrollBounds],
+  );
+  const captureReadingPosition = useCallback(
+    (fieldId?: string, options?: { readonly restoreScroll?: boolean }): (() => void) => {
+      const request = ++readingRequest.current;
+      const captured = sheetClampScrollOffset(scrollOffset.current, getScrollBounds());
+      if (Platform.OS === "ios") {
+        preservedOffset.current = captured;
+        // Reserve the currently visible viewport before a selection removes rows.
+        updateContentMinimumHeight();
+      }
+      return (): void => {
+        if (request !== readingRequest.current) return;
+        readingRequest.current += 1;
+        restoreSheetReadingPosition({
+          captured,
+          current: scrollOffset.current,
+          bounds: Platform.OS === "ios" ? getScrollBounds() : undefined,
+          restoreScroll: options?.restoreScroll,
+          screenReaderEnabled: screenReaderEnabled.current,
+          scrollTo: (y) => scroll.current?.scrollTo({ y, animated: false }),
+          restoreAccessibilityFocus: () => {
+            const view = fieldId ? fields.current.get(fieldId)?.view : undefined;
+            const handle = view ? findNodeHandle(view) : null;
+            if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
+          },
+        });
+      };
+    },
+    [getScrollBounds, updateContentMinimumHeight],
+  );
   return useMemo(
     () => ({
       ...controls,

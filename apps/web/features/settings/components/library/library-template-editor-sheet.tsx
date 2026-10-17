@@ -7,7 +7,8 @@ import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
   Button,
-  PageHeader,
+  FactRow,
+  GroupedSurface,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   DatePickerField,
@@ -135,7 +136,7 @@ export function LibraryTemplateEditorSheet({
               options={categories.map((row) => ({
                 value: row.id,
                 label: row.name,
-                description: row.code,
+                description: row.description || undefined,
               }))}
             />
             <FormField
@@ -229,7 +230,7 @@ export function LibraryTemplateEditorSheet({
                     <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
                       {component.label.trim() || `Komponen ${index + 1}`}
                     </span>
-                    <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                    <span className="mt-1 block truncate text-meta text-on-surface-variant">
                       {component.quantity} {component.unit} ·{" "}
                       {componentLabels[component.componentType]} ·{" "}
                       {complete ? "Lengkap" : "Perlu diperiksa"}
@@ -291,7 +292,7 @@ export function LibraryTemplateEditorSheet({
                 />
               </FormField>
             )}
-            <div className="p-3">
+            <div hidden={desktop} className="p-3">
               <div className="overflow-hidden rounded-inset bg-surface-container-low ring-1 ring-ring-subtle">
                 <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                   <div className="min-w-0 p-3">
@@ -432,45 +433,61 @@ export function LibraryTemplateEditorSheet({
       ) : null}
     </>
   );
-  if (desktop) {
-    if (!draft) return <></>;
-    return (
-      <section aria-label="Editor template harga" className="space-y-6">
-        <PageHeader
-          title={draft.id ? "Edit template harga" : "Tambah template harga"}
-          subtitle="Konfigurasi identitas, rincian biaya, dan harga klien."
-          action={
-            <Button variant="secondary" onClick={onClose} disabled={pending}>
-              Kembali ke library
-            </Button>
-          }
-        />
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (canManage && canSave && !pending) onSubmit();
-          }}
-        >
-          {content}
-          <div className="mt-6 flex items-center justify-between gap-4 border-t border-outline-variant/35 pt-4">
-            <div>
-              <p className="text-support text-on-surface-variant">
-                {draft.components.length} komponen · {money(internalCost)} · Margin{" "}
-                {grossMargin.toFixed(1)}%
-              </p>
-              {disabledReason ? <p className="text-meta text-warning">{disabledReason}</p> : null}
-            </div>
-            <Button type="submit" pending={pending} disabled={!canManage || !canSave}>
-              Simpan template
-            </Button>
-          </div>
-        </form>
-      </section>
-    );
-  }
   return (
     <OperationalFormSheet
       dismissal={{ mode: "managed" }}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        draft ? (
+          <div className="space-y-3">
+            <div className="px-1">
+              <p className="text-row font-semibold text-on-surface">
+                {draft.name.trim() || "Template baru"}
+              </p>
+              <p className="mt-1 text-support text-on-surface-variant">
+                {draft.components.length} komponen · Satuan {draft.unit || "belum diisi"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Biaya internal"
+                  value={
+                    <MoneyValue
+                      amount={internalCost}
+                      variant="fullDynamic"
+                      fractionDigits={Number.isInteger(internalCost) ? 0 : 2}
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Harga klien"
+                  value={
+                    <MoneyValue
+                      amount={clientPrice}
+                      variant="fullDynamic"
+                      fractionDigits={Number.isInteger(clientPrice) ? 0 : 2}
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  label="Margin kotor"
+                  value={`${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Harga referensi untuk penggunaan berikutnya. Rincian template tersimpan setelah Anda
+              memilih Simpan.
+            </p>
+          </div>
+        ) : undefined
+      }
       open={Boolean(draft)}
       title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
       onClose={onClose}
@@ -481,7 +498,7 @@ export function LibraryTemplateEditorSheet({
       submittingLabel="Menyimpan..."
       onSubmit={onSubmit}
       statusText={
-        draft
+        draft && !desktop
           ? `${draft.components.length} komponen · ${money(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
           : undefined
       }

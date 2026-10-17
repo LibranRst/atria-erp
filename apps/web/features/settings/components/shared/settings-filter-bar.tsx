@@ -108,6 +108,7 @@ export function SettingsFilterBar<TValue extends string>({
                   <Button
                     type="button"
                     onClick={onResetFilterDraft}
+                    fullWidth
                     className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface"
                     variant="secondary"
                   >
@@ -115,6 +116,7 @@ export function SettingsFilterBar<TValue extends string>({
                   </Button>
                   <Button
                     type="button"
+                    fullWidth
                     onClick={() => {
                       onApplyFilters();
                       setFilterOpen(false);

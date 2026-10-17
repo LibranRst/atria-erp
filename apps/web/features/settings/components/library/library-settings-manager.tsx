@@ -11,9 +11,14 @@ import {
   EmptyState,
   FilterSelect,
   FormRiskNotice,
+  SearchInput,
   Button,
 } from "@/components/ui";
 import { createClientId } from "@atria/core/utils/client-id";
+import {
+  useSettingsFilterState,
+  useSettingsTableState,
+} from "../../hooks/use-settings-table-state";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { evaluateLibraryDraft } from "../../library/library-draft-rules";
 import { LibraryCostComponentSheet } from "./library-cost-component-sheet";
@@ -125,6 +130,9 @@ export function LibrarySettingsManager({
   onMutationComplete,
 }: Props): React.JSX.Element {
   const desktop = useWorkspacePresentation() === "desktop";
+  const desktopSettings = desktop && presentation === "settings";
+  const namespace = presentation === "settings" ? "settings-library" : undefined;
+  const table = useSettingsTableState<PricingTemplateRow>("item", namespace);
   const [items, setItems] = React.useState(initialItems);
   const [draft, setDraft] = React.useState<Draft | null>(null);
   const [draftBaseline, setDraftBaseline] = React.useState("");
@@ -137,10 +145,10 @@ export function LibrarySettingsManager({
   const [sourceNoteTouched, setSourceNoteTouched] = React.useState(false);
   const [componentNameTouched, setComponentNameTouched] = React.useState(false);
   const [showSourceDetails, setShowSourceDetails] = React.useState(false);
-  const [search, setSearch] = React.useState("");
-  const [type, setType] = React.useState("ALL");
-  const [status, setStatus] = React.useState("ACTIVE");
-  const [categoryId, setCategoryId] = React.useState("ALL");
+  const [search, setSearch] = useSettingsFilterState(namespace, "search", "");
+  const [type, setType] = useSettingsFilterState(namespace, "type", "ALL");
+  const [status, setStatus] = useSettingsFilterState(namespace, "status", "ACTIVE");
+  const [categoryId, setCategoryId] = useSettingsFilterState(namespace, "category", "ALL");
   const [typeDraft, setTypeDraft] = React.useState("ALL");
   const [categoryIdDraft, setCategoryIdDraft] = React.useState("ALL");
   const [message, setMessage] = React.useState<string | null>(null);
@@ -299,11 +307,77 @@ export function LibrarySettingsManager({
           {message}
         </FormRiskNotice>
       )}
-      <div hidden={desktop && Boolean(draft)} className="space-y-sm">
-        {presentation === "onboarding" ? (
+      <div className="space-y-sm">
+        {desktopSettings ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-title font-bold text-on-surface">Library item & harga</h2>
+                <p className="mt-1 text-support text-on-surface-variant">
+                  {items.filter((item) => item.isActive).length} template aktif · Biaya internal dan
+                  harga klien
+                </p>
+              </div>
+              {canManage ? (
+                <Button
+                  type="button"
+                  size="compact"
+                  onClick={() => openDraft(emptyDraft(categories[0]?.id ?? ""))}
+                >
+                  <AppIcon name="add" className="icon-sm" aria-hidden="true" />
+                  Tambah template
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="min-w-44 flex-1">
+                <SearchInput
+                  value={search}
+                  onChange={(next) => {
+                    setSearch(next);
+                    table.resetPage();
+                  }}
+                  ariaLabel="Cari template harga"
+                  placeholder="Cari template, kode, kategori"
+                  showClear={false}
+                />
+              </div>
+              <FilterSelect
+                label="Status template"
+                value={status}
+                options={STATUS_FILTERS}
+                onChange={(next) => {
+                  setStatus(next);
+                  table.resetPage();
+                }}
+                presentation="menu"
+              />
+              <FilterSelect
+                label="Tipe template"
+                value={type}
+                options={TYPE_FILTERS}
+                onChange={(next) => {
+                  setType(next);
+                  table.resetPage();
+                }}
+                presentation="menu"
+              />
+              <FilterSelect
+                label="Kategori pengeluaran"
+                value={categoryId}
+                options={categoryFilters}
+                onChange={(next) => {
+                  setCategoryId(next);
+                  table.resetPage();
+                }}
+                presentation="menu"
+              />
+            </div>
+          </div>
+        ) : presentation === "onboarding" ? (
           <div className="flex min-w-0 items-center justify-between gap-3 px-1">
             <span className="min-w-0">
-              <span className="block text-[13px] leading-5 font-bold text-on-surface">
+              <span className="block text-row leading-5 font-bold text-on-surface">
                 Template tersimpan
               </span>
               <span className="block text-meta text-on-surface-variant">
@@ -333,13 +407,20 @@ export function LibrarySettingsManager({
                 searchAriaLabel="Cari template harga"
                 layoutPrefix="settings-library"
                 filterTitle="Filter template"
-                onStatusChange={setStatus}
-                onSearchChange={setSearch}
+                onStatusChange={(next) => {
+                  setStatus(next);
+                  table.resetPage();
+                }}
+                onSearchChange={(next) => {
+                  setSearch(next);
+                  table.resetPage();
+                }}
                 onEnterSearch={() => {
                   suspendedFiltersRef.current = { type, categoryId, status };
                   setType("ALL");
                   setCategoryId("ALL");
                   setStatus("ALL");
+                  table.resetPage();
                 }}
                 onExitSearch={() => {
                   const suspended = suspendedFiltersRef.current;
@@ -356,6 +437,7 @@ export function LibrarySettingsManager({
                 onApplyFilters={() => {
                   setType(typeDraft);
                   setCategoryId(categoryIdDraft);
+                  table.resetPage();
                 }}
                 onResetFilterDraft={() => {
                   setTypeDraft("ALL");
@@ -390,7 +472,7 @@ export function LibrarySettingsManager({
             ) : null}
           </div>
         )}
-        {filtered.length === 0 ? (
+        {filtered.length === 0 && !desktopSettings ? (
           <EmptyState
             title={items.length === 0 ? "Belum ada template" : "Template tidak ditemukan"}
             description={
@@ -403,6 +485,13 @@ export function LibrarySettingsManager({
           <LibraryTemplateList
             items={filtered}
             presentation={presentation}
+            table={presentation === "settings" ? table : undefined}
+            emptyTitle={items.length === 0 ? "Belum ada template" : "Template tidak ditemukan"}
+            emptyDescription={
+              items.length === 0
+                ? "Tambahkan template pertama untuk mempercepat setup proyek."
+                : "Ubah kata pencarian atau reset filter."
+            }
             onOpen={(item) => openDraft(toDraft(item))}
           />
         )}

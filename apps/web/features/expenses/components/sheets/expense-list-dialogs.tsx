@@ -36,6 +36,7 @@ export function ReceiptImageLightbox({
     <MediaPreviewDialog
       open={Boolean(imageUrl)}
       title="Pratinjau nota"
+      purpose="document"
       imageUrl={imageUrl}
       alt="Bukti nota pengeluaran"
       caption="Ketuk di luar dialog atau tekan Escape untuk menutup."

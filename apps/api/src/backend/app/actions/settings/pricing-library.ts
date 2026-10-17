@@ -1,12 +1,15 @@
 import { cookies } from "@runtime/request-context";
 import { revalidateWorkspacePath as revalidatePath } from "@backend/lib/cache/revalidate-workspace";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "@backend/db";
 import {
   expenseCategory,
   itemPriceLibrary,
   itemPriceLibraryCostComponent,
+  materialMaster,
+  vendor,
+  INSTANCE_TENANT_ID,
 } from "@backend/db/schema";
 import { auth } from "@backend/lib/auth";
 import { assertPermission } from "@backend/lib/auth/permissions";
@@ -121,10 +124,43 @@ export async function getPricingTemplates(
   try {
     await assertPermission(user, "view:settings");
     const rows = await db.query.itemPriceLibrary.findMany({
-      where: includeInactive ? undefined : eq(itemPriceLibrary.isActive, true),
+      where: and(
+        eq(itemPriceLibrary.tenantId, INSTANCE_TENANT_ID),
+        includeInactive ? undefined : eq(itemPriceLibrary.isActive, true),
+        inArray(
+          itemPriceLibrary.expenseCategoryId,
+          db
+            .select({ id: expenseCategory.id })
+            .from(expenseCategory)
+            .where(eq(expenseCategory.tenantId, INSTANCE_TENANT_ID)),
+        ),
+        or(
+          isNull(itemPriceLibrary.materialId),
+          inArray(
+            itemPriceLibrary.materialId,
+            db
+              .select({ id: materialMaster.id })
+              .from(materialMaster)
+              .where(eq(materialMaster.tenantId, INSTANCE_TENANT_ID)),
+          ),
+        ),
+        or(
+          isNull(itemPriceLibrary.defaultVendorId),
+          inArray(
+            itemPriceLibrary.defaultVendorId,
+            db
+              .select({ id: vendor.id })
+              .from(vendor)
+              .where(eq(vendor.tenantId, INSTANCE_TENANT_ID)),
+          ),
+        ),
+      ),
       with: {
         expenseCategory: true,
-        costComponents: { orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)] },
+        costComponents: {
+          where: eq(itemPriceLibraryCostComponent.tenantId, INSTANCE_TENANT_ID),
+          orderBy: [asc(itemPriceLibraryCostComponent.displayOrder)],
+        },
       },
       orderBy: [asc(itemPriceLibrary.itemType), asc(itemPriceLibrary.name)],
     });
