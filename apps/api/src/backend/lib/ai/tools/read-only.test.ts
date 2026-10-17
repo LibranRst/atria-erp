@@ -24,9 +24,13 @@ const FORBIDDEN_PATTERNS: readonly { pattern: RegExp; label: string }[] = [
   { pattern: /\btx\s*\.\s*execute\s*\(/, label: "tx.execute(" },
 ];
 
-/** One scoped exception: a repeatable, database-enforced READ ONLY snapshot. */
-function hasReadOnlyHistoryTransaction(filePath: string, source: string): boolean {
-  if (path.resolve(filePath) !== path.join(TOOLS_DIRECTORY, "financial-history-tools.ts"))
+/** Two named readers need a repeatable, database-enforced READ ONLY snapshot. */
+function hasReadOnlySnapshotTransaction(filePath: string, source: string): boolean {
+  if (
+    !["financial-history-tools.ts", "project-tools.ts"].some(
+      (name) => path.resolve(filePath) === path.join(TOOLS_DIRECTORY, name),
+    )
+  )
     return false;
   const ast = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const calls: ts.CallExpression[] = [];
@@ -85,7 +89,7 @@ describe("registry tool AI", () => {
     for (const filePath of files) {
       const source = readFileSync(filePath, "utf8");
       for (const { pattern, label } of FORBIDDEN_PATTERNS) {
-        if (label === "db.transaction(" && hasReadOnlyHistoryTransaction(filePath, source))
+        if (label === "db.transaction(" && hasReadOnlySnapshotTransaction(filePath, source))
           continue;
         if (pattern.test(source)) {
           violations.push(`${path.relative(process.cwd(), filePath)} memakai ${label}`);
@@ -96,35 +100,55 @@ describe("registry tool AI", () => {
     expect(violations).toEqual([]);
   });
 
-  test("exception laporan periode menolak transaksi biasa, konfigurasi dinamis dan file lain", () => {
-    const file = path.join(TOOLS_DIRECTORY, "financial-history-tools.ts");
-    const source = readFileSync(file, "utf8");
-    expect(hasReadOnlyHistoryTransaction(file, source)).toBe(true);
-    expect(
-      hasReadOnlyHistoryTransaction(path.join(TOOLS_DIRECTORY, "other-tools.ts"), source),
-    ).toBe(false);
-    expect(
-      hasReadOnlyHistoryTransaction(
-        file,
-        source.replace('accessMode: "read only"', 'accessMode: "read write"'),
-      ),
-    ).toBe(false);
-    expect(
-      hasReadOnlyHistoryTransaction(
-        file,
-        source.replace('accessMode: "read only"', "accessMode: requestedMode"),
-      ),
-    ).toBe(false);
-    expect(
-      hasReadOnlyHistoryTransaction(
-        file,
-        source.replace('isolationLevel: "repeatable read"', 'isolationLevel: "read committed"'),
-      ),
-    ).toBe(false);
-    expect(
-      hasReadOnlyHistoryTransaction(file, `${source}\ndb.transaction(async () => null);`),
-    ).toBe(false);
-  });
+  test.each(["financial-history-tools.ts", "project-tools.ts"])(
+    "snapshot exception rejects writes, dynamic configuration and other files: %s",
+    (name) => {
+      const file = path.join(TOOLS_DIRECTORY, name);
+      const source = readFileSync(file, "utf8");
+      expect(hasReadOnlySnapshotTransaction(file, source)).toBe(true);
+      expect(
+        hasReadOnlySnapshotTransaction(path.join(TOOLS_DIRECTORY, "other-tools.ts"), source),
+      ).toBe(false);
+      expect(
+        hasReadOnlySnapshotTransaction(
+          file,
+          source.replace('accessMode: "read only"', 'accessMode: "read write"'),
+        ),
+      ).toBe(false);
+      expect(
+        hasReadOnlySnapshotTransaction(
+          file,
+          source.replace('accessMode: "read only"', "accessMode: requestedMode"),
+        ),
+      ).toBe(false);
+      expect(
+        hasReadOnlySnapshotTransaction(
+          file,
+          source.replace('isolationLevel: "repeatable read"', 'isolationLevel: "read committed"'),
+        ),
+      ).toBe(false);
+      expect(
+        hasReadOnlySnapshotTransaction(file, `${source}\ndb.transaction(async () => null);`),
+      ).toBe(false);
+      for (const write of [
+        "db.insert(",
+        "db.update(",
+        "db.delete(",
+        "db.execute(",
+        "tx.insert(",
+        "tx.update(",
+        "tx.delete(",
+        "tx.execute(",
+      ]) {
+        const mutated = `${source}\n${write}`;
+        expect(
+          FORBIDDEN_PATTERNS.some(
+            ({ pattern, label }) => label !== "db.transaction(" && pattern.test(mutated),
+          ),
+        ).toBe(true);
+      }
+    },
+  );
 
   test("tool backend tidak bergantung pada framework frontend", () => {
     const missing = files.filter((filePath) => {
