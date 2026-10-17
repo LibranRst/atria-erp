@@ -1,3 +1,4 @@
+import { configuredAttachmentOrigins } from "@atria/core/media/web-origins";
 import ImageKit from "@imagekit/nodejs";
 import { and, eq, gte, count } from "drizzle-orm";
 import { z } from "zod";
@@ -190,10 +191,7 @@ export async function authorizedPrivateAttachment(
   purpose?: PrivateAttachmentPurpose,
   reader: PrivateAttachmentReader = db,
 ): Promise<AttachmentRow> {
-  const id = privateAttachmentId(url, [
-    process.env.WEB_ORIGIN ?? "http://localhost:3000",
-    process.env.API_PUBLIC_URL ?? "http://localhost:3001",
-  ]);
+  const id = privateAttachmentId(url, configuredAttachmentOrigins(process.env));
   const row = await reader.query.attachment.findFirst({
     where: and(eq(attachment.id, id), eq(attachment.tenantId, INSTANCE_TENANT_ID)),
   });

@@ -1,3 +1,5 @@
+import { additionalWebOriginsSchema } from "@atria/core/media/web-origins";
+import { rebasePrivateAttachmentLinks } from "@/lib/media/private-attachment-links";
 import "server-only";
 
 import type { WebRpcArgs, WebRpcOperation, WebRpcResult } from "@atria/api/contract";
@@ -82,7 +84,10 @@ export async function callBackend<K extends WebRpcOperation>(
   }
   // The allowlisted operation's external response was validated above. Its data
   // type is the declaration emitted by the API, without importing its runtime.
-  return envelope.data as WebRpcResult<K>;
+  return rebasePrivateAttachmentLinks(envelope.data, process.env.NEXT_PUBLIC_APP_URL, [
+    getBackendConnection().origin,
+    ...additionalWebOriginsSchema.parse(process.env.WEB_ADDITIONAL_ORIGINS),
+  ]) as WebRpcResult<K>;
 }
 
 /** Preserve the existing form contract when a request cannot reach or pass the bridge. */

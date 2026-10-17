@@ -1,4 +1,5 @@
-import { and, eq, lte, ne } from "drizzle-orm";
+import { configuredAttachmentOrigins } from "@atria/core/media/web-origins";
+import { and, eq, inArray, lte, ne } from "drizzle-orm";
 
 import type { SubmittedExpenseDraft } from "@backend/app/actions/finance/expense-draft-types";
 import { db } from "@backend/db";
@@ -24,12 +25,15 @@ export async function deleteExpenseDraftAttachment(
     .catch(() => undefined);
   if (!registered?.storageFileId || registered.referenceType !== "private_expense") return;
   // Keep an uploaded proof if a submitted cost already refers to it.
-  const inUse = await db.query.projectCost.findFirst({
-    where: eq(
-      projectCost.receiptImageUrl,
-      new URL(`/api/media/attachments/${fileId}`, process.env.WEB_ORIGIN ?? "http://localhost:3000")
-        .href,
+  const path = `/api/media/attachments/${registered.id}`;
+  const references = [
+    path,
+    ...configuredAttachmentOrigins(process.env).map(
+      (origin: string): string => new URL(path, origin).href,
     ),
+  ];
+  const inUse = await db.query.projectCost.findFirst({
+    where: inArray(projectCost.receiptImageUrl, references),
     columns: { id: true },
   });
   if (inUse) return;
