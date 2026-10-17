@@ -11,7 +11,7 @@ export function DesktopProfileMenu(): React.JSX.Element {
   const user = useCurrentUserProfile();
   const can = useCan();
   const router = useRouter();
-  const name = user?.name || "Pengguna Atria";
+  const name = user?.name || "Pengguna Paduna Build";
   const initials = getProfileInitials(name);
   return (
     <LogoutButton
@@ -57,7 +57,7 @@ export function DesktopProfileMenu(): React.JSX.Element {
                 <UserAvatar imageUrl={user?.image} initials={initials} renderPx={40} />
                 <div className="min-w-0">
                   <p className="truncate text-row font-bold text-on-surface">{name}</p>
-                  <p className="text-support text-on-surface-variant">Akun Atria</p>
+                  <p className="text-support text-on-surface-variant">Akun Paduna Build</p>
                 </div>
               </div>
             }

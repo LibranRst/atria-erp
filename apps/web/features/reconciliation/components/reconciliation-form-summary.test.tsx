@@ -19,7 +19,7 @@ describe("bank evidence form summaries", () => {
     expect(html).not.toContain("Dana keluar");
     expect(html).toContain("Belum dibaca");
     expect(html).not.toContain("0 mutasi");
-    expect(html).toContain("Impor tidak mengubah saldo rekening Atria");
+    expect(html).toContain("Impor tidak mengubah saldo rekening Paduna Build");
   });
 
   test("a parsed zero inflow is visible while parsing and errors stay distinct", () => {

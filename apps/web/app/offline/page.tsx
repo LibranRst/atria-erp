@@ -17,12 +17,12 @@ export default function OfflinePage(): React.JSX.Element {
     <section className="space-y-sm px-1 pb-8 select-none max-[430px]:-mx-1 max-[430px]:pb-6">
       <PageHeader
         title="Tanpa koneksi"
-        subtitle="Perangkat ini belum dapat menjangkau server Atria."
+        subtitle="Perangkat ini belum dapat menjangkau server Paduna Build."
       />
       <PageState
         kind="offline"
         title="Halaman belum dapat dimuat"
-        description="Saldo, budget, dan stok dibaca langsung dari server setiap kali dibuka. Atria tidak menyimpan salinan halaman keuangan di perangkat, jadi angka lama tidak pernah ditampilkan seolah-olah angka terkini."
+        description="Saldo, budget, dan stok dibaca langsung dari server setiap kali dibuka. Paduna Build tidak menyimpan salinan halaman keuangan di perangkat, jadi angka lama tidak pernah ditampilkan seolah-olah angka terkini."
       />
       <ButtonLink href="/" fullWidth variant="secondary">
         Coba lagi

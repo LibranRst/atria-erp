@@ -93,7 +93,7 @@ export function ReconciliationQueue({
     const status = suggested
       ? "Pasangan ditemukan"
       : hasMultipleCandidates
-        ? `${item.candidateCount} kandidat — tinjau Catatan Atria`
+        ? `${item.candidateCount} kandidat — tinjau Catatan Paduna Build`
         : `${directionCopy(item.type)} · Belum ada pasangan`;
 
     return (
@@ -118,7 +118,7 @@ export function ReconciliationQueue({
           suggested
             ? `Tinjau pasangan ${item.description}, ${formatIdr(item.amount)}`
             : hasMultipleCandidates
-              ? `Tinjau ${item.candidateCount} kandidat untuk ${item.description} di Catatan Atria`
+              ? `Tinjau ${item.candidateCount} kandidat untuk ${item.description} di Catatan Paduna Build`
               : undefined
         }
       />
@@ -160,7 +160,7 @@ export function ReconciliationQueue({
           },
           {
             value: "cash",
-            label: "Catatan Atria",
+            label: "Catatan Paduna Build",
             count: actionRequiredCount > 0 ? actionRequiredCount : undefined,
           },
           { value: "history", label: "Riwayat" },
@@ -240,9 +240,9 @@ export function ReconciliationQueue({
                   )}
                 </GroupedSurface>
               </section>
-              <section aria-label="Catatan Atria" className="min-w-0 space-y-3">
+              <section aria-label="Catatan Paduna Build" className="min-w-0 space-y-3">
                 <SectionHeader
-                  title="Catatan Atria"
+                  title="Catatan Paduna Build"
                   count={data.cashTransactions.length}
                   countLabel="Catatan"
                 />

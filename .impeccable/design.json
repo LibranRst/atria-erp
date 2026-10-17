@@ -263,7 +263,20 @@
         "name": "split-detail",
         "value": "1280px"
       }
-    ]
+    ],
+    "branding": {
+      "parent": "Paduna",
+      "currentProduct": "Paduna Build",
+      "symbol": "Temu",
+      "approvedArtwork": "apps/web/public/brand/paduna.svg",
+      "webRollout": {
+        "loginWidth": 176,
+        "sidebarWidth": 152,
+        "name": "Paduna Build",
+        "preserveTechnicalIdentifiers": true,
+        "scope": "display-only production web rollout"
+      }
+    }
   },
   "components": [
     {

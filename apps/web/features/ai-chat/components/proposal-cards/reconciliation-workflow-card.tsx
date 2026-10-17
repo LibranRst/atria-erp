@@ -429,7 +429,7 @@ export function ReconciliationWorkflowCard({
       return (
         <FormSection presentation="embedded">
           <AdaptiveSelect
-            label="Pasangkan dengan catatan Atria"
+            label="Pasangkan dengan catatan Paduna Build"
             placeholder="Pilih pasangan yang benar"
             value={value.chosenCashId ?? ""}
             disabled={pending || !ready}
@@ -579,7 +579,7 @@ export function ReconciliationWorkflowCard({
                       ? "Sudah tercatat · dilewati"
                       : action === "MATCH"
                         ? chosen
-                          ? `Catatan Atria: ${chosen.description}`
+                          ? `Catatan Paduna Build: ${chosen.description}`
                           : row.candidates.length
                             ? `${row.candidates.length} kandidat · pilih pasangan`
                             : "Belum ada catatan kas dengan nominal dan arah yang sama"
@@ -791,7 +791,7 @@ export function ReconciliationWorkflowCard({
                 />
                 {action === "MATCH" && (
                   <FactRow
-                    label="Catatan Atria"
+                    label="Catatan Paduna Build"
                     wrapLabel
                     value={
                       proposal.rows[0]?.candidates.find((c) => c.id === selected[0]!.chosenCashId)

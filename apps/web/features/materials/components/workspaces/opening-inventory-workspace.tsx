@@ -42,7 +42,7 @@ export function OpeningInventoryWorkspace({
           </p>
           <h2 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
           <p className="text-support text-on-surface-variant">
-            Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Atria.
+            Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Paduna Build.
           </p>
         </header>
       ) : null}

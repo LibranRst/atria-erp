@@ -82,7 +82,7 @@ export function LogoutButton({
       <ConfirmationDialog
         open={confirmOpen}
         title="Keluar dari akun?"
-        description="Sesi pada perangkat ini akan berakhir. Anda perlu masuk kembali untuk menggunakan Atria ERP."
+        description="Sesi pada perangkat ini akan berakhir. Anda perlu masuk kembali untuk menggunakan Paduna Build."
         confirmLabel="Keluar"
         danger
         pending={isLoading}

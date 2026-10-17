@@ -108,7 +108,7 @@ export function UserBatchCreateProposalCard({
 
   async function handleCopyAllCredentials(): Promise<void> {
     const lines = [
-      `*Daftar Akun Tim Baru Atria ERP (${proposal.count} Pengguna)*:`,
+      `*Daftar Akun Tim Baru Paduna Build (${proposal.count} Pengguna)*:`,
       "",
       ...proposal.users.map(
         (u, i) =>

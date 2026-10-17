@@ -15,7 +15,9 @@ web
 
 ## Product Purpose
 
-Atria ERP is Dekoria's internal Project Finance & Material Control System for interior design/build work. It upgrades Dekoria's existing workbook-informed Project Budget workflow into a structured system covering project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and (deferred) owner-readable AI summaries. Success means the Owner can read financial and material position in under 30 seconds, and Finance/Purchasing/PM roles can do their category-scoped jobs without manual chat follow-up or spreadsheet reconciliation.
+Display identity: **Paduna Build**, part of Paduna. This release renames the web product while preserving the existing project-finance/material scope, technical package/auth/tenant identifiers, and company identity on client documents.
+
+Paduna Build is Dekoria's internal Project Finance & Material Control System for interior design/build work. It upgrades Dekoria's existing workbook-informed Project Budget workflow into a structured system covering project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and (deferred) owner-readable AI summaries. Success means the Owner can read financial and material position in under 30 seconds, and Finance/Purchasing/PM roles can do their category-scoped jobs without manual chat follow-up or spreadsheet reconciliation.
 
 ## Positioning
 

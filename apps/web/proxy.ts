@@ -65,7 +65,8 @@ export const config = {
    * memeriksa pembaruan, memasang ikon manifest, dan menyajikan halaman offline
    * dari cache. Pengalihan ke `/login` di jalur-jalur itu membuat pemeriksaan
    * pembaruan worker gagal dan halaman offline tersimpan sebagai halaman login.
-   * Isinya tidak memuat data perusahaan: manifest, ikon, skrip worker, dan satu
+   * Isinya tidak memuat data perusahaan: manifest, ikon, artwork brand publik,
+   * skrip worker, dan satu
    * halaman pemberitahuan tanpa sesi.
    * /receipt_test.png adalah satu fixture nota sintetis yang disimpan di public
    * untuk preview seed demo. Gambar native tidak membawa cookie browser, jadi
@@ -73,6 +74,6 @@ export const config = {
    * perlindungan route yang sudah ada.
    */
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|notification-sw.js|icons/|offline|login|setup|receipt_test\\.png$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|favicon\\.svg$|manifest.webmanifest|notification-sw.js|icons/|brand/|offline|login|setup|receipt_test\\.png$).*)",
   ],
 };

@@ -104,7 +104,7 @@ export function UserCreateProposalCard({
   async function handleCopyCredentials(): Promise<void> {
     const textToCopy = [
       `Halo *${proposal.name}*,`,
-      `Berikut akun Atria ERP Anda:`,
+      `Berikut akun Paduna Build Anda:`,
       `Email: ${proposal.email}`,
       `Password Sementara: ${proposal.temporaryPassword}`,
       `Peran: ${proposal.roleDisplayName}`,

@@ -83,7 +83,7 @@ export function groupConversations(
 }
 
 const STYLE_OPTIONS: readonly { value: AiResponseStyle; label: string }[] = [
-  { value: "STANDARD", label: "Standard Atria" },
+  { value: "STANDARD", label: "Standard Paduna Build" },
   { value: "VERY_CONCISE", label: "Sangat ringkas" },
   { value: "DETAILED", label: "Lebih rinci" },
 ];

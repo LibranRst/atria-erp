@@ -514,7 +514,7 @@ export function ReconciliationWorkspace({
             ? undefined
             : previewRows.length > 0
               ? `Periksa ${previewRows.length} mutasi sebelum disimpan sebagai bukti bank.`
-              : "Unggah mutasi untuk dianalisis oleh AI atau format CSV standar Atria."
+              : "Unggah mutasi untuk dianalisis oleh AI atau format CSV standar Paduna Build."
         }
         statusTone={error ? "danger" : "default"}
         error={

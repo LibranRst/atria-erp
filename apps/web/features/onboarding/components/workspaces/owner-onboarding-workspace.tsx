@@ -108,7 +108,7 @@ export function OwnerOnboardingWorkspace({
         toast.error(result.error.message);
         return;
       }
-      toast.success("Fondasi Atria siap digunakan.");
+      toast.success("Fondasi Paduna Build siap digunakan.");
       window.location.replace(
         workspaceHref(target === "project" ? "/projects?new-project=true" : "/ledger"),
       );

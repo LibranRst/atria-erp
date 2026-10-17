@@ -26,28 +26,29 @@ const SURFACE_COPY: Record<Exclude<InstallSurfaceState, "unavailable">, SurfaceC
     badgeTone: "healthy",
     badgeLabel: "Terpasang",
     title: "Aplikasi",
-    description: "Atria terpasang di perangkat ini dan dibuka penuh layar tanpa bilah peramban.",
+    description:
+      "Paduna Build terpasang di perangkat ini dan dibuka penuh layar tanpa bilah peramban.",
   },
   prompt: {
     badgeTone: "neutral",
     badgeLabel: "Tersedia",
     title: "Aplikasi",
     description:
-      "Pasang Atria ke Layar Utama agar terbuka penuh layar dan dapat menerima notifikasi.",
+      "Pasang Paduna Build ke Layar Utama agar terbuka penuh layar dan dapat menerima notifikasi.",
   },
   "ios-steps": {
     badgeTone: "pending",
     badgeLabel: "Belum dipasang",
     title: "Aplikasi",
     description:
-      "iOS hanya mengizinkan notifikasi setelah Atria dipasang. Di Safari, ketuk Bagikan lalu pilih Tambahkan ke Layar Utama.",
+      "iOS hanya mengizinkan notifikasi setelah Paduna Build dipasang. Di Safari, ketuk Bagikan lalu pilih Tambahkan ke Layar Utama.",
   },
   "browser-menu": {
     badgeTone: "pending",
     badgeLabel: "Belum dipasang",
     title: "Aplikasi",
     description:
-      "Pasang Atria lewat menu peramban ini — pilih “Pasang aplikasi” atau “Tambahkan ke Layar Utama”.",
+      "Pasang Paduna Build lewat menu peramban ini — pilih “Pasang aplikasi” atau “Tambahkan ke Layar Utama”.",
   },
 };
 
@@ -89,7 +90,7 @@ export function InstallAppControl({
     startTransition(async () => {
       const outcome = await promptInstall();
       if (outcome === "accepted") {
-        toast.success("Atria dipasang di perangkat ini.");
+        toast.success("Paduna Build dipasang di perangkat ini.");
         return;
       }
       if (outcome === "dismissed") {

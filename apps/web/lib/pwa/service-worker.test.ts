@@ -91,7 +91,12 @@ function createScope(
 
   const cachesImpl = {
     open: async (): Promise<typeof cache> => cache,
-    keys: async (): Promise<string[]> => ["atria-shell-v0", "atria-shell-v1", "other-cache"],
+    keys: async (): Promise<string[]> => [
+      "atria-shell-v0",
+      "atria-shell-v1",
+      "atria-shell-v2",
+      "other-cache",
+    ],
     delete: async (key: string): Promise<boolean> => {
       calls.deletedCaches.push(key);
       return true;
@@ -236,7 +241,11 @@ describe("kebijakan fetch service worker", () => {
     const scope = createScope(networkUp);
     const afterActivate = await scope.dispatch("activate", {});
 
-    expect(afterActivate.deletedCaches).toEqual(["atria-shell-v0", "atria-shell-v1"]);
+    expect(afterActivate.deletedCaches).toEqual([
+      "atria-shell-v0",
+      "atria-shell-v1",
+      "atria-shell-v2",
+    ]);
   });
 });
 

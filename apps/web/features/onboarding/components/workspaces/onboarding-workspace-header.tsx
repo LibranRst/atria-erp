@@ -51,7 +51,7 @@ export function OnboardingWorkspaceHeader({
         </div>
         <div className="min-w-0 text-center">
           <p className="text-[9px] leading-5 font-bold tracking-[0.14em] text-on-surface-variant uppercase">
-            Setup Atria
+            Setup Paduna Build
           </p>
           <p className="truncate text-support font-semibold text-on-surface">{progress.label}</p>
         </div>

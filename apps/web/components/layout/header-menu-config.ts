@@ -21,5 +21,5 @@ export function getPageTitle(pathname: string): string {
   // dalam halaman (percakapan ↔ riwayat). Entri ini yang menjaga kedua sumber
   // tetap sepakat kalau ada yang membacanya lewat rute.
   if (pathname === "/ai") return "Asisten AI";
-  return "Atria";
+  return "Paduna Build";
 }

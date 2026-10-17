@@ -115,7 +115,7 @@ export function CashFlowTrendChart({
         ))}
       </div>
       <figcaption className="text-meta text-on-surface-variant">
-        * Bulan berjalan belum lengkap. Berdasarkan catatan kas Atria.
+        * Bulan berjalan belum lengkap. Berdasarkan catatan kas Paduna Build.
       </figcaption>
       <table className="sr-only">
         <caption>{ariaLabel}</caption>

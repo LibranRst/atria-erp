@@ -6,7 +6,7 @@ import { AiChatView } from "@/features/ai-chat/components/ai-chat-view";
 import { AiRestrictedAccess } from "@/features/ai-chat/components/ai-restricted-access";
 
 export const metadata: Metadata = {
-  title: "Asisten AI | Atria ERP",
+  title: "Asisten AI | Paduna Build",
   description: "Asisten cerdas keuangan dan kontrol material proyek",
 };
 

@@ -26,7 +26,7 @@ const STEP_COPY: Record<
   first_project: {
     title: "Buat project pertama",
     description:
-      "Isi identitas dan nilai project. Atria menyiapkan Draft budget kategori tanpa memindahkan kas.",
+      "Isi identitas dan nilai project. Paduna Build menyiapkan Draft budget kategori tanpa memindahkan kas.",
   },
   success: {
     title: "Project pertama siap direncanakan",
@@ -51,7 +51,7 @@ export function QuickStartHeader({
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <span className="h-12 w-12" aria-hidden="true" />
         <div className="min-w-0 text-center">
-          <p className="text-support font-bold text-on-surface">Quick start Atria</p>
+          <p className="text-support font-bold text-on-surface">Quick start Paduna Build</p>
           <p className="text-meta text-on-surface-variant">{progress.label}</p>
         </div>
         <div className="flex justify-end">

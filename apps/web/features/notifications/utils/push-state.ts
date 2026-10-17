@@ -85,7 +85,7 @@ export const PUSH_STATE_COPY: Record<PushState, PushCopy> = {
   insecure: {
     badge: "Perlu HTTPS",
     badgeTone: "warning",
-    description: "Buka Atria melalui alamat HTTPS agar perangkat dapat menerima notifikasi.",
+    description: "Buka Paduna Build melalui alamat HTTPS agar perangkat dapat menerima notifikasi.",
     action: null,
   },
   checking: {
@@ -97,7 +97,7 @@ export const PUSH_STATE_COPY: Record<PushState, PushCopy> = {
   enabled: {
     badge: "Aktif",
     badgeTone: "healthy",
-    description: "Pembaruan penting dapat muncul saat Atria tidak sedang dibuka.",
+    description: "Pembaruan penting dapat muncul saat Paduna Build tidak sedang dibuka.",
     action: "disable",
   },
   disabled: {
@@ -122,13 +122,13 @@ export const PUSH_STATE_COPY: Record<PushState, PushCopy> = {
     badge: "Perlu dipasang",
     badgeTone: "pending",
     description:
-      "Di iPhone, notifikasi hanya aktif setelah Atria dipasang ke Layar Utama: Bagikan, lalu Tambahkan ke Layar Utama, dan buka kembali dari ikon tersebut.",
+      "Di iPhone, notifikasi hanya aktif setelah Paduna Build dipasang ke Layar Utama: Bagikan, lalu Tambahkan ke Layar Utama, dan buka kembali dari ikon tersebut.",
     action: null,
   },
   unconfigured: {
     badge: "Nonaktif",
     badgeTone: "neutral",
-    description: "Pengiriman notifikasi belum disiapkan. Hubungi admin Atria.",
+    description: "Pengiriman notifikasi belum disiapkan. Hubungi admin Paduna Build.",
     action: null,
   },
   "sync-required": {

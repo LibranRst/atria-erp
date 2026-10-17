@@ -6,6 +6,7 @@ import { PwaRegistrar } from "@/components/layout/pwa-registrar";
 import { PermissionsProvider } from "@/components/auth/permissions-provider";
 import { resolveActor } from "@/server/actor";
 import { Toaster } from "sonner";
+import { WEB_BRAND_REVISION, WEB_PRODUCT_DESCRIPTION, WEB_PRODUCT_NAME } from "@/lib/brand";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -21,9 +22,10 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atria",
-  description: "Kontrol keuangan proyek dan material.",
-  applicationName: "Atria",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title: WEB_PRODUCT_NAME,
+  description: WEB_PRODUCT_DESCRIPTION,
+  applicationName: WEB_PRODUCT_NAME,
   manifest: "/manifest.webmanifest",
   /*
    * Tiga meta iOS ini yang membuat Atria terbuka penuh layar dari Layar Utama
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
    */
   appleWebApp: {
     capable: true,
-    title: "Atria",
+    title: WEB_PRODUCT_NAME,
     statusBarStyle: "default",
   },
   /*
@@ -50,7 +52,24 @@ export const metadata: Metadata = {
      * Berkasnya sengaja tidak memakai konvensi `app/apple-icon.*` supaya seluruh
      * ikon PWA berada di satu tempat, `public/icons/`.
      */
-    apple: "/icons/apple-touch-icon.png",
+    icon: { url: `/favicon.svg?v=${WEB_BRAND_REVISION}`, type: "image/svg+xml" },
+    apple: `/icons/apple-touch-icon.png?v=${WEB_BRAND_REVISION}`,
+  },
+  openGraph: {
+    title: WEB_PRODUCT_NAME,
+    description: WEB_PRODUCT_DESCRIPTION,
+    siteName: WEB_PRODUCT_NAME,
+    locale: "id_ID",
+    type: "website",
+    images: [
+      { url: "/brand/paduna-build-share.png", width: 1200, height: 630, alt: WEB_PRODUCT_NAME },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: WEB_PRODUCT_NAME,
+    description: WEB_PRODUCT_DESCRIPTION,
+    images: ["/brand/paduna-build-share.png"],
   },
 };
 

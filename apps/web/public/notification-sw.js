@@ -1,5 +1,5 @@
 /*
- * Service worker Atria.
+ * Service worker Paduna Build; legacy storage/tag namespaces remain compatible.
  *
  * Berkas ini dilayani apa adanya dari `public/`, jadi ia tidak diperiksa
  * TypeScript dan tidak boleh punya langkah build sendiri. Nama berkasnya
@@ -9,7 +9,7 @@
  */
 
 const CACHE_PREFIX = "atria-";
-const CACHE_NAME = `${CACHE_PREFIX}shell-v2`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v3`;
 const OFFLINE_URL = "/offline";
 
 const ALLOWED_DESTINATION =
@@ -118,7 +118,7 @@ self.addEventListener("push", (event) => {
   } catch {
     payload = {};
   }
-  const title = typeof payload.title === "string" ? payload.title : "Atria";
+  const title = typeof payload.title === "string" ? payload.title : "Paduna Build";
   const body = typeof payload.body === "string" ? payload.body : "Ada pembaruan baru.";
   const url = safeDestination(payload.url);
   const id = notificationId(payload.notificationId);

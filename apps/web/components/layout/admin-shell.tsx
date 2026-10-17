@@ -13,6 +13,8 @@ import { NotificationBellButton } from "@/features/notifications";
 import { useTopBarSlots } from "./top-bar-slots";
 import { AdminQuickActions } from "./admin-quick-actions";
 import { DesktopProfileMenu } from "./desktop-profile-menu";
+import { ProductLogo } from "@/components/brand/product-logo";
+import { WEB_PRODUCT_NAME } from "@/lib/brand";
 
 export function DesktopChrome({
   hidden = false,
@@ -43,14 +45,12 @@ export function DesktopChrome({
       >
         <Link
           href="/"
-          className="flex h-16 items-center gap-2.5 px-5 text-base font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          aria-label={`${WEB_PRODUCT_NAME} - Beranda`}
+          className="flex h-16 items-center justify-start px-5 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-icon bg-primary text-white">
-            <AppIcon name="space_dashboard" className="icon-lg" />
-          </span>
-          Atria
+          <ProductLogo compact priority />
         </Link>
-        <nav aria-label="Navigasi Atria" className="flex flex-col gap-1 px-3 pb-3">
+        <nav aria-label="Navigasi Paduna Build" className="flex flex-col gap-1 px-3 pb-3">
           {items.map((item) => (
             <Link
               key={item.href}
@@ -73,10 +73,12 @@ export function DesktopChrome({
       >
         <div className="min-w-0">
           <p className="max-w-96 truncate text-sm font-semibold" title={slots?.title}>
-            {slots?.title ?? active?.label ?? (pathname === "/profile" ? "Profil saya" : "Atria")}
+            {slots?.title ??
+              active?.label ??
+              (pathname === "/profile" ? "Profil saya" : WEB_PRODUCT_NAME)}
           </p>
           <p className="text-xs text-on-surface-variant">
-            {slots?.subtitle ?? user?.name ?? "Atria"}
+            {slots?.subtitle ?? user?.name ?? WEB_PRODUCT_NAME}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">

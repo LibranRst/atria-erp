@@ -74,7 +74,7 @@ export function StatementImportSummary({
           </>
         ) : null}
         <p className="px-4 py-3 text-support text-on-surface-variant">
-          Mutasi ini adalah bukti bank. Impor tidak mengubah saldo rekening Atria.
+          Mutasi ini adalah bukti bank. Impor tidak mengubah saldo rekening Paduna Build.
         </p>
       </div>
     </GroupedSurface>
@@ -126,7 +126,7 @@ export function StatementDraftSummary({
           }
         />
         <p className="px-4 py-3 text-support text-on-surface-variant">
-          Menyalin bukti bank tidak mencatat kas masuk atau keluar baru di Atria.
+          Menyalin bukti bank tidak mencatat kas masuk atau keluar baru di Paduna Build.
         </p>
       </div>
     </GroupedSurface>

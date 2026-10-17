@@ -20,7 +20,7 @@ export function LegacyWorkspaceRedirect({
     <div className="space-y-3">
       <PageState
         kind="syncing"
-        title="Membuka halaman Atria"
+        title="Membuka halaman Paduna Build"
         description="Halaman dan filter Anda tetap dipertahankan."
         compact
       />

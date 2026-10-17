@@ -33,7 +33,7 @@ function pushErrorMessage(error: unknown): string {
     if (error.name === "NotAllowedError")
       return "Izin atau layanan notifikasi perangkat belum tersedia. Periksa pengaturan notifikasi lalu coba lagi.";
     if (error.name === "SecurityError")
-      return "Buka Atria melalui alamat HTTPS untuk mengaktifkan notifikasi.";
+      return "Buka Paduna Build melalui alamat HTTPS untuk mengaktifkan notifikasi.";
     return "Layanan notifikasi perangkat belum dapat tersambung. Periksa koneksi lalu coba lagi.";
   }
   return error instanceof Error ? error.message : "Notifikasi perangkat belum dapat diaktifkan.";
