@@ -163,6 +163,33 @@ describe("trusted current-run financial and stock facts", () => {
     expect(answer?.coveredDomains).toContain("projects");
     expect(renderGroundedFacts(question, [bank()])?.status).toBe("partial");
   });
+  test("a corrected project-count retry supersedes presentation metadata from invalid input", (): void => {
+    const question = "Cek jumlah seluruh proyek, termasuk draf, dan saldo total rekening saat ini.";
+    const invalid = observation(
+      "listProjects",
+      {
+        limit: 100,
+        _introduction: "Aku akan memeriksa proyek dan saldo rekening perusahaan.",
+      },
+      { error: "Pemanggilan sumber tidak valid. Perlu pembacaan ulang." },
+      "invalid-project-read",
+    );
+    const corrected = observation(
+      "listProjects",
+      { limit: 20 },
+      {
+        matchedCount: 1,
+        hasMore: false,
+        projects: [{ projectId, name: "Proyek QA", status: "DRAFT" }],
+      },
+      "corrected-project-read",
+    );
+    const answer = renderGroundedFacts(question, [invalid, bank(), corrected]);
+    expect(answer?.status).toBe("verified");
+    expect(answer?.text).toContain("1 proyek");
+    expect(answer?.text).not.toContain("belum dapat diverifikasi");
+    expect(renderGroundedFacts(question, [corrected, bank(), invalid])?.status).toBe("partial");
+  });
   test("project count zero is valid, while legacy previews and unrelated filters are not totals", (): void => {
     const question = "Berapa jumlah seluruh proyek, termasuk draf?";
     const zero = observation("listProjects", {}, { matchedCount: 0, hasMore: false, projects: [] });

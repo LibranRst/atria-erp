@@ -5,6 +5,7 @@ import {
   stripQuotedEntitiesForIntent,
 } from "@atria/core/ai/financial-history";
 import { renderGroundedHistory } from "./grounded-history";
+import { INTRODUCTION_FIELD } from "./chat-introduction";
 import { isExpenseStatusQuestion, renderGroundedExpenseSection } from "./grounded-expenses";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { formatExactIdr, formatIdr } from "@atria/core/utils/money";
@@ -863,7 +864,9 @@ export function renderGroundedFacts(
       JSON.stringify(
         Object.fromEntries(
           Object.entries(record(input))
-            .filter(([key]) => domain !== "projects" || key !== "limit")
+            .filter(
+              ([key]) => key !== INTRODUCTION_FIELD && (domain !== "projects" || key !== "limit"),
+            )
             .sort(([left], [right]) => left.localeCompare(right)),
         ),
       );

@@ -23,22 +23,21 @@ const statusQuestion = "Cek status pengeluaran Biaya panel QA di Proyek QA sekar
 const historyQuestion = "Bandingkan pengeluaran Proyek QA Oktober 2026 dengan September 2026.";
 const mixedHistoryQuestion =
   "Bandingkan pengeluaran dan arus kas perusahaan Oktober 2026 dengan September 2026.";
-const question =
-  mode === "project-count-current"
-    ? "Cek jumlah seluruh proyek, termasuk draf, dan saldo total rekening yang tercatat saat ini. Hanya baca data; jangan membuat atau mengubah apa pun."
-    : mode === "expense-status"
-      ? statusQuestion
-      : mode === "stock-cost-comparison"
-        ? "Uji AI v1 final: bandingkan pengeluaran Proyek Operasional QA bulan Oktober 2026 dengan September 2026. Pisahkan biaya pemakaian stok dari pembelian persediaan; jangan simpan perubahan."
-        : mode === "mixed-current"
-          ? "Cek saldo Rekening QA dan status pengeluaran Biaya panel QA di Proyek QA sekarang."
-          : mode === "unsupported-remembered-bank"
-            ? "Berapa saldo Rekening QA pada akhir September 2026? Jangan gunakan saldo saat ini sebagai pengganti, dan jangan simpan perubahan."
-            : mode === "unsupported-snapshot"
-              ? "Berapa saldo Rekening QA pada akhir September 2026?"
-              : mode.startsWith("mixed-history")
-                ? mixedHistoryQuestion
-                : historyQuestion;
+const question = mode?.startsWith("project-count-")
+  ? "Cek jumlah seluruh proyek, termasuk draf, dan saldo total rekening yang tercatat saat ini. Hanya baca data; jangan membuat atau mengubah apa pun."
+  : mode === "expense-status"
+    ? statusQuestion
+    : mode === "stock-cost-comparison"
+      ? "Uji AI v1 final: bandingkan pengeluaran Proyek Operasional QA bulan Oktober 2026 dengan September 2026. Pisahkan biaya pemakaian stok dari pembelian persediaan; jangan simpan perubahan."
+      : mode === "mixed-current"
+        ? "Cek saldo Rekening QA dan status pengeluaran Biaya panel QA di Proyek QA sekarang."
+        : mode === "unsupported-remembered-bank"
+          ? "Berapa saldo Rekening QA pada akhir September 2026? Jangan gunakan saldo saat ini sebagai pengganti, dan jangan simpan perubahan."
+          : mode === "unsupported-snapshot"
+            ? "Berapa saldo Rekening QA pada akhir September 2026?"
+            : mode.startsWith("mixed-history")
+              ? mixedHistoryQuestion
+              : historyQuestion;
 const currentExpense = {
   appliedFilters: ["Deskripsi cocok Biaya panel QA"],
   offset: 0,
@@ -198,7 +197,7 @@ const tools = {
     },
   }),
   listProjects: tool({
-    inputSchema: z.object({ limit: z.number().default(10) }),
+    inputSchema: z.object({ limit: z.number().max(20).default(10) }),
     execute: async () => ({
       matchedCount: 2,
       hasMore: true,
@@ -249,6 +248,20 @@ const model = new MockLanguageModelV4({
               : [];
     else if (mode === "unsupported-remembered-bank" && step === 1)
       calls = [call("getBankBalances", "{}", "remembered-bank")];
+    else if (mode === "project-count-retry")
+      calls =
+        step === 1
+          ? [
+              call(
+                "listProjects",
+                '{"_introduction":"Aku akan memeriksa proyek dan saldo rekening perusahaan.","limit":100}',
+                "invalid-projects",
+              ),
+              call("getBankBalances", "{}", "cash"),
+            ]
+          : step === 2
+            ? [call("listProjects", '{"limit":20}', "corrected-projects")]
+            : [];
     else if (step === 1 && mode === "project-count-current")
       calls = [
         call("listProjects", '{"limit":1}', "projects"),
@@ -415,11 +428,12 @@ expect(
 ).toBe(true);
 expect(statuses).toHaveLength(1);
 const status = statuses[0].status;
-if (mode === "project-count-current") {
+if (mode?.startsWith("project-count-")) {
   expect(status).toBe("verified");
   expect(published).toContain("2 proyek");
   expect(published).toContain("1.000.000");
-  expect(sent).toHaveLength(1);
+  expect(sent).toHaveLength(mode === "project-count-retry" ? 2 : 1);
+  expect(published).not.toContain("belum dapat diverifikasi");
 } else if (["expense-status", "mixed-current"].includes(mode)) {
   expect(status).toBe("verified");
   expect(published).toContain("150.000,25");

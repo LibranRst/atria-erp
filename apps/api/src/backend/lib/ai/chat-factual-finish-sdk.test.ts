@@ -13,6 +13,7 @@ test.each([
   "mixed-history-partial",
   "mixed-current",
   "project-count-current",
+  "project-count-retry",
   "attachment-boundary",
   "forbidden-proposal",
   "unsupported-snapshot",

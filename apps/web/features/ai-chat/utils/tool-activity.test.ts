@@ -225,3 +225,31 @@ test("active generation, unresolved errors and interruption have priority over w
       .state,
   ).toBe("interrupted");
 });
+
+test("an invalid aggregate preview limit recovers only after a complete unfiltered count", () => {
+  const invalid: Part = {
+    ...legacy,
+    rawInput: { limit: 100, _introduction: "Aku akan memeriksa proyek perusahaan." },
+  };
+  const output = {
+    matchedCount: 37,
+    hasMore: true,
+    projects: [{ projectId: a, name: "Proyek A" }],
+  };
+  const success = done("listProjects", { limit: 20 }, output);
+  const traces = deriveToolActivity(message([invalid, success]), false);
+  expect(traces.map((trace) => trace.state)).toEqual(["recovered", "done"]);
+  expect(activitySummary(traces, false).state).toBe("done");
+  for (const unrelated of [
+    done("listProjects", { limit: 20, query: "Proyek A" }, output),
+    done("listProjects", { limit: 20, status: "ACTIVE" }, output),
+    done("listProjects", { limit: 20 }, { projects: output.projects }),
+    done("listProjects", { limit: 20 }, { ...output, hasMore: false }),
+    done("listProjects", { limit: 20 }, { error: "Tidak tersedia" }),
+  ])
+    expect(deriveToolActivity(message([invalid, unrelated]), false)[0].state).toBe("failed");
+  expect(deriveToolActivity(message([success, invalid]), false).at(-1)?.state).toBe("failed");
+  expect(
+    deriveToolActivity(message([{ ...invalid, errorText: "FORBIDDEN" }, success]), false)[0].state,
+  ).toBe("failed");
+});

@@ -94,6 +94,37 @@ function sameReadInput(failed: Part, success: Part): boolean {
     canonical(failed.input) === canonical(success.input)
   );
 }
+/** A preview-size correction does not change an authoritative unfiltered count. */
+function projectCountRetry(failed: Part, success: Part): boolean {
+  if (failed.type !== "tool-listProjects" || failed.input !== undefined) return false;
+  const raw = z
+    .object({
+      limit: z.number().int().gt(20),
+      _introduction: z.string().optional(),
+    })
+    .strict()
+    .safeParse(failed.rawInput);
+  const input = z
+    .object({ limit: z.number().int().min(1).max(20).optional() })
+    .strict()
+    .safeParse(success.input);
+  const output = z
+    .object({
+      matchedCount: z.number().int().nonnegative(),
+      hasMore: z.boolean(),
+      projects: z.array(z.object({ projectId: z.string().min(1), name: z.string().min(1) })),
+    })
+    .safeParse(success.output);
+  return (
+    raw.success &&
+    input.success &&
+    output.success &&
+    output.data.matchedCount >= output.data.projects.length &&
+    output.data.hasMore === output.data.matchedCount > output.data.projects.length &&
+    new Set(output.data.projects.map((project) => project.projectId)).size ===
+      output.data.projects.length
+  );
+}
 const shortLegacySearch = z
   .object({
     query: z.string().trim().length(1),
@@ -166,6 +197,7 @@ export function deriveToolActivity(
           success.type === part.type &&
           genuineResult(success) &&
           (sameReadInput(part, success) ||
+            projectCountRetry(part, success) ||
             projectChoiceHandoff(part, success, later.slice(next + 1))),
       );
     const payload =
