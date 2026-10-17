@@ -122,6 +122,94 @@ function rab(): GroundedToolObservation {
 }
 
 describe("trusted current-run financial and stock facts", () => {
+  test("project counts use the scoped server aggregate rather than a limited preview", (): void => {
+    const read = observation(
+      "listProjects",
+      { limit: 1 },
+      {
+        matchedCount: 37,
+        hasMore: true,
+        appliedFilters: [],
+        projects: [{ projectId, name: "Proyek QA", status: "DRAFT" }],
+      },
+    );
+    const answer = renderGroundedFacts("Berapa jumlah seluruh proyek, termasuk draf?", [read]);
+    expect(answer?.status).toBe("verified");
+    expect(answer?.text).toContain("37 proyek");
+    expect(answer?.coveredDomains).toContain("projects");
+    expect(answer?.sources[0]?.entityIds).toEqual([projectId]);
+  });
+  test("mixed project counts and current cash require both actual read sources", (): void => {
+    const question =
+      "Cek jumlah seluruh proyek, termasuk draf, dan saldo total rekening yang tercatat saat ini. Hanya baca data; jangan membuat atau mengubah apa pun.";
+    const read = observation(
+      "listProjects",
+      { limit: 10 },
+      {
+        matchedCount: 2,
+        hasMore: false,
+        appliedFilters: [],
+        projects: [
+          { projectId, name: "Proyek QA", status: "ACTIVE" },
+          { projectId: accountA, name: "Proyek QA Draf", status: "DRAFT" },
+        ],
+      },
+    );
+    const answer = renderGroundedFacts(question, [read, bank()]);
+    expect(answer?.status).toBe("verified");
+    expect(answer?.text).toContain("2 proyek");
+    expect(answer?.text).toContain("2.000.000,32");
+    expect(answer?.coveredDomains).toContain("cash");
+    expect(answer?.coveredDomains).toContain("projects");
+    expect(renderGroundedFacts(question, [bank()])?.status).toBe("partial");
+  });
+  test("project count zero is valid, while legacy previews and unrelated filters are not totals", (): void => {
+    const question = "Berapa jumlah seluruh proyek, termasuk draf?";
+    const zero = observation("listProjects", {}, { matchedCount: 0, hasMore: false, projects: [] });
+    expect(renderGroundedFacts(question, [zero])?.status).toBe("verified");
+    expect(renderGroundedFacts(question, [zero])?.text).toContain("0 proyek");
+    const preview = {
+      projects: [{ projectId, name: "Proyek QA", status: "DRAFT" }],
+      hasMore: true,
+    };
+    expect(renderGroundedFacts(question, [observation("listProjects", {}, preview)])?.status).toBe(
+      "waiting",
+    );
+    expect(
+      renderGroundedFacts(question, [
+        observation("listProjects", { status: "ACTIVE" }, { ...preview, matchedCount: 1 }),
+      ])?.status,
+    ).toBe("waiting");
+    expect(
+      renderGroundedFacts(question, [
+        observation("listProjects", { query: "proyek" }, { ...preview, matchedCount: 1 }),
+      ])?.status,
+    ).toBe("waiting");
+  });
+  test.each([
+    "Berapa saldo rekening saat ini?",
+    "Berapa saldo total rekening yang tercatat saat ini?",
+  ])(
+    "natural current-balance qualifiers retain the complete authorized total: %s",
+    (question): void => {
+      const answer = renderGroundedFacts(question, [bank()]);
+      expect(answer?.status).toBe("verified");
+      expect(answer?.text).toContain("2.000.000,32");
+      expect(answer?.sources[0]?.entityIds).toEqual([accountA, accountB]);
+    },
+  );
+  test.each([
+    "Cek saldo rekening Tidak Ada saat ini",
+    "Cek saldo rekening ini",
+    'Cek saldo rekening "Yang Tercatat Saat Ini"',
+  ])(
+    "current-balance wording does not broaden an unknown or ambiguous account: %s",
+    (question): void => {
+      const answer = renderGroundedFacts(question, [bank()]);
+      expect(answer?.status).toBe("waiting");
+      expect(answer?.sources).toEqual([]);
+    },
+  );
   test("terkini denotes a current balance request while named account binding stays explicit", (): void => {
     const answer = renderGroundedFacts(
       "Periksa saldo rekening terkini dan tampilkan daftar rekeningnya. Jangan ubah data.",

@@ -29,3 +29,11 @@ Use the already signed-in dedicated dev Owner; never reset a personal Owner pass
 Test AI streaming/completion/persistence, grounded read-only tools, error recovery and supported synthetic file/OCR/document previews through the public Netlify origin and existing approved API provider. Prefer synthetic content. Do not confirm finance/stock/administration proposals or create test business rows in production. Exercise mutation/domain invariants against isolated fixtures instead. Report exact passed coverage and any untested production actions honestly.
 
 Completion requires a live matching release, verified account/data preservation, passing CI, hosted UI/AI evidence and documented rollback—not merely an anonymous health response.
+
+## Hosted AI regression discovered during acceptance
+
+The first candidate is live and its three CI runs pass. Public chat streaming works, but a fresh mixed project-count/current-balance question repeatedly ends with read cards and a procedural introduction, without a final answer or persisted assistant message. Read-only database inspection confirms that the final text was never stored; this is not merely the old rendering-after-reload symptom.
+
+Two deterministic regressions now reproduce current-balance parsing: `saldo rekening saat ini` and `saldo total rekening yang tercatat saat ini` are incorrectly treated as an ambiguous/named account target. Existing invalid-input/retry SDK replay still publishes and persists a partial response, so a stale validation error alone does not explain the hosted failure. Preserve all permission, account identity, pagination and exact-money guards while fixing natural-language scope recognition.
+
+The follow-up must also avoid treating a bank-only result as complete coverage of a requested project count, and must expose interrupted responses as incomplete rather than accepting a useful read card as proof of a terminal stream. Add red-before-green regressions at the factual renderer and actual SDK/UI stream seams. Re-run targeted tests, relevant broad checks and hosted reproduction before a follow-up release. No finance/material/account data repair or authorization widening is part of this fix.

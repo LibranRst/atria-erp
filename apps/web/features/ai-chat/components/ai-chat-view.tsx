@@ -191,8 +191,10 @@ export function AiChatView(): React.JSX.Element {
     useChat({
       transport,
       generateId: () => crypto.randomUUID(),
-      onFinish: ({ message, isError, isAbort }) => {
-        if (isError || isAbort || !acceptStreamData.current) return;
+      onFinish: ({ message, isError, isAbort, finishReason }) => {
+        // EOF can end an HTTP stream after a useful card but before the answer.
+        // Only a terminal SDK finish may clear the recoverable question.
+        if (isError || isAbort || finishReason === undefined || !acceptStreamData.current) return;
         // Terminal status can render before the final streamed snapshot.
         // Publish the complete SDK reply, retaining the same turn/card IDs.
         setMessages((current) => finishChatReply(current, message));

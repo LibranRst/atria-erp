@@ -12,7 +12,7 @@ import {
   projectHealthReasonLabel,
 } from "@atria/core/project/effective-health";
 import { tool } from "ai";
-import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import {
   canAccessProject,
@@ -47,7 +47,9 @@ export function buildProjectTools(context: AiToolContext) {
         status: z
           .enum(["ACTIVE", "DRAFT", "ON_HOLD", "COMPLETED", "CANCELLED"])
           .optional()
-          .describe("Filter by project status. Omit to include all statuses."),
+          .describe(
+            "Filter by project status. Omit to include all statuses; never send ALL or null.",
+          ),
         limit: z
           .number()
           .int()
@@ -78,22 +80,35 @@ export function buildProjectTools(context: AiToolContext) {
         // Join eksplisit, bukan relational query: `where` pada relational query
         // tidak bisa menjangkau kolom tabel yang di-join, sehingga pencarian
         // berdasarkan nama klien akan diam-diam tidak pernah cocok.
-        const rows = await db
-          .select({
-            id: project.id,
-            name: project.name,
-            status: project.status,
-            financialHealth: project.financialHealth,
-            totalContractValue: project.totalContractValue,
-            clientName: client.name,
-          })
-          .from(project)
-          .innerJoin(client, eq(project.clientId, client.id))
-          .where(conditions.length > 0 ? and(...conditions) : undefined)
-          .orderBy(desc(project.updatedAt))
-          .limit(limit);
+        const { rows, matchedCount } = await db.transaction(
+          async (tx) => {
+            const rows = await tx
+              .select({
+                id: project.id,
+                name: project.name,
+                status: project.status,
+                financialHealth: project.financialHealth,
+                totalContractValue: project.totalContractValue,
+                clientName: client.name,
+              })
+              .from(project)
+              .innerJoin(client, eq(project.clientId, client.id))
+              .where(conditions.length > 0 ? and(...conditions) : undefined)
+              .orderBy(desc(project.updatedAt))
+              .limit(limit);
+            const [summary] = await tx
+              .select({ value: count() })
+              .from(project)
+              .innerJoin(client, eq(project.clientId, client.id))
+              .where(conditions.length > 0 ? and(...conditions) : undefined);
+            return { rows, matchedCount: summary?.value ?? 0 };
+          },
+          { isolationLevel: "repeatable read", accessMode: "read only" },
+        );
 
         return {
+          matchedCount,
+          hasMore: matchedCount > rows.length,
           requiresProjectChoice: query?.length === 1 || rows.length > 1,
           appliedFilters: describeFilters([
             query ? `Cocok "${query}"` : null,

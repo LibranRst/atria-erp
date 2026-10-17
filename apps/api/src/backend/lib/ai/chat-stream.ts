@@ -47,6 +47,7 @@ import { parseFinancialHistoryRequest } from "@atria/core/ai/financial-history";
 import { isExpenseStatusQuestion } from "./grounded-expenses";
 import {
   isGroundedFactQuestion,
+  isProjectCountQuestion,
   isHistoricalGroundedFactQuestion,
   renderGroundedFacts,
   type GroundedToolObservation,
@@ -233,17 +234,25 @@ export function runChatStream(input: ChatStreamInput): ChatStreamResult {
                   ),
               );
           let requestedDiscovery = false;
-          const requiredReads = (
-            historical
-              ? active.includes("getFinancialHistory")
-                ? ["getFinancialHistory"]
-                : []
-              : isExpenseStatusQuestion(question)
-                ? active.includes("getRecentExpenses")
-                  ? ["getRecentExpenses"]
+          const requiredReads = [
+            ...new Set([
+              ...(historical
+                ? active.includes("getFinancialHistory")
+                  ? ["getFinancialHistory"]
                   : []
-                : requiredFreshReads(intentMessages, active)
-          ).filter((name) => !(name === "getOwnProfileContext" && input.verifiedOwnProfile));
+                : isExpenseStatusQuestion(question)
+                  ? active.includes("getRecentExpenses")
+                    ? ["getRecentExpenses"]
+                    : []
+                  : requiredFreshReads(intentMessages, active)),
+              ...(grounded &&
+              !historical &&
+              isProjectCountQuestion(question) &&
+              active.includes("listProjects")
+                ? ["listProjects"]
+                : []),
+            ]),
+          ].filter((name) => !(name === "getOwnProfileContext" && input.verifiedOwnProfile));
           let factsReady = requiredReads.length === 0;
           const proposalTools = new Set(expectedSingleFamilyProposalTools(question, initial));
           const literalOwnNameEdit =

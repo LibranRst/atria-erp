@@ -16,7 +16,7 @@ import {
   getProjectHealthOutputSchema,
 } from "@atria/core/ai/tool-output";
 
-export type GroundedFactDomain = "cash" | "budget" | "stock" | "documents" | "history";
+export type GroundedFactDomain = "cash" | "projects" | "budget" | "stock" | "documents" | "history";
 /** Executed read results from this generation only. Never pass conversation history. */
 export interface GroundedToolObservation {
   readonly toolName: string;
@@ -53,6 +53,7 @@ const stockRow = z.object({
 const tools: Readonly<Record<GroundedFactDomain, readonly string[]>> = {
   history: ["getFinancialHistory"],
   cash: ["getBankBalances", "getBankCashContext"],
+  projects: ["listProjects"],
   budget: ["getProjectBudget", "getProjectHealth"],
   stock: [
     "getWarehouseContext",
@@ -77,6 +78,7 @@ const tools: Readonly<Record<GroundedFactDomain, readonly string[]>> = {
 const domainLabel: Readonly<Record<GroundedFactDomain, string>> = {
   history: "laporan periode",
   cash: "saldo rekening",
+  projects: "jumlah proyek",
   budget: "budget proyek",
   stock: "stok gudang",
   documents: "status dokumen",
@@ -96,6 +98,67 @@ function plain(value: string): string {
 }
 function record(value: unknown): Record<string, unknown> {
   return objectSchema.safeParse(value).data ?? {};
+}
+export function isProjectCountQuestion(question: string): boolean {
+  return /\b(?:jumlah|total|berapa(?: banyak)?)\s+(?:(?:seluruh|semua|total)\s+)?proyek\b/.test(
+    normalize(question),
+  );
+}
+function projectCountInputMatches(question: string, input: Record<string, unknown>): boolean {
+  // A limited/name search cannot stand in for the requested portfolio count.
+  if (input.query !== undefined || /\b(?:klien|bernama|milik)\b/.test(normalize(question)))
+    return false;
+  const statusWord = normalize(question).match(
+    /\b(?:proyek|status)\s+(?:yang\s+)?(aktif|draf|draft|ditahan|selesai|dibatalkan)\b/,
+  )?.[1];
+  const statuses: Readonly<Record<string, string>> = {
+    aktif: "ACTIVE",
+    draf: "DRAFT",
+    draft: "DRAFT",
+    ditahan: "ON_HOLD",
+    selesai: "COMPLETED",
+    dibatalkan: "CANCELLED",
+  };
+  return input.status === (statusWord ? statuses[statusWord] : undefined);
+}
+function projectCountSection(
+  question: string,
+  observation: GroundedToolObservation,
+): Section | null {
+  if (
+    observation.toolName !== "listProjects" ||
+    !projectCountInputMatches(question, record(observation.input))
+  )
+    return null;
+  const value = z
+    .object({
+      matchedCount: z.number().int().nonnegative(),
+      hasMore: z.boolean(),
+      projects: z.array(
+        z.object({
+          projectId: z.string().min(1),
+          name: z.string().min(1),
+          status: z.string().min(1),
+        }),
+      ),
+    })
+    .safeParse(observation.output).data;
+  if (
+    !value ||
+    value.matchedCount < value.projects.length ||
+    value.hasMore !== value.matchedCount > value.projects.length ||
+    new Set(value.projects.map((p) => p.projectId)).size !== value.projects.length
+  )
+    return null;
+  const status = z.string().safeParse(record(observation.input).status).data;
+  return {
+    text: `Jumlah proyek dalam akses Anda (${status ? formatBusinessLabel(status) : "semua status, termasuk draf"}): **${value.matchedCount} proyek**.`,
+    source: source(
+      observation,
+      value.projects.map((p) => p.projectId),
+    ),
+    complete: true,
+  };
 }
 function requestedDomains(question: string): GroundedFactDomain[] {
   const text = normalize(question);
@@ -127,6 +190,7 @@ function requestedDomains(question: string): GroundedFactDomain[] {
   const result: GroundedFactDomain[] = [];
   const cashQuestion = intent.replace(/\b(?:kas (?:dibayar|keluar)|cash paid)\b/g, "");
   if (/\b(?:saldo|kas|balance|cash)\b/.test(cashQuestion)) result.push("cash");
+  if (isProjectCountQuestion(question)) result.push("projects");
   if (
     /\b(?:budget|anggaran|alokasi|plafon|margin|nilai kontrak|nilai proyek|realisasi|sisa pagu)\b/.test(
       intent,
@@ -276,16 +340,24 @@ function cashSection(question: string, observation: GroundedToolObservation): Se
               bankOnly === normalize(a.bankName)),
         );
     const explicitlyNamed = namedAccounts.length ? namedAccounts : namedBanks;
-    const target = normalize(question).match(/\brekening\s+(.+?)(?:\s+dan\s+|$)/)?.[1];
-    const generic =
-      !target ||
-      /^(?:aktif|perusahaan|gabungan|semua|seluruh|terbaru|terkini|sekarang|saat ini)$/.test(
-        target,
-      );
+    const target = normalize(question.split(/[.!?;\n]/, 1)[0] ?? "").match(
+      /\brekening\s+(.+?)(?:\s+dan\s+|$)/,
+    )?.[1];
+    const quotedTarget = /\brekening\s+["'“‘]/i.test(question);
+    const genericTarget = target
+      ?.replace(/\b(?:yang\s+)?(?:tercatat|tersedia)\b/g, " ")
+      .replace(
+        /\b(?:saat ini|sekarang|terbaru|terkini|aktif|perusahaan|gabungan|semua|seluruh)\b/g,
+        " ",
+      )
+      .trim();
+    const generic = !target || (!quotedTarget && !genericTarget);
     if (!generic && !explicitlyNamed.length) return null;
     if (
       !explicitlyNamed.length &&
-      /\b(?:tadi|tersebut|dipilih|ini|itu|barusan|sebelumnya)\b/.test(normalize(question)) &&
+      /\b(?:tadi|tersebut|dipilih|ini|itu|barusan|sebelumnya)\b/.test(
+        normalize(question).replace(/\bsaat ini\b/g, ""),
+      ) &&
       !/\b(?:perusahaan|gabungan|semua rekening|seluruh rekening)\b/.test(normalize(question))
     )
       return null;
@@ -779,14 +851,18 @@ export function renderGroundedFacts(
           ? ["listProjects"]
           : [];
     const relevant = currentRun.filter(
-      (o) => tools[domain].includes(o.toolName) || supporting.includes(o.toolName),
+      (o) =>
+        (tools[domain].includes(o.toolName) || supporting.includes(o.toolName)) &&
+        (domain !== "projects" || projectCountInputMatches(question, record(o.input))),
     );
     // The latest attempt for exactly the same read replaces an earlier failed
     // retry. Errors for a different target remain visible.
     const inputKey = (input: unknown): string =>
       JSON.stringify(
         Object.fromEntries(
-          Object.entries(record(input)).sort(([left], [right]) => left.localeCompare(right)),
+          Object.entries(record(input))
+            .filter(([key]) => domain !== "projects" || key !== "limit")
+            .sort(([left], [right]) => left.localeCompare(right)),
         ),
       );
     const latest = relevant.filter(
@@ -858,11 +934,13 @@ export function renderGroundedFacts(
         const section =
           domain === "cash"
             ? cashSection(question, observation)
-            : domain === "budget"
-              ? budgetSection(question, observation, currentRun)
-              : domain === "stock"
-                ? stockSection(question, observation, currentRun)
-                : documentSection(question, observation);
+            : domain === "projects"
+              ? projectCountSection(question, observation)
+              : domain === "budget"
+                ? budgetSection(question, observation, currentRun)
+                : domain === "stock"
+                  ? stockSection(question, observation, currentRun)
+                  : documentSection(question, observation);
         if (section) {
           const key = `${domain}:${[...section.source.entityIds].sort().join(",")}`;
           const index = sectionIndexes.get(key);

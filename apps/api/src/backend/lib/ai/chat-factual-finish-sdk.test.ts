@@ -12,6 +12,7 @@ test.each([
   "mixed-history-complete",
   "mixed-history-partial",
   "mixed-current",
+  "project-count-current",
   "attachment-boundary",
   "forbidden-proposal",
   "unsupported-snapshot",

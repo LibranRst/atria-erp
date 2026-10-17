@@ -1,13 +1,21 @@
 import { test, expect } from "bun:test";
 import { fileURLToPath } from "node:url";
 
-for (const scenario of ["complete", "intro-only", "scroll-mobile", "scroll-desktop"] as const) {
+for (const scenario of [
+  "complete",
+  "intro-only",
+  "read-card-eof",
+  "scroll-mobile",
+  "scroll-desktop",
+] as const) {
   test(
     scenario === "complete"
       ? "completed SDK stream renders its final reply without reloading history"
-      : scenario === "intro-only"
-        ? "introduction-only SDK finish preserves pending recovery without a duplicate request"
-        : `real SDK conversation promotion and response growth preserve the reading position (${scenario})`,
+      : scenario === "read-card-eof"
+        ? "a read card followed by unexpected EOF retains the question and exposes retry"
+        : scenario === "intro-only"
+          ? "introduction-only SDK finish preserves pending recovery without a duplicate request"
+          : `real SDK conversation promotion and response growth preserve the reading position (${scenario})`,
     async (): Promise<void> => {
       const child = Bun.spawn(
         [
@@ -37,9 +45,11 @@ for (const scenario of ["complete", "intro-only", "scroll-mobile", "scroll-deskt
       expect(stdout).toContain(
         scenario === "complete"
           ? "chat stream final response DOM passed"
-          : scenario === "intro-only"
-            ? "chat stream introduction-only recovery DOM passed"
-            : `chat stream scroll stability DOM passed (${scenario === "scroll-desktop" ? 1280 : 390})`,
+          : scenario === "read-card-eof"
+            ? "chat stream partial-read EOF recovery DOM passed"
+            : scenario === "intro-only"
+              ? "chat stream introduction-only recovery DOM passed"
+              : `chat stream scroll stability DOM passed (${scenario === "scroll-desktop" ? 1280 : 390})`,
       );
     },
     30_000,

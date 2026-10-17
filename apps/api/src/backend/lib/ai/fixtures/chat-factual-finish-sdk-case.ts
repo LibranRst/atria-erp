@@ -24,19 +24,21 @@ const historyQuestion = "Bandingkan pengeluaran Proyek QA Oktober 2026 dengan Se
 const mixedHistoryQuestion =
   "Bandingkan pengeluaran dan arus kas perusahaan Oktober 2026 dengan September 2026.";
 const question =
-  mode === "expense-status"
-    ? statusQuestion
-    : mode === "stock-cost-comparison"
-      ? "Uji AI v1 final: bandingkan pengeluaran Proyek Operasional QA bulan Oktober 2026 dengan September 2026. Pisahkan biaya pemakaian stok dari pembelian persediaan; jangan simpan perubahan."
-      : mode === "mixed-current"
-        ? "Cek saldo Rekening QA dan status pengeluaran Biaya panel QA di Proyek QA sekarang."
-        : mode === "unsupported-remembered-bank"
-          ? "Berapa saldo Rekening QA pada akhir September 2026? Jangan gunakan saldo saat ini sebagai pengganti, dan jangan simpan perubahan."
-          : mode === "unsupported-snapshot"
-            ? "Berapa saldo Rekening QA pada akhir September 2026?"
-            : mode.startsWith("mixed-history")
-              ? mixedHistoryQuestion
-              : historyQuestion;
+  mode === "project-count-current"
+    ? "Cek jumlah seluruh proyek, termasuk draf, dan saldo total rekening yang tercatat saat ini. Hanya baca data; jangan membuat atau mengubah apa pun."
+    : mode === "expense-status"
+      ? statusQuestion
+      : mode === "stock-cost-comparison"
+        ? "Uji AI v1 final: bandingkan pengeluaran Proyek Operasional QA bulan Oktober 2026 dengan September 2026. Pisahkan biaya pemakaian stok dari pembelian persediaan; jangan simpan perubahan."
+        : mode === "mixed-current"
+          ? "Cek saldo Rekening QA dan status pengeluaran Biaya panel QA di Proyek QA sekarang."
+          : mode === "unsupported-remembered-bank"
+            ? "Berapa saldo Rekening QA pada akhir September 2026? Jangan gunakan saldo saat ini sebagai pengganti, dan jangan simpan perubahan."
+            : mode === "unsupported-snapshot"
+              ? "Berapa saldo Rekening QA pada akhir September 2026?"
+              : mode.startsWith("mixed-history")
+                ? mixedHistoryQuestion
+                : historyQuestion;
 const currentExpense = {
   appliedFilters: ["Deskripsi cocok Biaya panel QA"],
   offset: 0,
@@ -195,6 +197,15 @@ const tools = {
       };
     },
   }),
+  listProjects: tool({
+    inputSchema: z.object({ limit: z.number().default(10) }),
+    execute: async () => ({
+      matchedCount: 2,
+      hasMore: true,
+      appliedFilters: [],
+      projects: [{ projectId, name: "Proyek QA", status: "DRAFT" }],
+    }),
+  }),
   getAvailableActions: tool({
     inputSchema: z.object({}).strict(),
     execute: async () => ({
@@ -238,6 +249,11 @@ const model = new MockLanguageModelV4({
               : [];
     else if (mode === "unsupported-remembered-bank" && step === 1)
       calls = [call("getBankBalances", "{}", "remembered-bank")];
+    else if (step === 1 && mode === "project-count-current")
+      calls = [
+        call("listProjects", '{"limit":1}', "projects"),
+        call("getBankBalances", "{}", "cash"),
+      ];
     else if (step === 1 && mode === "mixed-current")
       calls = [
         call(
@@ -399,7 +415,12 @@ expect(
 ).toBe(true);
 expect(statuses).toHaveLength(1);
 const status = statuses[0].status;
-if (["expense-status", "mixed-current"].includes(mode)) {
+if (mode === "project-count-current") {
+  expect(status).toBe("verified");
+  expect(published).toContain("2 proyek");
+  expect(published).toContain("1.000.000");
+  expect(sent).toHaveLength(1);
+} else if (["expense-status", "mixed-current"].includes(mode)) {
   expect(status).toBe("verified");
   expect(published).toContain("150.000,25");
   expect(published).toContain("Disetujui");

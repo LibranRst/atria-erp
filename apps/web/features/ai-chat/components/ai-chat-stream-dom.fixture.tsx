@@ -6,6 +6,7 @@ import type { ChatComposerProps } from "./chat-composer";
 
 const motion = process.argv[2] === "reduced" ? "reduced" : "normal";
 const introductionOnly = process.argv[3] === "intro-only";
+const partialReadEof = process.argv[3] === "read-card-eof";
 const scrolling = process.argv[3] === "scroll-mobile" || process.argv[3] === "scroll-desktop";
 const width = process.argv[3] === "scroll-desktop" ? 1280 : 390;
 const browserWindow = new Window({
@@ -166,37 +167,65 @@ const opening: readonly Record<string, unknown>[] = [
 ];
 const chunks: readonly Record<string, unknown>[] = introductionOnly
   ? opening
-  : [
-      ...opening,
-      { type: "start-step" },
-      {
-        type: "tool-input-available",
-        toolCallId: "qa-follow-ups",
-        toolName: "suggestFollowUps",
-        input: { questions: ["Lihat rincian?"] },
-      },
-      {
-        type: "tool-output-available",
-        toolCallId: "qa-follow-ups",
-        output: { questions: ["Lihat rincian?"] },
-      },
-      { type: "finish-step" },
-    ];
+  : partialReadEof
+    ? [
+        ...opening,
+        { type: "start-step" },
+        {
+          type: "tool-input-available",
+          toolCallId: "qa-bank-read",
+          toolName: "getBankBalances",
+          input: {},
+        },
+        {
+          type: "tool-output-available",
+          toolCallId: "qa-bank-read",
+          output: {
+            totalAvailable: { amount: 10000, formatted: "Rp 10.000" },
+            accounts: [
+              {
+                accountName: "Rekening QA",
+                bankName: "Bank QA",
+                balance: { amount: 10000, formatted: "Rp 10.000" },
+              },
+            ],
+          },
+        },
+        { type: "finish-step" },
+      ]
+    : [
+        ...opening,
+        { type: "start-step" },
+        {
+          type: "tool-input-available",
+          toolCallId: "qa-follow-ups",
+          toolName: "suggestFollowUps",
+          input: { questions: ["Lihat rincian?"] },
+        },
+        {
+          type: "tool-output-available",
+          toolCallId: "qa-follow-ups",
+          output: { questions: ["Lihat rincian?"] },
+        },
+        { type: "finish-step" },
+      ];
 const answer = "Jawaban QA harus tampil setelah stream selesai.";
-const tail: readonly Record<string, unknown>[] = introductionOnly
-  ? [{ type: "finish", finishReason: "stop" }]
-  : [
-      { type: "start-step" },
-      { type: "text-start", id: "qa-final-text" },
-      { type: "text-delta", id: "qa-final-text", delta: answer },
-      { type: "text-end", id: "qa-final-text" },
-      {
-        type: "data-grounded-facts",
-        data: { status: "error", sources: [], coveredDomains: [], missingDomains: ["budget"] },
-      },
-      { type: "finish-step" },
-      { type: "finish", finishReason: "stop" },
-    ];
+const tail: readonly Record<string, unknown>[] = partialReadEof
+  ? []
+  : introductionOnly
+    ? [{ type: "finish", finishReason: "stop" }]
+    : [
+        { type: "start-step" },
+        { type: "text-start", id: "qa-final-text" },
+        { type: "text-delta", id: "qa-final-text", delta: answer },
+        { type: "text-end", id: "qa-final-text" },
+        {
+          type: "data-grounded-facts",
+          data: { status: "error", sources: [], coveredDomains: [], missingDomains: ["budget"] },
+        },
+        { type: "finish-step" },
+        { type: "finish", finishReason: "stop" },
+      ];
 function encode(parts: readonly Record<string, unknown>[]): Uint8Array {
   return new TextEncoder().encode(
     parts.map((part) => "data: " + JSON.stringify(part) + "\n\n").join(""),
@@ -463,14 +492,18 @@ if (scrolling) {
   const activityNode = host.querySelector("[data-reply-activity]");
   assert.ok(activityNode);
   assert.ok(introNode.compareDocumentPosition(activityNode) & Node.DOCUMENT_POSITION_FOLLOWING);
-  if (introductionOnly) {
+  if (introductionOnly || partialReadEof) {
     assert.equal(host.textContent?.includes(answer), false, "commentary is not the final answer");
-    assert.ok(
-      activityNode.classList.contains("hidden"),
-      "clean finish stops the activity indicator",
-    );
+    if (!partialReadEof)
+      assert.ok(
+        activityNode.classList.contains("hidden"),
+        "clean finish stops the activity indicator",
+      );
     const alert = host.querySelector('[role="alert"]');
-    assert.ok(alert, "a clean introduction-only finish still exposes pending recovery");
+    assert.ok(
+      alert,
+      "an introduction or read card without a terminal answer still exposes pending recovery",
+    );
     assert.ok(alert.textContent?.includes("Jawaban belum selesai. Pertanyaan tetap tersedia"));
     const retry = alert.querySelector<HTMLButtonElement>("button");
     assert.ok(retry);
@@ -480,7 +513,7 @@ if (scrolling) {
     const pending = saved.drafts["00000000-0000-4000-8000-000000000123"]?.pending;
     assert.ok(
       pending,
-      "onFinish does not clear the persisted pending question for commentary alone",
+      "onFinish does not clear the pending question for commentary or an interrupted read card",
     );
     assert.equal(pending.text, "Cek budget terbaru");
     assert.equal(requests, 1, "pending recovery does not start a duplicate request automatically");
@@ -494,8 +527,10 @@ if (scrolling) {
   await act(async () => root.unmount());
   await browserWindow.happyDOM.abort();
   console.log(
-    introductionOnly
-      ? "chat stream introduction-only recovery DOM passed"
-      : "chat stream final response DOM passed",
+    partialReadEof
+      ? "chat stream partial-read EOF recovery DOM passed"
+      : introductionOnly
+        ? "chat stream introduction-only recovery DOM passed"
+        : "chat stream final response DOM passed",
   );
 }
