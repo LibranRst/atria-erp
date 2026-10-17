@@ -540,17 +540,78 @@ describeIntegration("AI full expense batch workflow", () => {
       source = ok(await saveExpenseDraftUseCase(await actor(), { payload: p.proposal.payload })),
       ai = await proof({ sourceDraftId: source.id }),
       v = ok(await start(ai.identity));
-    const results = await Promise.all([
+    const [aiResult, manualResult] = await Promise.all([
       save({ ...ai.identity, expectedRevision: v.revision, token: randomUUID() }),
       withTestRequest(submitExpenseDraft)({
         draftId: source.id,
         expectedRevision: source.revision,
       }),
     ]);
-    expect(results.filter((r) => r.success)).toHaveLength(1);
-    expect(
-      await db.query.projectCost.findMany({ where: eq(projectCost.projectId, projectId) }),
-    ).toHaveLength(2);
+    // Manual submission may legitimately return the AI-created group idempotently.
+    expect(aiResult.success || manualResult.success).toBe(true);
+    const costs = await db.query.projectCost.findMany({
+      where: eq(projectCost.projectId, projectId),
+    });
+    expect(costs).toHaveLength(2);
+    expect(new Set(costs.map((cost) => cost.receiptGroupId)).size).toBe(1);
+    if (aiResult.success) {
+      expect(aiResult.data.costIds.toSorted()).toEqual(costs.map((cost) => cost.id).toSorted());
+      expect(costs.every((cost) => cost.receiptGroupId === aiResult.data.groupId)).toBe(true);
+    }
+    if (manualResult.success) {
+      expect(manualResult.data.projectCostIds.toSorted()).toEqual(
+        costs.map((cost) => cost.id).toSorted(),
+      );
+      expect(costs.every((cost) => cost.receiptGroupId === manualResult.data.receiptGroupId)).toBe(
+        true,
+      );
+      if (aiResult.success) expect(manualResult.data.idempotent).toBe(true);
+    }
+  });
+  test("AI-first continuation permits an idempotent manual retry without another expense group", async () => {
+    const p = await proof({ projectId, rows: [row(0), row(1)] }),
+      source = ok(await saveExpenseDraftUseCase(await actor(), { payload: p.proposal.payload })),
+      ai = await proof({ sourceDraftId: source.id }),
+      v = ok(await start(ai.identity)),
+      submitted = ok(
+        await save({ ...ai.identity, expectedRevision: v.revision, token: randomUUID() }),
+      ),
+      repeated = ok(
+        await withTestRequest(submitExpenseDraft)({
+          draftId: source.id,
+          expectedRevision: source.revision,
+        }),
+      );
+    expect(repeated.idempotent).toBe(true);
+    expect(repeated.receiptGroupId).toBe(submitted.groupId);
+    expect(repeated.projectCostIds.toSorted()).toEqual(submitted.costIds.toSorted());
+    const costs = await db.query.projectCost.findMany({
+      where: eq(projectCost.projectId, projectId),
+    });
+    expect(costs).toHaveLength(2);
+    expect(costs.map((cost) => cost.id).toSorted()).toEqual(submitted.costIds.toSorted());
+    expect(costs.every((cost) => cost.receiptGroupId === submitted.groupId)).toBe(true);
+  });
+  test("manual-first submission rejects stale AI continuation without another expense group", async () => {
+    const p = await proof({ projectId, rows: [row(0), row(1)] }),
+      source = ok(await saveExpenseDraftUseCase(await actor(), { payload: p.proposal.payload })),
+      ai = await proof({ sourceDraftId: source.id }),
+      v = ok(await start(ai.identity)),
+      submitted = ok(
+        await withTestRequest(submitExpenseDraft)({
+          draftId: source.id,
+          expectedRevision: source.revision,
+        }),
+      ),
+      stale = await save({ ...ai.identity, expectedRevision: v.revision, token: randomUUID() });
+    expect(stale.success).toBe(false);
+    if (!stale.success) expect(stale.error.code).toBe("CONFLICT");
+    const costs = await db.query.projectCost.findMany({
+      where: eq(projectCost.projectId, projectId),
+    });
+    expect(costs).toHaveLength(2);
+    expect(costs.map((cost) => cost.id).toSorted()).toEqual(submitted.projectCostIds.toSorted());
+    expect(costs.every((cost) => cost.receiptGroupId === submitted.receiptGroupId)).toBe(true);
   });
   test("owned chat image is adopted for project-scoped proof; foreign/wrong-project receipts cannot submit", async () => {
     const image = (

@@ -139,7 +139,7 @@ class DiscoveryTests(unittest.TestCase):
         app = Path(__file__).resolve().parents[1]
         suites = module.discover_suites(app)
         files = {row["file"] for row in suites}
-        self.assertGreaterEqual(len(files), 57)
+        self.assertGreaterEqual(len(files), 58)
         self.assertEqual(len(files), len(suites))
         self.assertTrue({
             "src/backend/app/actions/ai/expense-batch.integration.test.ts",
