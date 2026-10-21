@@ -24,7 +24,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-printf 'Atria R2 storage check; no database or personal data.\n' > "$probe_dir/source.probe"
+printf 'Paduna Build R2 storage check; no database or personal data.\n' > "$probe_dir/source.probe"
 digest="$(shasum -a 256 "$probe_dir/source.probe" | awk '{print $1}')"
 content_md5="$(openssl dgst -md5 -binary "$probe_dir/source.probe" | openssl base64 -A)"
 key="atria-erp/prod/_checks/$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_RUN_ID:-manual}-${GITHUB_RUN_ATTEMPT:-1}.probe"

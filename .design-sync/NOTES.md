@@ -1,6 +1,6 @@
 # design-sync NOTES
 
-Atria ERP is a private Next.js app (no publishable package, no Storybook prior to this sync). This file records the repo-specific fixes so future syncs don't have to rediscover them.
+Paduna Build is a private Next.js app (no publishable package, no Storybook prior to this sync). This file records the repo-specific fixes so future syncs don't have to rediscover them.
 
 ## Repo shape
 

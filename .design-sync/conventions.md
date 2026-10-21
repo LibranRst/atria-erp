@@ -1,6 +1,6 @@
-## Atria ERP design system — conventions
+## Paduna Build design system — conventions
 
-Atria ERP is Dekoria's mobile-first, iOS-style internal ERP for interior design/build project finance. These components are the real, compiled UI primitives from that app — build with them exactly as shown below, not with generic replacements.
+Paduna Build is Dekoria's mobile-first, iOS-style internal ERP for interior design/build project finance. These components are the real, compiled UI primitives from that app — build with them exactly as shown below, not with generic replacements.
 
 ### Setup
 

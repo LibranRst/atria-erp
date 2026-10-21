@@ -1,11 +1,11 @@
 ---
 name: atria-qa
-description: Runs diagnostic checks, automated quality gates, TypeScript validation, ESLint canonical checks, demo database reset, and seed invariant verification for Atria ERP. Use when verifying changes, checking build health, resetting test databases, or validating financial/demo seed integrity.
+description: Runs diagnostic checks, automated quality gates, TypeScript validation, ESLint canonical checks, demo database reset, and seed invariant verification for Paduna Build. Use when verifying changes, checking build health, resetting test databases, or validating financial/demo seed integrity.
 ---
 
-# Atria ERP Quality Assurance & Diagnostic Runbook
+# Paduna Build Quality Assurance & Diagnostic Runbook
 
-This skill provides step-by-step guidance for running quality assurance, type checks, linting, and database verification scripts in **Atria ERP**.
+This skill provides step-by-step guidance for running quality assurance, type checks, linting, and database verification scripts in **Paduna Build**.
 
 ---
 
@@ -16,7 +16,9 @@ Run these commands before declaring any feature or bugfix complete:
 ### A. TypeScript Type Check
 Ensure strict type safety across all files (no `any`, valid server action returns):
 ```bash
-bun x tsc --noEmit
+bun --filter @atria/api typecheck
+bun --filter @atria/web typecheck
+bun --filter @atria/mobile typecheck
 ```
 
 ### B. ESLint & Tailwind Canonical Classes Check
@@ -68,8 +70,8 @@ bun run storybook
 
 ## 4. Pre-Release Acceptance Checklist
 
-- [ ] `pnpm tsc --noEmit` passes with 0 errors.
+- [ ] workspace typechecks passes with 0 errors.
 - [ ] `bun run lint` passes with 0 errors.
 - [ ] `bun run db:demo:verify` confirms financial and inventory invariants.
-- [ ] Tested on 375px mobile viewport dimensions.
+- [ ] For UI changes, verify the mobile/desktop viewport matrix required by AGENTS.md.
 - [ ] No raw enum strings or English technical terms exposed in Indonesian user-facing views.

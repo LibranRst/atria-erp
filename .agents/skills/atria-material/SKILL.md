@@ -1,11 +1,13 @@
 ---
 name: atria-material
-description: Guides the implementation, auditing, and debugging of Material Master, RAP execution plans, client-facing RAB generation, warehouse inventory stock levels, stock movements, vendor PO/bills, and goods receipt in Atria ERP. Use when modifying material logic, inventory actions, or procurement flows.
+description: Guides the implementation, auditing, and debugging of Material Master, RAP execution plans, client-facing RAB generation, warehouse inventory stock levels, stock movements, vendor PO/bills, and goods receipt in Paduna Build. Use when modifying material logic, inventory actions, or procurement flows.
 ---
 
-# Atria ERP Material & Stock Control Runbook
+# Paduna Build Material & Stock Control Runbook
 
 This skill provides step-by-step guidance for managing materials, inventory projections, RAP execution planning, client-safe RAB proposals, and warehouse stock movements.
+
+Backend implementations and transactions now live in `apps/api/src/backend/` and use `@backend/*`. Web actions are typed HTTP facades. Read `docs/06-technical/ARCHITECTURE.md` before changing transport boundaries.
 
 ---
 
@@ -23,8 +25,8 @@ Each entry in `material_master` maintains three synchronized stock values:
 All stock mutations must run in `db.transaction` and create a `stock_movement` entry:
 
 ```typescript
-import { db } from "@/db";
-import { materialMaster, stockMovement, auditLog } from "@/db/schema";
+import { db } from "@backend/db";
+import { materialMaster, stockMovement, auditLog } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 
 await db.transaction(async (tx) => {

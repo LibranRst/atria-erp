@@ -1,5 +1,6 @@
 .next
 node_modules
+.atria-dev
 coverage
 scratch
 .agents
@@ -7,3 +8,15 @@ scratch
 public
 bun.lock
 drizzle/meta
+
+# Generated verification and native dependency output
+.next-admin-verify
+.next-admin-dev
+**/.next-*/
+apps/mobile/ios/Pods
+apps/mobile/ios/build
+apps/mobile/android/build
+apps/mobile/android/app/build
+
+# Generated from scoped HeroUI source; checked by heroui:styles:check
+apps/web/components/ui/desktop/heroui-scoped.css

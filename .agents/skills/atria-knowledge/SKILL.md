@@ -1,11 +1,11 @@
 ---
 name: atria-knowledge
-description: Provides fast indexed knowledge lookup across the entire Atria ERP documentation library, database schema specifications, business logic definitions, status enums, server action catalogs, and architectural guidelines. Use whenever searching for domain concepts, documentation locations, table definitions, or architectural context.
+description: Provides fast indexed knowledge lookup across the entire Paduna Build documentation library, database schema specifications, business logic definitions, status enums, server action catalogs, and architectural guidelines. Use whenever searching for domain concepts, documentation locations, table definitions, or architectural context.
 ---
 
-# Atria ERP Knowledge Base & Documentation Navigator
+# Paduna Build Knowledge Base & Documentation Navigator
 
-This skill serves as the indexed sitemap and knowledge directory for **Atria ERP**.
+This skill serves as the indexed sitemap and knowledge directory for **Paduna Build**.
 
 ---
 
@@ -39,10 +39,10 @@ This skill serves as the indexed sitemap and knowledge directory for **Atria ERP
 
 ## 3. Codebase Directory Mapping
 
-- `app/`: Next.js App Router pages and route handlers (`/ledger`, `/projects`, `/materials`, `/approvals`, `/settings`).
-- `components/ui/`: Shared UI primitives (`MoneyValue`, `Button`, `SegmentedTabs`, `Badge`).
-- `db/`: Database configuration, Drizzle client, and seed scripts.
-- `db/schema/`: Schema table definitions.
-- `features/`: Modular domain features containing server actions, components, and hooks.
-- `lib/`: Utilities, authentication helpers (`lib/auth/`), motion presets (`lib/utils/motion.ts`).
-- `.agents/`: Antigravity rules, skills, hooks, and configuration.
+- `apps/api/src/backend/db/`: Drizzle client/schema/seed; migrations in `apps/api/drizzle/`.
+- `apps/api/src/backend/app/actions/` and `server/usecases/`: backend domain operations, API-resolved session/Actor and transactions.
+- `apps/api/src/backend/server/trpc/`: native typed transport; `server/web-rpc/registry.ts`: allowlisted private web compatibility operations.
+- `apps/api/src/backend/features/**/server/`: screen loaders; `apps/api/src/runtime/`: request-local portable infrastructure.
+- `apps/web/app/` and `features/`: Next presentation plus typed HTTP action/loader facades; UI primitives in `apps/web/components/ui/`.
+- `apps/mobile/`: Expo client; `packages/core/`: pure shared calculations/DTOs/Zod.
+- For backend extraction/local commands and transport ownership, consult `docs/06-technical/ARCHITECTURE.md` and `docs/guide/mobile-api-development.md`. Earlier Expo plan paths are historical.

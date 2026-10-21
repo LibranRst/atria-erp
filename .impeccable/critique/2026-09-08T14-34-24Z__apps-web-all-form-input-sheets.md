@@ -2,52 +2,53 @@
 target: semua form/input sheet, drawer, dialog, dan modal di apps/web
 total_score: 25
 max_score: 40
-na_heuristics: 
+na_heuristics:
 p0_count: 0
 p1_count: 4
 timestamp: 2026-09-08T14-34-24Z
 slug: apps-web-all-form-input-sheets
 ---
-# Audit Konsistensi Seluruh Form Sheet Atria ERP
+
+# Audit Konsistensi Seluruh Form Sheet Paduna Build
 
 Target: seluruh form/input sheet, drawer, dialog, modal, selection/search overlay, dan compatibility alias di `apps/web`.
 
 ## Design Health Score
 
-| # | Heuristic | Score | Isu utama |
-|---:|---|---:|---|
-| 1 | Visibility of System Status | 3 | Pending, disabled reason, review, dan success kuat; beberapa direct sheet masih bergantung pada toast. |
-| 2 | Match System / Real World | 3 | Bahasa finance/material sangat kuat; `Import/Impor`, `Project/proyek`, dan fallback role belum seragam. |
-| 3 | User Control and Freedom | 2 | Flagship finance/material punya unsaved guard; admin, profile, dan preferences belum konsisten. |
-| 4 | Consistency and Standards | 2 | Taxonomy shared UI matang, tetapi direct `FormSheet`, raw `DialogFrame`, lightbox lokal, dan option-card lama menyimpang. |
-| 5 | Error Prevention | 3 | Review-before-commit, impact preview, confirmations, dan disabled reason tersebar luas. |
-| 6 | Recognition Rather Than Recall | 3 | Helper, default, preview, dan review mengurangi beban ingatan; daftar besar yang tidak searchable masih ada. |
-| 7 | Flexibility and Efficiency | 2 | Draft, OCR, template, dan search membantu; form batch/panjang masih satu jalur tanpa navigasi cepat. |
-| 8 | Aesthetic and Minimalist Design | 3 | Chrome dan grouped form tenang; workspace-di-dalam-sheet dan selected-card menambah noise. |
-| 9 | Error Recovery | 2 | Beberapa workflow menyimpan draft/retry; lainnya membuang work atau hanya menampilkan toast. |
-| 10 | Help and Documentation | 2 | Helper kontekstual banyak, tetapi pola bantuan dan penempatan aturan kritis belum seragam. |
-| **Total** |  | **25/40** | **Acceptable — fondasi kuat, tetapi consistency dan accessibility membutuhkan pass sistemik.** |
+|         # | Heuristic                       |     Score | Isu utama                                                                                                                 |
+| --------: | ------------------------------- | --------: | ------------------------------------------------------------------------------------------------------------------------- |
+|         1 | Visibility of System Status     |         3 | Pending, disabled reason, review, dan success kuat; beberapa direct sheet masih bergantung pada toast.                    |
+|         2 | Match System / Real World       |         3 | Bahasa finance/material sangat kuat; `Import/Impor`, `Project/proyek`, dan fallback role belum seragam.                   |
+|         3 | User Control and Freedom        |         2 | Flagship finance/material punya unsaved guard; admin, profile, dan preferences belum konsisten.                           |
+|         4 | Consistency and Standards       |         2 | Taxonomy shared UI matang, tetapi direct `FormSheet`, raw `DialogFrame`, lightbox lokal, dan option-card lama menyimpang. |
+|         5 | Error Prevention                |         3 | Review-before-commit, impact preview, confirmations, dan disabled reason tersebar luas.                                   |
+|         6 | Recognition Rather Than Recall  |         3 | Helper, default, preview, dan review mengurangi beban ingatan; daftar besar yang tidak searchable masih ada.              |
+|         7 | Flexibility and Efficiency      |         2 | Draft, OCR, template, dan search membantu; form batch/panjang masih satu jalur tanpa navigasi cepat.                      |
+|         8 | Aesthetic and Minimalist Design |         3 | Chrome dan grouped form tenang; workspace-di-dalam-sheet dan selected-card menambah noise.                                |
+|         9 | Error Recovery                  |         2 | Beberapa workflow menyimpan draft/retry; lainnya membuang work atau hanya menampilkan toast.                              |
+|        10 | Help and Documentation          |         2 | Helper kontekstual banyak, tetapi pola bantuan dan penempatan aturan kritis belum seragam.                                |
+| **Total** |                                 | **25/40** | **Acceptable — fondasi kuat, tetapi consistency dan accessibility membutuhkan pass sistemik.**                            |
 
 ## Coverage dan Accounting
 
 Audit source menginventarisasi 155 instance consumer shared-overlay di 85 file produksi:
 
-| Keluarga surface | Instance produksi |
-|---|---:|
-| Direct `FormSheet` | 7 |
-| `OperationalFormSheet` | 27 |
-| `WorkflowFormSheet` | 22 |
-| `CompactFormDialog` | 5 |
-| `SelectionDialog` | 1 |
-| `SearchDialog` | 1 |
-| `ConfirmationDialog` | 50 |
-| `FinanceUnsavedChangesModal` | 10 |
-| `MaterialUnsavedChangesModal` | 1 |
-| `SuccessDialog` | 1 |
-| `OperationSuccessDialog` | 10 |
-| `DetailSheet` | 19 |
-| Raw `DialogFrame` | 1 |
-| **Total** | **155** |
+| Keluarga surface              | Instance produksi |
+| ----------------------------- | ----------------: |
+| Direct `FormSheet`            |                 7 |
+| `OperationalFormSheet`        |                27 |
+| `WorkflowFormSheet`           |                22 |
+| `CompactFormDialog`           |                 5 |
+| `SelectionDialog`             |                 1 |
+| `SearchDialog`                |                 1 |
+| `ConfirmationDialog`          |                50 |
+| `FinanceUnsavedChangesModal`  |                10 |
+| `MaterialUnsavedChangesModal` |                 1 |
+| `SuccessDialog`               |                 1 |
+| `OperationSuccessDialog`      |                10 |
+| `DetailSheet`                 |                19 |
+| Raw `DialogFrame`             |                 1 |
+| **Total**                     |           **155** |
 
 Tambahan di luar shared-overlay:
 
@@ -64,115 +65,115 @@ Boundary: page-embedded forms tidak dihitung sebagai form sheet, kecuali ketika 
 
 ### Administration dan access
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `AdministrationUserEditorSheet` | direct `FormSheet` | Grouped dengan baik; server error/dirty close belum kuat; fallback role bisa bocor sebagai nama internal. |
-| `AdministrationVendorEditorSheet` | direct `FormSheet` | Dua grouped section; dismiss langsung membuang edit tanpa guard. |
-| `VendorCreateSheet` | direct `FormSheet` | Validasi lokal dan pending ada; error/success toast-only, tanpa dirty guard. |
-| `RoleCreateSheet` | `OperationalFormSheet` | Disabled reason dan smart default baik; belum punya dirty guard. |
-| `RoleEditorSheet` | `OperationalFormSheet` | Read-only/edit state dan progressive disclosure baik; permission toggle bisa sangat padat. |
-| `RoleAccessManager` | `ConfirmationDialog` | Konfirmasi destructive standar dan konsisten. |
+| Consumer                          | Surface                | Ringkasan konsistensi                                                                                     |
+| --------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `AdministrationUserEditorSheet`   | direct `FormSheet`     | Grouped dengan baik; server error/dirty close belum kuat; fallback role bisa bocor sebagai nama internal. |
+| `AdministrationVendorEditorSheet` | direct `FormSheet`     | Dua grouped section; dismiss langsung membuang edit tanpa guard.                                          |
+| `VendorCreateSheet`               | direct `FormSheet`     | Validasi lokal dan pending ada; error/success toast-only, tanpa dirty guard.                              |
+| `RoleCreateSheet`                 | `OperationalFormSheet` | Disabled reason dan smart default baik; belum punya dirty guard.                                          |
+| `RoleEditorSheet`                 | `OperationalFormSheet` | Read-only/edit state dan progressive disclosure baik; permission toggle bisa sangat padat.                |
+| `RoleAccessManager`               | `ConfirmationDialog`   | Konfirmasi destructive standar dan konsisten.                                                             |
 
 ### AI, approval, dan notification
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| Conversation rename | `CompactFormDialog` | Tepat untuk satu field; pending/disabled jelas. |
-| Conversation preferences | direct `FormSheet` | Lima pilihan serentak dan selected full-row fill menyimpang dari grammar choice. |
-| `MorphedInputComposer` | `SearchDialog` | Search continuity dan keyboard handoff kuat. |
-| `ApprovalList` approve/reject | `ConfirmationDialog` + `CompactFormDialog` | Review-first kuat; textarea/error association belum programmatik. |
-| Dashboard approval | `ConfirmationDialog` + compact reject | Sama dengan approval list; bagus secara domain, gap a11y sama. |
-| `NotificationMorphDialog` | raw `DialogFrame` | Accessible karena mewarisi frame, tetapi melanggar ownership boundary feature/shared UI. |
+| Consumer                      | Surface                                    | Ringkasan konsistensi                                                                    |
+| ----------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Conversation rename           | `CompactFormDialog`                        | Tepat untuk satu field; pending/disabled jelas.                                          |
+| Conversation preferences      | direct `FormSheet`                         | Lima pilihan serentak dan selected full-row fill menyimpang dari grammar choice.         |
+| `MorphedInputComposer`        | `SearchDialog`                             | Search continuity dan keyboard handoff kuat.                                             |
+| `ApprovalList` approve/reject | `ConfirmationDialog` + `CompactFormDialog` | Review-first kuat; textarea/error association belum programmatik.                        |
+| Dashboard approval            | `ConfirmationDialog` + compact reject      | Sama dengan approval list; bagus secara domain, gap a11y sama.                           |
+| `NotificationMorphDialog`     | raw `DialogFrame`                          | Accessible karena mewarisi frame, tetapi melanggar ownership boundary feature/shared UI. |
 
 ### Expenses dan vendor bills
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `ExpenseForm` | `WorkflowFormSheet` | Salah satu implementasi terbaik: draft/offline/conflict, OCR, review, unsaved, success. |
-| `ExpenseLineEditor` | `WorkflowFormSheet` | Field grouping dan budget risk bagus; `OptionChoiceGroup` menyimpang secara visual/semantik. |
-| `VendorBillForm` | `WorkflowFormSheet` | Draft/review/unsaved/success kuat; server error belum selalu dekat field. |
-| `FieldDisbursementSheet` | `WorkflowFormSheet` | Dampak finansial dan finality sangat jelas. |
-| `VendorSchedulePaymentSheet` | `WorkflowFormSheet` | Penjadwalan dibedakan jelas dari mutasi kas. |
-| `VendorDisbursePaymentSheet` | `WorkflowFormSheet` | Review balance dan warning final kuat. |
-| Expense approval/draft/receipt overlays | confirmation/success/local modal | Confirmation/success konsisten; receipt lightbox melompati contract modal bersama. |
+| Consumer                                | Surface                          | Ringkasan konsistensi                                                                        |
+| --------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `ExpenseForm`                           | `WorkflowFormSheet`              | Salah satu implementasi terbaik: draft/offline/conflict, OCR, review, unsaved, success.      |
+| `ExpenseLineEditor`                     | `WorkflowFormSheet`              | Field grouping dan budget risk bagus; `OptionChoiceGroup` menyimpang secara visual/semantik. |
+| `VendorBillForm`                        | `WorkflowFormSheet`              | Draft/review/unsaved/success kuat; server error belum selalu dekat field.                    |
+| `FieldDisbursementSheet`                | `WorkflowFormSheet`              | Dampak finansial dan finality sangat jelas.                                                  |
+| `VendorSchedulePaymentSheet`            | `WorkflowFormSheet`              | Penjadwalan dibedakan jelas dari mutasi kas.                                                 |
+| `VendorDisbursePaymentSheet`            | `WorkflowFormSheet`              | Review balance dan warning final kuat.                                                       |
+| Expense approval/draft/receipt overlays | confirmation/success/local modal | Confirmation/success konsisten; receipt lightbox melompati contract modal bersama.           |
 
 ### Finance dan reconciliation
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `AccountFormSheet` | `WorkflowFormSheet` | Review opening balance dan identity exception product-specific. |
-| `MovementSheet` | `WorkflowFormSheet` | Projected balance, review, dan unsaved guard kuat. |
-| `TransferSheet` | `WorkflowFormSheet` | Paired-ledger explanation dan wrong-account prevention kuat. |
-| Reconciliation exception/import/manual | 3× `OperationalFormSheet` | Pemisahan bukti bank vs catatan Atria sangat jelas; file/server errors cenderung generic. |
-| Reconciliation matching | `WorkflowFormSheet` | Review dan non-balance-changing copy sangat kuat. |
-| `ApprovalControlManager` | `OperationalFormSheet` | Dampak threshold dan no-change guard jelas. |
+| Consumer                               | Surface                   | Ringkasan konsistensi                                                                     |
+| -------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- |
+| `AccountFormSheet`                     | `WorkflowFormSheet`       | Review opening balance dan identity exception product-specific.                           |
+| `MovementSheet`                        | `WorkflowFormSheet`       | Projected balance, review, dan unsaved guard kuat.                                        |
+| `TransferSheet`                        | `WorkflowFormSheet`       | Paired-ledger explanation dan wrong-account prevention kuat.                              |
+| Reconciliation exception/import/manual | 3× `OperationalFormSheet` | Pemisahan bukti bank vs catatan Paduna Build sangat jelas; file/server errors cenderung generic. |
+| Reconciliation matching                | `WorkflowFormSheet`       | Review dan non-balance-changing copy sangat kuat.                                         |
+| `ApprovalControlManager`               | `OperationalFormSheet`    | Dampak threshold dan no-change guard jelas.                                               |
 
 ### Materials dan inventory
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `EmergencyAdjustSheet` | `WorkflowFormSheet` | Audit warning dan review tepat; option group memakai pola card/tint lama. |
-| `GoodsReceiptSheet` | `WorkflowFormSheet` | Strong review/stock warning/confirmations; item list dapat tumbuh tanpa batas. |
-| `InventoryLocationSheet` | `WorkflowFormSheet` | Satu field tetapi impact-nya membenarkan promotion ke workflow. |
-| `ProjectMaterialOperationSheet` | `WorkflowFormSheet` | Helper berubah sesuai operasi; stock availability dan discard jelas. |
-| `StockCountSheet` | `WorkflowFormSheet` | Review/draft/approval baik; batch quantity berpotensi sangat padat. |
-| Material `TransferSheet` | `WorkflowFormSheet` | Availability preview dan discard baik; item list berpotensi panjang. |
-| `MaterialsControlCenter` decision | `ConfirmationDialog` dengan reason/toggle | Tepat untuk irreversible decision; minimum reason jelas. |
-| `OpeningInventoryBatchDetailSheet` | `OperationalFormSheet` impact-promoted | Read-heavy dan reversal-only; danger context kuat. |
-| Operational material/detail/success surfaces | `DetailSheet`/success | Konsisten dan mempertahankan data selama exit. |
+| Consumer                                     | Surface                                   | Ringkasan konsistensi                                                          |
+| -------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `EmergencyAdjustSheet`                       | `WorkflowFormSheet`                       | Audit warning dan review tepat; option group memakai pola card/tint lama.      |
+| `GoodsReceiptSheet`                          | `WorkflowFormSheet`                       | Strong review/stock warning/confirmations; item list dapat tumbuh tanpa batas. |
+| `InventoryLocationSheet`                     | `WorkflowFormSheet`                       | Satu field tetapi impact-nya membenarkan promotion ke workflow.                |
+| `ProjectMaterialOperationSheet`              | `WorkflowFormSheet`                       | Helper berubah sesuai operasi; stock availability dan discard jelas.           |
+| `StockCountSheet`                            | `WorkflowFormSheet`                       | Review/draft/approval baik; batch quantity berpotensi sangat padat.            |
+| Material `TransferSheet`                     | `WorkflowFormSheet`                       | Availability preview dan discard baik; item list berpotensi panjang.           |
+| `MaterialsControlCenter` decision            | `ConfirmationDialog` dengan reason/toggle | Tepat untuk irreversible decision; minimum reason jelas.                       |
+| `OpeningInventoryBatchDetailSheet`           | `OperationalFormSheet` impact-promoted    | Read-heavy dan reversal-only; danger context kuat.                             |
+| Operational material/detail/success surfaces | `DetailSheet`/success                     | Konsisten dan mempertahankan data selama exit.                                 |
 
 ### Onboarding
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `FinancialDefaultsPanel` | direct expanded `FormSheet` | Menanam seluruh settings manager, sticky page save bar, nested editor sheet, lalu dialog; ownership action kabur. |
-| `InitialStockSetupPanel` | direct expanded `FormSheet` | Menanam workspace/page form; submit berada di scroll body, bukan fixed footer. |
-| Quick-start pause actions | `ConfirmationDialog` | Dua implementasi/copy terpisah untuk peran yang sama. |
+| Consumer                  | Surface                     | Ringkasan konsistensi                                                                                             |
+| ------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FinancialDefaultsPanel`  | direct expanded `FormSheet` | Menanam seluruh settings manager, sticky page save bar, nested editor sheet, lalu dialog; ownership action kabur. |
+| `InitialStockSetupPanel`  | direct expanded `FormSheet` | Menanam workspace/page form; submit berada di scroll body, bukan fixed footer.                                    |
+| Quick-start pause actions | `ConfirmationDialog`        | Dua implementasi/copy terpisah untuk peran yang sama.                                                             |
 
 ### Profile
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| `ChangePasswordSheet` | `OperationalFormSheet` | Validasi baik; dismiss tidak reset state sehingga nilai password muncul lagi ketika dibuka. |
-| `EditProfileSheet` | `OperationalFormSheet` | Upload progress/retry baik; belum ada dirty guard. |
-| Logout dan developer account switch | `ConfirmationDialog` | Konsekuensi cukup jelas; developer-only tetap user-facing dalam simulation mode. |
+| Consumer                            | Surface                | Ringkasan konsistensi                                                                       |
+| ----------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `ChangePasswordSheet`               | `OperationalFormSheet` | Validasi baik; dismiss tidak reset state sehingga nilai password muncul lagi ketika dibuka. |
+| `EditProfileSheet`                  | `OperationalFormSheet` | Upload progress/retry baik; belum ada dirty guard.                                          |
+| Logout dan developer account switch | `ConfirmationDialog`   | Konsekuensi cukup jelas; developer-only tetap user-facing dalam simulation mode.            |
 
 ### Project budget, invoice, RAP, dan RAB
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| Budget approval/reject flows | `ConfirmationDialog`/compact input | Copy keputusan kuat; field/error association belum konsisten. |
-| `BudgetItemForm` | `OperationalFormSheet` | Subtotal dan disabled reason baik; representative missing label-control association. |
-| `ClientInvoiceForm` | `WorkflowFormSheet` | Review, no-cash-change reassurance, unsaved, success kuat. |
-| `ClientPaymentSheet` | `WorkflowFormSheet` | Account/amount/date/impact review kuat. |
-| Budget reallocation | direct `FormSheet` | Lima kategori sekaligus dan custom footer; melewati `SheetFooterActions`. |
-| `RabBundleDrawer` | detail/`OperationalFormSheet` | Totals dan delete confirmation baik; membership dapat unbounded. |
-| `ChangeOrderDrawer` | `OperationalFormSheet` | Hierarki sequential dan contractual consequence sangat product-specific. |
-| `VoidRevisionDrawer` | `ConfirmationDialog` dengan textarea | Tepat untuk audit reason singkat dan irreversible choice. |
-| `RabItemEditDrawer` | detail/`OperationalFormSheet` | RAP/RAB separation jelas; choice cukup banyak tetapi terkelompok. |
-| `RabSourcePickerDrawer` | `OperationalFormSheet` | Dua daftar source tak terbatas dalam satu keputusan; overload terbesar. |
-| `ManualRabLineDrawer` | `OperationalFormSheet` | Client-safe helper dan live total baik. |
-| `CategoryPlanFormDrawer` | `OperationalFormSheet` | 8 keputusan dibagi 3 section, tetapi belum ada step/resume. |
-| `RapMaterialFormDrawer` | `OperationalFormSheet` | 9+ field; shortage/total context bagus tetapi padat. |
-| `InternalRevisionDrawer` | `OperationalFormSheet` | Locked-baseline warning baik; checklist bisa unbounded. |
-| PM assignment | `SelectionDialog` | List tidak searchable dan tidak punya threshold >6. |
-| `ProjectActivationSheet` | `WorkflowFormSheet` review-only | Fokus dan primary/secondary sangat jelas. |
-| `StockOperationSheet` | `WorkflowFormSheet` | Stock/audit warning dan success kuat. |
-| `ProjectDrawer` | `OperationalFormSheet` → review | Salah satu long-form terbaik: recovery, progressive details, blocker count, review, success. |
-| `ProjectReviewSheet` | `WorkflowFormSheet` review | Entry/review/commit separation tepat. |
+| Consumer                     | Surface                              | Ringkasan konsistensi                                                                        |
+| ---------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Budget approval/reject flows | `ConfirmationDialog`/compact input   | Copy keputusan kuat; field/error association belum konsisten.                                |
+| `BudgetItemForm`             | `OperationalFormSheet`               | Subtotal dan disabled reason baik; representative missing label-control association.         |
+| `ClientInvoiceForm`          | `WorkflowFormSheet`                  | Review, no-cash-change reassurance, unsaved, success kuat.                                   |
+| `ClientPaymentSheet`         | `WorkflowFormSheet`                  | Account/amount/date/impact review kuat.                                                      |
+| Budget reallocation          | direct `FormSheet`                   | Lima kategori sekaligus dan custom footer; melewati `SheetFooterActions`.                    |
+| `RabBundleDrawer`            | detail/`OperationalFormSheet`        | Totals dan delete confirmation baik; membership dapat unbounded.                             |
+| `ChangeOrderDrawer`          | `OperationalFormSheet`               | Hierarki sequential dan contractual consequence sangat product-specific.                     |
+| `VoidRevisionDrawer`         | `ConfirmationDialog` dengan textarea | Tepat untuk audit reason singkat dan irreversible choice.                                    |
+| `RabItemEditDrawer`          | detail/`OperationalFormSheet`        | RAP/RAB separation jelas; choice cukup banyak tetapi terkelompok.                            |
+| `RabSourcePickerDrawer`      | `OperationalFormSheet`               | Dua daftar source tak terbatas dalam satu keputusan; overload terbesar.                      |
+| `ManualRabLineDrawer`        | `OperationalFormSheet`               | Client-safe helper dan live total baik.                                                      |
+| `CategoryPlanFormDrawer`     | `OperationalFormSheet`               | 8 keputusan dibagi 3 section, tetapi belum ada step/resume.                                  |
+| `RapMaterialFormDrawer`      | `OperationalFormSheet`               | 9+ field; shortage/total context bagus tetapi padat.                                         |
+| `InternalRevisionDrawer`     | `OperationalFormSheet`               | Locked-baseline warning baik; checklist bisa unbounded.                                      |
+| PM assignment                | `SelectionDialog`                    | List tidak searchable dan tidak punya threshold >6.                                          |
+| `ProjectActivationSheet`     | `WorkflowFormSheet` review-only      | Fokus dan primary/secondary sangat jelas.                                                    |
+| `StockOperationSheet`        | `WorkflowFormSheet`                  | Stock/audit warning dan success kuat.                                                        |
+| `ProjectDrawer`              | `OperationalFormSheet` → review      | Salah satu long-form terbaik: recovery, progressive details, blocker count, review, success. |
+| `ProjectReviewSheet`         | `WorkflowFormSheet` review           | Entry/review/commit separation tepat.                                                        |
 
 ### Settings dan master data
 
-| Consumer | Surface | Ringkasan konsistensi |
-|---|---|---|
-| Formula/category editors | `OperationalFormSheet` | Grouped styling, inline errors, dan future-project consequence kuat. |
-| `CategorySettingsManager` | `OperationalFormSheet` | Dirty/read-only dan discard baik. |
-| `LibraryCostComponentSheet` | `OperationalFormSheet` | Inline validation dan subtotal baik. |
-| `LibraryTemplateEditorSheet` | `OperationalFormSheet` | Margin/internal-vs-client context kuat; form settings terpadat. |
-| `MaterialCategoryComposerDialog` | `CompactFormDialog` | Surface benar; input hanya punya placeholder/ARIA label tanpa visible label. |
-| `MaterialEditorSheet` | `OperationalFormSheet` | Progressive disclosure dan dirty parent baik; nested creators menambah depth. |
-| `MaterialImportSheet` | `WorkflowFormSheet` | Preview/transaction warning kuat; copy `Import` tidak seragam dan page reload kasar. |
-| `MaterialInventoryDefaultSheet` | `OperationalFormSheet` | No-current-stock-change explanation sangat jelas. |
+| Consumer                         | Surface                | Ringkasan konsistensi                                                                |
+| -------------------------------- | ---------------------- | ------------------------------------------------------------------------------------ |
+| Formula/category editors         | `OperationalFormSheet` | Grouped styling, inline errors, dan future-project consequence kuat.                 |
+| `CategorySettingsManager`        | `OperationalFormSheet` | Dirty/read-only dan discard baik.                                                    |
+| `LibraryCostComponentSheet`      | `OperationalFormSheet` | Inline validation dan subtotal baik.                                                 |
+| `LibraryTemplateEditorSheet`     | `OperationalFormSheet` | Margin/internal-vs-client context kuat; form settings terpadat.                      |
+| `MaterialCategoryComposerDialog` | `CompactFormDialog`    | Surface benar; input hanya punya placeholder/ARIA label tanpa visible label.         |
+| `MaterialEditorSheet`            | `OperationalFormSheet` | Progressive disclosure dan dirty parent baik; nested creators menambah depth.        |
+| `MaterialImportSheet`            | `WorkflowFormSheet`    | Preview/transaction warning kuat; copy `Import` tidak seragam dan page reload kasar. |
+| `MaterialInventoryDefaultSheet`  | `OperationalFormSheet` | No-current-stock-change explanation sangat jelas.                                    |
 
 ## Design Specificity Verdict
 
@@ -203,7 +204,7 @@ Hasil visual: shared bottom-sheet chrome, 28px top radius, pull indicator, group
 
 ## Yang Sudah Bekerja
 
-- High-stakes finance/material forms menunjukkan consequence sebelum commit. Ini adalah kekuatan terbesar dan paling khas Atria.
+- High-stakes finance/material forms menunjukkan consequence sebelum commit. Ini adalah kekuatan terbesar dan paling khas Paduna Build.
 - `OperationalFormSheet` dan `WorkflowFormSheet` sudah membentuk grammar yang jelas: input → status/review → fixed commit footer.
 - Project creation dan Expense adalah benchmark internal terbaik untuk long-form: progressive disclosure, draft recovery, blocker summary, review, dan explicit success state.
 
@@ -290,16 +291,16 @@ Suggested command: `$impeccable polish`.
 
 Overall: **3 dari 8 checklist gagal — moderate**, dengan onboarding, RAP/RAB source selection, permission editor, dan batch stock mencapai high-load territory.
 
-| Check | Status | Bukti |
-|---|---|---|
-| Single focus | Pass overall | Sebagian besar sheet satu title dan satu commit; onboarding manager-in-sheet menjadi exception. |
-| Chunking ≤4 | **Fail** | RAP material, category plan, library template, stock count, dan vendor sections melebihi empat keputusan/group. |
-| Grouping | Pass | `FormSection` tersebar luas. |
-| Visual hierarchy | Pass overall | Entry/review/footer sangat jelas. |
-| One thing at a time | Pass overall | Nested item editor dan review stage membantu. |
-| Minimal choices ≤4 | **Fail** | AI preferences 5, budget allocation 5, PM list, permission toggles, source lists. |
-| Working memory | Pass | Review menyatakan kembali account/project/amount/date/impact. |
-| Progressive disclosure | **Fail pada outlier** | Project/material editor bagus; onboarding dan unbounded source list buruk. |
+| Check                  | Status                | Bukti                                                                                                           |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Single focus           | Pass overall          | Sebagian besar sheet satu title dan satu commit; onboarding manager-in-sheet menjadi exception.                 |
+| Chunking ≤4            | **Fail**              | RAP material, category plan, library template, stock count, dan vendor sections melebihi empat keputusan/group. |
+| Grouping               | Pass                  | `FormSection` tersebar luas.                                                                                    |
+| Visual hierarchy       | Pass overall          | Entry/review/footer sangat jelas.                                                                               |
+| One thing at a time    | Pass overall          | Nested item editor dan review stage membantu.                                                                   |
+| Minimal choices ≤4     | **Fail**              | AI preferences 5, budget allocation 5, PM list, permission toggles, source lists.                               |
+| Working memory         | Pass                  | Review menyatakan kembali account/project/amount/date/impact.                                                   |
+| Progressive disclosure | **Fail pada outlier** | Project/material editor bagus; onboarding dan unbounded source list buruk.                                      |
 
 Decision point >4:
 

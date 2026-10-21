@@ -1,11 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    ".agents/rules/*.md",
-    "PRODUCT.md",
-    "DESIGN.md",
-    "docs/ANTIGRAVITY_INDEX.md"
-  ],
+  "instructions": [".agents/rules/*.md", "PRODUCT.md", "DESIGN.md", "docs/ANTIGRAVITY_INDEX.md"],
   "permission": {
     "skill": "allow"
   }

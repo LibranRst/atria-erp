@@ -1,6 +1,6 @@
 # Rule: Financial Integrity & Ledger Safety (Option A Model)
 
-This rule strictly enforces database transaction patterns, cash ledger immutability, audit logging, and category budget boundaries for **Atria ERP**.
+This rule strictly enforces database transaction patterns, cash ledger immutability, audit logging, and category budget boundaries for **Paduna Build**.
 
 ## 1. Option A Ledger Architecture
 - Every financial balance mutation (expense payout, vendor bill payment, client payment received, account transfer) MUST run inside `db.transaction`.
@@ -16,7 +16,7 @@ This rule strictly enforces database transaction patterns, cash ledger immutabil
 ## 2. Cash Reconciliation & Immutability Rules
 - **Reconciled Records are Immutable**: Once a `cash_transaction` row is reconciled (`reconciliation_status = 'RECONCILED'`), it MUST NEVER be edited, soft-deleted, or removed.
 - **Correction via Compensating Entries**: Any discrepancy or mistake in a reconciled transaction must be resolved by creating a compensating reversal transaction with an explicit audit note.
-- **Bank Statement Imports**: Bank mutations (`bank_mutation`) imported via CSV are matched against Atria cash records (`cash_transaction`) 1-to-1 or 1-to-N with documented approval.
+- **Bank Statement Imports**: Bank mutations (`bank_mutation`) imported via CSV are matched against Paduna Build cash records (`cash_transaction`) 1-to-1 or 1-to-N with documented approval.
 
 ---
 

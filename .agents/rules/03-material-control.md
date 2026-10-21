@@ -1,6 +1,6 @@
 # Rule: Material Control, Inventory & RAP/RAB Architecture
 
-This rule defines the operational lifecycle and data boundaries for Material Master, RAP execution plans, client-facing RAB, Inventory Stock, and Stock Movements in **Atria ERP**.
+This rule defines the operational lifecycle and data boundaries for Material Master, RAP execution plans, client-facing RAB, Inventory Stock, and Stock Movements in **Paduna Build**.
 
 ## 1. RAP vs. RAB Strict Separation
 - **RAP (Rencana Anggaran Pelaksanaan)**:

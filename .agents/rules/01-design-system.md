@@ -1,6 +1,6 @@
 # Rule: Calm Modern Luxury Design System & iOS Contextual Forms
 
-This rule governs all UI/UX styling, layout, typography, components, and interaction patterns in **Atria ERP**.
+This rule governs all UI/UX styling, layout, typography, components, and interaction patterns in **Paduna Build**.
 
 ## 1. Core Visual Grammar & Mobile Truth
 - **Viewport Truth**: Mobile screens (320px – 430px) are the primary source of truth. The application runs in a fixed `max-w-md` shell centered on desktop viewports. A desktop preview alone is never sufficient acceptance evidence.

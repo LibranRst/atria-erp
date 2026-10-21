@@ -1,4 +1,4 @@
-// Synthetic package entry for design-sync. Atria ERP is a private Next.js app
+// Synthetic package entry for design-sync. Paduna Build is a private Next.js app
 // (no publishable dist), so this barrel stands in for a package's built
 // entry point — it re-exports the design-system surface the /design-sync
 // skill scoped in: components/ui/** (via its own public barrel) plus the

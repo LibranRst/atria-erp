@@ -1,0 +1,91 @@
+name: Web pilot quality
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-pilot-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - run: bun install --frozen-lockfile
+      - name: Check shared styles and tokens
+        run: |
+          bun run heroui:styles:check
+          bun run tokens:check
+      - name: Install Chromium for browser-backed unit tests
+        working-directory: apps/web
+        run: bun x playwright install --with-deps chromium
+      - name: Workspace unit and regression tests
+        run: |
+          bun run test
+      - name: Database isolation and backup guard tests
+        run: |
+          python3 scripts/test-backup-pilot-db.py
+          python3 scripts/test-backup-production-db.py
+          python3 scripts/test-test-integration.py
+          python3 apps/api/scripts/test-local-postgres-audit.py
+      - name: Classify dependency security
+        run: |
+          bun run test:security-scripts
+          bun run audit:production
+      - name: Typecheck
+        run: |
+          bun x tsc -p packages/core/tsconfig.json --noEmit
+          bun run --filter @atria/api typecheck
+          bun run --filter @atria/web typecheck
+      - name: Lint
+        run: |
+          bun run --filter @atria/core lint
+          bun run --filter @atria/api lint
+          bun run --filter @atria/web lint
+      - name: Production API and web builds
+        env:
+          API_ORIGIN: https://api.example.invalid
+          API_BRIDGE_SECRET: ci-only-bridge-secret-never-use-in-production
+          NEXT_PUBLIC_APP_URL: https://web.example.invalid
+        run: |
+          bun run build:api
+          bun run build:web
+
+  postgres-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - run: bun install --frozen-lockfile
+      - name: Isolated PostgreSQL integration tests
+        run: bun run test:integration
+      # Test failures fail this job. Artifact storage is supplementary: the
+      # command prints totals, and artifacts contain sanitized per-suite results.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: postgres-integration-results
+          path: output/test-integration/*/suites/results.json
+          if-no-files-found: ignore
+          retention-days: 7

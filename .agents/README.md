@@ -1,6 +1,6 @@
-# Antigravity Workspace Customizations for Atria ERP
+# Antigravity Workspace Customizations for Paduna Build
 
-This directory (`.agents/`) contains the complete configuration and customization suite for **Google Antigravity** operating on **Atria ERP**.
+This directory (`.agents/`) contains the complete configuration and customization suite for **Google Antigravity** operating on **Paduna Build**.
 
 ## 1. Directory Structure
 
@@ -24,7 +24,7 @@ This directory (`.agents/`) contains the complete configuration and customizatio
 
 ## 2. Canonical UI Design Sources
 - `PRODUCT.md`: Product context and user/problem constraints.
-- `DESIGN.md`: Atria's visual language, tokens, components, and anti-patterns.
+- `DESIGN.md`: Paduna Build's visual language, tokens, components, and anti-patterns.
 - `.impeccable/design.json`: Impeccable's machine-readable design-system sidecar.
 - `.agents/skills/impeccable/`: Impeccable workflow and command references.
 
