@@ -1,74 +1,81 @@
-export const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+import {
+  PRIVATE_ATTACHMENT_MAX_BYTES,
+  PRIVATE_ATTACHMENT_MIME_BY_EXTENSION,
+} from "@atria/core/media/private-attachment";
 
-export const SUPPORTED_ATTACHMENT_EXTENSIONS = [
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-  ".gif",
-  ".bmp",
-  ".pdf",
-  ".csv",
-  ".xlsx",
-  ".xls",
-  ".txt",
-  ".md",
-] as const;
-
+export const MAX_ATTACHMENT_SIZE_BYTES = PRIVATE_ATTACHMENT_MAX_BYTES;
+export const MAX_CHAT_ATTACHMENTS = 4;
+export const SUPPORTED_ATTACHMENT_EXTENSIONS = Object.keys(
+  PRIVATE_ATTACHMENT_MIME_BY_EXTENSION,
+).map((extension) => `.${extension}`);
 export const SUPPORTED_ATTACHMENT_MIME_TYPES = [
-  "application/pdf",
-  "text/csv",
-  "text/plain",
-  "text/markdown",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-] as const;
-
+  ...new Set(Object.values(PRIVATE_ATTACHMENT_MIME_BY_EXTENSION)),
+];
 export const ACCEPTED_ATTACHMENT_INPUT = [
-  "image/*",
-  ".pdf",
-  "application/pdf",
-  ".csv",
-  "text/csv",
-  ".xlsx",
-  ".xls",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-excel",
-  ".txt",
-  ".md",
+  ...SUPPORTED_ATTACHMENT_EXTENSIONS,
+  ...SUPPORTED_ATTACHMENT_MIME_TYPES,
 ].join(",");
-
+export const CHAT_ATTACHMENT_OPTIONS = [
+  {
+    id: "spreadsheet",
+    label: "Spreadsheet",
+    description: "XLSX, XLS, CSV",
+    icon: "description",
+    accept: ".xlsx,.xls,.csv",
+  },
+  {
+    id: "image",
+    label: "Foto / gambar",
+    description: "JPG, PNG, WebP, GIF, HEIC/HEIF",
+    icon: "image",
+    accept: ".jpg,.jpeg,.png,.webp,.gif,.heic,.heif",
+  },
+  {
+    id: "pdf",
+    label: "Dokumen PDF",
+    description: "PDF, maksimal 5 halaman",
+    icon: "description",
+    accept: ".pdf",
+  },
+  {
+    id: "text",
+    label: "Teks / data",
+    description: "TXT, Markdown, JSON",
+    icon: "code",
+    accept: ".txt,.md,.json",
+  },
+] as const;
 export type FileCandidate = {
   readonly name: string;
   readonly type?: string;
   readonly size: number;
 };
-
 export type ValidationResult =
-  | { readonly valid: true }
-  | { readonly valid: false; readonly reason: string };
-
+  { readonly valid: true } | { readonly valid: false; readonly reason: string };
 export function isSupportedAttachment(file: FileCandidate): ValidationResult {
-  if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+  if (file.size <= 0) return { valid: false, reason: `Berkas ${file.name} kosong.` };
+  if (file.size > MAX_ATTACHMENT_SIZE_BYTES)
+    return { valid: false, reason: `Ukuran ${file.name} melebihi 10 MB.` };
+  const extension = file.name.toLowerCase().split(".").at(-1) ?? "";
+  if (!Object.hasOwn(PRIVATE_ATTACHMENT_MIME_BY_EXTENSION, extension))
     return {
       valid: false,
-      reason: `Ukuran ${file.name} melebihi 10 MB.`,
+      reason: `Format berkas ${file.name} tidak didukung. Pilih gambar, PDF, spreadsheet, atau teks/data.`,
     };
-  }
-
-  const name = file.name.toLowerCase();
-  const mime = (file.type ?? "").toLowerCase();
-
-  const isSupportedExtension = SUPPORTED_ATTACHMENT_EXTENSIONS.some((ext) => name.endsWith(ext));
-  const isImageMime = mime.startsWith("image/");
-  const isSupportedMime = (SUPPORTED_ATTACHMENT_MIME_TYPES as readonly string[]).includes(mime);
-
-  if (!isSupportedExtension && !isImageMime && !isSupportedMime) {
+  return { valid: true };
+}
+export function validateAttachmentBatch(
+  files: readonly FileCandidate[],
+  attachedCount: number,
+): ValidationResult {
+  if (files.length + attachedCount > MAX_CHAT_ATTACHMENTS)
     return {
       valid: false,
-      reason: `Format berkas ${file.name} tidak didukung. Format yang didukung: Gambar, PDF, Excel, CSV, dan TXT.`,
+      reason: `Maksimal ${MAX_CHAT_ATTACHMENTS} lampiran per pesan. Tersisa ${Math.max(0, MAX_CHAT_ATTACHMENTS - attachedCount)} slot.`,
     };
+  for (const file of files) {
+    const result = isSupportedAttachment(file);
+    if (!result.valid) return result;
   }
-
   return { valid: true };
 }

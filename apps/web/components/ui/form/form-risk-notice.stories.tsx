@@ -23,6 +23,17 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Inverse: Story = {
+  args: { inverse: true, title: "Saldo pilot: snapshot awal + transaksi pilot", children: null },
+  decorators: [
+    (Story) => (
+      <div className="rounded-owner bg-surface-inverse p-4">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 export const Danger: Story = {
   args: {
     title: "Melebihi Anggaran",

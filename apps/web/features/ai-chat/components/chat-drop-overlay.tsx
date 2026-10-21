@@ -20,7 +20,7 @@ export function ChatDropOverlay({ isDragging }: ChatDropOverlayProps): React.JSX
           exit="exit"
           transition={transitionEaseSmooth}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xs bg-surface/85"
+          className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-surface/85 p-4 backdrop-blur-xs"
         >
           <div className="flex w-full max-w-sm flex-col items-center justify-center gap-3.5 rounded-3xl border-2 border-dashed border-primary/40 bg-surface-container-lowest px-6 py-8 shadow-floating">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-control">

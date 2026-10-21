@@ -2,7 +2,8 @@
 
 import { confirmAiRecordClientPaymentProposal } from "@/app/actions/ai/confirm-finance-proposal";
 import { MoneyValue } from "@/components/ui";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 import { ProposalCardShell, ProposalDiffRow, ProposalItemRow } from "./proposal-card-shell";
 

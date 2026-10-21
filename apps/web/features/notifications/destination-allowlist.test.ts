@@ -10,6 +10,7 @@ import {
 
 const webRoot = fileURLToPath(new URL("../../", import.meta.url));
 const serviceWorkerPath = join(webRoot, "public", "notification-sw.js");
+const backendRoot = join(webRoot, "..", "api/src/backend");
 
 const PROJECT_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -56,8 +57,9 @@ async function everyDestination(): Promise<{
 }> {
   const literalUrls = [
     ...(await actionUrlLiterals(join(webRoot, "app"))),
-    ...(await actionUrlLiterals(join(webRoot, "server"))),
-    ...(await actionUrlLiterals(join(webRoot, "db"))),
+    ...(await actionUrlLiterals(join(backendRoot, "app"))),
+    ...(await actionUrlLiterals(join(backendRoot, "server"))),
+    ...(await actionUrlLiterals(join(backendRoot, "db"))),
   ];
   const destinations = new Set<string>();
   for (const referenceType of NOTIFICATION_REFERENCE_TYPES) {

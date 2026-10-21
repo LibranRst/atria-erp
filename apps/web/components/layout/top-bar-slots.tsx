@@ -18,6 +18,7 @@ import * as React from "react";
 export type TopBarSlots = {
   /** Judul yang tidak bisa diturunkan dari rute — misalnya keadaan dalam halaman. */
   readonly title?: string;
+  readonly subtitle?: string;
   readonly left?: React.ReactNode;
   readonly right?: React.ReactNode;
 };

@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from "@storybook/nextjs";
 import { useState } from "react";
 
 import { WorkflowFormSheet } from "./guided-form";
+import { GroupedSurface, FactRow } from "../feedback/main-surface";
 
-function Demo(): React.JSX.Element {
+function Demo({ aside = false }: { readonly aside?: boolean }): React.JSX.Element {
   const [open, setOpen] = useState(true);
   return (
     <div className="h-120 w-full">
@@ -14,6 +15,15 @@ function Demo(): React.JSX.Element {
         primaryLabel="Setujui"
         secondaryLabel="Tolak"
         statusText="Menunggu keputusan Owner"
+        desktopSize={aside ? "wide" : undefined}
+        desktopFooterPlacement={aside ? "aside" : undefined}
+        desktopAsideSummary={
+          aside ? (
+            <GroupedSurface>
+              <FactRow label="Status" value="Perlu ditinjau" />
+            </GroupedSurface>
+          ) : undefined
+        }
         onClose={() => setOpen(false)}
         onPrimary={() => setOpen(false)}
         onSecondary={() => setOpen(false)}
@@ -35,4 +45,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => <Demo />,
+};
+
+export const DesktopAside: Story = {
+  render: () => <Demo aside />,
 };

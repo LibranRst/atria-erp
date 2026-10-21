@@ -1,11 +1,20 @@
 import { getSessionCookie } from "better-auth/cookies";
+import type { ServerSession } from "@atria/api/contract";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { readBackendSession } from "@/lib/api/session";
 import {
   canUseTemporaryPasswordDuringDeveloperSimulation,
   isDeveloperAccountSimulationEnabled,
 } from "@atria/core/auth/developer-account-simulation";
+
+function loginUrl(request: NextRequest): URL {
+  const url = new URL("/login", request.url);
+  url.searchParams.set("returnTo", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+  if (request.nextUrl.searchParams.get("surface") === "mobile")
+    url.searchParams.set("surface", "mobile");
+  return url;
+}
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   /*
@@ -18,12 +27,20 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(loginUrl(request));
   }
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  let session: ServerSession;
+  try {
+    session = await readBackendSession(request.headers);
+  } catch {
+    return new NextResponse("API belum dapat dihubungi. Coba lagi sebentar lagi.", {
+      status: 503,
+      headers: { "cache-control": "no-store" },
+    });
+  }
   if (!session?.user || !session.user.isActive) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(loginUrl(request));
   }
   const canUseTemporaryPasswordDuringSimulation = canUseTemporaryPasswordDuringDeveloperSimulation({
     simulationEnabled: isDeveloperAccountSimulationEnabled(),
@@ -48,10 +65,15 @@ export const config = {
    * memeriksa pembaruan, memasang ikon manifest, dan menyajikan halaman offline
    * dari cache. Pengalihan ke `/login` di jalur-jalur itu membuat pemeriksaan
    * pembaruan worker gagal dan halaman offline tersimpan sebagai halaman login.
-   * Isinya tidak memuat data perusahaan: manifest, ikon, skrip worker, dan satu
+   * Isinya tidak memuat data perusahaan: manifest, ikon, artwork brand publik,
+   * skrip worker, dan satu
    * halaman pemberitahuan tanpa sesi.
+   * /receipt_test.png adalah satu fixture nota sintetis yang disimpan di public
+   * untuk preview seed demo. Gambar native tidak membawa cookie browser, jadi
+   * hanya nama berkas ini dikecualikan; gambar dan upload lain tetap mengikuti
+   * perlindungan route yang sudah ada.
    */
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|notification-sw.js|icons/|offline|login|setup).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|favicon\\.svg$|manifest.webmanifest|notification-sw.js|icons/|brand/|offline|login|setup|receipt_test\\.png$).*)",
   ],
 };

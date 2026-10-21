@@ -1,5 +1,7 @@
 "use client";
 
+import { DesktopAvatar } from "../desktop/desktop-avatar";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import Image from "next/image";
 import React from "react";
 
@@ -63,7 +65,19 @@ export function UserAvatar({
    * baru yang barusan diunggah untuk menggantikannya.
    */
   const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   const showImage = Boolean(imageUrl) && failedUrl !== imageUrl;
+
+  if (desktop)
+    return (
+      <DesktopAvatar
+        className={className}
+        renderPx={renderPx}
+        displayName={displayName}
+        initials={initials}
+        imageUrl={imageUrl ? withImageKitTransform(imageUrl, renderPx) : imageUrl}
+      />
+    );
 
   return (
     <span

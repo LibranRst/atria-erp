@@ -1,5 +1,5 @@
 "use client";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 interface LockedTabStateProps {
   readonly tabLabel: string;
   readonly actionLabel: string;
@@ -32,14 +32,15 @@ export function LockedTabState({
           </p>
         </div>
       </div>
-      <button
+      <Button
         type="button"
         onClick={onAction}
-        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:z-10 active:shadow-raised"
+        variant="primary"
       >
         <AppIcon name={actionIcon} className="icon-sm" />
         <span>{actionLabel}</span>
-      </button>
+      </Button>
     </section>
   );
 }
@@ -68,14 +69,15 @@ export function RabPrerequisiteState({ onGoToRap }: RabPrerequisiteStateProps): 
           </p>
         </div>
       </div>
-      <button
+      <Button
         type="button"
         onClick={onGoToRap}
-        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.98]"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:z-10 active:shadow-raised"
+        variant="primary"
       >
         Buka RAP
         <AppIcon name="arrow_forward" className="icon-sm" />
-      </button>
+      </Button>
     </section>
   );
 }

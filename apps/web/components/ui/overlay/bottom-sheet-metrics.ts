@@ -1,4 +1,5 @@
 export const SHEET_TOP_GAP = 8;
+export const DESKTOP_SHEET_VIEWPORT_GAP = 48;
 export const MIN_SHEET_HEIGHT = 196;
 export const MIN_RESIZE_DISTANCE = 56;
 
@@ -8,6 +9,9 @@ export type BottomSheetMetricsInput = {
   readonly headerHeight: number;
   readonly bodyHeight: number;
   readonly footerHeight: number;
+  readonly viewportGap?: number;
+  /** Total vertical extent of a parallel footer panel, including its insets. */
+  readonly asideHeight?: number;
 };
 
 export type BottomSheetMetrics = {
@@ -23,9 +27,13 @@ export function calculateBottomSheetMetrics({
   headerHeight,
   bodyHeight,
   footerHeight,
+  viewportGap = SHEET_TOP_GAP,
+  asideHeight = 0,
 }: BottomSheetMetricsInput): BottomSheetMetrics {
-  const maximumHeight = Math.max(MIN_SHEET_HEIGHT, Math.floor(viewportHeight - SHEET_TOP_GAP));
-  const measuredHeight = Math.ceil(handleHeight + headerHeight + bodyHeight + footerHeight);
+  const maximumHeight = Math.max(0, Math.floor(viewportHeight - viewportGap));
+  const measuredHeight = Math.ceil(
+    Math.max(handleHeight + headerHeight + bodyHeight + footerHeight, asideHeight),
+  );
   const contentOverflows = measuredHeight > maximumHeight;
   const naturalHeight = contentOverflows
     ? maximumHeight

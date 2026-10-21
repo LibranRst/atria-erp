@@ -1,14 +1,12 @@
 "use client";
-
-import { motion } from "framer-motion";
 import {
   ConfirmationDialog,
   FinanceUnsavedChangesModal,
   type OperationSuccess,
   OperationSuccessDialog,
+  Button,
 } from "@/components/ui";
 import type { ExpenseReceiptOcrResult } from "@/features/expenses/utils/expense-receipt-ocr";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 interface ExpenseFormOverlaysProps {
   readonly closeGuardOpen: boolean;
@@ -77,24 +75,22 @@ export function ExpenseFormOverlays({
         onClose={onCloseConflict}
         actions={
           <div className="space-y-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onSaveConflictCopy}
               className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
+              variant="primary"
             >
               Simpan sebagai Draft Baru
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onLoadServerVersion}
               className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
+              variant="secondary"
             >
               Muat Versi Server
-            </motion.button>
+            </Button>
           </div>
         }
       />
@@ -106,24 +102,22 @@ export function ExpenseFormOverlays({
         onClose={onCloseOcr}
         actions={
           <div className="space-y-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onAppendOcr}
               className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white"
+              variant="primary"
             >
               Tambahkan Hasil Scan
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               onClick={onReplaceOcr}
               className="min-h-12 w-full rounded-full bg-surface-container px-5 text-xs font-bold text-on-surface"
+              variant="secondary"
             >
               Ganti Item Saat Ini
-            </motion.button>
+            </Button>
           </div>
         }
       />

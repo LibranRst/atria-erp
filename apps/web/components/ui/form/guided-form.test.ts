@@ -17,9 +17,9 @@ describe("guided form sheet actions", () => {
 
 describe("FormDisclosure motion container", () => {
   test("allows overflow to transition to visible so shadows and focus rings are not clipped", async () => {
-    const source = await Bun.file(guidedFormPath).text();
+    const source = await Bun.file(new URL("../overlay/content-reveal.tsx", import.meta.url)).text();
 
-    expect(source).toContain('transitionEnd: { overflow: "visible" }');
+    expect(source).toContain('transitionEnd: { overflow: expanded ? "visible" : "hidden" }');
     expect(source).toContain('exit={{ opacity: 0, height: 0, overflow: "hidden" }}');
   });
 });

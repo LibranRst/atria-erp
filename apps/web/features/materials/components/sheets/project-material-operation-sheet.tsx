@@ -1,13 +1,16 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationDialog,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   QuantityStepper,
   AdaptiveSelect,
   Textarea,
@@ -115,6 +118,7 @@ export function ProjectMaterialOperationSheet({
   onClose,
   onSubmit,
 }: ProjectMaterialOperationSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const inventory = selectedMaterial.find((row) => row.locationId === locationId);
@@ -144,6 +148,62 @@ export function ProjectMaterialOperationSheet({
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Proyek"
+                  wrapLabel
+                  value={selectedProject?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="RAP material"
+                  wrapLabel
+                  value={
+                    selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name ??
+                    "Belum dipilih"
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi"
+                  wrapLabel
+                  value={inventory?.locationName ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Jumlah draft"
+                  wrapLabel
+                  value={`${formatMaterialQuantity(numericQuantity)} ${inventory?.unit ?? "unit"}`}
+                />
+                {inventory ? (
+                  <>
+                    <FactRow
+                      layout="stacked"
+                      label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"}
+                      wrapLabel
+                      value={`${formatMaterialQuantity(impactBefore)} ${inventory.unit}`}
+                    />
+                    <FactRow
+                      layout="stacked"
+                      label="Setelah dicatat"
+                      wrapLabel
+                      value={`${formatMaterialQuantity(impactAfter)} ${inventory.unit}`}
+                    />
+                  </>
+                ) : null}
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              {operationCopy?.detailHelper} Operasi ini tidak mencatat pembayaran.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? `Tinjau ${operationLabel}` : operationLabel}
@@ -175,29 +235,37 @@ export function ProjectMaterialOperationSheet({
               title="Tinjau operasi material"
               helper="Periksa proyek dan detail operasi sebelum mencatat."
             >
-              <ReviewFact
-                label="Proyek"
-                value={projects.find((row) => row.id === projectId)?.name ?? "–"}
-              />
-              <ReviewFact
-                label="RAP material"
-                value={selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name ?? "–"}
-              />
-              <ReviewFact label="Lokasi" value={inventory?.locationName ?? "–"} />
-              <ReviewFact
-                label="Jumlah"
-                value={`${formatMaterialQuantity(numericQuantity)} ${inventory?.unit ?? "unit"}`}
-              />
+              {!desktop && (
+                <ReviewFact
+                  label="Proyek"
+                  value={projects.find((row) => row.id === projectId)?.name ?? "–"}
+                />
+              )}
+              {!desktop && (
+                <ReviewFact
+                  label="RAP material"
+                  value={selectedProject?.rapItems.find((row) => row.id === rapItemId)?.name ?? "–"}
+                />
+              )}
+              {!desktop && <ReviewFact label="Lokasi" value={inventory?.locationName ?? "–"} />}
+              {!desktop && (
+                <ReviewFact
+                  label="Jumlah"
+                  value={`${formatMaterialQuantity(numericQuantity)} ${inventory?.unit ?? "unit"}`}
+                />
+              )}
               {note.trim() && <ReviewFact label="Catatan" value={note} />}
             </FormSection>
-            <StockImpactRow
-              label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"}
-              before={impactBefore}
-              delta={impactDelta}
-              after={impactAfter}
-              reserved={action === "RESERVE" ? undefined : inventory?.reservedStock}
-              unit={inventory?.unit}
-            />
+            {!desktop && (
+              <StockImpactRow
+                label={action === "RESERVE" ? "Stok tersedia" : "Stok fisik"}
+                before={impactBefore}
+                delta={impactDelta}
+                after={impactAfter}
+                reserved={action === "RESERVE" ? undefined : inventory?.reservedStock}
+                unit={inventory?.unit}
+              />
+            )}
             <FormRiskNotice
               title={
                 action === "WASTE"

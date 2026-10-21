@@ -1,13 +1,17 @@
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import type { SettingsOption, MaterialDraft } from "../../types/material-types";
 import {
   AppIcon,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
+  FactRow,
   FormDisclosure,
   FormField,
   FormSection,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OperationalFormSheet,
   AdaptiveSelect,
@@ -56,6 +60,7 @@ export function MaterialEditorSheet({
   onCreateLocation,
   onCreateVendor,
 }: MaterialEditorSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const completedDetails = draft
     ? [draft.brand, draft.code, draft.color, draft.defaultVendorId, draft.specification].filter(
         Boolean,
@@ -63,6 +68,93 @@ export function MaterialEditorSheet({
     : 0;
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        draft ? (
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Material"
+                  wrapLabel
+                  value={draft.name.trim() || "Nama belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Kategori"
+                  wrapLabel
+                  value={
+                    categories.find((row) => row.id === draft.categoryId)?.name ?? "Belum dipilih"
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Satuan"
+                  wrapLabel
+                  value={draft.unit || "Belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Vendor default"
+                  wrapLabel
+                  value={
+                    draft.defaultVendorId
+                      ? (vendors.find((row) => row.id === draft.defaultVendorId)?.name ??
+                        "Vendor tidak tersedia")
+                      : "Tanpa vendor default"
+                  }
+                />
+                {!draft.id ? (
+                  <>
+                    <FactRow
+                      layout="stacked"
+                      label="Lokasi awal"
+                      wrapLabel
+                      value={
+                        locations.find((row) => row.id === draft.locationId)?.name ??
+                        "Belum dipilih"
+                      }
+                    />
+                    <FactRow
+                      layout="stacked"
+                      label="Stok minimum"
+                      wrapLabel
+                      value={`${draft.minimumStock.toLocaleString("id-ID")} ${draft.unit}`}
+                    />
+                    <FactRow
+                      layout="stacked"
+                      label="Harga acuan"
+                      wrapLabel
+                      value={
+                        <MoneyValue
+                          fractionDigits={Number.isInteger(draft.lastPurchasePrice) ? 0 : 2}
+                          amount={draft.lastPurchasePrice}
+                          variant="fullDynamic"
+                          size="sm"
+                        />
+                      }
+                    />
+                  </>
+                ) : null}
+                <FactRow
+                  layout="stacked"
+                  label="Data utama lengkap"
+                  wrapLabel
+                  value={`${completion[0]} dari ${completion[1]}`}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              {draft.id
+                ? "Perubahan memperbarui identitas dan konteks pembelian material."
+                : "Material baru menyiapkan inventori bersaldo nol di lokasi awal."}{" "}
+              Stok fisik dan pembayaran dicatat melalui operasi terpisah.
+            </p>
+          </div>
+        ) : undefined
+      }
       dismissal={{ mode: "managed" }}
       open={Boolean(draft)}
       title={draft?.id ? "Edit material" : "Material baru"}
@@ -72,9 +164,7 @@ export function MaterialEditorSheet({
       disabled={!canSave}
       disabledReason={disabledReason}
       statusText={
-        draft
-          ? `${completion[0]} dari ${completion[1]} data utama lengkap`
-          : undefined
+        draft && !desktop ? `${completion[0]} dari ${completion[1]} data utama lengkap` : undefined
       }
       statusTone={canSave ? "success" : "warning"}
       onClose={onClose}

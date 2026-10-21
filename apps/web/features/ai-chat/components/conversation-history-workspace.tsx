@@ -17,6 +17,8 @@ import {
   ConfirmationDialog,
   FormField,
   FormSection,
+  GroupedSurface,
+  FactRow,
   IconButton,
   OperationalFormSheet,
   SearchInput,
@@ -81,7 +83,7 @@ export function groupConversations(
 }
 
 const STYLE_OPTIONS: readonly { value: AiResponseStyle; label: string }[] = [
-  { value: "STANDARD", label: "Standard Atria" },
+  { value: "STANDARD", label: "Standard Paduna Build" },
   { value: "VERY_CONCISE", label: "Sangat ringkas" },
   { value: "DETAILED", label: "Lebih rinci" },
 ];
@@ -91,18 +93,32 @@ export function ConversationHistoryWorkspace({
   onSelect,
   onNewConversation,
   onActiveDeleted,
+  compact = false,
+  refreshKey,
+  localDrafts = [],
+  onTitleChange,
 }: {
   readonly activeId: string | null;
-  readonly onSelect: (id: string) => void;
+  readonly onSelect: (id: string, title?: string) => void;
   readonly onNewConversation: () => void;
   readonly onActiveDeleted: () => void;
+  readonly compact?: boolean;
+  readonly refreshKey?: string;
+  readonly localDrafts?: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly updatedAt: number;
+  }[];
+  readonly onTitleChange?: (id: string, title: string) => void;
 }): React.JSX.Element {
   const can = useCan();
   const [items, setItems] = React.useState<readonly Conversation[]>([]);
   const [query, setQuery] = React.useState("");
   const [nextCursor, setNextCursor] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [hasLoaded, setHasLoaded] = React.useState(false);
   const [loadingMore, setLoadingMore] = React.useState(false);
+  const [loadError, setLoadError] = React.useState("");
   const [actionTarget, setActionTarget] = React.useState<Conversation | null>(null);
   const [renameTitle, setRenameTitle] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<Conversation | null>(null);
@@ -119,22 +135,33 @@ export function ConversationHistoryWorkspace({
     const id = ++requestId.current;
     if (cursor) setLoadingMore(true);
     else setLoading(true);
-    const response = await listAiConversations({ query: search || undefined, cursor, limit: 30 });
-    if (id !== requestId.current) return;
-    if (response.success) {
-      setItems((current) => (cursor ? [...current, ...response.data.items] : response.data.items));
-      setNextCursor(response.data.nextCursor);
-    } else {
-      toast.error(response.error.message);
+    setLoadError("");
+    try {
+      const response = await listAiConversations({ query: search || undefined, cursor, limit: 30 });
+      if (id !== requestId.current) return;
+      if (response.success) {
+        setHasLoaded(true);
+        setItems((current) =>
+          cursor ? [...current, ...response.data.items] : response.data.items,
+        );
+        setNextCursor(response.data.nextCursor);
+      } else {
+        setLoadError(response.error.message);
+      }
+    } catch {
+      if (id === requestId.current) setLoadError("Riwayat belum dapat dimuat. Coba lagi.");
+    } finally {
+      if (id === requestId.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-    setLoading(false);
-    setLoadingMore(false);
   }, []);
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => void load(query), 250);
     return () => window.clearTimeout(timer);
-  }, [load, query]);
+  }, [load, query, refreshKey]);
 
   React.useEffect(() => {
     void getAiPreference().then((response) => {
@@ -194,6 +221,7 @@ export function ConversationHistoryWorkspace({
       ),
     );
     setActionTarget(null);
+    onTitleChange?.(actionTarget.id, response.data.title);
     toast.success("Judul percakapan diperbarui.");
   }
 
@@ -221,79 +249,135 @@ export function ConversationHistoryWorkspace({
 
   const activeDraftFocus = sanitizePrimaryFocus(preferenceDraft.primaryFocus, can);
   const customNoteLength = preferenceDraft.customNote?.length ?? 0;
+  const visibleLocalDrafts = localDrafts.filter((item) =>
+    item.title.toLocaleLowerCase("id-ID").includes(query.trim().toLocaleLowerCase("id-ID")),
+  );
 
   return (
-    <div className="space-y-md pt-2 pb-6">
-      <Button variant="primary" fullWidth onClick={onNewConversation}>
-        Mulai percakapan baru
-      </Button>
-      <button
-        type="button"
-        onClick={() => {
-          const synchronized: AiPreferenceInput = {
-            ...preference,
-            primaryFocus: effectiveFocus,
-          };
-          setPreferenceDraft(synchronized);
-          setPreferenceOpen(true);
-        }}
-        className="flex min-h-16 w-full items-center gap-3 rounded-owner bg-white px-4 text-left shadow-surface ring-1 ring-ring-subtle transition-colors hover:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none active:bg-surface-container"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-icon bg-surface-container text-on-surface">
-          <AppIcon name="tune" className="icon-md" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-row font-bold text-on-surface">Preferensi asisten</span>
-          <span className="block truncate text-meta font-semibold text-on-surface-variant">
-            {styleLabel} · {focusLabel}
-            {preference.customNote ? " · Ada catatan" : ""}
-          </span>
-        </span>
-        <AppIcon name="chevron_right" className="icon-sm text-on-surface-variant" />
-      </button>
-      <SearchInput value={query} onChange={setQuery} placeholder="Cari percakapan" />
-      {loading ? (
+    <div
+      className={compact ? "space-y-3 pb-4" : "space-y-md pt-2 pb-6"}
+      aria-busy={loading || loadingMore}
+    >
+      <div className="flex min-h-10 items-center justify-between gap-2">
+        {compact ? (
+          <h2 className="px-2 text-support font-semibold">Riwayat percakapan</h2>
+        ) : (
+          <Button
+            variant="primary"
+            className="min-w-0 flex-1"
+            aria-label="Mulai percakapan baru"
+            onClick={onNewConversation}
+          >
+            <AppIcon name="add" className="icon-sm shrink-0" />
+            Percakapan baru
+          </Button>
+        )}
+        <IconButton
+          label={`Preferensi asisten · ${styleLabel} · ${focusLabel}`}
+          icon={<AppIcon name="tune" className="icon-md" />}
+          variant="tertiary"
+          size="compact"
+          aria-haspopup="dialog"
+          aria-expanded={preferenceOpen}
+          className="shrink-0 bg-transparent! text-on-surface-variant! shadow-none!"
+          onClick={() => {
+            setPreferenceDraft(preference);
+            setPreferenceOpen(true);
+          }}
+        />
+      </div>
+
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        placeholder="Cari judul percakapan"
+        ariaLabel="Cari judul percakapan"
+        showClear={false}
+      />
+      {visibleLocalDrafts.length ? (
+        <section className="space-y-1">
+          <h3 className="px-2 text-meta font-semibold text-on-surface-variant">Belum dikirim</h3>
+          {visibleLocalDrafts.map((item) => (
+            <Button
+              key={item.id}
+              variant="tertiary"
+              fullWidth
+              className="justify-start! bg-transparent! text-start! text-on-surface! shadow-none!"
+              onClick={() => onSelect(item.id)}
+            >
+              <AppIcon name="edit" className="icon-sm" />
+              <span className="min-w-0 truncate">{item.title}</span>
+            </Button>
+          ))}
+        </section>
+      ) : null}
+      {loadError ? (
+        <div role="alert" className="space-y-2 px-2 py-3">
+          <p className="text-support text-on-surface-variant">{loadError}</p>
+          <Button variant="secondary" size="compact" onClick={() => void load(query)}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : null}
+      {loading && !hasLoaded ? (
         <div className="space-y-2" role="status" aria-label="Memuat riwayat">
           {[0, 1, 2].map((item) => (
             <div key={item} className="h-16 rounded-inset bg-surface-container" />
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : !hasLoaded ? null : items.length === 0 && visibleLocalDrafts.length === 0 ? (
         <div className="py-12 text-center text-on-surface-variant">
-          <p className="text-body font-semibold">Belum ada percakapan</p>
-          <p className="text-meta">Mulai percakapan baru untuk bertanya seputar proyek.</p>
+          <p className="text-support font-semibold">
+            {query.trim() ? "Judul tidak ditemukan" : "Belum ada percakapan"}
+          </p>
+          <p className="text-meta">
+            {query.trim()
+              ? "Coba kata lain atau kosongkan pencarian."
+              : "Mulai percakapan baru untuk bertanya."}
+          </p>
         </div>
       ) : (
         groups.map((group) => (
           <section key={group.label} className="space-y-2">
-            <h3 className="px-1 text-meta font-bold text-on-surface-variant">
-              {group.label}
-            </h3>
-            <ul className="divide-y divide-black/5.5 overflow-hidden rounded-owner bg-white shadow-surface ring-1 ring-ring-subtle">
+            <h3 className="px-1 text-meta font-bold text-on-surface-variant">{group.label}</h3>
+            <ul
+              className={
+                compact
+                  ? "space-y-1"
+                  : "divide-y divide-ring-subtle overflow-hidden rounded-owner bg-surface-container-lowest shadow-surface ring-1 ring-ring-subtle"
+              }
+            >
               {group.items.map((conversation) => {
                 const isActive = conversation.id === activeId;
                 return (
                   <li
                     key={conversation.id}
-                    className={`group flex min-h-16 items-center gap-1 pr-2 transition-colors hover:bg-surface-container-low ${
-                      isActive ? "bg-accent/[0.04]" : "bg-white"
+                    className={`group flex min-h-16 items-center gap-1 pr-1 transition-colors hover:bg-surface-container ${compact ? "rounded-2xl" : ""} ${
+                      isActive
+                        ? "bg-surface-container-high"
+                        : compact
+                          ? "bg-transparent"
+                          : "bg-surface-container-lowest"
                     }`}
                   >
                     <button
                       type="button"
-                      onClick={() => onSelect(conversation.id)}
-                      className="flex min-h-16 min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+                      onClick={() => onSelect(conversation.id, conversation.title ?? undefined)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`flex min-h-16 min-w-0 flex-1 cursor-pointer items-center gap-2 ${compact ? "px-2" : "px-4"} text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset`}
                     >
-                      <AppIcon
-                        name={isActive ? "check_circle" : "sparkle"}
-                        className={`icon-sm shrink-0 ${
-                          isActive ? "text-accent" : "text-on-surface-variant"
-                        }`}
-                      />
+                      {!compact ? (
+                        <AppIcon
+                          name={isActive ? "check_circle" : "sparkle"}
+                          className={`icon-sm shrink-0 ${
+                            isActive ? "text-accent" : "text-on-surface-variant"
+                          }`}
+                        />
+                      ) : null}
                       <div className="min-w-0 flex-1">
                         <p
-                          className={`truncate text-row font-semibold ${
-                            isActive ? "font-bold text-accent" : "text-on-surface"
+                          className={`${compact ? "line-clamp-2 text-support" : "truncate text-row"} font-semibold ${
+                            isActive ? "font-bold text-on-surface" : "text-on-surface"
                           }`}
                         >
                           {conversation.title ?? "Percakapan baru"}
@@ -314,7 +398,7 @@ export function ConversationHistoryWorkspace({
                             size="compact"
                             variant="tertiary"
                             icon={<AppIcon name="more_horiz" className="icon-md" />}
-                            className="text-on-surface-variant group-hover:text-on-surface"
+                            className="bg-transparent! text-on-surface-variant! shadow-none! group-hover:text-on-surface"
                           />
                         }
                         items={[
@@ -349,6 +433,7 @@ export function ConversationHistoryWorkspace({
           variant="secondary"
           fullWidth
           pending={loadingMore}
+          disabled={loading}
           onClick={() => void load(query, nextCursor)}
         >
           Muat lebih banyak
@@ -399,6 +484,33 @@ export function ConversationHistoryWorkspace({
         }}
         open={preferenceOpen}
         title="Preferensi asisten"
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        sizing="content"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                label="Gaya jawaban"
+                wrapLabel
+                value={
+                  STYLE_OPTIONS.find((option) => option.value === preferenceDraft.responseStyle)
+                    ?.label
+                }
+              />
+              <FactRow
+                label="Fokus utama"
+                wrapLabel
+                value={
+                  availableFocusOptions.find((option) => option.value === activeDraftFocus)?.label
+                }
+              />
+              <div className="px-4 py-3 text-support text-on-surface-variant">
+                Hanya memengaruhi gaya dan peristilahan, bukan izin atau fakta.
+              </div>
+            </div>
+          </GroupedSurface>
+        }
         onClose={() => setPreferenceOpen(false)}
         onSubmit={() => void savePreference()}
         submitLabel="Simpan"
@@ -419,7 +531,11 @@ export function ConversationHistoryWorkspace({
           </FormSection>
 
           <FormSection title="Fokus utama" presentation="grouped">
-            <div role="radiogroup" aria-label="Fokus utama" className="divide-y divide-outline-variant/20">
+            <div
+              role="radiogroup"
+              aria-label="Fokus utama"
+              className="divide-y divide-outline-variant/20"
+            >
               {availableFocusOptions.map((option) => (
                 <ChoiceRow
                   key={option.value}
@@ -436,7 +552,7 @@ export function ConversationHistoryWorkspace({
           </FormSection>
 
           <FormSection title="Catatan personal" presentation="grouped">
-            <div className="p-4 space-y-2">
+            <div className="space-y-2 p-4">
               <Textarea
                 id="ai-custom-note"
                 value={preferenceDraft.customNote ?? ""}

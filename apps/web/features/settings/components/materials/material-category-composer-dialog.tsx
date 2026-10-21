@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  CompactFormDialog,
-  SheetFooterActions,
-  TextInput,
-} from "@/components/ui";
+import { CompactFormDialog, SheetFooterActions, TextInput } from "@/components/ui";
 
 type MaterialCategoryComposerDialogProps = {
   readonly open: boolean;

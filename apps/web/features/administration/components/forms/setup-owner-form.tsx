@@ -1,12 +1,9 @@
 "use client";
-
-import { motion } from "framer-motion";
 import React from "react";
 import { toast } from "sonner";
 
 import { bootstrapFirstOwner } from "@/app/actions/administration";
-import { FormField, FormSection, TextInput } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { FormField, FormSection, TextInput, Button } from "@/components/ui";
 
 type SetupFormState = {
   readonly bootstrapSecret: string;
@@ -123,15 +120,14 @@ export function SetupOwnerForm(): React.JSX.Element {
             />
           </FormField>
         </FormSection>
-        <motion.button
+        <Button
           type="submit"
           disabled={pending}
-          whileTap={pending ? undefined : { scale: 0.97 }}
-          transition={transitionSpringSnappy}
           className="min-h-12 w-full rounded-full bg-primary px-6 text-sm font-bold text-white disabled:opacity-50"
+          variant="primary"
         >
           {pending ? "Menyiapkan…" : "Selesaikan setup"}
-        </motion.button>
+        </Button>
       </form>
     </section>
   );

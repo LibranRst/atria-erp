@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { approveProjectChangeOrder } from "@/app/actions/project/revision-change-order";
@@ -14,15 +15,22 @@ import {
 } from "@/features/activity-detail/components/activity-detail-provider";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { AppIcon, Button, CompactFormDialog, FormField, Textarea } from "@/components/ui";
+import { RabDesktopHistory } from "./rab-desktop-history";
 
 export function RabRevisionHistoryPanel({
   revisionHistory,
   changeOrders,
   setHistoryDetailId,
+  desktop = false,
+  canApproveRab = false,
+  onWorkflowActiveChange,
 }: {
   readonly revisionHistory: readonly RabRevisionHistoryView[];
   readonly changeOrders: readonly ChangeOrderHistoryView[];
   readonly setHistoryDetailId: (id: string | null) => void;
+  readonly desktop?: boolean;
+  readonly canApproveRab?: boolean;
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
 }): React.JSX.Element {
   const router = useRouter();
   const { openActivityDetail } = useActivityDetail();
@@ -31,116 +39,147 @@ export function RabRevisionHistoryPanel({
   const [overrideOrderId, setOverrideOrderId] = React.useState<string | null>(null);
   const [overrideReason, setOverrideReason] = React.useState("");
   const [overridePending, setOverridePending] = React.useState(false);
+  React.useEffect(() => {
+    onWorkflowActiveChange?.(pendingId !== null || overrideOrderId !== null || overridePending);
+  }, [pendingId, overrideOrderId, overridePending, onWorkflowActiveChange]);
 
   async function approve(orderId: string): Promise<void> {
+    if (!canApproveRab || pendingId !== null || overridePending) return;
     setPendingId(orderId);
-    const result = await approveProjectChangeOrder({ changeOrderId: orderId });
-    setPendingId(null);
-    if (!result.success) {
-      if (
-        result.error.message.includes("MAKER_CHECKER_REQUIRED") ||
-        result.error.message.includes("disetujui user lain")
-      ) {
-        setOverrideOrderId(orderId);
-        setOverrideReason("");
+    try {
+      const result = await approveProjectChangeOrder({ changeOrderId: orderId });
+      if (!result.success) {
+        if (
+          result.error.message.includes("MAKER_CHECKER_REQUIRED") ||
+          result.error.message.includes("disetujui user lain")
+        ) {
+          setOverrideOrderId(orderId);
+          setOverrideReason("");
+          return;
+        }
+        toast.error(result.error.message);
         return;
       }
-      toast.error(result.error.message);
-      return;
+      toast.success("Change Order disetujui dan baseline kontrak diperbarui.");
+      router.refresh();
+    } catch {
+      toast.error("Change Order belum dapat disetujui. Coba lagi.");
+    } finally {
+      setPendingId(null);
     }
-    toast.success("Change Order disetujui dan baseline kontrak diperbarui.");
-    router.refresh();
   }
 
   async function submitEmergencyOverride(): Promise<void> {
-    if (!overrideOrderId) return;
+    if (!canApproveRab || !overrideOrderId || overridePending) return;
     if (overrideReason.trim().length < 10) {
       toast.error("Alasan persetujuan darurat minimal 10 karakter.");
       return;
     }
     setOverridePending(true);
-    const result = await approveProjectChangeOrder({
-      changeOrderId: overrideOrderId,
-      emergencyOverride: true,
-      reason: overrideReason.trim(),
-    });
-    setOverridePending(false);
-    if (!result.success) {
-      toast.error(result.error.message);
-      return;
+    try {
+      const result = await approveProjectChangeOrder({
+        changeOrderId: overrideOrderId,
+        emergencyOverride: true,
+        reason: overrideReason.trim(),
+      });
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      setOverrideOrderId(null);
+      setOverrideReason("");
+      toast.success("Change Order disetujui dengan persetujuan darurat (Emergency Override).");
+      router.refresh();
+    } catch {
+      toast.error("Persetujuan darurat belum dapat disimpan. Coba lagi.");
+    } finally {
+      setOverridePending(false);
     }
-    setOverrideOrderId(null);
-    setOverrideReason("");
-    toast.success("Change Order disetujui dengan persetujuan darurat (Emergency Override).");
-    router.refresh();
   }
 
   return (
-    <NativePanel eyebrow="Jejak perubahan" title="Riwayat Revisi">
-      <div className="space-y-2">
-        {revisionHistory.map((revision) => (
-          <button
-            type="button"
-            onClick={() => openActivityDetail({ kind: "RAB_REVISION", id: revision.id })}
-            key={revision.id}
-            className={`min-h-12 w-full rounded-2xl bg-surface-container-low p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
-              revision.status === "VOID" ? "opacity-65" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-meta font-bold text-primary">
-                R{revision.revision}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs leading-5 font-bold">
-                  {revision.status === "VOID"
-                    ? "Revisi dibatalkan"
-                    : formatBusinessLabel(revision.status)}
-                </span>
-                {revision.voidReason && (
-                  <span className="block truncate text-meta text-on-surface-variant">
-                    {revision.voidReason}
-                  </span>
-                )}
-              </span>
-              <span className="font-mono text-meta font-bold">{formatShortRp(revision.value)}</span>
-              <ActivityDetailChevron />
-            </div>
-          </button>
-        ))}
-        {changeOrders.map((order) => (
-          <div
-            key={order.id}
-            className="flex min-h-14 items-center gap-2 rounded-2xl bg-primary/5 p-2"
-          >
-            <button
-              type="button"
-              onClick={() => setHistoryDetailId(order.id)}
-              className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-full px-2 text-left"
-            >
-              <AppIcon name="history" className="text-primary" />
-              <span className="min-w-0 flex-1 truncate text-xs font-bold">
-                Change Order R{order.baseRevision} ke R{order.revisedRevision}
-              </span>
-              <span className="font-mono text-meta font-bold text-primary">
-                {Number(order.valueDelta) >= 0 ? "+" : ""}
-                {formatShortRp(Number(order.valueDelta))}
-              </span>
-            </button>
-            {order.status === "PENDING_APPROVAL" ? (
+    <>
+      <div hidden={!desktop} inert={!desktop}>
+        <RabDesktopHistory
+          revisionHistory={revisionHistory}
+          changeOrders={changeOrders}
+          onRevision={(id) => openActivityDetail({ kind: "RAB_REVISION", id })}
+          onOrder={(id) => setHistoryDetailId(id)}
+          onApproveOrder={(id) => void approve(id)}
+          canApprove={canApproveRab}
+          pendingId={pendingId}
+        />
+      </div>
+      <div hidden={desktop} inert={desktop}>
+        <NativePanel eyebrow="Jejak perubahan" title="Riwayat Revisi">
+          <div className="space-y-2">
+            {revisionHistory.map((revision) => (
               <button
                 type="button"
-                disabled={pendingId === order.id}
-                onClick={() => void approve(order.id)}
-                className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-meta font-bold text-white disabled:opacity-50"
+                onClick={() => openActivityDetail({ kind: "RAB_REVISION", id: revision.id })}
+                key={revision.id}
+                className={`min-h-12 w-full rounded-2xl bg-surface-container-low p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                  revision.status === "VOID" ? "opacity-65" : ""
+                }`}
               >
-                {pendingId === order.id ? "Memproses" : "Setujui"}
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-meta font-bold text-primary">
+                    R{revision.revision}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs leading-5 font-bold">
+                      {revision.status === "VOID"
+                        ? "Revisi dibatalkan"
+                        : formatBusinessLabel(revision.status)}
+                    </span>
+                    {revision.voidReason && (
+                      <span className="block truncate text-meta text-on-surface-variant">
+                        {revision.voidReason}
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-mono text-meta font-bold">
+                    {formatShortRp(revision.value)}
+                  </span>
+                  <ActivityDetailChevron />
+                </div>
               </button>
-            ) : null}
+            ))}
+            {changeOrders.map((order) => (
+              <div
+                key={order.id}
+                className="flex min-h-14 items-center gap-2 rounded-2xl bg-primary/5 p-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => setHistoryDetailId(order.id)}
+                  className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-full px-2 text-left"
+                >
+                  <AppIcon name="history" className="text-primary" />
+                  <span className="min-w-0 flex-1 truncate text-xs font-bold">
+                    Change Order R{order.baseRevision} ke R{order.revisedRevision}
+                  </span>
+                  <span className="font-mono text-meta font-bold text-primary">
+                    {Number(order.valueDelta) >= 0 ? "+" : ""}
+                    {formatShortRp(Number(order.valueDelta))}
+                  </span>
+                </button>
+                {order.status === "PENDING_APPROVAL" && canApproveRab ? (
+                  <Button
+                    type="button"
+                    disabled={pendingId === order.id}
+                    onClick={() => void approve(order.id)}
+                    className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-meta font-bold text-white disabled:opacity-50"
+                    variant="primary"
+                  >
+                    {pendingId === order.id ? "Memproses" : "Setujui"}
+                  </Button>
+                ) : null}
+              </div>
+            ))}
           </div>
-        ))}
+        </NativePanel>
       </div>
-
       <CompactFormDialog
         open={overrideOrderId !== null}
         title="Persetujuan Darurat (Emergency Override)"
@@ -165,9 +204,15 @@ export function RabRevisionHistoryPanel({
       >
         <div className="space-y-3">
           <p className="text-xs leading-relaxed text-on-surface-variant">
-            Change Order ini dibuat oleh akun Anda. Sesuai prinsip Maker-Checker, persetujuan memerlukan otorisasi pihak lain (Finance/Owner). Sebagai Owner, Anda dapat memakai hak persetujuan darurat dengan alasan tertulis.
+            Change Order ini dibuat oleh akun Anda. Sesuai prinsip Maker-Checker, persetujuan
+            memerlukan otorisasi pihak lain (Finance/Owner). Sebagai Owner, Anda dapat memakai hak
+            persetujuan darurat dengan alasan tertulis.
           </p>
-          <FormField label="Alasan Persetujuan Darurat" helper="Minimal 10 karakter alasan tertulis." required>
+          <FormField
+            label="Alasan Persetujuan Darurat"
+            helper="Minimal 10 karakter alasan tertulis."
+            required
+          >
             <Textarea
               id="co-emergency-override-reason"
               autoFocus
@@ -180,6 +225,6 @@ export function RabRevisionHistoryPanel({
           </FormField>
         </div>
       </CompactFormDialog>
-    </NativePanel>
+    </>
   );
 }

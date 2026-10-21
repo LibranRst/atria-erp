@@ -1,9 +1,11 @@
 "use client";
 
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import {
   AppIcon,
+  Button,
   DetailSheet,
   DuotoneIconTile,
   FactRow,
@@ -23,7 +25,7 @@ import {
 } from "@atria/core/finance/budget-indicator";
 import { formatShortDate } from "@atria/core/utils/date";
 import { formatIdr } from "@atria/core/utils/money";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 
 export type ApprovalItem = ApprovalDetail;
 
@@ -38,10 +40,9 @@ export function cleanApprovalNotes(notes: string): string {
   return notes.replace(/^\[Kategori:\s*[^\]]+\]\s*/i, "").trim();
 }
 
-
 import { cn } from "@/lib/utils/cn";
 
-const rowPressScale = { scale: 0.985 } as const;
+const rowPressScale = { scale: buttonTapActiveScale } as const;
 
 /**
  * What's being decided, restated at the commit step (approve/reject) so the
@@ -55,6 +56,7 @@ export function ApprovalDecisionSubject({
   readonly item: ApprovalItem;
   readonly className?: string;
 }): React.JSX.Element {
+  const desktop = useWorkspaceControlPresentation() === "desktop";
   return (
     <div className={cn("flex items-center justify-between gap-3 text-left", className)}>
       <div className="min-w-0 flex-1">
@@ -65,7 +67,8 @@ export function ApprovalDecisionSubject({
       </div>
       <MoneyValue
         amount={item.amount}
-        variant="compact"
+        fractionDigits={Number.isInteger(item.amount) ? 0 : 2}
+        variant={desktop ? "fullDynamic" : "compact"}
         size="sm"
         align="right"
         className="shrink-0"
@@ -161,12 +164,14 @@ export function ApprovalQueueRow({
 export function ApprovalDetailSheet({
   item,
   pending,
+  canDecide = true,
   onClose,
   onOpenReceipt,
   onDecision,
 }: {
   readonly item: ApprovalItem | null;
   readonly pending: boolean;
+  readonly canDecide?: boolean;
   readonly onClose: () => void;
   readonly onOpenReceipt: (url: string) => void;
   readonly onDecision: (item: ApprovalItem, status: ApprovalDecision["status"]) => void;
@@ -188,13 +193,13 @@ export function ApprovalDetailSheet({
           <SheetFooterActions
             secondary={{
               label: "Tolak",
-              disabled: pending,
+              disabled: pending || !canDecide,
               variant: "criticalQuiet",
               onClick: () => onDecision(presentedItem, "REJECTED"),
             }}
             primary={{
               label: "Setujui",
-              disabled: pending,
+              disabled: pending || !canDecide,
               variant: "primary",
               onClick: () => onDecision(presentedItem, "APPROVED"),
             }}
@@ -287,7 +292,7 @@ export function ApprovalDetailContent({
               <FactRow
                 label="Catatan"
                 value={
-                  <span className="font-medium text-on-surface whitespace-pre-wrap">
+                  <span className="font-medium whitespace-pre-wrap text-on-surface">
                     {cleanApprovalNotes(item.notes)}
                   </span>
                 }
@@ -311,18 +316,41 @@ export function ApprovalDetailContent({
   );
 }
 
-
 /**
  * The receipt as its own attached exhibit — a photo chip in the same gray
  * canvas as every other fact, not a bordered row inside a white list.
  */
-function ApprovalEvidenceRow({
+export function ApprovalEvidenceRow({
   item,
   onOpenReceipt,
+  presentation = "mobile",
 }: {
   readonly item: ApprovalItem;
   readonly onOpenReceipt: (url: string) => void;
+  readonly presentation?: "mobile" | "desktop";
 }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
+  if (presentation === "desktop") {
+    const receiptUrl = item.receiptImageUrl;
+    return (
+      <GroupedSurface variant="desktopPanel" className="p-3">
+        {receiptUrl ? (
+          <Button
+            variant="secondary"
+            size="compact"
+            fullWidth
+            onClick={() => onOpenReceipt(receiptUrl)}
+          >
+            <AppIcon name="image" className="icon-sm" /> Buka bukti pengajuan
+          </Button>
+        ) : (
+          <p className="text-support text-on-surface-variant">Tidak ada bukti terlampir.</p>
+        )}
+      </GroupedSurface>
+    );
+  }
+
   if (!item.receiptImageUrl) {
     return (
       <GroupedSurface>
@@ -348,7 +376,7 @@ function ApprovalEvidenceRow({
       <motion.button
         type="button"
         onClick={() => onOpenReceipt(receiptUrl)}
-        whileTap={{ scale: 0.99 }}
+        whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
         transition={transitionSpringSnappy}
         className="group relative block h-48 w-full overflow-hidden rounded-inset bg-surface-container text-left outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
@@ -491,7 +519,6 @@ function ApprovalImpactReview({ item }: { readonly item: ApprovalItem }): React.
     </section>
   );
 }
-
 
 function formatQueueTime(value: Date): string {
   return new Date(value).toLocaleDateString("id-ID", {

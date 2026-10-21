@@ -1,7 +1,7 @@
 "use client";
 
 import { AppIcon } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { motion, useReducedMotion } from "framer-motion";
 import { z } from "zod";
 import * as React from "react";
@@ -49,7 +49,7 @@ export function FollowUpChips({
             type="button"
             onClick={() => onSelect(question)}
             disabled={disabled}
-            whileTap={reduceMotion || disabled ? undefined : { scale: 0.97 }}
+            whileTap={reduceMotion || disabled ? undefined : { scale: buttonTapActiveScale }}
             transition={transitionSpringSnappy}
             className="group flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-white px-3.5 py-2 text-left shadow-control ring-1 ring-ring-subtle transition-all duration-200 hover:bg-surface-container-low hover:ring-ring-control focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
           >

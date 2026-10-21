@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { motion, useReducedMotion } from "framer-motion";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { postGoodsReceipt } from "@/app/actions/material/goods-receipt";
@@ -10,11 +12,14 @@ import {
   AppIcon,
   ConfirmationDialog,
   DatePickerField,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
-  type OperationSuccess,
+  GroupedSurface,
+  MoneyValue,
   OperationSuccessDialog,
+  type OperationSuccess,
   AdaptiveSelect,
   Textarea,
   TextInput,
@@ -33,8 +38,9 @@ import {
   buildGoodsReceiptBillPrefill,
   type GoodsReceiptVendorBillOption,
 } from "@/features/materials/utils/goods-receipt-prefill";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { useCan } from "@/components/auth/permissions-provider";
 export function GoodsReceiptSheet({
   projects,
   locations,
@@ -43,7 +49,12 @@ export function GoodsReceiptSheet({
   vendorBills,
   compact = false,
   showTrigger = true,
+  onMutationComplete,
 }: Props): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const canCreateLocation = useCan()("manage:material_settings");
+  const reduceMotion = useReducedMotion();
+
   const router = useRouter();
   const urlAction = useUrlSearchParam("action");
   const showSheet = urlAction === "RECEIVE";
@@ -55,16 +66,19 @@ export function GoodsReceiptSheet({
   const [projectId, setProjectId] = React.useState("");
   const [locationId, setLocationId] = React.useState(locations[0]?.id ?? "");
   const [vendorBillId, setVendorBillId] = React.useState("");
-  const [receiptNumber, setReceiptNumber] = React.useState(
-    () => `GR/${new Date().getFullYear()}/${Date.now().toString().slice(-6)}`,
-  );
+  const defaultReceiptNumber = React.useId().replaceAll(":", "").slice(0, 6).toUpperCase();
+  const [customReceiptNumber, setCustomReceiptNumber] = React.useState<string | null>(null);
+  const receiptNumber = customReceiptNumber ?? `GR-${defaultReceiptNumber}`;
+  const setReceiptNumber = (value: string) => setCustomReceiptNumber(value);
   const [receivedAt, setReceivedAt] = React.useState(new Date().toISOString().slice(0, 10));
   const [note, setNote] = React.useState("");
   const [items, setItems] = React.useState<readonly ItemDraft[]>([newItem()]);
   const [message, setMessage] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<OperationSuccess | null>(null);
   const [pending, startTransition] = React.useTransition();
-  const [addedLocations, setAddedLocations] = React.useState<readonly { readonly id: string; readonly name: string }[]>([]);
+  const [addedLocations, setAddedLocations] = React.useState<
+    readonly { readonly id: string; readonly name: string }[]
+  >([]);
   const [showLocationComposer, setShowLocationComposer] = React.useState(false);
   const selectedProject = projects.find((project) => project.id === projectId);
   const selectedVendorBill = vendorBills.find((bill) => bill.id === vendorBillId);
@@ -97,13 +111,13 @@ export function GoodsReceiptSheet({
       : receiptNumber.trim().length < 3
         ? "Nomor penerimaan minimal 3 karakter."
         : items.some(
-            (item) =>
-              !item.materialId ||
-              Number(item.quantity) <= 0 ||
-              Number.isNaN(Number(item.quantity)) ||
-              Number(item.unitCost) < 0 ||
-              Number.isNaN(Number(item.unitCost)),
-          )
+              (item) =>
+                !item.materialId ||
+                Number(item.quantity) <= 0 ||
+                Number.isNaN(Number(item.quantity)) ||
+                Number(item.unitCost) < 0 ||
+                Number.isNaN(Number(item.unitCost)),
+            )
           ? "Lengkapi material, jumlah, dan harga setiap item."
           : undefined;
   const vendorBillOptions = [
@@ -152,9 +166,9 @@ export function GoodsReceiptSheet({
       const params = new URLSearchParams(window.location.search);
       params.delete("action");
       const query = params.toString();
-      router.replace(`${window.location.pathname}${query ? `?${query}` : ""}`);
+      updateBrowserUrl(`${window.location.pathname}${query ? `?${query}` : ""}`, "replace");
     }
-  }, [reset, router]);
+  }, [reset]);
 
   function requestClose(): void {
     if (reviewing) {
@@ -247,6 +261,7 @@ export function GoodsReceiptSheet({
         setReviewing(false);
         return;
       }
+      onMutationComplete?.();
       setSuccess({
         title: "Penerimaan barang berhasil",
         description:
@@ -286,7 +301,7 @@ export function GoodsReceiptSheet({
       {showTrigger ? (
         <motion.button
           type="button"
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           onClick={launch}
           className={
@@ -299,6 +314,62 @@ export function GoodsReceiptSheet({
         </motion.button>
       ) : null}
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Proyek"
+                  wrapLabel
+                  value={selectedProject?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi"
+                  wrapLabel
+                  value={allLocations.find((row) => row.id === locationId)?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Penerimaan"
+                  wrapLabel
+                  value={receiptNumber || "Belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Sumber tagihan"
+                  wrapLabel
+                  value={
+                    vendorBillId
+                      ? (selectedVendorBill?.name ?? "Tagihan tidak tersedia")
+                      : "Isi manual"
+                  }
+                />
+                <FactRow layout="stacked" label="Baris material" wrapLabel value={items.length} />
+                <FactRow
+                  layout="stacked"
+                  label="Nilai draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(total) ? 0 : 2}
+                      amount={total}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Posting menambah stok fisik dan memperbarui harga rata-rata. Pembayaran tagihan
+              dicatat terpisah.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={isSheetOpen}
         title={reviewing ? "Tinjau Penerimaan Barang" : "Penerimaan Barang"}
@@ -314,7 +385,7 @@ export function GoodsReceiptSheet({
       >
         {reviewing ? (
           <div className="space-y-md">
-            <div className="rounded-2xl bg-primary/5 px-4 py-3">
+            <div className={desktop ? "hidden" : "rounded-2xl bg-primary/5 px-4 py-3"}>
               <p className="text-meta font-bold tracking-wide text-primary uppercase">Penerimaan</p>
               <p className="mt-1 text-sm font-bold">{selectedProject?.name}</p>
               <p className="mt-0.5 text-xs text-on-surface-variant">
@@ -389,7 +460,7 @@ export function GoodsReceiptSheet({
                 placeholder="Pilih lokasi"
                 createActionLabel="Buat lokasi baru"
                 createActionDescription="Tambahkan lokasi gudang atau workshop baru."
-                onCreateAction={() => setShowLocationComposer(true)}
+                onCreateAction={canCreateLocation ? () => setShowLocationComposer(true) : undefined}
                 required
               />
             </FormSection>
@@ -497,7 +568,7 @@ export function GoodsReceiptSheet({
         }}
       />
       <InventoryLocationSheet
-        open={showLocationComposer}
+        open={canCreateLocation && showLocationComposer}
         onClose={() => setShowLocationComposer(false)}
         onSuccess={(newLocation) => {
           setAddedLocations((curr) => [...curr, newLocation]);

@@ -1,3 +1,9 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { ReconciliationDesktopSkeleton } from "@/features/reconciliation/components/reconciliation-desktop-skeleton";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
@@ -27,6 +33,14 @@ function ReconciliationRowSkeleton({
 }
 
 export default function ReconciliationLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const view = useBrowserUrlSearchParam("view", "statement");
+  if (desktop)
+    return (
+      <ReconciliationDesktopSkeleton
+        view={view === "cash" || view === "history" ? view : "statement"}
+      />
+    );
   return (
     <div className="space-y-sm pb-8" aria-label="Memuat rekonsiliasi" role="status">
       <div className="space-y-2">

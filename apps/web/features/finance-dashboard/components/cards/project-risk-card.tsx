@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 
 import { MoneyValue, StatusBadge, type StatusBadgeTone } from "@/components/ui";
 import type { DashboardRiskyProject } from "@/features/finance-dashboard/types/dashboard-types";
@@ -33,7 +33,7 @@ export function ProjectRiskCard({
   return (
     <Link
       href={`/projects/${project.projectId}?tab=overview`}
-      className="block w-60 shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-surface ring-1 ring-ring-subtle transition hover:bg-white active:scale-[0.99]"
+      className="block w-60 shrink-0 snap-start rounded-2xl bg-white p-3.5 shadow-surface ring-1 ring-ring-subtle transition hover:bg-white active:z-10 active:scale-[1.05] active:shadow-raised"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span

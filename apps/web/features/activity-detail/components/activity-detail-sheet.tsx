@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "@/lib/navigation/workspace-navigation";
 
 import { getActivityDetail } from "@/app/actions/activity-detail";
 import {
@@ -305,13 +305,14 @@ function ActivityDetailSourceButton({
   if (isAlreadyOnSourcePage) return null;
 
   return (
-    <button
+    <Button
       type="button"
       onClick={onNavigate}
       className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+      variant="primary"
     >
       {source.label}
-    </button>
+    </Button>
   );
 }
 

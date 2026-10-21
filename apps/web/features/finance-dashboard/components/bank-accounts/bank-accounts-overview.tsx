@@ -1,14 +1,24 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { DesktopAccountsOverview } from "../desktop/desktop-accounts-overview";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { AppIcon, DuotoneIconTile, MoneyValue, SummaryFact, SummarySurface } from "@/components/ui";
+import {
+  AppIcon,
+  DuotoneIconTile,
+  MoneyValue,
+  SummaryFact,
+  SummarySurface,
+  Button,
+} from "@/components/ui";
 import { BankAccountCard } from "@/features/finance-dashboard/components/cards/dashboard-cards";
 import type { BankAccount } from "@/features/finance-dashboard/types/bank-account-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+import { PilotBalanceNotice } from "../shared/pilot-balance-notice";
 
-const accountCardPressScale = { scale: 0.985 } as const;
+const accountCardPressScale = { scale: buttonTapActiveScale } as const;
 
 type BankAccountsOverviewProps = {
   readonly accounts: readonly BankAccount[];
@@ -40,14 +50,16 @@ function EmptyAccountsState({
           : "Rekening kas perusahaan belum dibuat. Hanya Owner yang dapat menambahkannya."}
       </p>
       {canCreate ? (
-        <button
+        <Button
           type="button"
           onClick={onCreate}
-          className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:scale-[0.97]"
+          className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-on-primary active:z-10 active:shadow-raised"
+          variant="primary"
+          size="compact"
         >
           <AppIcon name="add" className="icon-sm" />
           Tambah rekening
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -64,6 +76,7 @@ function AccountPositionCard({
 
   return (
     <motion.button
+      tabIndex={0}
       type="button"
       onClick={() => onSelect(account)}
       aria-label={`Buka rekening ${account.name}`}
@@ -155,6 +168,18 @@ export function BankAccountsOverview({
   onCreate,
   onSelect,
 }: BankAccountsOverviewProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop)
+    return (
+      <DesktopAccountsOverview
+        accounts={accounts}
+        totalCash={totalCash}
+        unreconciledCount={unreconciledCount}
+        onSelect={onSelect}
+        onCreate={onCreate}
+        canCreate={canCreate}
+      />
+    );
   if (variant === "preview") {
     return (
       <div className="-my-3 flex snap-x snap-mandatory scrollbar-none gap-3 overflow-x-auto px-5 py-5">
@@ -176,6 +201,11 @@ export function BankAccountsOverview({
         }
         statusTone={unreconciledCount > 0 ? "warning" : "positive"}
       >
+        {process.env.NEXT_PUBLIC_ATRIA_PILOT_MODE === "true" ? (
+          <div className="px-3.5 pt-3">
+            <PilotBalanceNotice />
+          </div>
+        ) : null}
         <div className="px-3.5 pt-3 pb-1">
           <p className="text-eyebrow font-semibold text-on-surface-variant/60">Total saldo kas</p>
           <MoneyValue
@@ -215,15 +245,17 @@ export function BankAccountsOverview({
               hanya menjadi gangguan bagi peran lain; ketiadaannya sudah jujur,
               dan empty state yang menjelaskan siapa yang berwenang. */}
           {canCreate ? (
-            <button
+            <Button
               type="button"
               onClick={onCreate}
               className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-semibold text-on-surface outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high"
+              variant="secondary"
+              size="mini"
             >
               <AppIcon name="add" className="icon-xs" />
               <span className="hidden min-[360px]:inline">Tambah rekening</span>
               <span className="min-[360px]:hidden">Tambah</span>
-            </button>
+            </Button>
           ) : null}
         </div>
         {accounts.length === 0 ? (

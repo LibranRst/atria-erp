@@ -1,17 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import type {
   InitialStockCandidate,
   InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
-import {
-  DuotoneIconTile,
-  GroupedSurface,
-  InlineStateRow,
-  MainSection,
-} from "@/components/ui";
+import { DuotoneIconTile, GroupedSurface, InlineStateRow, MainSection } from "@/components/ui";
 import { OpeningInventoryBatchDetailSheet } from "./opening-inventory-batch-detail-sheet";
 import { OpeningInventoryEntryForm } from "./opening-inventory-entry-form";
 import { OpeningInventoryHistory } from "./opening-inventory-history";
@@ -47,7 +42,7 @@ export function OpeningInventoryWorkspace({
           </p>
           <h2 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
           <p className="text-support text-on-surface-variant">
-            Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Atria.
+            Catat stok fisik yang sudah dimiliki sebelum aktivitas gudang berjalan di Paduna Build.
           </p>
         </header>
       ) : null}
@@ -100,13 +95,13 @@ export function OpeningInventoryWorkspace({
             <div className="grid grid-cols-2 gap-2 border-t border-black/5.5 p-3">
               <Link
                 href="/materials?action=LOCATION"
-                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-row font-bold text-on-surface ring-1 ring-ring-subtle active:scale-[0.98] transition-transform"
+                className="flex min-h-12 items-center justify-center rounded-full bg-white px-3 text-row font-bold text-on-surface ring-1 ring-ring-subtle transition-transform active:z-10 active:scale-[1.05] active:shadow-raised"
               >
                 Buat lokasi
               </Link>
               <Link
                 href="/settings?tab=materials"
-                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-row font-bold text-on-primary active:scale-[0.98] transition-transform"
+                className="flex min-h-12 items-center justify-center rounded-full bg-primary px-3 text-row font-bold text-on-primary transition-transform active:z-10 active:scale-[1.05] active:shadow-raised"
               >
                 Material Master
               </Link>

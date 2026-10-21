@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import {
   type DeveloperAccountSimulationState,
   type DeveloperSimulationTarget,
 } from "@atria/core/auth/developer-account-simulation";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 type DeveloperAccountSwitcherProps = {
   readonly state: DeveloperAccountSimulationState;
 };
@@ -19,6 +19,8 @@ type DeveloperAccountSwitcherProps = {
 export function DeveloperAccountSwitcher({
   state,
 }: DeveloperAccountSwitcherProps): React.JSX.Element | null {
+  const reduceMotion = useReducedMotion();
+
   const [selected, setSelected] = React.useState<DeveloperSimulationTarget | null>(null);
   const [pending, startTransition] = React.useTransition();
 
@@ -79,7 +81,7 @@ export function DeveloperAccountSwitcher({
                 <motion.button
                   key={target.id}
                   type="button"
-                  whileTap={{ scale: 0.985 }}
+                  whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
                   transition={transitionSpringSnappy}
                   onClick={() => setSelected(target)}
                   disabled={pending}

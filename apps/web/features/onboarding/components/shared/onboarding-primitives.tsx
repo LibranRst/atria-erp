@@ -1,10 +1,6 @@
 "use client";
-
-import { motion } from "framer-motion";
 import React from "react";
-
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 export function OnboardingStage({
   children,
 }: {
@@ -48,16 +44,16 @@ export function OnboardingToolbar({
         <span className="block text-[13px] leading-5 font-bold text-on-surface">{title}</span>
         <span className="mt-0.5 block text-[9px] leading-4 text-on-surface-variant">{detail}</span>
       </span>
-      <motion.button
+      <Button
         type="button"
         disabled={disabled}
         onClick={onAction}
-        whileTap={disabled ? undefined : { scale: 0.97 }}
-        transition={transitionSpringSnappy}
         className="relative min-h-10 shrink-0 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-40"
+        variant="secondary"
+        size="compact"
       >
         {actionLabel}
-      </motion.button>
+      </Button>
     </div>
   );
 }

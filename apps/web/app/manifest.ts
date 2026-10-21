@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { WEB_BRAND_REVISION, WEB_PRODUCT_DESCRIPTION, WEB_PRODUCT_NAME } from "@/lib/brand";
 
 /**
  * Manifest aplikasi web.
@@ -22,9 +23,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Atria ERP",
-    short_name: "Atria",
-    description: "Kendali budget proyek, pengeluaran, dan material untuk tim lapangan.",
+    name: WEB_PRODUCT_NAME,
+    short_name: WEB_PRODUCT_NAME,
+    description: WEB_PRODUCT_DESCRIPTION,
     lang: "id",
     dir: "ltr",
     start_url: "/",
@@ -44,10 +45,20 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#f5f5f7",
     categories: ["business", "finance", "productivity"],
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       {
-        src: "/icons/icon-maskable-512.png",
+        src: `/icons/icon-192.png?v=${WEB_BRAND_REVISION}`,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: `/icons/icon-512.png?v=${WEB_BRAND_REVISION}`,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: `/icons/icon-maskable-512.png?v=${WEB_BRAND_REVISION}`,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

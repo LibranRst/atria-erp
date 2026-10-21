@@ -1,8 +1,11 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  GroupedSurface,
+  FactRow,
   AppIcon,
   DatePickerField,
   FinanceUnsavedChangesModal,
@@ -16,8 +19,13 @@ import {
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import { derivePaymentReference } from "@atria/core/finance/invoice-prefill";
+import {
+  calculateInvoicePaidAmount,
+  calculateInvoiceRemaining,
+} from "../../utils/project-invoices-utils";
 import type { BankAccountItem, ClientInvoiceItem } from "../../types/project-invoices-types";
 export function ClientPaymentSheet({
   selectedInvoice,
@@ -60,6 +68,7 @@ export function ClientPaymentSheet({
   readonly onDiscard: () => void;
   readonly onSubmit: () => void;
 }): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const {
     presentedValue: invoice,
     open,
@@ -101,8 +110,8 @@ export function ClientPaymentSheet({
   if (!invoice) return null;
   const invoiceAmount = Number(invoice.amount);
   const paidAmount = Number(amountPaid || 0);
-  const paidBefore = invoice.payments.reduce((sum, payment) => sum + Number(payment.amountPaid), 0);
-  const remaining = Math.max(0, invoiceAmount - paidBefore);
+  const paidBefore = calculateInvoicePaidAmount(invoice);
+  const remaining = calculateInvoiceRemaining(invoice);
   const accountBefore = Number(selectedAccount?.balance ?? 0);
   const overpayment = paidAmount > remaining;
   const remainingAfter = Math.max(0, remaining - paidAmount);
@@ -141,6 +150,65 @@ export function ClientPaymentSheet({
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <div className="px-1">
+              <h3 className="text-support font-semibold text-on-surface">Penerimaan klien</h3>
+              <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+                {invoice.invoiceNumber}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Sisa invoice"
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(remaining) ? 0 : 2}
+                      amount={remaining}
+                      variant="fullDynamic"
+                      size="sm"
+                      align="right"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Diterima"
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(paidAmount) ? 0 : 2}
+                      amount={paidAmount}
+                      variant="fullDynamic"
+                      size="sm"
+                      align="right"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Rekening penerima"
+                  value={selectedAccount?.name ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Tanggal transaksi"
+                  value={formattedPaymentDate}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Periksa bukti transfer dan rekening sebelum mencatat kas masuk.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         onExitComplete={handleExit}
@@ -177,85 +245,128 @@ export function ClientPaymentSheet({
 
           {reviewing ? (
             <div className="space-y-4">
-              {/* Focal Summary Card */}
-              <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-eyebrow font-bold tracking-[0.16em] text-on-surface-variant uppercase">
-                      Penerimaan Dana Masuk
-                    </p>
-                    <div className="mt-1">
-                      <MoneyValue
-                        amount={paidAmount}
-                        variant="fullDynamic"
-                        size="lg"
-                        className="font-bold text-primary"
-                      />
-                    </div>
-                    <p className="mt-1 text-xs text-on-surface-variant truncate">
-                      Invoice {invoice.invoiceNumber} · Termin {stageLabel}
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    {overpayment ? (
-                      <span className="rounded-full bg-warning/10 px-3 py-1 font-mono text-xs font-bold text-warning ring-1 ring-warning/20">
-                        LEBIH BAYAR
-                      </span>
-                    ) : remainingAfter === 0 ? (
-                      <span className="rounded-full bg-success/10 px-3 py-1 font-mono text-xs font-bold text-success ring-1 ring-success/20">
-                        LUNAS
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-surface-container-low px-3 py-1 font-mono text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
-                        SEBAGIAN
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Inset Metric Cells: Sisa Tagihan & Total Invoice */}
-                <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-outline-variant/15 pt-3">
-                  <div className="rounded-2xl bg-surface-container-low p-2.5">
-                    <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-                      Sisa Tagihan
-                    </p>
-                    <div className="mt-1">
-                      {remainingAfter === 0 ? (
-                        <p className="text-xs font-bold text-success">Rp 0 (Lunas)</p>
-                      ) : (
-                        <MoneyValue
-                          amount={remainingAfter}
-                          variant="fullDynamic"
-                          size="sm"
-                          className="font-bold text-on-surface"
-                        />
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-[10px] text-on-surface-variant truncate">
-                      Sebelumnya Rp {remaining.toLocaleString("id-ID")}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-surface-container-low p-2.5">
-                    <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-                      Total Tagihan
-                    </p>
-                    <div className="mt-1">
+              {desktop ? (
+                <FormSection
+                  title="Posisi invoice"
+                  helper="Nilai sebelum penerimaan dan sisa setelah draft ini dicatat."
+                >
+                  <FactRow
+                    wrapLabel
+                    label="Total invoice"
+                    value={
                       <MoneyValue
                         amount={invoiceAmount}
                         variant="fullDynamic"
                         size="sm"
-                        className="font-bold text-on-surface"
+                        align="right"
                       />
+                    }
+                  />
+                  <FactRow
+                    wrapLabel
+                    label="Sudah diterima"
+                    value={
+                      <MoneyValue
+                        amount={paidBefore}
+                        variant="fullDynamic"
+                        size="sm"
+                        align="right"
+                      />
+                    }
+                  />
+                  <FactRow
+                    wrapLabel
+                    label="Sisa setelah draft"
+                    value={
+                      <MoneyValue
+                        amount={remainingAfter}
+                        variant="fullDynamic"
+                        size="sm"
+                        align="right"
+                      />
+                    }
+                  />
+                </FormSection>
+              ) : (
+                <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-eyebrow font-bold tracking-[0.16em] text-on-surface-variant uppercase">
+                        Penerimaan Dana Masuk
+                      </p>
+                      <div className="mt-1">
+                        <MoneyValue
+                          amount={paidAmount}
+                          variant="fullDynamic"
+                          size="lg"
+                          className="font-bold text-primary"
+                        />
+                      </div>
+                      <p className="mt-1 truncate text-xs text-on-surface-variant">
+                        Invoice {invoice.invoiceNumber} · Termin {stageLabel}
+                      </p>
                     </div>
-                    <p className="mt-0.5 text-[10px] text-on-surface-variant truncate">
-                      {paidBefore > 0
-                        ? `Sudah diterima Rp ${paidBefore.toLocaleString("id-ID")}`
-                        : "Termin pertama"}
-                    </p>
+                    <div className="shrink-0">
+                      {overpayment ? (
+                        <span className="rounded-full bg-warning/10 px-3 py-1 font-mono text-xs font-bold text-warning ring-1 ring-warning/20">
+                          LEBIH BAYAR
+                        </span>
+                      ) : remainingAfter === 0 ? (
+                        <span className="rounded-full bg-success/10 px-3 py-1 font-mono text-xs font-bold text-success ring-1 ring-success/20">
+                          LUNAS
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-surface-container-low px-3 py-1 font-mono text-xs font-bold text-on-surface ring-1 ring-ring-subtle">
+                          SEBAGIAN
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Inset Metric Cells: Sisa Tagihan & Total Invoice */}
+                  <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-outline-variant/15 pt-3">
+                    <div className="rounded-2xl bg-surface-container-low p-2.5">
+                      <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                        Sisa Tagihan
+                      </p>
+                      <div className="mt-1">
+                        {remainingAfter === 0 ? (
+                          <p className="text-xs font-bold text-success">Rp 0 (Lunas)</p>
+                        ) : (
+                          <MoneyValue
+                            amount={remainingAfter}
+                            variant="fullDynamic"
+                            size="sm"
+                            className="font-bold text-on-surface"
+                          />
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate text-meta text-on-surface-variant">
+                        Sebelumnya Rp {remaining.toLocaleString("id-ID")}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-surface-container-low p-2.5">
+                      <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                        Total Tagihan
+                      </p>
+                      <div className="mt-1">
+                        <MoneyValue
+                          amount={invoiceAmount}
+                          variant="fullDynamic"
+                          size="sm"
+                          className="font-bold text-on-surface"
+                        />
+                      </div>
+                      <p className="mt-0.5 truncate text-meta text-on-surface-variant">
+                        {paidBefore > 0
+                          ? `Sudah diterima Rp ${paidBefore.toLocaleString("id-ID")}`
+                          : "Termin pertama"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Rincian Transaksi */}
               <FormSection
@@ -273,9 +384,7 @@ export function ClientPaymentSheet({
                 <ReviewFact
                   label="No. Referensi Bukti"
                   value={
-                    <span className="font-mono text-xs font-bold text-on-surface">
-                      {refNumber}
-                    </span>
+                    <span className="font-mono text-xs font-bold text-on-surface">{refNumber}</span>
                   }
                 />
                 <ReviewFact label="Tanggal Transaksi" value={formattedPaymentDate} />
@@ -283,7 +392,7 @@ export function ClientPaymentSheet({
                   label="Status Invoice"
                   value={
                     remainingAfter === 0 ? (
-                      <span className="font-bold text-success">Lunas (PAID)</span>
+                      <span className="font-bold text-success">Lunas</span>
                     ) : (
                       <span className="font-bold text-on-surface">Terbayar Sebagian</span>
                     )
@@ -312,9 +421,7 @@ export function ClientPaymentSheet({
               {/* Notice Risiko / Konfirmasi */}
               <FormRiskNotice
                 title={
-                  overpayment
-                    ? "Periksa kelebihan pembayaran"
-                    : "Pencatatan kas riil & buku besar"
+                  overpayment ? "Periksa kelebihan pembayaran" : "Pencatatan kas riil & buku besar"
                 }
                 tone={overpayment ? "warning" : "default"}
               >
@@ -347,8 +454,9 @@ export function ClientPaymentSheet({
                         className="font-bold text-primary"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-on-surface-variant truncate">
-                      Invoice {invoice.invoiceNumber} · Total Rp {invoiceAmount.toLocaleString("id-ID")}
+                    <p className="mt-1 truncate text-xs text-on-surface-variant">
+                      Invoice {invoice.invoiceNumber} · Total Rp{" "}
+                      {invoiceAmount.toLocaleString("id-ID")}
                     </p>
                   </div>
                   <div className="shrink-0">
@@ -412,13 +520,15 @@ export function ClientPaymentSheet({
                       Format standar:{" "}
                       <strong className="font-mono text-on-surface">{suggestedRef}</strong>
                     </span>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setRefNumber(suggestedRef)}
-                      className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:scale-[0.98]"
+                      className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:z-10 active:shadow-raised"
+                      variant="secondary"
+                      size="mini"
                     >
                       Terapkan
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -491,8 +601,8 @@ function ReviewFact({
   if (stacked) {
     return (
       <div className="px-4 py-3 text-xs">
-        <span className="text-on-surface-variant font-medium">{label}</span>
-        <p className="mt-1 font-medium text-on-surface leading-relaxed whitespace-pre-wrap">
+        <span className="font-medium text-on-surface-variant">{label}</span>
+        <p className="mt-1 leading-relaxed font-medium whitespace-pre-wrap text-on-surface">
           {value}
         </p>
       </div>
@@ -500,7 +610,7 @@ function ReviewFact({
   }
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-3 text-xs">
-      <span className="shrink-0 text-on-surface-variant font-medium">{label}</span>
+      <span className="shrink-0 font-medium text-on-surface-variant">{label}</span>
       <span className="text-right font-bold text-on-surface">{value}</span>
     </div>
   );

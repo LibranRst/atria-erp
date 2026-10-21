@@ -6,7 +6,10 @@ import {
   ConfirmationDialog,
   FormField,
   FormSection,
+  FactRow,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OptionChoiceGroup,
   AdaptiveSelect,
@@ -14,6 +17,7 @@ import {
   useAnimatedSheetClose,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import {
   ExpenseLineBudgetContextCard,
   ExpenseLineStockContextCard,
@@ -62,11 +66,14 @@ export function ExpenseLineEditor({
   onClose,
   onSave,
 }: ExpenseLineEditorProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [prevLine, setPrevLine] = React.useState<ExpenseLine>(line);
   const [draft, setDraft] = React.useState<ExpenseLine>(line);
   const [touched, setTouched] = React.useState<Record<string, boolean>>({});
   const [pendingCategoryId, setPendingCategoryId] = React.useState<string | null>(null);
-  const [addedLocations, setAddedLocations] = React.useState<readonly InventoryLocationOption[]>([]);
+  const [addedLocations, setAddedLocations] = React.useState<readonly InventoryLocationOption[]>(
+    [],
+  );
   const [showLocationComposer, setShowLocationComposer] = React.useState(false);
 
   const allLocations = React.useMemo(() => {
@@ -91,7 +98,8 @@ export function ExpenseLineEditor({
   const amount = Number(draft.amount) || 0;
   const remaining = Number(selectedCategory?.remainingAmount ?? 0);
   const overBudget = Boolean(selectedCategory && amount > remaining);
-  const complete = isExpenseLineComplete(draft, selectedCategory?.code);
+  const complete =
+    Boolean(selectedCategory) && isExpenseLineComplete(draft, selectedCategory?.code);
 
   function markTouched(fieldKey?: string): void {
     if (fieldKey) {
@@ -168,6 +176,46 @@ export function ExpenseLineEditor({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "preserve" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            {selectedCategory ? (
+              <ExpenseLineBudgetContextCard
+                compact
+                categoryName={selectedCategory.name}
+                amount={amount}
+                remaining={remaining}
+                usedPercentage={selectedCategory.usedPercentage}
+              />
+            ) : (
+              <GroupedSurface>
+                <FactRow
+                  layout="stacked"
+                  label="Subtotal item"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                      variant="fullDynamic"
+                      amount={amount}
+                    />
+                  }
+                />
+              </GroupedSurface>
+            )}
+            {selectedMaterial && draft.quantity !== "" && isMaterial ? (
+              <ExpenseLineStockContextCard
+                compact
+                materialName={selectedMaterial.name}
+                unit={selectedMaterial.unit}
+                availableStock={selectedMaterial.availableStock}
+                requiredQuantity={Number(draft.quantity)}
+                stockHandling={draft.stockHandling}
+              />
+            ) : null}
+          </div>
+        }
         open={animatedClose.visible}
         title={`Rincian item ${index + 1}`}
         primaryLabel="Simpan"
@@ -180,7 +228,11 @@ export function ExpenseLineEditor({
         statusText={
           overBudget
             ? "Subtotal melebihi sisa kategori."
-            : `Subtotal Rp ${amount.toLocaleString("id-ID")}`
+            : desktop
+              ? complete
+                ? "Rincian item lengkap."
+                : "Lengkapi rincian item."
+              : `Subtotal Rp ${amount.toLocaleString("id-ID")}`
         }
         statusTone={overBudget ? "danger" : complete ? "success" : "warning"}
         onClose={handleRequestClose}
@@ -197,7 +249,13 @@ export function ExpenseLineEditor({
               value={draft.projectBudgetCategoryId}
               onChange={requestCategoryChange}
               options={budgetOptions}
-              placeholder="Pilih kategori"
+              placeholder={budgetOptions.length > 0 ? "Pilih kategori" : "Kategori belum tersedia"}
+              disabled={budgetOptions.length === 0}
+              helper={
+                budgetOptions.length === 0
+                  ? "Kategori budget proyek belum tersedia. Pilih atau lengkapi budget proyek terlebih dahulu."
+                  : undefined
+              }
               required
               error={
                 touched.category && !draft.projectBudgetCategoryId
@@ -268,7 +326,7 @@ export function ExpenseLineEditor({
             </div>
           </FormSection>
 
-          {selectedCategory ? (
+          {!desktop && selectedCategory ? (
             <ExpenseLineBudgetContextCard
               categoryName={selectedCategory.name}
               amount={amount}
@@ -358,7 +416,7 @@ export function ExpenseLineEditor({
             </FormSection>
           ) : null}
 
-          {selectedMaterial && draft.quantity !== "" && isMaterial ? (
+          {!desktop && selectedMaterial && draft.quantity !== "" && isMaterial ? (
             <ExpenseLineStockContextCard
               materialName={selectedMaterial.name}
               unit={selectedMaterial.unit}

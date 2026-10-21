@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getMaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
-import { GroupedSurface, InlineStateRow } from "@/components/ui";
+import { MaterialLoadState } from "@/features/materials/components/shared/material-load-state";
 import { MaterialsControlCenter } from "@/features/materials/components/workspaces/materials-control-center";
 
 export const dynamic = "force-dynamic";
@@ -9,16 +9,12 @@ export const dynamic = "force-dynamic";
 export default async function MaterialsPage(): Promise<React.JSX.Element> {
   const result = await getMaterialOperationsDashboard();
   if (!result.success) {
-    if (result.error.code === "UNAUTHORIZED") redirect("/login");
+    if (result.error.code === "UNAUTHORIZED") redirect("/login?returnTo=%2Fmaterials");
     return (
-      <GroupedSurface>
-        <InlineStateRow
-          icon="lock"
-          title="Akses material dibatasi"
-          description={result.error.message}
-          tone="critical"
-        />
-      </GroupedSurface>
+      <MaterialLoadState
+        restricted={result.error.code === "FORBIDDEN"}
+        message={result.error.message}
+      />
     );
   }
   return <MaterialsControlCenter data={result.data} />;

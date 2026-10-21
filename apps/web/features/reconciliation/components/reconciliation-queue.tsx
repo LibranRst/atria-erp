@@ -1,5 +1,7 @@
 "use client";
 
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+
 import type {
   ReconciliationCashTransaction,
   ReconciliationStatementRow,
@@ -7,10 +9,12 @@ import type {
 } from "@/app/actions/finance/reconciliation-workspace";
 import {
   AppIcon,
+  SectionHeader,
   GroupedSurface,
   SegmentedTabs,
   SummaryFact,
   SummarySurface,
+  Button,
 } from "@/components/ui";
 import {
   cashDisplayTitle,
@@ -50,6 +54,7 @@ export function ReconciliationQueue({
   onOpenSuggestedMatch,
   onSelectHistory,
 }: ReconciliationQueueProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const actionableCashTransactions = data.cashTransactions.filter(cashTransactionNeedsAction);
   const passiveCashTransactions = data.cashTransactions.filter(
     (item) => !cashTransactionNeedsAction(item),
@@ -88,7 +93,7 @@ export function ReconciliationQueue({
     const status = suggested
       ? "Pasangan ditemukan"
       : hasMultipleCandidates
-        ? `${item.candidateCount} kandidat — tinjau Catatan Atria`
+        ? `${item.candidateCount} kandidat — tinjau Catatan Paduna Build`
         : `${directionCopy(item.type)} · Belum ada pasangan`;
 
     return (
@@ -113,7 +118,7 @@ export function ReconciliationQueue({
           suggested
             ? `Tinjau pasangan ${item.description}, ${formatIdr(item.amount)}`
             : hasMultipleCandidates
-              ? `Tinjau ${item.candidateCount} kandidat untuk ${item.description} di Catatan Atria`
+              ? `Tinjau ${item.candidateCount} kandidat untuk ${item.description} di Catatan Paduna Build`
               : undefined
         }
       />
@@ -155,7 +160,7 @@ export function ReconciliationQueue({
           },
           {
             value: "cash",
-            label: "Catatan Atria",
+            label: "Catatan Paduna Build",
             count: actionRequiredCount > 0 ? actionRequiredCount : undefined,
           },
           { value: "history", label: "Riwayat" },
@@ -188,15 +193,17 @@ export function ReconciliationQueue({
                   : "Mutasi yang memiliki kandidat ditampilkan lebih dahulu."}
             </p>
           </div>
-          {activeView === "statement" ? (
-            <button
+          {activeView === "statement" || (desktop && activeView !== "history") ? (
+            <Button
               type="button"
               onClick={onOpenImport}
               className="relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 text-meta font-semibold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-primary/88"
+              variant="primary"
+              size="compact"
             >
               <AppIcon name="upload_file" className="text-[15px]" />
               Import
-            </button>
+            </Button>
           ) : null}
         </div>
 
@@ -215,6 +222,41 @@ export function ReconciliationQueue({
                 ))
               )}
             </GroupedSurface>
+          ) : desktop ? (
+            <div className="grid items-start gap-6 xl:grid-cols-2">
+              <section aria-label="Mutasi bank" className="min-w-0 space-y-3">
+                <SectionHeader
+                  title="Mutasi bank"
+                  count={data.statementRows.length}
+                  countLabel="Mutasi"
+                />
+                <GroupedSurface className="divide-y divide-outline-variant/35">
+                  {data.statementRows.length === 0 ? (
+                    <ReconciliationEmptyState kind="statement" />
+                  ) : (
+                    [...actionableStatementRows, ...passiveStatementRows].map((item) =>
+                      renderStatementRow(item),
+                    )
+                  )}
+                </GroupedSurface>
+              </section>
+              <section aria-label="Catatan Paduna Build" className="min-w-0 space-y-3">
+                <SectionHeader
+                  title="Catatan Paduna Build"
+                  count={data.cashTransactions.length}
+                  countLabel="Catatan"
+                />
+                <GroupedSurface className="divide-y divide-outline-variant/35">
+                  {data.cashTransactions.length === 0 ? (
+                    <ReconciliationEmptyState kind="cash" />
+                  ) : (
+                    [...actionableCashTransactions, ...passiveCashTransactions].map((item) =>
+                      renderCashRow(item),
+                    )
+                  )}
+                </GroupedSurface>
+              </section>
+            </div>
           ) : activeView === "cash" ? (
             data.cashTransactions.length === 0 ? (
               <GroupedSurface className="divide-y divide-black/5.5">

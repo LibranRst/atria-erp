@@ -1,8 +1,30 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { ProjectOverviewDesktopLoading } from "@/features/projects/detail/components/overview/project-overview-desktop-loading";
+import { ProjectDetailDesktopLoading } from "@/features/projects/detail/components/shared/project-planning-desktop-loading";
+import { useUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import { useParams } from "next/navigation";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function ProjectDetailLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const tab = useUrlSearchParam("tab");
+  const params = useParams<{ id?: string }>();
+  if (desktop)
+    return tab === "rap" ||
+      tab === "rab" ||
+      tab === "stok" ||
+      tab === "expenses" ||
+      tab === "payments" ||
+      tab === "profitability" ? (
+      <ProjectDetailDesktopLoading kind={tab} projectId={params?.id} />
+    ) : (
+      <ProjectOverviewDesktopLoading />
+    );
   return (
     <div className="space-y-md pb-8" aria-label="Memuat detail proyek" role="status">
       <section className="relative aspect-square overflow-hidden rounded-owner bg-primary/90">

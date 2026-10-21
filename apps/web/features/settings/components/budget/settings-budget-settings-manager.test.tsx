@@ -6,6 +6,7 @@ import type {
   ExpenseCategorySettingRow,
 } from "@/app/actions/settings/system";
 import SettingsLoading from "@/app/settings/loading";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 import { ApprovalControlManager } from "./approval-control-manager";
 import { SettingsBudgetSettingsManager } from "./settings-budget-settings-manager";
 
@@ -52,15 +53,18 @@ const categories: readonly ExpenseCategorySettingRow[] = setting.categories.map(
 
 function renderBudget(
   overrides: Partial<React.ComponentProps<typeof SettingsBudgetSettingsManager>> = {},
+  desktop = false,
 ): string {
   return renderToStaticMarkup(
-    <SettingsBudgetSettingsManager
-      initialSetting={setting}
-      initialCategories={categories}
-      canManageBudget
-      canManageCategories
-      {...overrides}
-    />,
+    <WorkspacePresentationProvider presentation={desktop ? "desktop" : "mobile"}>
+      <SettingsBudgetSettingsManager
+        initialSetting={setting}
+        initialCategories={categories}
+        canManageBudget
+        canManageCategories
+        {...overrides}
+      />
+    </WorkspacePresentationProvider>,
   );
 }
 
@@ -140,6 +144,75 @@ describe("Settings financial presentation", () => {
     expect(html).toContain("rounded-[22px]");
     expect(html.match(/rounded-owner bg-white shadow-surface/g)?.length).toBe(3);
   });
+
+  test("desktop compares allocation in a native table with explicit simulation context", () => {
+    const html = renderBudget({}, true);
+
+    expect(html).toContain("Default alokasi kategori budget");
+    expect(html).toContain("<table");
+    expect(html).toContain("Pembelian bahan proyek.");
+    expect(html).toContain("bukan saldo proyek");
+    expect(html).toContain("Budget proyek yang sudah dibuat tetap memakai pengaturannya");
+    expect(html).not.toContain("bg-surface-inverse");
+    expect(html).not.toContain("MATERIAL");
+  });
+
+  test("desktop keeps a disabled category visible with zero effective allocation", () => {
+    const html = renderBudget(
+      {
+        initialSetting: {
+          ...setting,
+          categories: setting.categories.map((category) => ({ ...category, isEnabled: false })),
+        },
+      },
+      true,
+    );
+
+    expect(html).toContain("Material");
+    expect(html).toContain("Nonaktif");
+    expect(html).toContain("0%");
+    expect(html).not.toContain("Melebihi batas");
+  });
+
+  test("desktop preserves separate finance/category access and marks over-allocation", () => {
+    const html = renderBudget(
+      {
+        canManageBudget: false,
+        canManageCategories: false,
+        initialSetting: {
+          ...setting,
+          categories: setting.categories.map((category) => ({ ...category, ratioPercentage: 0.6 })),
+        },
+      },
+      true,
+    );
+
+    expect(html).toContain("Hanya baca");
+    expect(html).toContain("Melebihi batas");
+    expect(html).toContain("Total alokasi harus kembali ke 100% atau kurang.");
+    expect(html).not.toContain("Ubah formula");
+    expect(html).not.toContain("Ubah alokasi");
+    expect(html).toContain("Buka detail kategori Material");
+  });
+
+  test("desktop thresholds compare exact cents and clarify zero/new-request policy", () => {
+    const html = renderToStaticMarkup(
+      <WorkspacePresentationProvider presentation="desktop">
+        <ApprovalControlManager
+          fieldCostCents={0}
+          vendorPaymentCents={750_000_125}
+          canManage={false}
+        />
+      </WorkspacePresentationProvider>,
+    );
+
+    expect(html).toContain("Nol berarti");
+    expect(html).toContain("setiap pengajuan terkait");
+    expect(html).toContain("jalur persetujuan awal");
+    expect(html).toContain("7.500.001,25");
+    expect(html).toContain("Hanya baca");
+    expect(html).not.toContain("Ubah ambang");
+  });
 });
 
 describe("Settings financial workflow contracts", () => {
@@ -195,7 +268,7 @@ describe("Settings financial workflow contracts", () => {
       new URL("./settings-budget-settings-manager.tsx", import.meta.url),
     ).text();
 
-    expect(source).toContain('<FormDisclosure');
+    expect(source).toContain("<FormDisclosure");
     expect(source).toContain('title="Uji nominal proyek"');
     expect(source).toContain('presentation="grouped"');
     expect(source).not.toContain('presentation="plain"');

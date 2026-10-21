@@ -1,13 +1,16 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationDialog,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   OptionChoiceGroup,
   QuantityStepper,
   AdaptiveSelect,
@@ -56,6 +59,7 @@ export function EmergencyAdjustSheet({
   onClose,
   onSubmit,
 }: EmergencyAdjustSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const item = items[0];
@@ -89,6 +93,62 @@ export function EmergencyAdjustSheet({
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Material"
+                  wrapLabel
+                  value={selectedInventory?.materialName ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi"
+                  wrapLabel
+                  value={
+                    locationOptions.find((option) => option.value === locationId)?.label ??
+                    "Belum dipilih"
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Penyesuaian"
+                  wrapLabel
+                  value={adjustDirection === "INCREASE" ? "Tambah stok" : "Kurangi stok"}
+                />
+                {selectedInventory ? (
+                  <>
+                    <FactRow
+                      layout="stacked"
+                      label="Stok saat ini"
+                      wrapLabel
+                      value={`${selectedInventory.currentStock.toLocaleString("id-ID")} ${selectedInventory.unit}`}
+                    />
+                    <FactRow
+                      layout="stacked"
+                      label="Stok setelah posting"
+                      wrapLabel
+                      value={`${after.toLocaleString("id-ID")} ${selectedInventory.unit}`}
+                    />
+                    <FactRow
+                      layout="stacked"
+                      label="Direservasi"
+                      wrapLabel
+                      value={`${selectedInventory.reservedStock.toLocaleString("id-ID")} ${selectedInventory.unit}`}
+                    />
+                  </>
+                ) : null}
+              </div>
+            </GroupedSurface>
+            <FormRiskNotice title="Koreksi langsung" tone="danger">
+              Posting mengubah stok fisik dan mencatat alasan audit. Tidak mencatat pembayaran.
+            </FormRiskNotice>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau Penyesuaian Darurat" : "Penyesuaian Stok Darurat"}
@@ -120,14 +180,16 @@ export function EmergencyAdjustSheet({
               Penyesuaian darurat langsung mengubah stok fisik. Gunakan hanya untuk koreksi yang
               tidak dapat diselesaikan lewat penerimaan, transfer, atau opname.
             </FormRiskNotice>
-            <StockImpactRow
-              label={`${selectedInventory?.materialName ?? "Material"} · ${selectedInventory?.locationName ?? "Lokasi"}`}
-              before={selectedInventory?.currentStock ?? 0}
-              delta={delta}
-              after={after}
-              reserved={selectedInventory?.reservedStock}
-              unit={selectedInventory?.unit}
-            />
+            {!desktop && (
+              <StockImpactRow
+                label={`${selectedInventory?.materialName ?? "Material"} · ${selectedInventory?.locationName ?? "Lokasi"}`}
+                before={selectedInventory?.currentStock ?? 0}
+                delta={delta}
+                after={after}
+                reserved={selectedInventory?.reservedStock}
+                unit={selectedInventory?.unit}
+              />
+            )}
             {note.trim() && (
               <FormSection
                 title="Detail audit"
@@ -185,7 +247,7 @@ export function EmergencyAdjustSheet({
                 required
               />
             </FormSection>
-            {selectedInventory ? (
+            {!desktop && selectedInventory ? (
               <StockImpactRow
                 label="Pratinjau stok"
                 before={selectedInventory.currentStock}

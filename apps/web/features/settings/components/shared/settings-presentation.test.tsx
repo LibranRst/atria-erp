@@ -16,6 +16,13 @@ const materialManagerPath = new URL("../materials/material-settings-manager.tsx"
 const libraryManagerPath = new URL("../library/library-settings-manager.tsx", import.meta.url);
 
 describe("Settings presentation", () => {
+  test("keeps the library alias selected after hydration and allows returning to canonical financial", async () => {
+    const { resolveSettingsTab } = await import("../../utils/settings-tabs-config");
+    expect(resolveSettingsTab("/settings/library", null, "catalog")).toBe("catalog");
+    expect(resolveSettingsTab("/settings", null, "catalog")).toBe("financial");
+    expect(resolveSettingsTab("/settings/library", "financial", "catalog")).toBe("financial");
+    expect(resolveSettingsTab("/settings", "organization")).toBe("organization");
+  });
   test("keeps query and legacy settings routes compatible", () => {
     expect(parseSettingsTab("materials")).toBe("catalog");
     expect(parseSettingsTab("unknown")).toBe("financial");

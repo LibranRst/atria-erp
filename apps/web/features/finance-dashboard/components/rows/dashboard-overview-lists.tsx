@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import {
   ActivityDetailChevron,
@@ -14,9 +14,9 @@ import type {
   DashboardAction,
   DashboardTransaction,
 } from "@/features/finance-dashboard/types/dashboard-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { dashboardToneClasses, severityTone } from "../shared/dashboard-tone";
-const dashboardPressScale = { scale: 0.985 } as const;
+const dashboardPressScale = { scale: buttonTapActiveScale } as const;
 
 function priorityActionIcon(id: string): string {
   if (id === "approvals") return "approval";
@@ -81,6 +81,7 @@ export function OverviewPriorityList({
         const isCritical = action.severity === "CRITICAL";
         return (
           <motion.div
+            tabIndex={-1}
             key={action.id}
             whileTap={reduceMotion ? undefined : dashboardPressScale}
             transition={transitionSpringSnappy}

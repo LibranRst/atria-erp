@@ -1,15 +1,17 @@
 "use client";
 
 import React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { z } from "zod";
 import { toast } from "sonner";
 
 import { createClientInvoice } from "@/app/actions/finance/create-client-invoice";
 import { getInvoicePrefillContext } from "@/app/actions/finance/get-invoice-prefill-context";
 import type { InvoicePrefillResult } from "@atria/core/finance/invoice-prefill";
-import { cn } from "@/lib/utils/cn";
 import {
+  GroupedSurface,
+  FactRow,
   AppIcon,
   DatePickerField,
   FinanceUnsavedChangesModal,
@@ -24,6 +26,7 @@ import {
   Textarea,
   TextInput,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { getErrorMessage } from "@atria/core/utils/error-message";
@@ -105,6 +108,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
         if (!active) return;
         if (res.success && res.data) {
           const data = res.data;
+          setError(null);
           setPrefill(data);
 
           setPayload((prev) => {
@@ -124,10 +128,18 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
               notes: prev.notes ? prev.notes : data.suggestedNotes,
             };
           });
+        } else {
+          setError(
+            "Prefill invoice belum tersedia. Isi data manual atau buka kembali form untuk mencoba lagi.",
+          );
         }
       })
       .catch(() => {
-        // Abaikan error jaringan non-fatal saat prefill
+        if (active) {
+          setError(
+            "Prefill invoice belum tersedia. Isi data manual atau buka kembali form untuk mencoba lagi.",
+          );
+        }
       });
 
     return () => {
@@ -215,6 +227,53 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <div className="px-1">
+              <h3 className="text-support font-semibold text-on-surface">Ringkasan invoice</h3>
+              <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+                {draft.payload.invoiceNumber.trim() || "Nomor invoice belum diisi"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow layout="stacked" wrapLabel label="Termin" value={stageLabel} />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Nominal draft"
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                      amount={amount}
+                      variant="fullDynamic"
+                      size="sm"
+                      align="right"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Jatuh tempo"
+                  value={
+                    draft.payload.dueDate
+                      ? new Date(draft.payload.dueDate).toLocaleDateString("id-ID", {
+                          dateStyle: "medium",
+                        })
+                      : "Belum dipilih"
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Invoice mencatat piutang. Saldo kas bertambah melalui pencatatan penerimaan klien
+              terpisah.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau invoice klien" : "Buat invoice klien"}
@@ -352,13 +411,15 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                           {prefill.suggestedInvoiceNumber}
                         </strong>
                       </span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => patch({ invoiceNumber: prefill.suggestedInvoiceNumber })}
-                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:scale-[0.98]"
+                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary hover:bg-primary/15 active:z-10 active:shadow-raised"
+                        variant="secondary"
+                        size="mini"
                       >
                         Terapkan
-                      </button>
+                      </Button>
                     </div>
                   )}
                 <AdaptiveSelect
@@ -378,7 +439,7 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
               >
                 {prefill?.presets && prefill.presets.length > 0 && (
                   <div className="px-4 pt-3 pb-2.5">
-                    <span className="block text-[11px] font-semibold text-on-surface-variant">
+                    <span className="block text-meta font-semibold text-on-surface-variant">
                       Pilihan termin cepat:
                     </span>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -387,9 +448,12 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                           Number(draft.payload.amount) === preset.amount &&
                           draft.payload.stage === preset.stage;
                         return (
-                          <button
+                          <Button
                             key={preset.label}
                             type="button"
+                            size="compact"
+                            variant={isSelected ? "primary" : "quiet"}
+                            aria-pressed={isSelected}
                             disabled={isPending}
                             onClick={() => {
                               patch({
@@ -398,15 +462,9 @@ export function ClientInvoiceForm({ open }: ClientInvoiceFormProps): React.JSX.E
                                 notes: preset.notes,
                               });
                             }}
-                            className={cn(
-                              "inline-flex min-h-8 items-center rounded-full px-3 py-1 text-xs font-semibold transition-all select-none",
-                              isSelected
-                                ? "bg-primary text-white shadow-xs ring-1 ring-primary"
-                                : "bg-surface-container-low text-on-surface ring-1 ring-ring-subtle hover:bg-surface-container",
-                            )}
                           >
                             {preset.label}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -483,8 +541,8 @@ function ReviewFact({
   if (stacked) {
     return (
       <div className="px-4 py-3 text-xs">
-        <span className="text-on-surface-variant font-medium">{label}</span>
-        <p className="mt-1 font-medium text-on-surface leading-relaxed whitespace-pre-wrap">
+        <span className="font-medium text-on-surface-variant">{label}</span>
+        <p className="mt-1 leading-relaxed font-medium whitespace-pre-wrap text-on-surface">
           {value}
         </p>
       </div>

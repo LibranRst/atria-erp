@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { toast } from "sonner";
 
 import { activateProjectAction } from "@/app/actions/project/activation";
@@ -23,6 +24,7 @@ export function ProjectActivationSheet({
   const router = useRouter();
   const [open, setOpen] = React.useState(readiness.isReady && canActivate);
   const [pending, startTransition] = React.useTransition();
+  const refreshAfterExit = React.useRef(false);
 
   if (!canActivate || !readiness.isReady) return null;
 
@@ -34,8 +36,8 @@ export function ProjectActivationSheet({
         return;
       }
       setOpen(false);
+      refreshAfterExit.current = true;
       toast.success("Proyek sudah Aktif dan siap untuk operasional.");
-      router.refresh();
     });
   }
 
@@ -43,6 +45,11 @@ export function ProjectActivationSheet({
     <WorkflowFormSheet
       dismissal={{ mode: "discard" }}
       open={open}
+      onExitComplete={() => {
+        if (!refreshAfterExit.current) return;
+        refreshAfterExit.current = false;
+        router.refresh();
+      }}
       title="Proyek siap diaktifkan"
       primaryLabel="Aktifkan"
       secondaryLabel="Nanti"

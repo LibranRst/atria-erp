@@ -6,14 +6,19 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
+  MoneyValue,
   MoneyImpactRow,
   MoneyInput,
   AdaptiveSelect,
   SegmentedTabs,
   Textarea,
   TextInput,
+  useSheetPresenceValue,
   WorkflowFormSheet,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { shortMoney } from "@/features/finance-dashboard/utils/dashboard-formatters";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { movementCategoryOptions } from "@/features/finance-dashboard/utils/bank-account-constants";
@@ -50,18 +55,41 @@ export function MovementSheet({
   readonly onDiscard: () => void;
   readonly onSave: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const { presentedValue: presentedAccount, handleExitComplete } = useSheetPresenceValue(
+    open ? account : null,
+    open ? account?.id : null,
+  );
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  const [prevAccountId, setPrevAccountId] = React.useState(account?.id);
+
+  if (open !== prevOpen || account?.id !== prevAccountId) {
+    setPrevOpen(open);
+    setPrevAccountId(account?.id);
+    if (open && (!prevOpen || account?.id !== prevAccountId)) {
+      setReviewing(false);
+      setConfirmClose(false);
+    }
+  }
+
+  const handleExitAnimationComplete = React.useCallback((): void => {
+    handleExitComplete();
+    setReviewing(false);
+    setConfirmClose(false);
+  }, [handleExitComplete]);
+
   function patch(next: Partial<MovementDraft>): void {
     setDraft((current) => ({ ...current, ...next }));
   }
 
   const canSave = Number(draft.amount || 0) > 0 && draft.description.trim().length >= 5;
   const amount = Number(draft.amount || 0);
-  const projectedBalance = account
+  const projectedBalance = presentedAccount
     ? draft.type === "INFLOW"
-      ? account.balance + amount
-      : account.balance - amount
+      ? presentedAccount.balance + amount
+      : presentedAccount.balance - amount
     : 0;
   const disabledReason =
     Number(draft.amount || 0) <= 0
@@ -85,11 +113,82 @@ export function MovementSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Rekening"
+                wrapLabel
+                value={presentedAccount?.name ?? "Data tidak tersedia"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Arah"
+                wrapLabel
+                value={draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Kategori"
+                wrapLabel
+                value={
+                  movementCategoryOptions.find((option) => option.value === draft.category)
+                    ?.label ?? formatBusinessLabel(draft.category, "FINANCE")
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Nominal"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              {presentedAccount ? (
+                <>
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(presentedAccount.balance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={presentedAccount.balance}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo pratinjau"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(projectedBalance) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={projectedBalance}
+                        tone={projectedBalance < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                </>
+              ) : null}
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         title={
           reviewing ? "Tinjau mutasi kas" : draft.type === "INFLOW" ? "Kas masuk" : "Kas keluar"
         }
         onClose={requestClose}
+        onExitComplete={handleExitAnimationComplete}
         pending={pending}
         disabled={!canSave}
         disabledReason={disabledReason}
@@ -103,14 +202,14 @@ export function MovementSheet({
         onSecondary={() => setReviewing(false)}
       >
         <div className="space-y-md">
-          {account ? (
-            <BankAccountContextCard account={account} eyebrow="Rekening" />
+          {!desktop && presentedAccount ? (
+            <BankAccountContextCard account={presentedAccount} eyebrow="Rekening" />
           ) : null}
           {reviewing ? (
             <>
               <MoneyImpactRow
-                label={account?.name ?? "Rekening"}
-                before={account?.balance ?? 0}
+                label={presentedAccount?.name ?? "Rekening"}
+                before={presentedAccount?.balance ?? 0}
                 delta={draft.type === "INFLOW" ? amount : -amount}
                 after={projectedBalance}
               />
@@ -183,14 +282,11 @@ export function MovementSheet({
                 helper={
                   projectedBalance < 0
                     ? `Peringatan: Saldo menjadi minus (${shortMoney(projectedBalance)})`
-                    : `Estimasi saldo: ${shortMoney(account?.balance ?? 0)} → ${shortMoney(projectedBalance)}`
+                    : `Estimasi saldo: ${shortMoney(presentedAccount?.balance ?? 0)} → ${shortMoney(projectedBalance)}`
                 }
               >
                 <FormField label="Nominal" required>
-                  <MoneyInput
-                    value={draft.amount}
-                    onChange={(value) => patch({ amount: value })}
-                  />
+                  <MoneyInput value={draft.amount} onChange={(value) => patch({ amount: value })} />
                 </FormField>
               </FormSection>
               <FormSection title="Klasifikasi" helper="Untuk rekonsiliasi dan audit.">

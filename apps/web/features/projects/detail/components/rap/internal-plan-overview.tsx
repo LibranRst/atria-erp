@@ -1,11 +1,15 @@
 "use client";
 
 import React from "react";
+import { RapDesktopWorkspace } from "./rap-desktop-workspace";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 
-import { AppIcon, Badge, SegmentedTabs } from "@/components/ui";
+import { AppIcon, Badge, SegmentedTabs, Button, MoneyValue } from "@/components/ui";
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { formatIdr as formatRp, formatShortIdr as formatShortRp } from "@atria/core/utils/money";
+import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
+import { countMaterialsNeedingPurchase } from "./rap-desktop-model";
+import { sumPackageCost } from "../../utils/rap-setup-utils";
 import type {
   RapView,
   RabEstimateView,
@@ -13,13 +17,12 @@ import type {
   RapOverviewFilter,
 } from "../shared/rap-rab-manager";
 
-export function InternalPlanOverview({
+function InternalPlanMobile({
   rap,
   plannedCost,
   tukangPlanItems,
   subconPlanItems,
   packageItemCount,
-  needToBuy,
   canEditRap,
   rabEstimate,
   setInternalRevisionOpen,
@@ -42,6 +45,8 @@ export function InternalPlanOverview({
   readonly setRapDetailItemId: (id: string | null) => void;
   readonly setPackageDetailItemId: (id: string | null) => void;
 }): React.JSX.Element {
+  const totalPlan = plannedCost + sumPackageCost(tukangPlanItems) + sumPackageCost(subconPlanItems);
+  const neededMaterials = countMaterialsNeedingPurchase(rap.items);
   return (
     <>
       <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
@@ -50,29 +55,33 @@ export function InternalPlanOverview({
             <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
               Total rencana internal
             </p>
-            <p className="mt-1 font-mono text-[22px] font-bold">
-              {formatRp(
-                plannedCost +
-                  tukangPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0) +
-                  subconPlanItems.reduce((sum, item) => sum + Number(item.estimatedTotalCost), 0),
-              )}
-            </p>
+            <MoneyValue
+              amount={totalPlan}
+              variant="compactWithFull"
+              fractionDigits={Number.isInteger(totalPlan) ? 0 : 2}
+              tone="inverse"
+              size="2xl"
+              className="mt-1"
+            />
           </div>
           <Badge status="APPROVED">Terkunci</Badge>
         </div>
-        <div className="mt-4 flex justify-between border-t border-white/12 pt-4 text-meta text-white/70">
+        <div className="mt-4 flex justify-between gap-2 border-t border-white/12 pt-4 text-meta text-white/70">
           <span>{rap.items.length} material</span>
           <span>{packageItemCount} paket</span>
-          <span>{needToBuy > 0 ? `${needToBuy} perlu dibeli` : "Material siap"}</span>
+          <span className="text-right">
+            {neededMaterials > 0 ? `${neededMaterials} material perlu dibeli` : "Material siap"}
+          </span>
         </div>
         {canEditRap && rabEstimate?.status === "APPROVED" && (
-          <button
+          <Button
             type="button"
             onClick={() => setInternalRevisionOpen(true)}
             className="mt-4 min-h-12 w-full rounded-full bg-white/10 text-xs font-bold text-white ring-1 ring-white/15"
+            variant="secondary"
           >
             Buat Revisi RAP
-          </button>
+          </Button>
         )}
       </section>
       <SegmentedTabs
@@ -152,6 +161,34 @@ export function InternalPlanOverview({
               ))}
         </div>
       </NativePanel>
+    </>
+  );
+}
+
+export function InternalPlanOverview(
+  props: React.ComponentProps<typeof InternalPlanMobile>,
+): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  return (
+    <>
+      <div hidden={desktop} inert={desktop} className="space-y-4">
+        <InternalPlanMobile {...props} />
+      </div>
+      <div hidden={!desktop} inert={!desktop}>
+        <RapDesktopWorkspace
+          rap={props.rap}
+          plannedCost={props.plannedCost}
+          tukangPlanItems={props.tukangPlanItems}
+          subconPlanItems={props.subconPlanItems}
+          canEditRap={props.canEditRap}
+          onMaterialOpen={props.setRapDetailItemId}
+          onPackageOpen={props.setPackageDetailItemId}
+          overviewFilter={props.rapOverviewFilter}
+          onOverviewFilterChange={props.setRapOverviewFilter}
+          canRevise={props.rabEstimate?.status === "APPROVED"}
+          onRevise={(): void => props.setInternalRevisionOpen(true)}
+        />
+      </div>
     </>
   );
 }

@@ -1,28 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-import type { SubmittedExpenseDraft } from "@/app/actions/finance/expense-draft-types";
-import { resolveActor } from "@/server/actor";
-import { submitExpenseDraftUseCase } from "@/server/usecases/finance/submit-expense-draft";
-import type { ActionResponse } from "@atria/core/types/action-response";
-import type { SubmitExpenseDraftInput } from "@atria/core/validations/expense-draft";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/finance/expense-draft-submit";
 
 export async function submitExpenseDraft(
-  input: SubmitExpenseDraftInput,
-): Promise<ActionResponse<SubmittedExpenseDraft>> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid." },
-    };
-  }
-
-  const result = await submitExpenseDraftUseCase(actor, input);
-  if (result.success) {
-    revalidatePath("/expenses");
-    revalidatePath(`/projects/${result.data.projectId}`);
-  }
-  return result;
+  ...args: WebRpcArgs<"app/actions/finance/expense-draft-submit.submitExpenseDraft">
+): Promise<WebRpcResult<"app/actions/finance/expense-draft-submit.submitExpenseDraft">> {
+  return callBackendAction("app/actions/finance/expense-draft-submit.submitExpenseDraft", args, {
+    allowCookieWrites: true,
+  });
 }

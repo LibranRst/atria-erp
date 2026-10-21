@@ -1,3 +1,0 @@
-ALTER TABLE "cash_transaction" ADD CONSTRAINT "ct_reconciliation_exception_complete_check" CHECK (("reconciliation_exception_reason" IS NULL AND "reconciliation_exception_at" IS NULL AND "reconciliation_exception_by_id" IS NULL) OR ("reconciliation_exception_reason" IS NOT NULL AND "reconciliation_exception_at" IS NOT NULL AND "reconciliation_exception_by_id" IS NOT NULL));
---> statement-breakpoint
-ALTER TABLE "cash_transaction" ADD CONSTRAINT "ct_reconciled_without_exception_check" CHECK (NOT "reconciled" OR ("reconciliation_exception_reason" IS NULL AND "reconciliation_exception_at" IS NULL AND "reconciliation_exception_by_id" IS NULL));

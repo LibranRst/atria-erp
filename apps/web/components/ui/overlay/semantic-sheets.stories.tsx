@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
+import { FactRow, FormField, FormSection, SheetSection, TextInput } from "@/components/ui";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 
 import { Button } from "../button/button";
 import { ConfirmationDialog } from "./dialogs";
@@ -83,6 +85,66 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function ScrollEdgesDemo({ desktop = false }: { readonly desktop?: boolean }): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+  const [name, setName] = useState("Panel kayu finishing");
+  useLayoutEffect((): (() => void) | undefined => {
+    if (!desktop) return;
+    const previous = document.body.getAttribute("data-atria-admin");
+    document.body.setAttribute("data-atria-admin", "");
+    return (): void => {
+      if (previous === null) document.body.removeAttribute("data-atria-admin");
+      else document.body.setAttribute("data-atria-admin", previous);
+    };
+  }, [desktop]);
+  return (
+    <WorkspacePresentationProvider presentation={desktop ? "desktop" : "mobile"}>
+      <Button onClick={() => setOpen(true)}>Buka sheet panjang</Button>
+      <FormSheet
+        open={open}
+        title="Rincian material"
+        dismissal={{ mode: "discard" }}
+        onClose={() => setOpen(false)}
+        footer={
+          <SheetFooterActions
+            status={
+              <p className="text-support text-on-surface-variant">Data fixture · belum disimpan</p>
+            }
+            primary={{ label: "Selesai", onClick: () => setOpen(false) }}
+          />
+        }
+      >
+        <div className="space-y-4">
+          <FormSection title="Identitas">
+            <FormField label="Nama material">
+              <TextInput value={name} onChange={setName} />
+            </FormField>
+          </FormSection>
+          <SheetSection title="Spesifikasi">
+            <div className="divide-y divide-outline-variant/15">
+              {Array.from({ length: 16 }, (_, index) => (
+                <FactRow
+                  key={index}
+                  label={`Material ${index + 1}`}
+                  value="Finishing kayu · unit lembar"
+                />
+              ))}
+            </div>
+          </SheetSection>
+          <FormSection title="Catatan akhir">
+            <FormField label="Catatan">
+              <TextInput value="Periksa warna sebelum pemakaian" readOnly />
+            </FormField>
+          </FormSection>
+        </div>
+      </FormSheet>
+    </WorkspacePresentationProvider>
+  );
+}
+
+export const ScrollEdges: Story = { render: () => <ScrollEdgesDemo /> };
+export const DesktopScrollEdges: Story = { render: () => <ScrollEdgesDemo desktop /> };
 
 export const Sheet: Story = {
   render: () => <FormSheetDemo />,

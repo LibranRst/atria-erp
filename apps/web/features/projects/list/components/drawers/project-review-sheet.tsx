@@ -1,6 +1,13 @@
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
-import { FormRiskNotice, FormSection, WorkflowFormSheet } from "@/components/ui";
+import {
+  GroupedSurface,
+  FactRow,
+  FormRiskNotice,
+  FormSection,
+  WorkflowFormSheet,
+} from "@/components/ui";
 import type { ProjectFormDraft } from "@/features/projects/list/utils/project-form-draft";
 
 function ReviewFact({
@@ -28,6 +35,7 @@ export function ProjectReviewSheet({
   statusLabel,
   healthLabel,
   onClose,
+  onExitComplete,
   onSubmit,
 }: {
   readonly open: boolean;
@@ -39,10 +47,41 @@ export function ProjectReviewSheet({
   readonly statusLabel: string;
   readonly healthLabel: string;
   readonly onClose: () => void;
+  readonly onExitComplete?: () => void;
   readonly onSubmit: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   return (
     <WorkflowFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Keputusan proyek</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {draft.name.trim()}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow layout="stacked" wrapLabel label="Klien" value={clientName} />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Project Manager"
+                value={projectManagerName}
+              />
+              <FactRow layout="stacked" wrapLabel label="Status" value={statusLabel} />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            {editMode
+              ? "Periksa perubahan sebelum menyimpan proyek."
+              : "Budget kategori awal mengikuti default Settings."}
+          </p>
+        </div>
+      }
       dismissal={{ mode: "discard" }}
       open={open}
       title={editMode ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
@@ -51,6 +90,7 @@ export function ProjectReviewSheet({
       pendingLabel={editMode ? "Memperbarui…" : "Membuat…"}
       pending={pending}
       onClose={onClose}
+      onExitComplete={onExitComplete}
       onSecondary={onClose}
       onPrimary={onSubmit}
       statusText={`${clientName} · ${projectManagerName}`}
@@ -58,7 +98,9 @@ export function ProjectReviewSheet({
     >
       <div className="space-y-3">
         <FormSection
-          title={editMode ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"}
+          title={
+            desktop ? "Rincian proyek" : editMode ? "Tinjau Perubahan Proyek" : "Tinjau Proyek Baru"
+          }
           helper="Periksa detail proyek sebelum menyimpan."
         >
           <ReviewFact label="Nama Proyek" value={draft.name.trim()} />

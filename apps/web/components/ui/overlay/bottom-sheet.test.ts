@@ -7,22 +7,21 @@ describe("BottomSheet floating chrome", () => {
     const source = await Bun.file(bottomSheetPath).text();
 
     expect(source).toContain("bg-surface-container-low");
-    expect(source).toContain("bg-linear-to-b");
-    expect(source).toContain("bg-linear-to-t");
-    // Chrome atas tetap memudar di atas bidang scroll yang sama.
-    expect(source).toContain("via-surface-container-low/95 via-70%");
-    expect(source).toContain("absolute inset-0 bg-linear-to-b");
+    // Header/footer share the page chrome's gradual ramp on the sheet canvas.
+    expect(source).toContain("scroll-edge-scrim-sheet");
+    expect(source).toContain("scroll-edge-scrim-bottom");
+    expect(source).not.toContain("via-surface-container-low/95 via-70%");
     expect(source).toContain("px-margin-mobile pt-sm");
     // Footer harus solid. Ketika latarnya berupa gradien yang transparan di
     // sisi atas, baris status footer berada di pita transparan itu dan
     // bertumpuk dengan isi form yang di-scroll di belakangnya.
-    expect(source).toContain("bottom-0 z-20 bg-surface-container-low px-margin-mobile");
-    // Peredupannya adalah pita terpisah di luar kotak footer (`bottom-full`),
-    // sehingga tidak ikut terukur `offsetHeight` dan spacer tetap akurat.
-    expect(source).toContain("absolute inset-x-0 bottom-full");
+    expect(source).toContain("scroll-edge-scrim-sheet-footer");
+    expect(source).toContain("[&_button]:shadow-raised!");
+    // The decorative wash is absolute and cannot change measured footer clearance.
+    expect(source).toContain("absolute inset-x-0 bottom-0 h-[calc(100%+2rem)]");
     expect(source).not.toContain("top-0 h-24 bg-linear-to-b");
     expect(source).toContain("scrollPaddingTop: topChromeHeight + 16");
-    expect(source).toContain("scrollPaddingBottom: footerHeight + 16");
+    expect(source).toContain("scrollPaddingBottom: (sideFooter ? 0 : footerHeight) + 16");
     expect(source).toContain("style={{ height: topChromeHeight }}");
     expect(source).toContain("style={{ height: footerHeight }}");
     expect(source).not.toContain(
@@ -38,8 +37,9 @@ describe("BottomSheet floating chrome", () => {
     const source = await Bun.file(bottomSheetPath).text();
 
     expect(source).toContain("useReducedMotion");
-    expect(source).toContain("reduceMotion ? { y: 0, opacity: 0 }");
-    expect(source).toContain("reduceMotion ? { duration: 0 } : transitionSpringSmooth");
+    expect(source).toMatch(/reduceMotion\s*\?\s*\{\s*y: 0, opacity: 0\s*\}/);
+    expect(source).toMatch(/reduceMotion\s*\?\s*\{\s*duration: 0\s*\}/);
+    expect(source).toContain("transitionSpringSmooth");
     expect(source).toContain("reduceMotion ? { duration: 0 } : transitionEaseSmooth");
   });
 });

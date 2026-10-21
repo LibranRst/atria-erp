@@ -18,6 +18,8 @@ const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
  * biasanya tempatnya di `components/ui` atau `lib/`, bukan jadi edge baru.
  */
 const ALLOWED_EDGES: Readonly<Record<string, readonly string[]>> = {
+  // Chat opens the same client RAB export workbench as Project; document behavior stays in its domain.
+  "ai-chat": ["projects"],
   // Onboarding memandu penyiapan domain lain, jadi memang menyusunnya.
   onboarding: ["settings", "finance-dashboard", "materials", "approvals", "administration"],
   // Halaman proyek menampilkan pengeluaran, stok, dan riwayat aktivitasnya.
@@ -63,7 +65,7 @@ function sliceOf(filePath: string): string {
 function actualEdges(): Map<string, Set<string>> {
   const edges = new Map<string, Set<string>>();
   for (const filePath of collectSourceFiles(FEATURES_ROOT)) {
-    if (filePath.endsWith(".stories.tsx") || /\.test\.tsx?$/.test(filePath)) continue;
+    if (filePath.endsWith(".stories.tsx") || /\.(?:test|fixture)\.tsx?$/.test(filePath)) continue;
     const source = readFileSync(filePath, "utf8");
     const from = sliceOf(filePath);
     for (const match of source.matchAll(/@\/features\/([a-z0-9-]+)/g)) {
@@ -100,7 +102,7 @@ describe("feature slice boundaries", () => {
   test("only the slices that declare it may reach into components/layout", () => {
     const offenders = new Set<string>();
     for (const filePath of collectSourceFiles(FEATURES_ROOT)) {
-      if (filePath.endsWith(".stories.tsx") || /\.test\.tsx?$/.test(filePath)) continue;
+      if (filePath.endsWith(".stories.tsx") || /\.(?:test|fixture)\.tsx?$/.test(filePath)) continue;
       if (!readFileSync(filePath, "utf8").includes("@/components/layout")) continue;
 
       const slice = sliceOf(filePath);

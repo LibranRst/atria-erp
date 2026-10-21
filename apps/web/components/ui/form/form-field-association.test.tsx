@@ -27,7 +27,7 @@ describe("FormField association", () => {
   test("keeps explicit IDs authoritative", () => {
     const html = renderToStaticMarkup(
       <FormField label="Nama proyek" htmlFor="project-name">
-        <TextInput id="project-name" value="Atria" onChange={() => undefined} />
+        <TextInput id="project-name" value="Paduna" onChange={() => undefined} />
       </FormField>,
     );
 

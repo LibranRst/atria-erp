@@ -1,6 +1,15 @@
 "use client";
 
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useDesktopDashboardData } from "../../hooks/use-desktop-dashboard-data";
+import {
+  DesktopBudgetTab,
+  DesktopCashDueTab,
+  DesktopMaterialsTab,
+  DesktopApprovalsTable,
+} from "../desktop/desktop-dashboard-tabs";
+import { DesktopBudgetBand } from "../desktop/desktop-dashboard-overview";
 import { useCan } from "@/components/auth/permissions-provider";
 import React from "react";
 
@@ -13,13 +22,14 @@ import {
   GroupedSurface,
   InlineStateRow,
   MoneyValue,
+  PageState,
   PageHeader,
   SegmentedTabs,
 } from "@/components/ui";
 import { useDashboardRefresh } from "@/features/finance-dashboard/hooks/use-dashboard-refresh";
+import { useDashboardApprovalQueue } from "@/features/finance-dashboard/hooks/use-dashboard-approval-queue";
 import type { DashboardPageTab } from "@/features/finance-dashboard/types/dashboard-types";
 import { resolveDashboardDataStatus } from "@/features/finance-dashboard/utils/dashboard-data-status";
-import type { ApprovalDetail } from "@atria/core/finance/approval-types";
 import { updateBrowserUrl, useUrlSearchParam } from "@/lib/utils/use-url-search-param";
 import type { OrganizationSetupOverview } from "@atria/core/onboarding/organization-setup";
 import { ApprovalsTab } from "../tabs/dashboard-approvals-tab";
@@ -28,6 +38,7 @@ import { BudgetRiskTab } from "../tabs/tab-budget-risk";
 import { CashDueTab } from "../tabs/tab-cash-due";
 import { DashboardOverviewTab } from "../tabs/tab-overview";
 import { MaterialsTab } from "../tabs/tab-materials";
+import { PilotBalanceNotice } from "../shared/pilot-balance-notice";
 
 function parseDashboardTab(value: string | null, canSeeApprovalQueue: boolean): DashboardPageTab {
   if (value === "approvals" && canSeeApprovalQueue) return "approvals";
@@ -53,11 +64,13 @@ function DashboardTabsNav({
     readonly label: string;
     readonly count?: number;
     readonly icon: React.ReactNode;
+    readonly disabled?: boolean;
+    readonly unavailableReason?: string;
   }> = [
     {
       value: "overview",
       label: "Ringkasan",
-      icon: <AppIcon name="space_dashboard" className="text-[15px]" />,
+      icon: <AppIcon name="space_dashboard" className="icon-sm" />,
     },
   ];
   if (can("view:approval_queue")) {
@@ -65,30 +78,34 @@ function DashboardTabsNav({
       value: "approvals",
       label: "Persetujuan",
       count: approvalCount > 0 ? approvalCount : undefined,
-      icon: <AppIcon name="approval" className="text-[15px]" />,
+      icon: <AppIcon name="approval" className="icon-sm" />,
     });
   }
   options.push(
     {
       value: "budget",
       label: "Budget",
+      disabled: !can("view:budget"),
+      unavailableReason: !can("view:budget") ? "Memerlukan izin melihat budget." : undefined,
       count: data.dashboardTabs.counts.budget > 0 ? data.dashboardTabs.counts.budget : undefined,
-      icon: <AppIcon name="monitoring" className="text-[15px]" />,
+      icon: <AppIcon name="monitoring" className="icon-sm" />,
     },
     {
       value: "cash",
       label: "Jatuh Tempo",
       count: data.dashboardTabs.counts.cash > 0 ? data.dashboardTabs.counts.cash : undefined,
-      icon: <AppIcon name="event_busy" className="text-[15px]" />,
+      icon: <AppIcon name="event_busy" className="icon-sm" />,
     },
     {
       value: "accounts",
       label: "Rekening",
-      icon: <AppIcon name="account_balance" className="text-[15px]" />,
+      icon: <AppIcon name="account_balance" className="icon-sm" />,
     },
     {
       value: "materials",
       label: "Material",
+      disabled: !can("view:inventory"),
+      unavailableReason: !can("view:inventory") ? "Memerlukan izin melihat persediaan." : undefined,
       count:
         data.dashboardTabs.counts.materials > 0 ? data.dashboardTabs.counts.materials : undefined,
       icon: <AppIcon name="inventory_2" className="h-3.75 w-3.75" />,
@@ -159,6 +176,12 @@ export function FinancialPosition({
         />
       </div>
 
+      {process.env.NEXT_PUBLIC_ATRIA_PILOT_MODE === "true" ? (
+        <div className="mt-3">
+          <PilotBalanceNotice inverse />
+        </div>
+      ) : null}
+
       <div className="mt-4 flex flex-row gap-3">
         <PositionMetric label="Piutang" amount={summary.receivablesOutstanding} />
         <PositionMetric label="Hutang" amount={summary.payablesOutstanding} />
@@ -181,7 +204,7 @@ export function FinancialPosition({
           </div>
           <div className="flex flex-row items-end justify-between">
             <p
-              className={`mt-1 font-sans text-lg font-extrabold tracking-[-0.025em] tabular-nums max-[430px]:text-[16px] ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
+              className={`mt-1 font-sans text-lg font-extrabold tracking-[-0.025em] tabular-nums max-[430px]:text-base max-[430px]:leading-7 ${budgetDanger ? "text-critical-on-inverse" : "text-white"}`}
             >
               {summary.usedPercentage.toFixed(1)}%
             </p>
@@ -274,15 +297,26 @@ export function FinanceDashboard({
 }): React.JSX.Element {
   const can = useCan();
   const tabParam = useUrlSearchParam("tab");
-  const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(data.generatedAt);
-  const [referenceDate] = React.useState(() => new Date());
-  const [approvals, setApprovals] = React.useState<readonly ApprovalDetail[]>(
-    data.dashboardDetails.approvals,
+  const [readRevision, setReadRevision] = React.useState(0);
+  const invalidateDesktopReads = React.useCallback(
+    (): void => setReadRevision((value) => value + 1),
+    [],
   );
-  const [approvalSummary, setApprovalSummary] = React.useState(
+  const { online, refreshFailed, refreshing, refresh } = useDashboardRefresh(
+    data.generatedAt,
+    invalidateDesktopReads,
+  );
+  const [referenceDate] = React.useState(() => new Date());
+  const [approvalQueue, recordDecision] = useDashboardApprovalQueue(
+    data.dashboardDetails.approvals,
     data.dashboardDetails.approvalSummary,
   );
   const activeTab = parseDashboardTab(tabParam, can("view:approval_queue"));
+  const desktop = useWorkspacePresentation() === "desktop";
+  const desktopQuery = useDesktopDashboardData(activeTab, data.generatedAt, {
+    generation: `${data.generatedAt.toISOString()}:${readRevision}`,
+    suspended: refreshing,
+  });
   const today = referenceDate.toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -292,7 +326,10 @@ export function FinanceDashboard({
   });
 
   function changeTab(value: DashboardPageTab): void {
-    updateBrowserUrl(value === "overview" ? "/ledger" : `/ledger?tab=${value}`, "replace");
+    const url = new URL(window.location.href);
+    if (value === "overview") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", value);
+    updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
   }
 
   const tabContent =
@@ -301,35 +338,84 @@ export function FinanceDashboard({
         data={data}
         financialPosition={<FinancialPosition summary={data.summary} />}
         setup={setup}
+        trend={desktopQuery.trend}
       />
     ) : activeTab === "approvals" && can("view:approval_queue") ? (
       <ApprovalsTab
-        approvals={approvals}
-        approvalSummary={approvalSummary}
-        setApprovals={setApprovals}
-        setApprovalSummary={setApprovalSummary}
+        approvals={
+          desktop && desktopQuery.data?.tab === "approvals"
+            ? desktopQuery.data.rows
+            : approvalQueue.approvals
+        }
+        approvalSummary={approvalQueue.summary}
+        onDecisionRecorded={(item) => {
+          recordDecision({ approvalId: item.id, decidedAt: new Date(), approval: item });
+          desktopQuery.reload();
+        }}
+        renderDesktopList={
+          desktop
+            ? (onOpen) => <DesktopApprovalsTable query={desktopQuery} onOpen={onOpen} />
+            : undefined
+        }
         canEmergencyOverride={can("override:self_approval")}
       />
     ) : activeTab === "budget" ? (
-      <BudgetRiskTab data={data} />
+      desktop ? (
+        <div className="space-y-4">
+          <DesktopBudgetBand data={data} />
+          <DesktopBudgetTab data={data} query={desktopQuery} />
+        </div>
+      ) : (
+        <BudgetRiskTab data={data} />
+      )
     ) : activeTab === "cash" ? (
-      <CashDueTab data={data} referenceDate={referenceDate} />
+      desktop ? (
+        <DesktopCashDueTab query={desktopQuery} data={data} />
+      ) : (
+        <CashDueTab data={data} referenceDate={referenceDate} />
+      )
     ) : activeTab === "accounts" ? (
       <AccountsTab data={data} />
+    ) : desktop ? (
+      <DesktopMaterialsTab data={data} query={desktopQuery} />
     ) : (
       <MaterialsTab data={data} />
     );
 
   return (
-    <div className="dashboard-density space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
+    <div
+      className={
+        desktop
+          ? "space-y-4 pb-8"
+          : "dashboard-density space-y-sm pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
+      }
+    >
       <PageHeader
         title={`Halo, ${userName.split(" ")[0]}`}
         subtitle={today}
-        action={<Badge status="PRIMARY">{formatBusinessLabel(data.role)}</Badge>}
+        action={
+          desktop ? (
+            <div className="flex items-center gap-3">
+              <span className="text-support text-on-surface-variant">
+                Diperbarui{" "}
+                {new Date(data.generatedAt).toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "Asia/Jakarta",
+                })}
+              </span>
+              <Button size="compact" variant="secondary" pending={refreshing} onClick={refresh}>
+                Segarkan
+              </Button>
+            </div>
+          ) : (
+            <Badge status="PRIMARY">{formatBusinessLabel(data.role)}</Badge>
+          )
+        }
       />
       <DashboardTabsNav
         activeTab={activeTab}
-        approvalCount={approvalSummary.totalCount}
+        approvalCount={approvalQueue.summary.totalCount}
         data={data}
         onChange={changeTab}
       />
@@ -340,7 +426,17 @@ export function FinanceDashboard({
         refreshing={refreshing}
         onRefresh={refresh}
       />
-      <div>{tabContent}</div>
+      <div>
+        {desktop && desktopQuery.restricted ? (
+          <PageState
+            kind="restricted"
+            title="Akses tab tidak tersedia"
+            description={desktopQuery.error ?? "Izin Dashboard tidak tersedia."}
+          />
+        ) : (
+          tabContent
+        )}
+      </div>
     </div>
   );
 }

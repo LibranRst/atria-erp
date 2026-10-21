@@ -1,1 +1,0 @@
-ALTER TABLE "project_cost" ADD COLUMN "receipt_group_id" uuid;

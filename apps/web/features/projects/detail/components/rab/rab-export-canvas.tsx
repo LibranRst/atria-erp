@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button, IconButton } from "@/components/ui";
+
+import { motion, useReducedMotion } from "framer-motion";
+import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 interface RabExportCanvasProps {
   readonly children: React.ReactNode;
@@ -12,10 +15,12 @@ export function RabExportCanvas({
   children,
   documentWidth = 794,
 }: RabExportCanvasProps): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const fitScaleRef = useRef<number>(0.35);
   const hasInitializedRef = useRef<boolean>(false);
+  const lastWidthRef = useRef(0);
 
   const [scale, setScale] = useState<number>(0.35);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -40,11 +45,13 @@ export function RabExportCanvas({
   const computeFitPageScale = useCallback((): number => {
     if (!containerRef.current) return 0.35;
     const containerWidth = containerRef.current.clientWidth;
-    const containerHeight = containerRef.current.clientHeight;
+    const containerHeight =
+      containerRef.current.querySelector("[data-export-canvas-stage]")?.clientHeight ||
+      containerRef.current.clientHeight;
     if (containerWidth <= 0 || containerHeight <= 0) return 0.35;
 
     const horizontalPadding = containerWidth < 480 ? 16 : 32;
-    const verticalPadding = 76;
+    const verticalPadding = 24;
 
     const availableWidth = Math.max(containerWidth - horizontalPadding, 80);
     const availableHeight = Math.max(containerHeight - verticalPadding, 80);
@@ -64,7 +71,14 @@ export function RabExportCanvas({
 
     const handleResize = (): void => {
       const fitW = computeFitWidthScale();
+      const oldFit = fitScaleRef.current;
       fitScaleRef.current = fitW;
+      const widthChanged = Math.abs(containerEl.clientWidth - lastWidthRef.current) > 0.5;
+      lastWidthRef.current = containerEl.clientWidth;
+      if (widthChanged && hasInitializedRef.current) {
+        setScale(fitW);
+        setPan((prev) => ({ x: 0, y: (prev.y * fitW) / oldFit }));
+      }
       if (
         !hasInitializedRef.current &&
         containerEl.clientWidth > 100 &&
@@ -98,10 +112,11 @@ export function RabExportCanvas({
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const zoomDelta = -e.deltaY * 0.003;
-        setScale((prev) =>
-          Math.min(Math.max(Number((prev + zoomDelta).toFixed(2)), 0.15), 2.5),
-        );
+        setScale((prev) => Math.min(Math.max(Number((prev + zoomDelta).toFixed(2)), 0.15), 2.5));
       } else {
+        if (e.deltaX === 0 && e.deltaY === 0) return;
+        // The canvas consumes this gesture; its containing sheet must not scroll too.
+        e.preventDefault();
         setPan((prev) => ({
           x: prev.x - e.deltaX * 0.8,
           y: prev.y - e.deltaY * 0.8,
@@ -191,10 +206,7 @@ export function RabExportCanvas({
       const t2 = e.touches[1];
       if (t1 && t2) {
         setIsDragging(false);
-        touchDistanceRef.current = Math.hypot(
-          t1.clientX - t2.clientX,
-          t1.clientY - t2.clientY,
-        );
+        touchDistanceRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       }
     }
   };
@@ -206,9 +218,7 @@ export function RabExportCanvas({
       if (t1 && t2) {
         const newDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
         const factor = newDist / touchDistanceRef.current;
-        setScale((prev) =>
-          Math.min(Math.max(Number((prev * factor).toFixed(2)), 0.15), 2.5),
-        );
+        setScale((prev) => Math.min(Math.max(Number((prev * factor).toFixed(2)), 0.15), 2.5));
         touchDistanceRef.current = newDist;
       }
     }
@@ -223,6 +233,64 @@ export function RabExportCanvas({
   return (
     <div
       ref={containerRef}
+      role="region"
+      tabIndex={0}
+      aria-label="Pratinjau RAB · panah untuk geser, Page Down atau End untuk bagian bawah"
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || e.ctrlKey || e.metaKey || e.altKey) return;
+        const step = 64,
+          page =
+            containerRef.current?.querySelector<HTMLElement>("[data-export-canvas-stage]")
+              ?.clientHeight ||
+            containerRef.current?.clientHeight ||
+            440;
+        const end = Math.min(0, page - 24 - (contentRef.current?.offsetHeight || 0) * scale);
+        if (
+          [
+            "ArrowUp",
+            "ArrowDown",
+            "ArrowLeft",
+            "ArrowRight",
+            "PageUp",
+            "PageDown",
+            "Home",
+            "End",
+          ].includes(e.key)
+        ) {
+          e.preventDefault();
+          setPan((prev) => ({
+            x:
+              e.key === "ArrowLeft"
+                ? prev.x + step
+                : e.key === "ArrowRight"
+                  ? prev.x - step
+                  : e.key === "Home"
+                    ? 0
+                    : prev.x,
+            y:
+              e.key === "Home"
+                ? 0
+                : e.key === "End"
+                  ? end
+                  : Math.max(
+                      end,
+                      Math.min(
+                        0,
+                        prev.y +
+                          (e.key === "ArrowUp"
+                            ? step
+                            : e.key === "ArrowDown"
+                              ? -step
+                              : e.key === "PageUp"
+                                ? page - 24
+                                : e.key === "PageDown"
+                                  ? -(page - 24)
+                                  : 0),
+                      ),
+                    ),
+          }));
+        }
+      }}
       data-export-canvas-container="true"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -232,7 +300,7 @@ export function RabExportCanvas({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onDoubleClick={handleDoubleClick}
-      className={`relative w-full overflow-hidden rounded-2xl bg-neutral-200/50 select-none touch-none ring-1 ring-ring-subtle ${
+      className={`relative flex w-full touch-none flex-col overflow-hidden rounded-2xl bg-surface-container ring-1 ring-ring-subtle outline-none select-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         isDragging ? "cursor-grabbing" : "cursor-grab"
       }`}
       style={{
@@ -241,76 +309,55 @@ export function RabExportCanvas({
         maxHeight: "760px",
       }}
     >
-      {/* Floating Zoom & Fit Toolbar (iOS Pill Style) */}
       <div
         data-toolbar="true"
-        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-white/90 p-1.5 backdrop-blur-md shadow-floating ring-1 ring-ring-subtle"
+        className="relative z-20 m-2 flex w-max max-w-[calc(100%-16px)] shrink-0 flex-wrap items-center justify-center gap-2 self-center rounded-2xl bg-surface-container-lowest p-1.5 shadow-floating"
       >
-        <button
-          type="button"
-          onClick={handleZoomOut}
-          aria-label="Perkecil pratinjau"
-          title="Perkecil (-)"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition"
-        >
-          <AppIcon name="remove" className="text-xs" />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleFitWidth}
-          title="Sesuaikan lebar dokumen ke layar"
-          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-95 transition"
-        >
-          Fit Lebar
-        </button>
-
-        <button
-          type="button"
-          onClick={handleFitPage}
-          title="Lihat 1 halaman utuh"
-          className="flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold text-on-surface hover:bg-surface-container active:scale-95 transition"
-        >
-          Fit Halaman
-        </button>
-
-        <span className="min-w-9 px-1 text-center font-mono text-[11px] font-bold text-on-surface-variant">
-          {Math.round(scale * 100)}%
-        </span>
-
-        <button
-          type="button"
-          onClick={handleZoomIn}
-          aria-label="Perbesar pratinjau"
-          title="Perbesar (+)"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition"
-        >
-          <AppIcon name="add" className="text-xs" />
-        </button>
+        <div className="flex items-center gap-1">
+          <IconButton
+            label="Perkecil pratinjau"
+            icon={<AppIcon name="remove" />}
+            variant="quiet"
+            size="compact"
+            onClick={handleZoomOut}
+          />
+          <span className="min-w-9 text-center text-support font-semibold tabular-nums">
+            {Math.round(scale * 100)}%
+          </span>
+          <IconButton
+            label="Perbesar pratinjau"
+            icon={<AppIcon name="add" />}
+            variant="quiet"
+            size="compact"
+            onClick={handleZoomIn}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="secondary" size="compact" onClick={handleFitWidth}>
+            Fit Lebar
+          </Button>
+          <Button variant="secondary" size="compact" onClick={handleFitPage}>
+            Fit Halaman
+          </Button>
+        </div>
       </div>
 
       {/* Canvas Viewport Stage */}
       <div
         data-export-canvas-stage="true"
-        className="flex h-full w-full items-start justify-center overflow-visible pt-3"
+        className="flex min-h-0 w-full flex-1 items-start justify-center overflow-hidden pt-3"
       >
-        <div
+        <motion.div
           data-export-canvas-wrapper="true"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-            transformOrigin: "top center",
-            transition: isDragging ? "none" : "transform 0.12s ease-out",
-            willChange: "transform",
-          }}
+          animate={{ x: pan.x, y: pan.y, scale }}
+          transition={isDragging || reduceMotion ? { duration: 0 } : transitionSpringSnappy}
+          style={{ transformOrigin: "top center", willChange: "transform" }}
           className="origin-top"
         >
-          <div
-            ref={contentRef}
-            className="rounded-xl shadow-lg ring-1 ring-neutral-300"
-          >
+          <div ref={contentRef} className="rounded-xl shadow-surface">
             {children}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

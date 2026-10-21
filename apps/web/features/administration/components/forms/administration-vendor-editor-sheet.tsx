@@ -2,14 +2,9 @@
 
 import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
-import {
-  FormField,
-  FormSection,
-  OperationalFormSheet,
-  Textarea,
-  TextInput,
-} from "@/components/ui";
+import { FormField, FormSection, OperationalFormSheet, Textarea, TextInput } from "@/components/ui";
 import type { EditorMode, VendorFormState } from "./administration-editor-types";
+import { VendorDraftSummary } from "./vendor-draft-summary";
 
 type Props = {
   readonly editorMode: EditorMode;
@@ -66,6 +61,16 @@ export function AdministrationVendorEditorSheet({
       }}
       open={open}
       title={editorMode === "EDIT_VENDOR" ? "Edit vendor" : "Tambah vendor"}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <VendorDraftSummary
+          {...vendorForm}
+          status={
+            selectedVendor ? (selectedVendor.isActive ? "Aktif" : "Diarsipkan") : "Vendor baru"
+          }
+        />
+      }
       onClose={closeEditor}
       formId="administration-vendor-form"
       submitLabel={editorMode === "EDIT_VENDOR" ? "Simpan" : "Tambah"}

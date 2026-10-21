@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 
 import ApprovalsLoading from "@/app/approvals/loading";
 import { ApprovalDecisionReasonFields } from "@/features/approvals/components/shared/approval-decision-reason-fields";
@@ -318,7 +319,6 @@ describe("Approval decision queue presentation", () => {
     expect(html).not.toContain("[Kategori: Tukang]");
   });
 
-
   test("shows quantity and unit cost for every opening inventory item", () => {
     const openingApproval = openingApprovalItem();
 
@@ -401,6 +401,15 @@ describe("Approval decision queue presentation", () => {
     expect(html).toContain("Menteng Villa");
     expect(html).not.toContain("bg-surface-container-low");
     expect(html).not.toContain("rounded-inset");
+  });
+  test("desktop confirmation subjects show the complete amount including cents", () => {
+    const html = renderToStaticMarkup(
+      <WorkspacePresentationProvider presentation="desktop">
+        <ApprovalDecisionSubject item={approvalItem({ amount: 18_000_000.25 })} />
+      </WorkspacePresentationProvider>,
+    ).replace(/\u00a0/g, " ");
+    expect(html).toContain("18.000.000,25");
+    expect(html).not.toContain("18 jt");
   });
 
   test("uses warning tone on ConfirmationDialog when emergency override is required", async () => {

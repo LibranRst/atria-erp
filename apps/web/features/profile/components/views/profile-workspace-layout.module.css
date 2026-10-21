@@ -1,0 +1,99 @@
+.layout [data-profile-column="details"] {
+  display: contents;
+}
+.layout:not(.desktop) [data-profile-column="details"] > * {
+  margin-bottom: var(--spacing-sm);
+}
+
+.desktop {
+  display: grid;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  grid-template-rows: auto min-content 1fr;
+  grid-template-areas:
+    "header header"
+    "identity details"
+    "session details";
+  gap: 24px;
+  align-items: start;
+  padding-bottom: 32px;
+}
+
+.desktop > header {
+  grid-area: header;
+}
+.desktop [data-profile-section="identity"] {
+  grid-area: identity;
+}
+.desktop [data-profile-column="details"] {
+  grid-area: details;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+.desktop [data-profile-section="account"] {
+  order: 1;
+}
+.desktop [data-profile-section="notifications"] {
+  order: 2;
+  scroll-margin-top: 88px;
+}
+.desktop [data-profile-section="access"] {
+  order: 3;
+}
+.desktop [data-profile-section="session"] {
+  grid-area: session;
+}
+.desktop [data-profile-section="developer"] {
+  order: 4;
+}
+.desktop > * {
+  min-width: 0;
+}
+.desktop [data-profile-eyebrow],
+.desktop [data-profile-mobile-only],
+.desktop [data-profile-account-fact],
+.desktop [data-profile-mobile-title] {
+  display: none;
+}
+.desktop [data-profile-desktop-title] {
+  display: inline;
+}
+.desktop > header h1 {
+  margin-top: 0;
+  font-size: var(--text-title);
+  line-height: var(--text-title--line-height);
+}
+.desktop > section h2,
+.desktop [data-profile-column="details"] > section h2 {
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+}
+.desktop > header p:last-child {
+  max-width: none;
+  font-size: var(--text-support);
+  line-height: var(--text-support--line-height);
+}
+.desktop [data-profile-panel] {
+  background: var(--surface-container-lowest);
+  border-radius: var(--radius-owner);
+  backdrop-filter: none;
+}
+.desktop [data-profile-settings-link] {
+  min-height: 56px;
+}
+.desktop [data-profile-settings-link] > span:first-child {
+  width: 32px;
+  height: 32px;
+}
+.desktop [data-profile-skeleton-identity] {
+  flex-direction: column;
+}
+.desktop [data-profile-skeleton-row] {
+  min-height: 56px;
+}
+
+@media (pointer: coarse) {
+  .desktop [data-profile-settings-link] {
+    min-height: 64px;
+  }
+}

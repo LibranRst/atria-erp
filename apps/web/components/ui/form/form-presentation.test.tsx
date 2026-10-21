@@ -17,7 +17,7 @@ describe("iOS grouped form presentation", () => {
     const html = renderToStaticMarkup(
       <FormSection title="Identitas">
         <FormField label="Nama" required>
-          <TextInput value="Atria" onChange={() => undefined} />
+          <TextInput value="Paduna" onChange={() => undefined} />
         </FormField>
         <AdaptiveSelect
           label="Status"
@@ -48,7 +48,7 @@ describe("iOS grouped form presentation", () => {
   });
 
   test("keeps standalone inputs as white capsules", () => {
-    const html = renderToStaticMarkup(<TextInput value="Atria" onChange={() => undefined} />);
+    const html = renderToStaticMarkup(<TextInput value="Paduna" onChange={() => undefined} />);
 
     expect(html).toContain("min-h-12");
     expect(html).toContain("rounded-full");
@@ -151,5 +151,20 @@ describe("iOS grouped form presentation", () => {
 
     expect(html).toContain("grid-cols-1");
     expect(html).not.toContain("grid-cols-2");
+  });
+
+  test("value previews retain explicit source cents without changing incumbent rounding", () => {
+    const precise = renderToStaticMarkup(
+      <ValuePreviewStrip
+        items={[{ label: "Subtotal klien", amount: 1234567.25, fractionDigits: 2 }]}
+      />,
+    );
+    const incumbent = renderToStaticMarkup(
+      <ValuePreviewStrip items={[{ label: "Subtotal klien", amount: 1234567.25 }]} />,
+    );
+
+    expect(precise).toContain("1.234.567,25");
+    expect(incumbent).toContain("1.234.567");
+    expect(incumbent).not.toContain("1.234.567,25");
   });
 });

@@ -1,7 +1,8 @@
 "use client";
 
 import { BudgetSplitIndicator, MoneyValue, StatusBadge } from "@/components/ui";
-import { getProjectBudgetOutputSchema, type ProjectBudgetCategory } from "@/lib/ai/tool-output";
+import { getProjectBudgetOutputSchema } from "@/lib/ai/tool-output";
+import { selectVisibleBudgetCategories as selectVisibleCategories } from "@atria/core/ai/budget-card-presentation";
 import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import type { StatusBadgeTone } from "@/components/ui";
 import * as React from "react";
@@ -24,9 +25,6 @@ import { ResultShell } from "./result-shell";
  * membuat tiap kartu bisa dibaca sekali pandang alih-alih digulir.
  */
 
-/** Jumlah kategori aman yang tetap ikut tampil sebagai konteks. */
-const SAFE_CONTEXT_ROWS = 2;
-
 const STATUS_TONE: Record<string, StatusBadgeTone> = {
   SAFE: "healthy",
   WATCH: "warning",
@@ -48,18 +46,6 @@ const INDICATOR_TONE: Record<string, IndicatorTone> = {
   OVER_BUDGET: "critical",
 };
 
-/** Paling mendesak lebih dulu: lewat budget, lalu persentase pemakaian tertinggi. */
-function urgencyRank(category: ProjectBudgetCategory): number {
-  if (category.status === "OVER_BUDGET" || category.remaining.amount < 0) return 0;
-  if (category.status === "CRITICAL") return 1;
-  if (category.status === "WATCH") return 2;
-  return 3;
-}
-
-function needsAttention(category: ProjectBudgetCategory): boolean {
-  return urgencyRank(category) < 3;
-}
-
 /**
  * Memilih kategori yang layak ditampilkan penuh.
  *
@@ -67,21 +53,7 @@ function needsAttention(category: ProjectBudgetCategory): boolean {
  * justru bagian yang menuntut tindakan. Sisa ruang diisi kategori aman dengan
  * pemakaian tertinggi, sekadar sebagai konteks bahwa yang lain memang berjalan.
  */
-export function selectVisibleCategories(categories: readonly ProjectBudgetCategory[]): {
-  readonly shown: readonly ProjectBudgetCategory[];
-  readonly hidden: readonly ProjectBudgetCategory[];
-} {
-  const sorted = [...categories].sort((left, right) => {
-    const rank = urgencyRank(left) - urgencyRank(right);
-    return rank !== 0 ? rank : right.usedPercentage - left.usedPercentage;
-  });
-
-  const attention = sorted.filter(needsAttention);
-  const calm = sorted.filter((category) => !needsAttention(category));
-  const shown = [...attention, ...calm.slice(0, SAFE_CONTEXT_ROWS)];
-
-  return { shown, hidden: calm.slice(SAFE_CONTEXT_ROWS) };
-}
+export { selectVisibleBudgetCategories as selectVisibleCategories } from "@atria/core/ai/budget-card-presentation";
 
 export function ProjectBudgetResult({
   output,

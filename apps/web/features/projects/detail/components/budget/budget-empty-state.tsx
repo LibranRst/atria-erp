@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 export function BudgetEmptyState({
   canManage,
   isPending,
@@ -25,11 +25,13 @@ export function BudgetEmptyState({
         </p>
       </div>
       {canManage && (
-        <button
+        <Button
           type="button"
           onClick={onCreateBudget}
           disabled={isPending}
-          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-6 text-xs font-bold text-white shadow-primary transition active:scale-[0.98] disabled:opacity-50"
+          className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-6 text-xs font-bold text-white shadow-primary active:z-10 active:shadow-raised disabled:opacity-50"
+          variant="primary"
+          size="mini"
         >
           {isPending ? (
             <span className="animate-pulse">Membuat Draf...</span>
@@ -39,7 +41,7 @@ export function BudgetEmptyState({
               <span>Buat Rencana Anggaran (RAB)</span>
             </>
           )}
-        </button>
+        </Button>
       )}
       {error && <p className="text-xs font-medium text-error">{error}</p>}
     </div>

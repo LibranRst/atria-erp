@@ -1,14 +1,12 @@
 "use client";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
 
 import { changeTemporaryPassword } from "@/app/actions/administration";
-import { FormField, FormSection, TextInput } from "@/components/ui";
+import { FormField, FormSection, TextInput, Button } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 export function TemporaryPasswordForm(): React.JSX.Element {
   const router = useRouter();
@@ -82,15 +80,14 @@ export function TemporaryPasswordForm(): React.JSX.Element {
             />
           </FormField>
           <div className="bg-white p-3.5">
-            <motion.button
+            <Button
               type="submit"
               disabled={pending}
-              whileTap={pending ? undefined : { scale: 0.97 }}
-              transition={transitionSpringSnappy}
               className="min-h-12 w-full rounded-full bg-primary text-sm font-bold text-white disabled:opacity-50"
+              variant="primary"
             >
               {pending ? "Menyimpan…" : "Simpan password baru"}
-            </motion.button>
+            </Button>
           </div>
         </FormSection>
       </form>

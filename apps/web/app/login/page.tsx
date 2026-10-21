@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { AppIcon, Button, FormField, FormSection, TextInput } from "@/components/ui";
 import { getPostLoginRedirectDestination } from "@/app/actions/auth-navigation";
+import { ProductLogo } from "@/components/brand/product-logo";
 import { navigateAfterLogin } from "./login-navigation";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -62,14 +63,18 @@ export default function LoginPage(): React.JSX.Element {
       toast.success("Berhasil masuk.");
       let destination = "/";
       try {
-        destination = await getPostLoginRedirectDestination();
+        const query = new URLSearchParams(window.location.search);
+        destination = await getPostLoginRedirectDestination({
+          returnTo: query.get("returnTo") ?? undefined,
+          surface: query.get("surface") === "mobile" ? "mobile" : undefined,
+        });
       } catch (err) {
         console.error("Gagal mendapatkan rute post-login, fallback ke root:", err);
       }
       navigateAfterLogin(window.location, destination);
     } catch (err: unknown) {
       console.error("Login unexpected error:", err);
-      setError("Atria belum dapat memverifikasi akun. Coba lagi.");
+      setError("Paduna Build belum dapat memverifikasi akun. Coba lagi.");
       setIsLoading(false);
     }
   }
@@ -78,10 +83,13 @@ export default function LoginPage(): React.JSX.Element {
     <section className="flex min-h-[calc(100dvh-3rem)] flex-col">
       <div className="flex flex-1 items-center py-8">
         <div className="w-full space-y-2">
-          <header>
-            <h1 className="text-center text-[28px] leading-9 font-extrabold tracking-[-0.035em] text-on-surface">
-              Atria
+          <header className="mb-6 space-y-3">
+            <h1 className="flex justify-center">
+              <ProductLogo priority />
             </h1>
+            <p className="text-center text-support text-on-surface-variant">
+              Kendali biaya dan material proyek.
+            </p>
           </header>
 
           <form method="post" noValidate aria-busy={isLoading} onSubmit={handleLogin}>
@@ -126,7 +134,7 @@ export default function LoginPage(): React.JSX.Element {
                 <p
                   id="login-error"
                   role="alert"
-                  className="flex items-start gap-2 text-[11px] leading-5 font-semibold text-error"
+                  className="flex items-start gap-2 text-support font-semibold text-error"
                 >
                   <AppIcon name="error" className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -142,7 +150,7 @@ export default function LoginPage(): React.JSX.Element {
       </div>
 
       <p className="shrink-0 pb-1 text-center text-eyebrow font-semibold tracking-[0.04em] text-on-surface-variant/70">
-        Atria · Project Finance &amp; Material Control
+        Paduna Build · Keuangan dan material proyek
       </p>
     </section>
   );

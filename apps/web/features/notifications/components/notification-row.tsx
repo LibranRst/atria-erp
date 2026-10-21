@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
 import { AppIcon, Badge } from "@/components/ui";
 import { safeNotificationUrl, type NotificationItem } from "@atria/core/notifications/types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { useNotifications } from "../hooks/notification-context";
 import { formatRelativeTime, getSeverityVisualConfig } from "../utils/notification-formatting";
 
@@ -57,7 +58,7 @@ export function NotificationRow({ item, onItemClick }: NotificationRowProps): Re
       type="button"
       onClick={() => void handleClick()}
       aria-busy={pending}
-      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+      whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
       transition={transitionSpringSnappy}
       className={`group flex min-h-12 w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors duration-150 outline-none hover:bg-surface-container-high/30 focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high/50 ${
         item.read ? "text-on-surface-variant" : "bg-primary/[0.025] text-on-surface"
@@ -92,7 +93,7 @@ export function NotificationRow({ item, onItemClick }: NotificationRowProps): Re
 
           <time
             dateTime={item.createdAt}
-            className="shrink-0 text-meta tabular-nums text-on-surface-variant/75"
+            className="shrink-0 text-meta text-on-surface-variant/75 tabular-nums"
           >
             {formatRelativeTime(item.createdAt)}
           </time>

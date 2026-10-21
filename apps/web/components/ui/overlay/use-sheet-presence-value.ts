@@ -16,17 +16,36 @@ export function useSheetPresenceValue<T>(
   const [presence, setPresence] = React.useState<{
     readonly identity: string | number | null;
     readonly value: T | null;
-  }>({ identity: normalizedIdentity, value: normalizedValue });
+    readonly requestedIdentity: string | number | null;
+    readonly epoch: number;
+  }>({
+    identity: normalizedIdentity,
+    value: normalizedValue,
+    requestedIdentity: normalizedIdentity,
+    epoch: 0,
+  });
 
-  if (normalizedIdentity !== null && normalizedIdentity !== presence.identity) {
-    setPresence({ identity: normalizedIdentity, value: normalizedValue });
+  if (
+    normalizedIdentity !== presence.requestedIdentity ||
+    (normalizedIdentity !== null &&
+      (normalizedIdentity !== presence.identity || normalizedValue !== presence.value))
+  ) {
+    setPresence({
+      identity: normalizedIdentity ?? presence.identity,
+      value: normalizedIdentity === null ? presence.value : normalizedValue,
+      requestedIdentity: normalizedIdentity,
+      epoch: presence.epoch + 1,
+    });
   }
 
   const handleExitComplete = React.useCallback((): void => {
-    if (normalizedIdentity === null) {
-      setPresence({ identity: null, value: null });
-    }
-  }, [normalizedIdentity]);
+    setPresence((current) => {
+      // Interrupted/reopened sheets have a new epoch. A late completion from
+      // an older exit must never clear their selected entity or draft.
+      if (current.requestedIdentity !== null || current.epoch !== presence.epoch) return current;
+      return { ...current, identity: null, value: null };
+    });
+  }, [presence.epoch]);
 
   return {
     presentedValue: presence.value,

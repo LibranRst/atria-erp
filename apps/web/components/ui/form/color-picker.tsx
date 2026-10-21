@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { transitionEaseSmooth } from "@/lib/utils/motion";
 import { AppIcon } from "../icon/app-icon";
 import { FormField } from "./basic-form-controls";
 import { cx } from "./form-control-utils";
+import { useFormFieldAssociation } from "./form-field-association-context";
+import { useFormPresentation } from "./form-presentation-context";
 
 export interface ColorPresetOption {
   readonly id: string;
@@ -131,6 +134,7 @@ export function isValidHex(val: string): boolean {
 }
 
 export interface CustomColorPickerProps {
+  readonly id?: string;
   readonly value: string;
   readonly onChange: (hex: string) => void;
   readonly presets?: readonly ColorPresetOption[];
@@ -140,11 +144,12 @@ export interface CustomColorPickerProps {
 }
 
 /**
- * Custom Color Picker interaktif yang 100% mengikuti Atria Design System & iOS form style.
+ * Custom Color Picker interaktif yang 100% mengikuti Paduna Design System & iOS form style.
  * Menggunakan kanvas saturasi/brightness HSV, slider hue pelangi, input HEX langsung,
  * serta preset cepat dengan highlight aktif.
  */
 export function CustomColorPicker({
+  id,
   value,
   onChange,
   presets,
@@ -152,6 +157,13 @@ export function CustomColorPicker({
   className,
   ariaLabel = "Pemilih warna kustom",
 }: CustomColorPickerProps): React.JSX.Element {
+  const association = useFormFieldAssociation();
+  const generatedId = useId();
+  const controlId = id ?? association?.controlId ?? `${generatedId}-color`;
+  const paletteId = `${generatedId}-palette`;
+  const keyboardHintId = `${generatedId}-keyboard`;
+  const grouped = useFormPresentation() === "grouped";
+  const reduced = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   // State input string & previous external value mirror
   const [prevValue, setPrevValue] = useState(value);
@@ -193,7 +205,7 @@ export function CustomColorPicker({
   }, [hue, sat, val]);
 
   const updateSatValAndEmit = useCallback(
-    (nextSat: number, nextVal: number) => {
+    (nextSat: number, nextVal: number): void => {
       satRef.current = nextSat;
       valRef.current = nextVal;
       setSat(nextSat);
@@ -206,7 +218,7 @@ export function CustomColorPicker({
   );
 
   const updateHueAndEmit = useCallback(
-    (nextHue: number) => {
+    (nextHue: number): void => {
       hueRef.current = nextHue;
       setHue(nextHue);
       const nextHex = hsvToHex(nextHue, satRef.current, valRef.current);
@@ -217,10 +229,11 @@ export function CustomColorPicker({
   );
 
   const handleSatPointer = useCallback(
-    (clientX: number, clientY: number) => {
+    (clientX: number, clientY: number): void => {
       const area = satAreaRef.current;
       if (!area) return;
       const rect = area.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
       const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
       const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
 
@@ -233,10 +246,11 @@ export function CustomColorPicker({
   );
 
   const handleHuePointer = useCallback(
-    (clientX: number) => {
+    (clientX: number): void => {
       const track = hueTrackRef.current;
       if (!track) return;
       const rect = track.getBoundingClientRect();
+      if (rect.width <= 0) return;
       const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
       const h = (x / rect.width) * 360;
       updateHueAndEmit(h);
@@ -267,17 +281,18 @@ export function CustomColorPicker({
   }, [handleSatPointer, handleHuePointer]);
 
   // Support Eyedropper API jika didukung browser (Chromium / Safari modern)
-  const hasEyeDropper =
-    typeof window !== "undefined" && "EyeDropper" in window;
+  const hasEyeDropper = typeof window !== "undefined" && "EyeDropper" in window;
 
   const handleEyeDropper = async (): Promise<void> => {
     try {
       const globalWindow = window as unknown as Record<string, unknown>;
       const EyeDropperClass = globalWindow.EyeDropper;
       if (typeof EyeDropperClass === "function") {
-        const instance = new (EyeDropperClass as new () => {
-          open: () => Promise<{ sRGBHex?: string }>;
-        })();
+        const instance = new (
+          EyeDropperClass as new () => {
+            open: () => Promise<{ sRGBHex?: string }>;
+          }
+        )();
         const result = await instance.open();
         if (result?.sRGBHex) {
           const hex = result.sRGBHex.toUpperCase();
@@ -302,27 +317,28 @@ export function CustomColorPicker({
   return (
     <div className={cx("space-y-3", className)}>
       {/* Baris 1: Swatch Pemicu, Input HEX & Toggle Popover */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {/* Swatch Lingkaran Interaktif */}
         <button
           type="button"
           disabled={disabled}
           onClick={() => setIsOpen((prev) => !prev)}
           className={cx(
-            "relative h-9 w-9 shrink-0 rounded-full border border-white/80 shadow-control ring-1 ring-ring-control transition-all outline-none",
-            "hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-focus-ring",
+            "relative h-12 w-12 shrink-0 rounded-full shadow-control ring-1 ring-ring-control outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
             disabled && "cursor-not-allowed opacity-50",
           )}
           style={{ backgroundColor: value || "#000000" }}
           aria-label={`${ariaLabel}. Warna saat ini: ${value}`}
           aria-expanded={isOpen}
+          aria-controls={paletteId}
         >
           <span className="sr-only">Buka kontrol warna visual</span>
         </button>
 
         {/* Input HEX Monospaced yang dapat diedit langsung */}
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1 basis-24">
           <input
+            id={controlId}
             type="text"
             disabled={disabled}
             value={hexInput}
@@ -352,10 +368,16 @@ export function CustomColorPicker({
               }
             }}
             placeholder="#181817"
-            aria-label="Input kode warna HEX"
+            aria-label={`${ariaLabel}: kode HEX`}
+            aria-describedby={association?.describedBy}
+            aria-invalid={association?.invalid || undefined}
+            required={association?.required}
             className={cx(
-              "h-9 w-full rounded-full border border-outline-variant/35 bg-surface-container-lowest px-3.5 font-mono text-xs font-bold text-on-surface uppercase shadow-control transition outline-none",
-              "placeholder:text-on-surface-variant/55 focus:border-accent focus:ring-2 focus:ring-focus-ring",
+              "min-h-12 w-full font-mono text-support font-bold text-on-surface uppercase outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+              grouped
+                ? "border-0 bg-transparent px-0"
+                : "rounded-full border border-outline-variant/35 bg-surface-container-lowest px-5 shadow-control",
+              "placeholder:text-on-surface-variant focus:border-accent",
               disabled && "cursor-not-allowed opacity-50",
             )}
           />
@@ -368,8 +390,7 @@ export function CustomColorPicker({
             disabled={disabled}
             onClick={handleEyeDropper}
             className={cx(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-outline-variant/35 bg-surface-container-lowest text-on-surface-variant shadow-control transition outline-none",
-              "hover:bg-surface-container-low hover:text-on-surface active:scale-95 focus-visible:ring-2 focus-visible:ring-focus-ring",
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest text-on-surface-variant shadow-control outline-none hover:bg-surface-container-low hover:text-on-surface focus-visible:ring-2 focus-visible:ring-focus-ring",
               disabled && "cursor-not-allowed opacity-50",
             )}
             aria-label="Ambil warna dari layar (Eyedropper)"
@@ -384,13 +405,14 @@ export function CustomColorPicker({
           disabled={disabled}
           onClick={() => setIsOpen((prev) => !prev)}
           className={cx(
-            "flex h-9 items-center gap-1.5 rounded-full px-3 text-meta font-bold transition outline-none active:scale-[0.97]",
+            "flex min-h-12 items-center gap-1.5 rounded-full px-3 text-meta font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
             isOpen
               ? "bg-primary text-on-primary shadow-primary"
               : "border border-outline-variant/35 bg-surface-container-lowest text-on-surface shadow-control hover:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring",
             disabled && "cursor-not-allowed opacity-50",
           )}
           aria-expanded={isOpen}
+          aria-controls={paletteId}
           aria-label="Sesuaikan warna di palet visual"
         >
           <AppIcon name="tune" className="icon-xs" />
@@ -402,26 +424,45 @@ export function CustomColorPicker({
       <AnimatePresence initial={false}>
         {isOpen && !disabled && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{
-              height: { duration: 0.28, ease: [0.32, 0.94, 0.6, 1] },
-              opacity: { duration: 0.2, ease: "linear" },
-            }}
+            id={paletteId}
+            initial={{ opacity: reduced ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={reduced ? { duration: 0 } : transitionEaseSmooth}
             className="overflow-hidden"
           >
-            <div className="rounded-2xl border border-outline-variant/25 bg-surface-container-low/60 p-3 shadow-sm backdrop-blur-sm">
+            <div className="rounded-inset bg-surface-container-low p-3">
               <div className="space-y-3">
+                <p id={keyboardHintId} className="text-support text-on-surface-variant">
+                  Panah kiri/kanan mengubah saturasi; atas/bawah mengubah kecerahan.
+                </p>
                 {/* Kanvas 2D: Saturasi (Horizontal) x Brightness (Vertikal) */}
                 <div
                   ref={satAreaRef}
+                  tabIndex={0}
+                  onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>): void => {
+                    const step = event.shiftKey ? 0.1 : 0.01;
+                    let nextSat = satRef.current;
+                    let nextVal = valRef.current;
+                    if (event.key === "ArrowLeft") nextSat -= step;
+                    else if (event.key === "ArrowRight") nextSat += step;
+                    else if (event.key === "ArrowUp") nextVal += step;
+                    else if (event.key === "ArrowDown") nextVal -= step;
+                    else if (event.key === "Home") nextVal = 0;
+                    else if (event.key === "End") nextVal = 1;
+                    else return;
+                    event.preventDefault();
+                    updateSatValAndEmit(
+                      Math.max(0, Math.min(1, nextSat)),
+                      Math.max(0, Math.min(1, nextVal)),
+                    );
+                  }}
                   onPointerDown={(e) => {
                     isDraggingSat.current = true;
                     isDraggingHue.current = false;
                     handleSatPointer(e.clientX, e.clientY);
                   }}
-                  className="relative h-36 w-full cursor-crosshair touch-none select-none rounded-xl overflow-hidden shadow-inner ring-1 ring-black/10"
+                  className="relative h-36 w-full cursor-crosshair touch-none overflow-hidden rounded-icon ring-1 ring-ring-control outline-none select-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   style={{
                     backgroundColor: pureHueColor,
                     backgroundImage: `
@@ -431,6 +472,7 @@ export function CustomColorPicker({
                   }}
                   role="slider"
                   aria-label="Saturasi dan kecerahan warna"
+                  aria-describedby={keyboardHintId}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(val * 100)}
@@ -438,7 +480,7 @@ export function CustomColorPicker({
                 >
                   {/* Thumb Penanda Warna Aktif */}
                   <div
-                    className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md ring-1 ring-black/30"
+                    className="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-control ring-1 ring-ring-control"
                     style={{
                       left: `${sat * 100}%`,
                       top: `${(1 - val) * 100}%`,
@@ -449,18 +491,33 @@ export function CustomColorPicker({
 
                 {/* Slider Hue Pelangi (0° - 360°) */}
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-on-surface-variant">
-                    <span>Spektrum Spektrum (Hue)</span>
+                  <div className="flex items-center justify-between text-support font-bold text-on-surface-variant">
+                    <span>Spektrum warna</span>
                     <span className="font-mono tabular-nums">{Math.round(hue)}°</span>
                   </div>
                   <div
                     ref={hueTrackRef}
+                    tabIndex={0}
+                    onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>): void => {
+                      const step = event.shiftKey ? 10 : 1;
+                      let nextHue = hueRef.current;
+                      if (event.key === "ArrowLeft" || event.key === "ArrowDown") nextHue -= step;
+                      else if (event.key === "ArrowRight" || event.key === "ArrowUp")
+                        nextHue += step;
+                      else if (event.key === "Home") nextHue = 0;
+                      else if (event.key === "End") nextHue = 360;
+                      else if (event.key === "PageUp") nextHue += 10;
+                      else if (event.key === "PageDown") nextHue -= 10;
+                      else return;
+                      event.preventDefault();
+                      updateHueAndEmit(Math.max(0, Math.min(360, nextHue)));
+                    }}
                     onPointerDown={(e) => {
                       isDraggingHue.current = true;
                       isDraggingSat.current = false;
                       handleHuePointer(e.clientX);
                     }}
-                    className="relative h-4 w-full cursor-pointer touch-none select-none rounded-full shadow-inner ring-1 ring-black/10"
+                    className="relative flex min-h-12 w-full cursor-pointer touch-none items-center rounded-full ring-1 ring-ring-control outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                     style={{
                       background:
                         "linear-gradient(to right, #FF0000 0%, #FFFF00 17%, #00FF00 33%, #00FFFF 50%, #0000FF 67%, #FF00FF 83%, #FF0000 100%)",
@@ -473,7 +530,7 @@ export function CustomColorPicker({
                   >
                     {/* Thumb Penanda Hue */}
                     <div
-                      className="pointer-events-none absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white shadow-md ring-1 ring-black/20"
+                      className="pointer-events-none absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white shadow-control ring-1 ring-ring-control"
                       style={{
                         left: `${(hue / 360) * 100}%`,
                       }}
@@ -489,13 +546,12 @@ export function CustomColorPicker({
       {/* Baris 2: Quick-Pick Presets Studio */}
       {presets && presets.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          <span className="text-[11px] font-bold text-on-surface-variant">
+          <span className="text-support font-bold text-on-surface-variant">
             Pilihan Cepat Studio:
           </span>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {presets.map((preset) => {
-              const isSelected =
-                value.toLowerCase() === preset.hex.toLowerCase();
+              const isSelected = value.toLowerCase() === preset.hex.toLowerCase();
               return (
                 <button
                   key={preset.id}
@@ -514,7 +570,7 @@ export function CustomColorPicker({
                     onChange(normalized);
                   }}
                   className={cx(
-                    "flex min-h-9 items-center justify-center gap-2 rounded-full px-3 py-1.5 text-meta font-bold transition active:scale-[0.97]",
+                    "flex min-h-12 items-center justify-center gap-2 rounded-full px-3 py-1.5 text-meta font-bold outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
                     isSelected
                       ? "bg-primary text-on-primary shadow-primary"
                       : "border border-outline-variant/25 bg-surface-container-lowest text-on-surface shadow-control hover:bg-surface-container-low",
@@ -576,6 +632,7 @@ export function ColorPickerField({
       required={required}
     >
       <CustomColorPicker
+        id={controlId}
         value={value}
         onChange={onChange}
         presets={presets}

@@ -2,11 +2,39 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { ActionMenu, ContextPopover, MAX_ACTION_MENU_ITEMS, Tooltip } from "./anchored-surfaces";
+import { DesktopButton } from "../desktop/desktop-controls";
 
 const sourcePath = new URL("./anchored-surfaces.tsx", import.meta.url);
 const listboxPath = new URL("./anchored-listbox.tsx", import.meta.url);
 
 describe("anchored interaction surfaces", () => {
+  test("owns trigger identity above the native or composed control's hook tree", () => {
+    const items = [{ id: "edit", label: "Ubah", onSelect: (): void => undefined }];
+    const native = renderToStaticMarkup(
+      <ActionMenu label="Aksi" trigger={<button>Buka</button>} items={items} />,
+    );
+    const desktop = renderToStaticMarkup(
+      <ActionMenu label="Aksi" trigger={<DesktopButton>Buka</DesktopButton>} items={items} />,
+    );
+    const nativeId = native.match(/<button[^>]*id="([^"]+)"/)?.[1];
+    const desktopId = desktop.match(/<button[^>]*id="([^"]+)"/)?.[1];
+    expect(nativeId).toStartWith("anchored-trigger-");
+    expect(desktopId).toBe(nativeId);
+    expect(desktop).toContain('aria-haspopup="menu"');
+    expect(desktop.match(/tabindex="0"/g)?.length).toBe(1);
+  });
+
+  test("preserves a caller-owned trigger id for menu labelling", () => {
+    const html = renderToStaticMarkup(
+      <ActionMenu
+        label="Aksi"
+        trigger={<DesktopButton id="project-menu">Buka</DesktopButton>}
+        items={[]}
+      />,
+    );
+    expect(html).toContain('id="project-menu"');
+    expect(html).not.toContain("anchored-trigger-");
+  });
   test("keeps action menus and contextual disclosures semantically distinct", () => {
     const menu = renderToStaticMarkup(
       <ActionMenu
@@ -64,7 +92,7 @@ describe("anchored interaction surfaces", () => {
 
     expect(html).toContain('aria-label="Rp 150.000.000"');
     expect(html).toContain("Rp 150 jt");
-    expect(html).not.toContain("role=\"tooltip\"");
+    expect(html).not.toContain('role="tooltip"');
   });
 
   test("centralizes collision, keyboard, typeahead, and delayed-action behavior", async () => {

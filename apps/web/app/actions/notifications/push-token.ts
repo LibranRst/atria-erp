@@ -1,77 +1,27 @@
 "use server";
 
-import { resolveActor } from "@/server/actor";
-import {
-  registerPushSubscription,
-  unregisterPushSubscription,
-} from "@/server/usecases/notifications/notification-queries";
-import {
-  registerPushTokenSchema,
-  unregisterPushTokenSchema,
-} from "@atria/core/notifications/types";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/notifications/push-token";
+
+export async function testWebPushAction(
+  ...args: WebRpcArgs<"app/actions/notifications/push-token.testWebPushAction">
+): Promise<WebRpcResult<"app/actions/notifications/push-token.testWebPushAction">> {
+  return callBackendAction("app/actions/notifications/push-token.testWebPushAction", args);
+}
 
 export async function registerPushTokenAction(
-  rawInput: unknown,
-): Promise<ActionResponse<{ success: boolean }>> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid atau telah berakhir." },
-    };
-  }
-
-  const parsed = registerPushTokenSchema.safeParse(rawInput);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: { code: "VALIDATION_ERROR", message: "Data token push tidak valid." },
-    };
-  }
-
-  try {
-    const result = await registerPushSubscription(parsed.data, actor.userId, actor.sessionId);
-    return {
-      success: true,
-      data: result,
-    };
-  } catch (error) {
-    console.error("Gagal mendaftarkan push token:", error);
-    return {
-      success: false,
-      error: { code: "INTERNAL_SERVER_ERROR", message: "Gagal menyimpan langganan push." },
-    };
-  }
+  ...args: WebRpcArgs<"app/actions/notifications/push-token.registerPushTokenAction">
+): Promise<WebRpcResult<"app/actions/notifications/push-token.registerPushTokenAction">> {
+  return callBackendAction("app/actions/notifications/push-token.registerPushTokenAction", args, {
+    allowCookieWrites: true,
+  });
 }
 
 export async function unregisterPushTokenAction(
-  rawInput: unknown,
-): Promise<ActionResponse<{ success: boolean }>> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid atau telah berakhir." },
-    };
-  }
-  const parsed = unregisterPushTokenSchema.safeParse(rawInput);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: { code: "VALIDATION_ERROR", message: "Data langganan push tidak valid." },
-    };
-  }
-  try {
-    return {
-      success: true,
-      data: await unregisterPushSubscription(parsed.data, actor.userId),
-    };
-  } catch (error) {
-    console.error("Gagal menonaktifkan push token:", error);
-    return {
-      success: false,
-      error: { code: "INTERNAL_SERVER_ERROR", message: "Gagal menonaktifkan push." },
-    };
-  }
+  ...args: WebRpcArgs<"app/actions/notifications/push-token.unregisterPushTokenAction">
+): Promise<WebRpcResult<"app/actions/notifications/push-token.unregisterPushTokenAction">> {
+  return callBackendAction("app/actions/notifications/push-token.unregisterPushTokenAction", args, {
+    allowCookieWrites: true,
+  });
 }

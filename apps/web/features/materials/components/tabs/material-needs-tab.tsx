@@ -1,8 +1,9 @@
 "use client";
 
 import { useCan } from "@/components/auth/permissions-provider";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
@@ -20,6 +21,7 @@ type NeedsTabProps = {
 };
 
 export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const can = useCan();
   const shortages = data.shortages.filter((row) => row.needToBuy > 0);
   const anchors = Array.from(new Map(shortages.map((row) => [row.projectRapId, row])).values());
@@ -77,7 +79,7 @@ export function MaterialNeedsTab({ data }: NeedsTabProps): React.JSX.Element {
       </SummarySurface>
 
       <MainSection title="Per project" count={anchors.length} countLabel="Project">
-        <div className="space-y-3">
+        <div className={desktop ? "grid items-start gap-6 xl:grid-cols-2" : "space-y-3"}>
           {anchors.map((anchor) => {
             const rows = shortages.filter((row) => row.projectRapId === anchor.projectRapId);
             const projectEstimate = rows.reduce((sum, row) => sum + row.estimatedTotalCost, 0);

@@ -5,6 +5,8 @@ import React from "react";
 import type { AdministrationOverview } from "@/app/actions/administration";
 import {
   AppIcon,
+  FactRow,
+  GroupedSurface,
   FormField,
   FormSection,
   OperationalFormSheet,
@@ -12,6 +14,7 @@ import {
   TextInput,
 } from "@/components/ui";
 import type { EditorMode, UserFormState } from "./administration-editor-types";
+import { formatRoleName } from "../../utils/role-editor";
 
 type Props = {
   readonly data: AdministrationOverview;
@@ -66,6 +69,7 @@ export function AdministrationUserEditorSheet({
           temporaryPassword: "",
         };
   const dirty = JSON.stringify(userForm) !== JSON.stringify(baseline);
+  const selectedRole = data.roles.find((role) => role.id === userForm.roleId);
 
   return (
     <OperationalFormSheet
@@ -77,6 +81,45 @@ export function AdministrationUserEditorSheet({
       }}
       open={open}
       title={editorMode === "EDIT_USER" ? "Edit user" : "Tambah user"}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/20">
+            <FactRow
+              layout="stacked"
+              label="Nama"
+              wrapLabel
+              value={userForm.name.trim() || "Belum diisi"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Email"
+              wrapLabel
+              value={userForm.email.trim() || "Belum diisi"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Peran"
+              wrapLabel
+              value={selectedRole ? formatRoleName(selectedRole.name) : "Belum dipilih"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Status akun"
+              wrapLabel
+              value={selectedUser ? (selectedUser.isActive ? "Aktif" : "Nonaktif") : "Akun baru"}
+            />
+            <p className="px-4 py-3 text-support text-on-surface-variant">
+              {selectedUser?.roleId === OWNER_ROLE_ID
+                ? "Peran Owner akun ini tetap terkunci."
+                : editorMode === "NEW_USER"
+                  ? "Pengguna wajib mengganti password sementara pada login pertama."
+                  : "Perubahan peran menentukan izin pengguna pada permintaan berikutnya."}
+            </p>
+          </div>
+        </GroupedSurface>
+      }
       onClose={closeEditor}
       formId="administration-user-form"
       submitLabel={editorMode === "EDIT_USER" ? "Simpan" : "Tambah"}

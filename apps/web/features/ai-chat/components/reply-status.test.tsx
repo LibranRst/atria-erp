@@ -14,27 +14,45 @@ describe("PendingReplyIndicator", () => {
     ]);
   });
 
-  test("merender assistant row yang terlihat tanpa surface atau bubble", () => {
+  test("renders a contextual activity row without a separate card", () => {
     const html = renderToStaticMarkup(
       <PendingReplyIndicator displayedPhase="fetching" visible contentVisible={false} />,
     );
-
     expect(html).toContain("Mengambil data…");
-    expect(html).toContain("min-h-11");
-    expect(html).toContain("py-2");
-    expect(html).toContain("h-7 w-7");
-    expect(html).toContain("gap-2.5");
-    expect(html).toContain("text-row");
-    expect(html).toContain("font-semibold");
-    expect(html.match(/h-1\.5 w-1\.5/g)).toHaveLength(3);
-    expect(html.match(/bg-primary/g)).toHaveLength(3);
+    expect(html).toContain("min-h-12");
     expect(html).toContain("pointer-events-none");
-    expect(html).not.toContain("bg-on-primary");
-    expect(html).not.toContain("gap-0.5 rounded-full bg-primary");
-    expect(html).not.toContain("Asisten siap");
-    expect(html).not.toContain("bg-surface-container");
     expect(html).not.toContain("shadow-");
-    expect(html).not.toContain("rounded-t-");
+  });
+
+  test("renders the submitted intention as a temporary bubble without generic thinking copy", () => {
+    const html = renderToStaticMarkup(
+      <PendingReplyIndicator
+        displayedPhase="analyzing"
+        visible
+        contentVisible={false}
+        intent="Aku akan memeriksa data stok gudang dulu."
+      />,
+    );
+    expect(html).toContain("Aku akan memeriksa data stok gudang dulu.");
+    expect(html).toContain("rounded-tl-md");
+    expect(html).toContain('data-visible="true"');
+    expect(html).not.toContain("Menganalisis…");
+    expect(html.match(/role="status"/g)).toHaveLength(1);
+  });
+
+  test("a ready result clears the introduction announcement immediately", () => {
+    const html = renderToStaticMarkup(
+      <PendingReplyIndicator
+        displayedPhase="composing"
+        visible
+        contentVisible
+        intent="Aku akan memeriksa data stok gudang dulu."
+      />,
+    );
+    expect(html).toContain('data-visible="false"');
+    expect(html).toContain(
+      '<span class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>',
+    );
   });
 
   test("memisahkan visual row dari satu live region persisten", () => {

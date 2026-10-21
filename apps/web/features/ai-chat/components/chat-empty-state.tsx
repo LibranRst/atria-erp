@@ -1,121 +1,136 @@
 "use client";
 
-import { AppIcon } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-import { motion, useReducedMotion } from "framer-motion";
+import { getAiCapabilities } from "@/app/actions/ai/preferences";
+import { useCurrentUserProfile, usePermissions } from "@/components/auth/permissions-provider";
+import { AppIcon, Button, type AppIconName } from "@/components/ui";
 import * as React from "react";
 
-const QUICK_ACTIONS: readonly {
-  readonly icon: string;
+type Starter = {
+  readonly tool: string;
+  readonly icon: AppIconName;
   readonly title: string;
   readonly prompt: string;
-}[] = [
+};
+const STARTERS: readonly Starter[] = [
   {
-    icon: "add_circle",
-    title: "Buat Proyek Baru",
-    prompt: "Bantu saya buat proyek baru dari awal beserta alokasi budgetnya",
+    tool: "proposeMaterialMaster",
+    icon: "upload_file",
+    title: "Impor Material Master",
+    prompt:
+      "Bantu saya menambahkan Material Master dari file atau gambar. Saya akan mengunggah sumbernya untuk ditinjau sebelum disimpan.",
   },
   {
+    tool: "proposeCreateProject",
+    icon: "folder_open",
+    title: "Siapkan proyek",
+    prompt: "Bantu saya buat proyek baru dengan budget awal mengikuti Pengaturan ERP.",
+  },
+  {
+    tool: "proposeExpenseDraft",
     icon: "receipt_long",
-    title: "Catat Pengeluaran",
-    prompt: "Saya mau catat pengeluaran lapangan baru",
+    title: "Catat pengeluaran",
+    prompt: "Bantu saya menyiapkan pengeluaran proyek untuk ditinjau.",
   },
   {
-    icon: "account_balance_wallet",
-    title: "Bayar Tagihan Vendor",
-    prompt: "Tampilkan tagihan vendor yang perlu dibayar dan siapkan usulan pembayarannya",
-  },
-  {
+    tool: "getMaterialCatalog",
     icon: "inventory_2",
-    title: "Terima Barang / Stok",
-    prompt: "Bantu saya mencatat penerimaan barang (Goods Receipt) ke gudang",
+    title: "Cek material dan stok",
+    prompt: "Tampilkan ringkasan Material Master dan ketersediaan stok yang bisa saya akses.",
+  },
+  {
+    tool: "getBankBalances",
+    icon: "account_balance",
+    title: "Ringkasan kas",
+    prompt: "Tampilkan ringkasan saldo rekening yang bisa saya akses.",
   },
 ];
-
-const ANALYSIS_QUESTIONS: readonly string[] = [
-  "Proyek mana yang budgetnya paling kritis atau over-budget?",
-  "Berapa total saldo kas di semua rekening bank saat ini?",
-  "Berapa sisa budget material proyek yang sedang berjalan?",
-];
-
-type ChatEmptyStateProps = {
+export function ChatEmptyState({
+  onSelect,
+  disabled,
+}: {
   readonly onSelect: (question: string) => void;
   readonly disabled: boolean;
-};
-
-export function ChatEmptyState({ onSelect, disabled }: ChatEmptyStateProps): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
-
+}): React.JSX.Element {
+  const user = useCurrentUserProfile();
+  const permissions = usePermissions();
+  const signature = permissions.join("|");
+  const [available, setAvailable] = React.useState<ReadonlySet<string>>(new Set());
+  const [loading, setLoading] = React.useState(true);
+  const [failed, setFailed] = React.useState(false);
+  const [retry, setRetry] = React.useState(0);
+  const [loadedFor, setLoadedFor] = React.useState("");
+  const identity = `${user?.id ?? ""}:${signature}:${retry}`;
+  React.useEffect(() => {
+    let current = true;
+    void getAiCapabilities()
+      .then((result) => {
+        if (!current) return;
+        setLoadedFor(identity);
+        setFailed(!result.success);
+        if (result.success) setAvailable(new Set(result.data.map((item) => item.tool)));
+        else setFailed(true);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (current) {
+          setLoadedFor(identity);
+          setFailed(true);
+          setLoading(false);
+        }
+      });
+    return () => {
+      current = false;
+    };
+  }, [identity]);
   return (
-    <div className="space-y-lg py-2">
-      {/* Header Info */}
-      <div className="flex items-start gap-3.5">
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-control"
-          aria-hidden="true"
-        >
-          <AppIcon name="sparkle" weight="fill" className="icon-lg" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-section font-bold tracking-[-0.015em] text-on-surface">
-            Asisten Cerdas Atria
-          </h3>
-          <p className="text-support leading-relaxed font-semibold text-on-surface-variant">
-            Asisten siap memandu pembuatan proyek, alokasi budget, pengeluaran, pembayaran vendor,
-            hingga penerimaan stok barang.
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Action Guides */}
-      <div className="space-y-2.5">
-        <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
-          Panduan Aksi Cepat
+    <section className="space-y-5 py-8">
+      <div className="space-y-2">
+        <h2 className="text-section font-semibold text-on-surface">Mau cek atau siapkan apa?</h2>
+        <p className="max-w-120 text-support leading-relaxed text-on-surface-variant">
+          Tanyakan soal proyek, transaksi, atau material. Saran di bawah mengikuti akses Anda; data
+          tetap ditinjau sebelum disimpan.
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map((action) => (
-            <motion.button
-              key={action.title}
-              type="button"
-              onClick={() => onSelect(action.prompt)}
-              disabled={disabled}
-              whileTap={reduceMotion || disabled ? undefined : { scale: 0.97 }}
-              transition={transitionSpringSnappy}
-              className="group flex flex-col items-start gap-2 rounded-2xl bg-white p-3 text-left shadow-surface ring-1 ring-ring-subtle transition-all duration-200 hover:bg-surface-container-low hover:ring-ring-control focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none disabled:opacity-45"
-            >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container text-primary">
-                <AppIcon name={action.icon} className="icon-xs" />
-              </span>
-              <span className="text-support font-bold tracking-tight text-on-surface">
-                {action.title}
-              </span>
-            </motion.button>
+      </div>
+      {loading || loadedFor !== identity ? (
+        <div role="status" aria-label="Memuat kemampuan asisten" className="flex flex-wrap gap-2">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="h-10 w-40 rounded-full bg-surface-container" />
           ))}
         </div>
-      </div>
-
-      {/* Analysis Questions */}
-      <div className="space-y-2.5">
-        <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
-          Pertanyaan Analisis
-        </p>
-        <div className="space-y-1.5">
-          {ANALYSIS_QUESTIONS.map((question) => (
-            <motion.button
-              key={question}
-              type="button"
-              onClick={() => onSelect(question)}
+      ) : failed ? (
+        <div role="alert" className="flex items-center gap-3 text-support text-on-surface-variant">
+          <span>Saran belum dimuat.</span>
+          <Button variant="secondary" size="compact" onClick={() => setRetry((value) => value + 1)}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {STARTERS.filter((item) => available.has(item.tool)).map((item) => (
+            <Button
+              key={item.tool}
+              variant="secondary"
+              size="compact"
               disabled={disabled}
-              whileTap={reduceMotion || disabled ? undefined : { scale: 0.98 }}
-              transition={transitionSpringSnappy}
-              className="flex w-full items-center justify-between gap-3 rounded-full bg-white px-4 py-3 text-left text-support font-semibold text-on-surface shadow-control ring-1 ring-ring-subtle transition-all duration-200 hover:bg-surface-container-low hover:ring-ring-control focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none disabled:opacity-45"
+              className="bg-surface-container-lowest! text-on-surface!"
+              onClick={() => onSelect(item.prompt)}
             >
-              <span className="truncate">{question}</span>
-              <AppIcon name="arrow_forward" className="icon-xs shrink-0 text-on-surface-variant" />
-            </motion.button>
+              <AppIcon name={item.icon} className="icon-sm" />
+              {item.title}
+            </Button>
           ))}
         </div>
-      </div>
-    </div>
+      )}
+      <Button
+        variant="tertiary"
+        size="compact"
+        disabled={disabled}
+        className="bg-transparent! text-on-surface-variant! shadow-none!"
+        onClick={() => onSelect("Apa saja yang bisa Anda bantu sesuai akses saya?")}
+      >
+        Lihat kemampuan asisten
+        <AppIcon name="arrow_forward" className="icon-sm" />
+      </Button>
+    </section>
   );
 }

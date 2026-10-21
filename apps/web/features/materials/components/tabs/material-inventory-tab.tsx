@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
   AppIcon,
+  DesktopTable,
   ExclusiveSearchFilterBar,
   GroupedSurface,
   InlineStateRow,
@@ -11,6 +13,7 @@ import {
   MoneyValue,
   type SearchFilterMode,
   SegmentedTabs,
+  Button,
 } from "@/components/ui";
 import type { MaterialLocation } from "@/features/materials/types/material-dashboard-types";
 import {
@@ -51,7 +54,9 @@ export function MaterialInventoryTab({
   onOpenMaterial,
   onAddLocation,
 }: InventoryTabProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [mode, setMode] = React.useState<SearchFilterMode>("filter");
+  const filtered = search.trim().length > 0 || status !== "ALL";
 
   return (
     <div className="space-y-sm">
@@ -99,15 +104,17 @@ export function MaterialInventoryTab({
             ) : null}
           </div>
           {canManage && onAddLocation ? (
-            <button
+            <Button
               type="button"
               onClick={onAddLocation}
               className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-surface-container-low px-3 text-meta font-bold text-on-surface hover:bg-surface-container active:bg-surface-container-high"
               title="Tambah Lokasi Gudang"
+              variant="secondary"
+              size="compact"
             >
               <AppIcon name="add" className="icon-xs" />
               <span>Lokasi</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -116,9 +123,89 @@ export function MaterialInventoryTab({
         <GroupedSurface>
           {visibleMaterials.length === 0 ? (
             <InlineStateRow
-              icon="search_off"
-              title="Material tidak ditemukan"
-              description="Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
+              icon={filtered ? "search_off" : "warehouse"}
+              title={
+                filtered
+                  ? "Material tidak ditemukan"
+                  : location === "ALL"
+                    ? "Belum ada inventori"
+                    : "Belum ada inventori di lokasi ini"
+              }
+              description={
+                filtered
+                  ? "Ubah kata pencarian, lokasi, atau status stok untuk melihat hasil lain."
+                  : "Tambahkan Material Master dan tentukan lokasi inventori melalui Pengaturan ERP → Katalog → Material."
+              }
+            />
+          ) : desktop ? (
+            <DesktopTable
+              ariaLabel="Inventori material"
+              rows={visibleMaterials}
+              rowKey={(material) => material.id}
+              onRowAction={(material) => onOpenMaterial(material.id)}
+              columns={[
+                {
+                  key: "material",
+                  label: "Material",
+                  render: (material) => (
+                    <div>
+                      <p className="font-semibold">{material.name}</p>
+                      <p className="text-meta text-on-surface-variant">
+                        {material.categoryName} · {material.rows[0]?.unit}
+                      </p>
+                    </div>
+                  ),
+                },
+                {
+                  key: "available",
+                  label: "Tersedia",
+                  align: "end",
+                  render: (material) =>
+                    formatMaterialQuantity(getGroupedMaterialStockSummary(material).availableStock),
+                },
+                {
+                  key: "reserved",
+                  label: "Terreservasi",
+                  align: "end",
+                  render: (material) =>
+                    formatMaterialQuantity(getGroupedMaterialStockSummary(material).reservedStock),
+                },
+                {
+                  key: "minimum",
+                  label: "Minimum",
+                  align: "end",
+                  render: (material) =>
+                    formatMaterialQuantity(getGroupedMaterialStockSummary(material).minimumStock),
+                },
+                {
+                  key: "location",
+                  label: "Lokasi",
+                  render: (material) =>
+                    `${getGroupedMaterialStockSummary(material).locationCount} lokasi`,
+                },
+                {
+                  key: "value",
+                  label: "Nilai stok",
+                  align: "end",
+                  render: (material) => (
+                    <MoneyValue
+                      amount={getGroupedMaterialStockSummary(material).stockValue}
+                      variant="compact"
+                      size="sm"
+                    />
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Kondisi",
+                  render: (material) => {
+                    const status = inventoryStatusPresentation(
+                      getGroupedMaterialStockSummary(material),
+                    );
+                    return <MaterialStatusLabel label={status.label} tone={status.tone} />;
+                  },
+                },
+              ]}
             />
           ) : (
             <div className="divide-y divide-black/5.5">

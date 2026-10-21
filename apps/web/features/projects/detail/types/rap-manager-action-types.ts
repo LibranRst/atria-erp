@@ -32,6 +32,7 @@ export interface UseRapManagerActionsResult {
   readonly isPending: boolean;
   readonly error: string | null;
   readonly success: string | null;
+  readonly resetMessages: () => void;
   readonly handleCreateRap: () => void;
   readonly handleSubmitCategoryPlanItem: (event: FormEvent) => void;
   readonly handleMarkCategoryPlanActive: (projectCategoryPlanItemId: string) => void;

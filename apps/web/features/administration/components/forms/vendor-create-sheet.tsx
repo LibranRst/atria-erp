@@ -2,14 +2,9 @@
 
 import React from "react";
 import { saveVendor } from "@/app/actions/administration-vendors";
-import {
-  FormField,
-  FormSection,
-  OperationalFormSheet,
-  Textarea,
-  TextInput,
-} from "@/components/ui";
+import { FormField, FormSection, OperationalFormSheet, Textarea, TextInput } from "@/components/ui";
 import { toast } from "sonner";
+import { VendorDraftSummary } from "./vendor-draft-summary";
 
 type VendorFormState = {
   name: string;
@@ -93,6 +88,9 @@ export function VendorCreateSheet({
       }}
       open={open}
       title="Tambah Vendor Baru"
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={<VendorDraftSummary {...form} status="Vendor baru" />}
       onClose={() => {
         if (!pending) {
           setForm(INITIAL_STATE);

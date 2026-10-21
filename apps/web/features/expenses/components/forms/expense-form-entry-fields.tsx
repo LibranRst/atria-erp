@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { AppIcon, FormRiskNotice, FormSection, AdaptiveSelect } from "@/components/ui";
 import { ExpenseItemsSection } from "@/features/expenses/components/forms/expense-form-sections";
 import { ExpenseReceiptUpload } from "@/features/expenses/components/forms/expense-receipt-upload";
@@ -11,7 +11,7 @@ import type {
   InventoryLocationOption,
   ProjectBudgetCategoryOption,
 } from "@/features/expenses/types/expense-form-types";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 
 interface ProjectOption {
   readonly value: string;
@@ -75,6 +75,8 @@ export function ExpenseFormEntryFields({
   onRestoreLine,
   onUpdateLine,
 }: ExpenseFormEntryFieldsProps): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+
   return (
     <>
       <FormSection
@@ -87,7 +89,7 @@ export function ExpenseFormEntryFields({
           onChange={onProjectChange}
           options={projectOptions}
           placeholder="Pilih proyek aktif"
-          disabled={busy}
+          disabled={busy || Boolean(safeRouteProjectId)}
           required
         />
         {!safeRouteProjectId &&
@@ -95,7 +97,7 @@ export function ExpenseFormEntryFields({
         lastProjectSuggestion?.canonicalBudgets?.[0]?.status === "APPROVED" ? (
           <motion.button
             type="button"
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
             transition={transitionSpringSnappy}
             onClick={() => onUseLastProject(lastProjectSuggestion.id)}
             className="flex min-h-14 w-full min-w-0 items-center gap-3 bg-surface-container-lowest px-4 py-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low"

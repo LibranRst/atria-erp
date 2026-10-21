@@ -351,5 +351,3 @@ describe("GoodsReceiptItemsSection", () => {
     expect(refMap.get("item-2")).toBeUndefined();
   });
 });
-
-

@@ -1,2 +1,0 @@
-ALTER TABLE "rab_estimate_item" ADD COLUMN "item_nature" varchar(50) DEFAULT 'PRODUCTION' NOT NULL;--> statement-breakpoint
-CREATE INDEX "rei_item_nature_idx" ON "rab_estimate_item" USING btree ("item_nature");

@@ -1,5 +1,5 @@
 "use client";
-import { AppIcon, MoneyValue } from "@/components/ui";
+import { AppIcon, MoneyValue, Button } from "@/components/ui";
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -12,14 +12,12 @@ import {
   getVendorBillStatus,
   getVendorPaymentPresentation,
 } from "@/features/expenses/utils/vendor-bill-list-utils";
-import { transitionSpringSmooth, transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSmooth } from "@/lib/utils/motion";
 import {
   ActivityDetailChevron,
   type ActivityDetailOpenOptions,
   useActivityDetail,
 } from "@/features/activity-detail/components/activity-detail-provider";
-
-const payablePressScale = { scale: 0.975 } as const;
 
 function vendorBillStatusLabel(status: ReturnType<typeof getVendorBillStatus>): string {
   if (status === "PAID") return "Lunas";
@@ -172,28 +170,28 @@ export function VendorBillCard({
             isFullyScheduledOrPaid ? (
               hasPending ? (
                 <span className="flex items-center gap-1 text-eyebrow font-bold text-warning">
-                  <AppIcon name="schedule" className="text-[13px] leading-none" />
+                  <AppIcon name="schedule" className="icon-xs leading-none" />
                   Menunggu pencairan
                 </span>
               ) : (
                 <span className="flex items-center gap-1 text-eyebrow font-bold text-primary">
-                  <AppIcon name="event_available" className="text-[13px] leading-none" />
+                  <AppIcon name="event_available" className="icon-xs leading-none" />
                   Terjadwal penuh
                 </span>
               )
             ) : (
-              <motion.button
+              <Button
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
                   onScheduleClick(bill);
                 }}
-                whileTap={reduceMotion ? undefined : payablePressScale}
-                transition={transitionSpringSnappy}
                 className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+                variant="primary"
+                size="mini"
               >
                 {totalScheduledOrPaid > 0 ? "Jadwalkan Sisa" : "Jadwalkan Bayar"}
-              </motion.button>
+              </Button>
             )
           ) : (
             <span className="text-eyebrow font-bold text-primary">Terjadwal penuh</span>
@@ -215,7 +213,6 @@ export function VendorPaymentCard({
   isOwnerOrFinance,
   onDisburseClick,
 }: VendorPaymentCardProps): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
   const { openActivityDetail } = useActivityDetail();
   const amountPaidNum = Number(payment.amountPaid);
   const isCompleted = payment.status === "COMPLETED";
@@ -334,21 +331,21 @@ export function VendorPaymentCard({
               {presentation.label}
             </span>
           ) : isOwnerOrFinance ? (
-            <motion.button
+            <Button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 onDisburseClick(payment);
               }}
-              whileTap={reduceMotion ? undefined : payablePressScale}
-              transition={transitionSpringSnappy}
               className="relative h-8 shrink-0 rounded-full bg-primary px-3 text-meta font-bold text-on-primary outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring"
+              variant="primary"
+              size="mini"
             >
               Cairkan
-            </motion.button>
+            </Button>
           ) : (
             <span className="flex items-center gap-1 text-eyebrow font-bold text-primary">
-              <AppIcon name="schedule" className="text-[13px] leading-none" />
+              <AppIcon name="schedule" className="icon-xs leading-none" />
               Dalam antrean
             </span>
           )}

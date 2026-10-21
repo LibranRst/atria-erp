@@ -1,4 +1,34 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { useSearchParams } from "next/navigation";
+import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+import {
+  DashboardDesktopSkeleton,
+  resolveDashboardSkeletonTab,
+} from "@/features/finance-dashboard/components/desktop/dashboard-desktop-skeletons";
+
 export default function LedgerLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const initialParams = useSearchParams();
+  const tab = resolveDashboardSkeletonTab(
+    useBrowserUrlSearchParam("tab", initialParams?.get("tab") ?? null),
+  );
+  const sizeKey = `${tab}-pageSize`;
+  const rawSize = useBrowserUrlSearchParam(sizeKey, initialParams?.get(sizeKey) ?? null);
+  const pageSize = rawSize === "50" ? 50 : rawSize === "25" ? 25 : 10;
+  const rawMonths = useBrowserUrlSearchParam(
+    "trendMonths",
+    initialParams?.get("trendMonths") ?? null,
+  );
+  if (desktop)
+    return (
+      <DashboardDesktopSkeleton
+        tab={tab}
+        pageSize={pageSize}
+        months={rawMonths === "12" ? 12 : 6}
+      />
+    );
   return (
     <div className="dashboard-density space-y-sm pb-8" aria-label="Memuat Dashboard" role="status">
       <div className="space-y-2">

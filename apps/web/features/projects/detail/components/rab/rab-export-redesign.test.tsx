@@ -9,14 +9,13 @@ import type { RabExportMetadata } from "../../utils/rab-export-utils";
 describe("RabExport Components Redesign", () => {
   const mockEstimate: RabEstimateView = {
     id: "est-1",
-    projectId: "proj-1",
-    version: 1,
-    revision: 1,
+    sourceProjectRapId: null,
+    supersedesRabEstimateId: null,
     status: "APPROVED",
-    grandTotal: "75000000",
+    revision: 1,
+    title: "RAB Utama",
     clientNotes: "Uang muka 50% saat SPK",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    approvedValue: "75000000",
     bundles: [
       {
         id: "bundle-1",
@@ -44,14 +43,18 @@ describe("RabExport Components Redesign", () => {
         itemNature: "PRODUCTION",
         displayOrder: 1,
         sourceType: "RAP_MATERIAL",
-        sourceId: "mat-1",
-        isClientCustom: false,
-        markupPercentage: 20,
+        sourceProjectRapItemId: "mat-1",
+        sourceProjectCategoryPlanItemId: null,
+        isBundle: false,
+        sourceRevision: null,
+        sourceUpdatedAt: null,
         isHidden: false,
       },
       {
         id: "item-2",
+        bundleId: null,
         clientLabel: "Jasa Supervisi & Desain 3D",
+        description: null,
         quantity: "1",
         unit: "ls",
         unitPrice: "30000000",
@@ -59,8 +62,11 @@ describe("RabExport Components Redesign", () => {
         itemNature: "SERVICE_FEE",
         displayOrder: 2,
         sourceType: "MANUAL",
-        isClientCustom: true,
-        markupPercentage: 0,
+        sourceProjectRapItemId: null,
+        sourceProjectCategoryPlanItemId: null,
+        isBundle: false,
+        sourceRevision: null,
+        sourceUpdatedAt: null,
         isHidden: false,
       },
     ],
@@ -77,10 +83,7 @@ describe("RabExport Components Redesign", () => {
 
   it("renders RabExportDocument with modern architectural editorial style", () => {
     const html = renderToStaticMarkup(
-      <RabExportDocument
-        rabEstimate={mockEstimate}
-        meta={mockMeta}
-      />
+      <RabExportDocument rabEstimate={mockEstimate} meta={mockMeta} />,
     );
 
     expect(html).toContain("Villa Seminyak");
@@ -97,7 +100,7 @@ describe("RabExport Components Redesign", () => {
     const html = renderToStaticMarkup(
       <RabExportCanvas>
         <div id="test-content">Document Content</div>
-      </RabExportCanvas>
+      </RabExportCanvas>,
     );
 
     expect(html).toContain("Fit Lebar");
@@ -105,21 +108,21 @@ describe("RabExport Components Redesign", () => {
     expect(html).toContain("Document Content");
   });
 
-  it("implements DetailSheet with footer actions and ActionMenu in rab-export-drawer.tsx", async () => {
+  it("implements shared responsive FormSheet with footer actions and ActionMenu in rab-export-drawer.tsx", async () => {
     const drawerPath = new URL("./rab-export-drawer.tsx", import.meta.url);
     const source = await Bun.file(drawerPath).text();
 
-    expect(source).toContain("<DetailSheet");
-    expect(source).toContain("footer={footerNode}");
+    expect(source).toContain("<FormSheet");
+    expect(source).toContain("footer={footer}");
     expect(source).toContain("<ActionMenu");
     expect(source).toContain("<SheetFooterActions");
-    expect(source).toContain("Format Lainnya");
-    expect(source).toContain("Cetak / PDF");
+    expect(source).toContain("Format dokumen");
+    expect(source).toContain("buildRabPdfBlob");
     expect(source).toContain("<SegmentedTabs");
     expect(source).toContain('title="Tema Warna Dokumen"');
     expect(source).toContain('title="Identitas Studio & Kop Surat"');
-    expect(source).toContain('title="Ketentuan & Termin Pembayaran"');
-    expect(source).toContain('title="Penandatangan Dokumen"');
+    expect(source).toContain('title="Judul dan ketentuan"');
+    expect(source).toContain('title="Penyiap dan penerima"');
     // Ensures no nested card wrapper
     expect(source).not.toContain("rounded-2xl bg-surface-container-lowest p-4 ring-1");
     expect(source).toContain('label="Warna Aksen Dokumen"');

@@ -3,6 +3,8 @@
 import React from "react";
 
 import {
+  GroupedSurface,
+  FactRow,
   ChoiceRow,
   FormField,
   FormRiskNotice,
@@ -24,6 +26,8 @@ export function InternalRevisionDrawer({
   toggleRevisionPackage,
   handleCreateInternalPlanRevision,
   isPending,
+  canReviseMaterial = true,
+  canRevisePackages = true,
 }: {
   readonly internalRevisionOpen: boolean;
   readonly setInternalRevisionOpen: (open: boolean) => void;
@@ -36,9 +40,49 @@ export function InternalRevisionDrawer({
   readonly toggleRevisionPackage: (id: string) => void;
   readonly handleCreateInternalPlanRevision: () => void;
   readonly isPending: boolean;
+  readonly canReviseMaterial?: boolean;
+  readonly canRevisePackages?: boolean;
 }): React.JSX.Element {
+  const unauthorizedSelection =
+    (reviseMaterial && !canReviseMaterial) || (revisionPackageIds.length > 0 && !canRevisePackages);
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Lingkup revisi</h3>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Material RAP"
+                value={reviseMaterial ? "Dipilih" : "Tidak dipilih"}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Paket kerja"
+                value={`${revisionPackageIds.length} dipilih`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Alasan audit"
+                value={
+                  internalRevisionReason.trim().length >= 10 ? "Terisi" : "Minimal 10 karakter"
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Revisi menghasilkan draft baru; baseline RAP yang terkunci tetap dipertahankan.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty: internalRevisionReason.length > 0 || reviseMaterial || revisionPackageIds.length > 0,
@@ -52,15 +96,18 @@ export function InternalRevisionDrawer({
       submittingLabel="Membuat…"
       pending={isPending}
       disabled={
+        unauthorizedSelection ||
         internalRevisionReason.trim().length < 10 ||
         (!reviseMaterial && revisionPackageIds.length === 0)
       }
       disabledReason={
-        internalRevisionReason.trim().length < 10
-          ? "Jelaskan alasan revisi minimal 10 karakter."
-          : !reviseMaterial && revisionPackageIds.length === 0
-            ? "Pilih minimal satu bagian yang akan direvisi."
-            : undefined
+        unauthorizedSelection
+          ? "Izin revisi untuk pilihan ini tidak tersedia."
+          : internalRevisionReason.trim().length < 10
+            ? "Jelaskan alasan revisi minimal 10 karakter."
+            : !reviseMaterial && revisionPackageIds.length === 0
+              ? "Pilih minimal satu bagian yang akan direvisi."
+              : undefined
       }
       onSubmit={handleCreateInternalPlanRevision}
       statusText={`${internalRevisionReason.trim().length}/10 karakter · ${(reviseMaterial ? 1 : 0) + revisionPackageIds.length} bagian dipilih`}
@@ -93,7 +140,12 @@ export function InternalRevisionDrawer({
           helper="Pilih hanya material atau paket yang benar-benar perlu disesuaikan."
         >
           <fieldset className="space-y-2">
-            <ChoiceRow checked={reviseMaterial} onChange={setReviseMaterial} title="Material RAP" />
+            <ChoiceRow
+              checked={reviseMaterial}
+              onChange={setReviseMaterial}
+              title="Material RAP"
+              disabled={!canReviseMaterial || isPending}
+            />
             {categoryPlanItems
               .filter((item) => item.status === "LOCKED")
               .map((item) => (
@@ -103,6 +155,7 @@ export function InternalRevisionDrawer({
                   onChange={() => toggleRevisionPackage(item.id)}
                   title={item.name}
                   description={item.expenseCategoryName}
+                  disabled={!canRevisePackages || isPending}
                 />
               ))}
           </fieldset>

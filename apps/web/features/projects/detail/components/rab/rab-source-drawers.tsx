@@ -1,16 +1,20 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
   ChoiceRow,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   MoneyInput,
+  MoneyValue,
   NumericInput,
   OperationalFormSheet,
   SwitchRow,
@@ -44,6 +48,9 @@ export function RabSourcePickerDrawer({
   isPending,
   selectedQuotationSourceCount,
   rabEstimate,
+  error,
+  fallbackFocusRef,
+  onDiscard,
 }: {
   readonly sourcePickerOpen: boolean;
   readonly setSourcePickerOpen: (open: boolean) => void;
@@ -61,7 +68,11 @@ export function RabSourcePickerDrawer({
   readonly isPending: boolean;
   readonly selectedQuotationSourceCount: number;
   readonly rabEstimate: RabEstimateView | null;
+  readonly error?: string | null;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly onDiscard?: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [showManualEntry, setShowManualEntry] = React.useState(
     () => manualQuotationLine.clientLabel.trim().length > 0,
   );
@@ -78,12 +89,12 @@ export function RabSourcePickerDrawer({
   );
 
   const baselineManualItems = React.useMemo(
-    () =>
-      rabEstimate?.items.filter((item) => isRabManualSourceType(item.sourceType)) ?? [],
+    () => rabEstimate?.items.filter((item) => isRabManualSourceType(item.sourceType)) ?? [],
     [rabEstimate],
   );
 
   function handleToggleManualEntry(checked: boolean): void {
+    if (isPending) return;
     setShowManualEntry(checked);
     if (!checked) {
       setManualQuotationLine({
@@ -102,12 +113,70 @@ export function RabSourcePickerDrawer({
       : [...currentIds, id];
   }
 
+  function updateManualQuotationLine(value: React.SetStateAction<ManualQuotationLine>): void {
+    if (!isPending) setManualQuotationLine(value);
+  }
+
+  function discardSelection(): void {
+    if (isPending) return;
+    setShowManualEntry(false);
+    onDiscard?.();
+  }
+
   return (
     <OperationalFormSheet
+      fallbackFocusRef={fallbackFocusRef}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <h3 className="px-1 text-support font-semibold text-on-surface">Sumber RAB dipilih</h3>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Total sumber"
+                value={selectedQuotationSourceCount}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Material"
+                value={selectedRapQuotationIds.length}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Paket kerja"
+                value={selectedCategoryQuotationIds.length}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Manual/jasa"
+                value={selectedBaselineManualItemIds?.length ?? 0}
+              />
+              {showManualEntry && (
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Item tambahan"
+                  value={manualQuotationLine.clientLabel.trim() || "Belum diisi"}
+                />
+              )}
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Sumber disalin sebagai snapshot. Periksa nama dan deskripsi untuk klien setelah draft
+            RAB dibuat.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
-        onDiscard: () => undefined,
+        onDiscard: discardSelection,
         description: "Pilihan sumber RAB yang belum diproses akan hilang.",
       }}
       open={sourcePickerOpen}
@@ -116,17 +185,30 @@ export function RabSourcePickerDrawer({
       submitLabel={rabEstimate?.status === "APPROVED" ? "Revisi" : "Buat"}
       submittingLabel="Membuat draft…"
       pending={isPending}
+      error={
+        error ? (
+          <div role="alert">
+            <FormRiskNotice title="Sumber RAB belum diproses" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : undefined
+      }
       disabled={selectedQuotationSourceCount === 0}
       disabledReason={
         selectedQuotationSourceCount === 0
           ? "Pilih minimal satu sumber untuk menyusun RAB."
           : undefined
       }
-      onSubmit={handleGenerateRab}
+      onSubmit={(): void => {
+        if (!isPending) handleGenerateRab();
+      }}
       statusText={
-        (selectedBaselineManualItemIds?.length ?? 0) > 0
-          ? `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket · ${selectedBaselineManualItemIds?.length ?? 0} manual/jasa`
-          : `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket`
+        desktop
+          ? undefined
+          : (selectedBaselineManualItemIds?.length ?? 0) > 0
+            ? `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket · ${selectedBaselineManualItemIds?.length ?? 0} manual/jasa`
+            : `${selectedQuotationSourceCount} sumber dipilih · ${selectedRapQuotationIds.length} material · ${selectedCategoryQuotationIds.length} paket`
       }
       statusTone={selectedQuotationSourceCount > 0 ? "success" : "warning"}
     >
@@ -151,10 +233,12 @@ export function RabSourcePickerDrawer({
               {rap.items.map((item) => (
                 <ChoiceRow
                   key={item.id}
+                  disabled={isPending}
                   checked={selectedRapQuotationIds.includes(item.id)}
-                  onChange={() =>
-                    setSelectedRapQuotationIds((current) => toggleSelection(current, item.id))
-                  }
+                  onChange={(): void => {
+                    if (!isPending)
+                      setSelectedRapQuotationIds((current) => toggleSelection(current, item.id));
+                  }}
                   title={item.name}
                   description={`${item.area} - ${item.totalQuantity} ${item.unit}`}
                 />
@@ -173,13 +257,14 @@ export function RabSourcePickerDrawer({
                 return (
                   <ChoiceRow
                     key={item.id}
-                    disabled={!ready}
+                    disabled={isPending || !ready}
                     checked={selectedCategoryQuotationIds.includes(item.id)}
-                    onChange={() =>
-                      setSelectedCategoryQuotationIds((current) =>
-                        toggleSelection(current, item.id),
-                      )
-                    }
+                    onChange={(): void => {
+                      if (!isPending && ready)
+                        setSelectedCategoryQuotationIds((current) =>
+                          toggleSelection(current, item.id),
+                        );
+                    }}
                     title={item.name}
                     description={`${item.expenseCategoryName} - ${
                       ready ? "Siap" : "Aktifkan dahulu"
@@ -197,20 +282,21 @@ export function RabSourcePickerDrawer({
           >
             <fieldset className="space-y-2">
               {baselineManualItems.map((item) => {
-                const isSelected =
-                  selectedBaselineManualItemIds?.includes(item.id) ?? true;
+                const isSelected = selectedBaselineManualItemIds?.includes(item.id) ?? true;
                 const natureBadge =
                   item.itemNature === "SERVICE_FEE" ? "Jasa & Fee" : "Pekerjaan Fisik";
                 const lineTotalFormatted = `Rp ${Number(item.lineTotal).toLocaleString("id-ID")}`;
                 return (
                   <ChoiceRow
                     key={item.id}
+                    disabled={isPending}
                     checked={isSelected}
-                    onChange={() =>
-                      setSelectedBaselineManualItemIds?.((current) =>
-                        toggleSelection(current, item.id),
-                      )
-                    }
+                    onChange={(): void => {
+                      if (!isPending)
+                        setSelectedBaselineManualItemIds?.((current) =>
+                          toggleSelection(current, item.id),
+                        );
+                    }}
                     title={item.clientLabel}
                     description={`${natureBadge} · ${item.quantity} ${item.unit} · ${lineTotalFormatted}`}
                   />
@@ -225,6 +311,7 @@ export function RabSourcePickerDrawer({
             helper="Opsional untuk biaya yang tidak berasal dari RAP atau paket kerja."
           >
             <SwitchRow
+              disabled={isPending}
               checked={showManualEntry}
               onChange={handleToggleManualEntry}
               title="Tambahkan item manual"
@@ -242,9 +329,10 @@ export function RabSourcePickerDrawer({
                   <div className="divide-y divide-outline-variant/20">
                     <FormField label="Nama item" required>
                       <TextInput
+                        disabled={isPending}
                         value={manualQuotationLine.clientLabel}
                         onChange={(value) =>
-                          setManualQuotationLine((curr) => ({
+                          updateManualQuotationLine((curr) => ({
                             ...curr,
                             clientLabel: value,
                           }))
@@ -254,10 +342,11 @@ export function RabSourcePickerDrawer({
                     </FormField>
                     <FormField label="Jumlah">
                       <NumericInput
+                        disabled={isPending}
                         min={0.01}
                         value={manualQuotationLine.quantity}
                         onChange={(value) =>
-                          setManualQuotationLine((curr) => ({
+                          updateManualQuotationLine((curr) => ({
                             ...curr,
                             quantity: value,
                           }))
@@ -265,19 +354,21 @@ export function RabSourcePickerDrawer({
                       />
                     </FormField>
                     <ComboboxField
+                      disabled={isPending}
                       label="Satuan"
                       value={manualQuotationLine.unit}
                       onChange={(value) =>
-                        setManualQuotationLine((curr) => ({ ...curr, unit: value }))
+                        updateManualQuotationLine((curr) => ({ ...curr, unit: value }))
                       }
                       options={COMMON_UNIT_OPTIONS}
                       placeholder="Pilih satuan"
                     />
                     <FormField label="Harga satuan klien">
                       <MoneyInput
+                        disabled={isPending}
                         value={manualQuotationLine.unitPrice}
                         onChange={(value) =>
-                          setManualQuotationLine((curr) => ({
+                          updateManualQuotationLine((curr) => ({
                             ...curr,
                             unitPrice: value,
                           }))
@@ -290,11 +381,12 @@ export function RabSourcePickerDrawer({
                       </legend>
                       <div role="radiogroup" aria-label="Sifat item" className="space-y-1.5 pt-1">
                         <ChoiceRow
+                          disabled={isPending}
                           checked={
                             (manualQuotationLine.itemNature ?? "PRODUCTION") === "PRODUCTION"
                           }
                           onChange={() =>
-                            setManualQuotationLine((curr) => ({
+                            updateManualQuotationLine((curr) => ({
                               ...curr,
                               itemNature: "PRODUCTION",
                             }))
@@ -304,9 +396,10 @@ export function RabSourcePickerDrawer({
                           selectionMode="radio"
                         />
                         <ChoiceRow
+                          disabled={isPending}
                           checked={manualQuotationLine.itemNature === "SERVICE_FEE"}
                           onChange={() =>
-                            setManualQuotationLine((curr) => ({
+                            updateManualQuotationLine((curr) => ({
                               ...curr,
                               itemNature: "SERVICE_FEE",
                             }))
@@ -335,6 +428,9 @@ export function ManualRabLineDrawer({
   setManualQuotationLine,
   handleAddManualRabItem,
   isPending,
+  error,
+  fallbackFocusRef,
+  onDiscard,
 }: {
   readonly manualLineOpen: boolean;
   readonly setManualLineOpen: (open: boolean) => void;
@@ -342,18 +438,68 @@ export function ManualRabLineDrawer({
   readonly setManualQuotationLine: React.Dispatch<React.SetStateAction<ManualQuotationLine>>;
   readonly handleAddManualRabItem: () => void;
   readonly isPending: boolean;
+  readonly error?: string | null;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
+  readonly onDiscard?: () => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
     manualLineOpen,
     "manual-rab-line",
     JSON.stringify(manualQuotationLine),
   );
+  const subtotal = Number(manualQuotationLine.quantity) * Number(manualQuotationLine.unitPrice);
+  function updateManualQuotationLine(value: React.SetStateAction<ManualQuotationLine>): void {
+    if (!isPending) setManualQuotationLine(value);
+  }
   return (
     <OperationalFormSheet
+      fallbackFocusRef={fallbackFocusRef}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan item manual</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {manualQuotationLine.clientLabel.trim() || "Nama item belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Jumlah"
+                value={`${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Subtotal klien"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(subtotal) ? 0 : 2}
+                    amount={subtotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Nama, deskripsi, dan harga item ini digunakan pada dokumen untuk klien.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
-        onDiscard: () => undefined,
+        onDiscard: (): void => {
+          if (!isPending) onDiscard?.();
+        },
         description: "Item manual yang belum ditambahkan akan hilang.",
       }}
       open={manualLineOpen}
@@ -362,6 +508,15 @@ export function ManualRabLineDrawer({
       submitLabel="Tambah"
       submittingLabel="Menambahkan…"
       pending={isPending}
+      error={
+        error ? (
+          <div role="alert">
+            <FormRiskNotice title="Item manual belum tersimpan" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : undefined
+      }
       disabled={
         manualQuotationLine.clientLabel.trim().length < 3 ||
         Number(manualQuotationLine.quantity) <= 0
@@ -373,8 +528,14 @@ export function ManualRabLineDrawer({
             ? "Jumlah harus lebih dari 0."
             : undefined
       }
-      onSubmit={handleAddManualRabItem}
-      statusText={`${manualQuotationLine.clientLabel.trim() || "Item belum diisi"} · ${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit} · Rp ${(Number(manualQuotationLine.quantity) * Number(manualQuotationLine.unitPrice)).toLocaleString("id-ID")}`}
+      onSubmit={(): void => {
+        if (!isPending) handleAddManualRabItem();
+      }}
+      statusText={
+        desktop
+          ? undefined
+          : `${manualQuotationLine.clientLabel.trim() || "Item belum diisi"} · ${manualQuotationLine.quantity || 0} ${manualQuotationLine.unit} · Rp ${subtotal.toLocaleString("id-ID")}`
+      }
       statusTone={
         manualQuotationLine.clientLabel.trim().length >= 3 &&
         Number(manualQuotationLine.quantity) > 0
@@ -389,19 +550,21 @@ export function ManualRabLineDrawer({
         >
           <FormField label="Nama item">
             <TextInput
+              disabled={isPending}
               value={manualQuotationLine.clientLabel}
               onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, clientLabel: value }))
+                updateManualQuotationLine((curr) => ({ ...curr, clientLabel: value }))
               }
               placeholder="Contoh: Biaya koordinasi"
             />
           </FormField>
           <FormField label="Deskripsi untuk klien">
             <Textarea
+              disabled={isPending}
               rows={3}
               value={manualQuotationLine.description || ""}
               onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, description: value }))
+                updateManualQuotationLine((curr) => ({ ...curr, description: value }))
               }
               placeholder="Jelaskan lingkup secara singkat"
             />
@@ -413,25 +576,28 @@ export function ManualRabLineDrawer({
         >
           <FormField label="Jumlah">
             <NumericInput
+              disabled={isPending}
               min={0.01}
               value={manualQuotationLine.quantity}
               onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, quantity: value }))
+                updateManualQuotationLine((curr) => ({ ...curr, quantity: value }))
               }
             />
           </FormField>
           <ComboboxField
+            disabled={isPending}
             label="Satuan"
             value={manualQuotationLine.unit}
-            onChange={(value) => setManualQuotationLine((curr) => ({ ...curr, unit: value }))}
+            onChange={(value) => updateManualQuotationLine((curr) => ({ ...curr, unit: value }))}
             options={COMMON_UNIT_OPTIONS}
             placeholder="Pilih satuan"
           />
           <FormField label="Harga satuan klien">
             <MoneyInput
+              disabled={isPending}
               value={manualQuotationLine.unitPrice}
               onChange={(value) =>
-                setManualQuotationLine((curr) => ({ ...curr, unitPrice: value }))
+                updateManualQuotationLine((curr) => ({ ...curr, unitPrice: value }))
               }
             />
           </FormField>
@@ -442,17 +608,19 @@ export function ManualRabLineDrawer({
         >
           <div className="space-y-1.5 p-3">
             <ChoiceRow
+              disabled={isPending}
               checked={(manualQuotationLine.itemNature ?? "PRODUCTION") === "PRODUCTION"}
               onChange={() =>
-                setManualQuotationLine((curr) => ({ ...curr, itemNature: "PRODUCTION" }))
+                updateManualQuotationLine((curr) => ({ ...curr, itemNature: "PRODUCTION" }))
               }
               title="Pekerjaan Fisik Tambahan"
               description="Memerlukan belanja material/tukang. Masuk ke pagu belanja fisik lapangan."
             />
             <ChoiceRow
+              disabled={isPending}
               checked={manualQuotationLine.itemNature === "SERVICE_FEE"}
               onChange={() =>
-                setManualQuotationLine((curr) => ({ ...curr, itemNature: "SERVICE_FEE" }))
+                updateManualQuotationLine((curr) => ({ ...curr, itemNature: "SERVICE_FEE" }))
               }
               title="Jasa Desain & Manajemen Fee"
               description="Jasa profesional studio. 100% margin kotor tanpa menambah pagu belanja lapangan."

@@ -1,8 +1,15 @@
 "use client";
 
 import { useCan } from "@/components/auth/permissions-provider";
+import { ProjectOverviewDesktop, type BudgetCategorySort } from "./project-overview-desktop";
+import {
+  useWorkspacePresentation,
+  useWorkspaceControlPresentation,
+} from "@/lib/navigation/workspace-presentation";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+import { updateBrowserUrl, useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
+
 import { toast } from "sonner";
 
 import type { ProjectBudgetDashboard } from "@/app/actions/project/excel-budget";
@@ -20,8 +27,10 @@ import {
   CompactFormDialog,
   ConfirmationDialog,
   DetailSheet,
+  FactRow,
   FormField,
   FormSection,
+  GroupedSurface,
   MoneyValue,
   NumericInput,
   OperationalFormSheet,
@@ -32,6 +41,7 @@ import type { IndicatorTone } from "@atria/core/types/indicator-tone";
 import { categoryTab, statusTone } from "../../utils/project-overview-utils";
 import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import { cn } from "@/lib/utils/cn";
+import type { ProjectBudgetSource } from "../../types/project-tabs-types";
 export { ProjectIdentityHeader } from "./project-identity-header";
 
 export type ProjectOverviewTab =
@@ -56,11 +66,14 @@ export type ProjectReadinessItem = {
 
 type ProjectOverviewProps = {
   readonly budget: ProjectBudgetDashboard | null;
+  readonly budgetSource?: ProjectBudgetSource;
+  readonly storedHealth?: string;
   readonly contractValue: number;
   readonly actions: readonly ProjectOverviewAction[];
   readonly readiness: readonly ProjectReadinessItem[];
   readonly onNavigate: (tab: ProjectOverviewTab) => void;
   readonly onAssignPm?: () => void;
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
 };
 
 function categoryTone(status: string): IndicatorTone {
@@ -92,16 +105,43 @@ function SectionHeading({
 }
 
 export function ProjectOverview({
-  budget,
+  budget: incomingBudget,
+  budgetSource: incomingBudgetSource,
+  storedHealth,
   contractValue,
   actions,
   readiness,
   onNavigate,
   onAssignPm,
+  onWorkflowActiveChange,
 }: ProjectOverviewProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const desktopControls = useWorkspaceControlPresentation() === "desktop";
   const can = useCan();
   const router = useRouter();
+  const [sourceSnapshot, setSourceSnapshot] = useState({
+    budget: incomingBudget,
+    budgetSource: incomingBudgetSource,
+  });
+  const { budget, budgetSource } = sourceSnapshot;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategorySurface, setSelectedCategorySurface] = useState<"sheet" | "panel">(
+    "panel",
+  );
+  const categorySortColumn = useBrowserUrlSearchParam("budget-category-sort");
+  const categorySortDirection = useBrowserUrlSearchParam("budget-category-direction");
+  const categorySort = React.useMemo<BudgetCategorySort | undefined>(
+    () =>
+      categorySortColumn &&
+      ["category", "allocated", "actual", "remaining", "condition"].includes(categorySortColumn)
+        ? {
+            column: categorySortColumn,
+            direction: categorySortDirection === "descending" ? "descending" : "ascending",
+          }
+        : undefined,
+    [categorySortColumn, categorySortDirection],
+  );
+  const budgetDecisionReturnFocusRef = React.useRef<HTMLElement | null>(null);
   const [reallocationOpen, setReallocationOpen] = useState(false);
   const [reallocationReason, setReallocationReason] = useState("");
   const [budgetDecision, setBudgetDecision] = useState<"submit" | "approve" | "reject" | null>(
@@ -118,6 +158,26 @@ export function ProjectOverview({
     ),
   );
   const [savingAllocation, setSavingAllocation] = useState(false);
+  const sourceFrozen =
+    reallocationOpen || budgetDecision !== null || budgetDecisionPending || savingAllocation;
+  function updateCategorySort(sort: BudgetCategorySort): void {
+    if (!desktop || sourceFrozen) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("budget-category-sort", String(sort.column));
+    url.searchParams.set("budget-category-direction", sort.direction);
+    updateBrowserUrl(`${url.pathname}${url.search}${url.hash}`, "replace");
+  }
+  React.useEffect(() => {
+    onWorkflowActiveChange?.(sourceFrozen);
+    return () => onWorkflowActiveChange?.(false);
+  }, [onWorkflowActiveChange, sourceFrozen]);
+  if (
+    !sourceFrozen &&
+    (sourceSnapshot.budget !== incomingBudget ||
+      sourceSnapshot.budgetSource !== incomingBudgetSource)
+  ) {
+    setSourceSnapshot({ budget: incomingBudget, budgetSource: incomingBudgetSource });
+  }
   const selectedCategory =
     budget?.categories.find((category) => category.id === selectedCategoryId) ?? null;
   const remaining = budget?.remainingBudget ?? 0;
@@ -200,122 +260,157 @@ export function ProjectOverview({
 
   return (
     <div className="space-y-sm">
-      {!budget ? (
-        <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
-          <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
-            Posisi proyek
-          </p>
-          <h2 className="mt-2 text-[20px] leading-6 font-semibold">
-            Budget internal belum terbentuk
-          </h2>
-          <p className="mt-2 text-xs leading-5 text-white/65">
-            Lengkapi RAP dan RAB agar pengeluaran, stok, pembayaran, dan margin dapat dipantau.
-          </p>
-          <button
-            type="button"
-            onClick={() => onNavigate("rap")}
-            className="mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-primary"
-          >
-            Mulai dari RAP
-          </button>
-        </section>
-      ) : (
-        <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
-                Sisa budget internal
-              </p>
-              <MoneyValue
-                amount={remaining}
-                variant="fullDynamic"
-                tone={remaining < 0 ? "danger" : "inverse"}
-                size="hero"
-                className="mt-1"
-              />
+      <section
+        ref={budgetDecisionReturnFocusRef}
+        aria-label="Ringkasan budget proyek"
+        tabIndex={-1}
+        hidden={!desktop}
+        inert={!desktop ? true : undefined}
+      >
+        <ProjectOverviewDesktop
+          budget={budget}
+          budgetSource={budgetSource}
+          storedHealth={storedHealth}
+          contractValue={contractValue}
+          actions={actions}
+          readiness={readiness}
+          selectedCategoryId={selectedCategoryId}
+          categorySort={categorySort}
+          canUpdateBudget={canUpdateBudget}
+          canApproveBudget={canApproveBudget}
+          canReallocate={canReallocate}
+          decisionPending={budgetDecisionPending}
+          onCategorySelect={(categoryId) => {
+            setSelectedCategorySurface("panel");
+            setSelectedCategoryId(categoryId);
+          }}
+          onCategoryClose={() => setSelectedCategoryId(null)}
+          onRetry={() => router.refresh()}
+          onCategorySort={updateCategorySort}
+          onBudgetDecision={setBudgetDecision}
+          onReallocate={openReallocation}
+          onNavigate={onNavigate}
+          onAssignPm={onAssignPm}
+        />
+      </section>
+      {!desktop &&
+        (!budget ? (
+          <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+            <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
+              Posisi proyek
+            </p>
+            <h2 className="mt-2 text-[20px] leading-6 font-semibold">
+              Budget internal belum terbentuk
+            </h2>
+            <p className="mt-2 text-xs leading-5 text-white/65">
+              Lengkapi RAP dan RAB agar pengeluaran, stok, pembayaran, dan margin dapat dipantau.
+            </p>
+            <Button
+              type="button"
+              onClick={() => onNavigate("rap")}
+              className="mt-4 min-h-12 w-full rounded-full bg-white px-5 text-xs font-bold text-primary"
+              variant="secondary"
+            >
+              Mulai dari RAP
+            </Button>
+          </section>
+        ) : (
+          <section className="rounded-owner bg-primary p-5 text-on-primary shadow-inverse max-[430px]:p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
+                  Sisa budget internal
+                </p>
+                <MoneyValue
+                  amount={remaining}
+                  variant="fullDynamic"
+                  tone={remaining < 0 ? "danger" : "inverse"}
+                  size="hero"
+                  className="mt-1"
+                />
+              </div>
+              <Badge status={remaining < 0 ? "CRITICAL" : used >= 80 ? "WARNING" : "APPROVED"}>
+                {remaining < 0 ? "Terlampaui" : used >= 80 ? "Perlu dipantau" : "Terkendali"}
+              </Badge>
             </div>
-            <Badge status={remaining < 0 ? "CRITICAL" : used >= 80 ? "WARNING" : "APPROVED"}>
-              {remaining < 0 ? "Terlampaui" : used >= 80 ? "Perlu dipantau" : "Terkendali"}
-            </Badge>
-          </div>
 
-          <BudgetSplitIndicator
-            value={used}
-            inverse
-            danger={remaining < 0}
-            tone={remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"}
-          />
+            <BudgetSplitIndicator
+              value={used}
+              inverse
+              danger={remaining < 0}
+              tone={remaining < 0 ? "critical" : used >= 80 ? "warning" : "positive"}
+            />
 
-          <div className="mt-2 space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
-              <FinancialFact label="Budget" amount={budget.internalBudget} />
+            <div className="mt-2 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <FinancialFact label="Nilai proyek" amount={budget.contractValue} />
+                <FinancialFact label="Budget" amount={budget.internalBudget} />
+              </div>
+              <FinancialFact label="Realisasi" amount={budget.actualCost} />
             </div>
-            <FinancialFact label="Realisasi" amount={budget.actualCost} />
-          </div>
-          {budget.serviceFeeTotal > 0 ? (
-            <div className="mt-3 space-y-2 rounded-[18px] bg-white/[0.07] p-3 text-meta">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <div>
-                  <span className="font-semibold text-white">Margin Murni Produksi</span>
-                  <p className="text-[11px] text-white/50">Murni belanja fisik (lapangan)</p>
+            {budget.serviceFeeTotal > 0 ? (
+              <div className="mt-3 space-y-2 rounded-[18px] bg-white/[0.07] p-3 text-meta">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <div>
+                    <span className="font-semibold text-white">Margin Murni Produksi</span>
+                    <p className="text-[11px] text-white/50">Murni belanja fisik (lapangan)</p>
+                  </div>
+                  <div className="text-right">
+                    <MoneyValue
+                      amount={budget.physicalMarginAmount}
+                      variant="fullDynamic"
+                      tone="inverse"
+                      align="right"
+                      size="md"
+                    />
+                    <span className="block font-mono text-[11px] text-white/60 tabular-nums">
+                      {budget.physicalMarginPercentage.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <MoneyValue
-                    amount={budget.physicalMarginAmount}
-                    variant="fullDynamic"
-                    tone="inverse"
-                    align="right"
-                    size="md"
-                  />
-                  <span className="block font-mono text-[11px] text-white/60 tabular-nums">
-                    {budget.physicalMarginPercentage.toFixed(1)}%
-                  </span>
+
+                <div className="flex items-center justify-between pt-0.5">
+                  <div>
+                    <span className="font-semibold text-white">Margin Total Proyek</span>
+                    <p className="text-[11px] text-white/50">Gabungan fisik + fee jasa</p>
+                  </div>
+                  <div className="text-right">
+                    <MoneyValue
+                      amount={budget.targetGrossAmount}
+                      variant="fullDynamic"
+                      tone="inverse"
+                      align="right"
+                      size="md"
+                    />
+                    <span className="block font-mono text-[11px] text-white/60 tabular-nums">
+                      {margin.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between pt-0.5">
-                <div>
-                  <span className="font-semibold text-white">Margin Total Proyek</span>
-                  <p className="text-[11px] text-white/50">Gabungan fisik + fee jasa</p>
-                </div>
+            ) : (
+              <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
+                <span className="text-meta font-semibold text-white/60">Margin proyeksi</span>
                 <div className="text-right">
                   <MoneyValue
-                    amount={budget.targetGrossAmount}
+                    amount={budget.projectedMarginAmount}
                     variant="fullDynamic"
                     tone="inverse"
                     align="right"
                     size="md"
                   />
-                  <span className="block font-mono text-[11px] text-white/60 tabular-nums">
+                  <span
+                    className={`block font-mono text-[11px] tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white/60"}`}
+                  >
                     {margin.toFixed(1)}%
                   </span>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="mt-3 flex items-center justify-between rounded-[18px] bg-white/[0.07] px-3 py-2.5">
-              <span className="text-meta font-semibold text-white/60">Margin proyeksi</span>
-              <div className="text-right">
-                <MoneyValue
-                  amount={budget.projectedMarginAmount}
-                  variant="fullDynamic"
-                  tone="inverse"
-                  align="right"
-                  size="md"
-                />
-                <span
-                  className={`block font-mono text-[11px] tabular-nums ${margin < 10 ? "text-critical-on-inverse" : "text-white/60"}`}
-                >
-                  {margin.toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
+            )}
+          </section>
+        ))}
 
-      {budget && (budget.status === "DRAFT" || budget.status === "PENDING_APPROVAL") ? (
+      {!desktop && budget && (budget.status === "DRAFT" || budget.status === "PENDING_APPROVAL") ? (
         <section className="rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -366,60 +461,63 @@ export function ProjectOverview({
         </section>
       ) : null}
 
-      <section className="space-y-2.5">
-        <SectionHeading
-          title="Kesiapan proyek"
-          supporting="Status dasar sebelum pekerjaan dan transaksi dilanjutkan."
-        />
-        <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
-          {readiness.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                if (item.id === "pm" && onAssignPm) {
-                  onAssignPm();
-                } else {
-                  onNavigate(item.tab);
-                }
-              }}
-              className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
-                <AppIcon
-                  name={
-                    item.tone === "APPROVED"
-                      ? "check"
-                      : item.tone === "DRAFT"
-                        ? "edit_note"
-                        : "priority_high"
+      {!desktop ? (
+        <section className="space-y-2.5">
+          <SectionHeading
+            title="Kesiapan proyek"
+            supporting="Status dasar sebelum pekerjaan dan transaksi dilanjutkan."
+          />
+          <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
+            {readiness.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  if (item.id === "pm" && onAssignPm) {
+                    onAssignPm();
+                  } else {
+                    onNavigate(item.tab);
                   }
-                  className="icon-md"
-                />
-              </span>
-              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                <span className="grid min-w-0 gap-0.5">
-                  <span className="truncate text-xs leading-4 font-bold text-on-surface">
-                    {item.label}
-                  </span>
-                  <span className="block truncate text-meta text-on-surface-variant">
-                    {item.detail}
-                  </span>
+                }}
+                className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-surface-container-low text-primary">
+                  <AppIcon
+                    name={
+                      item.tone === "APPROVED"
+                        ? "check"
+                        : item.tone === "DRAFT"
+                          ? "edit_note"
+                          : "priority_high"
+                    }
+                    className="icon-md"
+                  />
                 </span>
-                <Badge status={item.tone} className="shrink-0">
-                  {item.value}
-                </Badge>
-              </span>
-              <AppIcon
-                name="chevron_right"
-                className="icon-md shrink-0 text-on-surface-variant/55"
-              />
-            </button>
-          ))}
-        </div>
-      </section>
+                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="grid min-w-0 gap-0.5">
+                    <span className="truncate text-xs leading-4 font-bold text-on-surface">
+                      {item.label}
+                    </span>
+                    <span className="block truncate text-meta text-on-surface-variant">
+                      {item.detail}
+                    </span>
+                  </span>
+                  <Badge status={item.tone} className="shrink-0">
+                    {item.value}
+                  </Badge>
+                </span>
+                <AppIcon
+                  name="chevron_right"
+                  className="icon-md shrink-0 text-on-surface-variant/55"
+                />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <ConfirmationDialog
+        returnFocusRef={budgetDecisionReturnFocusRef}
         open={budgetDecision === "submit" || budgetDecision === "approve"}
         title={budgetDecision === "approve" ? "Setujui Project Budget?" : "Ajukan Project Budget?"}
         description={
@@ -434,6 +532,7 @@ export function ProjectOverview({
       />
 
       <CompactFormDialog
+        returnFocusRef={budgetDecisionReturnFocusRef}
         open={budgetDecision === "reject"}
         title="Minta revisi budget"
         pending={budgetDecisionPending}
@@ -463,77 +562,74 @@ export function ProjectOverview({
         </FormField>
       </CompactFormDialog>
 
-      <section className="space-y-2.5">
-        <SectionHeading
-          title="Perlu tindakan"
-          supporting={
-            actions.length === 0
-              ? "Tidak ada hambatan aktif saat ini."
-              : `${actions.length} prioritas teratas berdasarkan dampaknya.`
-          }
-        />
-        {actions.length === 0 ? (
-          <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-surface">
-            <AppIcon name="check_circle" className="mr-2 icon-md align-middle" />
-            Proyek berjalan tanpa blocker aktif.
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
-            {actions.slice(0, 3).map((action, index) => (
-              <button
-                key={action.id}
-                type="button"
-                onClick={() => {
-                  if (action.id === "assign-pm" && onAssignPm) {
-                    onAssignPm();
-                  } else {
-                    onNavigate(action.tab);
-                  }
-                }}
-                className={`flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
-              >
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${action.severity === "CRITICAL" ? "bg-error-container/28 text-error" : action.severity === "WARNING" ? "bg-secondary-container/30 text-secondary" : "bg-primary/8 text-primary"}`}
+      {!desktop ? (
+        <section className="space-y-2.5">
+          <SectionHeading
+            title="Perlu tindakan"
+            supporting={
+              actions.length === 0
+                ? "Tidak ada hambatan aktif saat ini."
+                : `${actions.length} prioritas teratas berdasarkan dampaknya.`
+            }
+          />
+          {actions.length === 0 ? (
+            <div className="rounded-[22px] bg-white px-4 py-4 text-xs font-medium text-primary shadow-surface">
+              <AppIcon name="check_circle" className="mr-2 icon-md align-middle" />
+              Proyek berjalan tanpa blocker aktif.
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-3xl bg-white shadow-surface ring-1 ring-ring-subtle">
+              {actions.slice(0, 3).map((action, index) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => {
+                    if (action.id === "assign-pm" && onAssignPm) {
+                      onAssignPm();
+                    } else {
+                      onNavigate(action.tab);
+                    }
+                  }}
+                  className={`flex min-h-17 w-full items-center gap-3 px-4 py-3 text-left outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
                 >
-                  <AppIcon
-                    name={action.severity === "INFO" ? "arrow_forward" : "priority_high"}
-                    className="icon-md"
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs leading-4 font-bold text-on-surface">
-                    {action.title}
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${action.severity === "CRITICAL" ? "bg-error-container/28 text-error" : action.severity === "WARNING" ? "bg-secondary-container/30 text-secondary" : "bg-primary/8 text-primary"}`}
+                  >
+                    <AppIcon
+                      name={action.severity === "INFO" ? "arrow_forward" : "priority_high"}
+                      className="icon-md"
+                    />
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-meta text-on-surface-variant">
-                    {action.description}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs leading-4 font-bold text-on-surface">
+                      {action.title}
+                    </span>
+                    <span className="mt-0.5 line-clamp-2 block text-meta text-on-surface-variant">
+                      {action.description}
+                    </span>
                   </span>
-                </span>
-                <Badge status={action.severity === "INFO" ? "DRAFT" : action.severity}>
-                  {action.severity === "CRITICAL"
-                    ? "Kritis"
-                    : action.severity === "WARNING"
-                      ? "Perhatian"
-                      : "Tinjau"}
-                </Badge>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+                  <Badge status={action.severity === "INFO" ? "DRAFT" : action.severity}>
+                    {action.severity === "CRITICAL"
+                      ? "Kritis"
+                      : action.severity === "WARNING"
+                        ? "Perhatian"
+                        : "Tinjau"}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
 
-      {budget ? (
+      {!desktop && budget ? (
         <section className="space-y-2.5">
           <SectionHeading
             title="Budget per kategori"
             supporting="Bandingkan realisasi dan sisa pada setiap pos."
             action={
               canReallocate ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="compact"
-                  onClick={openReallocation}
-                >
+                <Button type="button" variant="secondary" size="compact" onClick={openReallocation}>
                   Atur alokasi
                 </Button>
               ) : undefined
@@ -544,8 +640,11 @@ export function ProjectOverview({
               <button
                 key={category.id}
                 type="button"
-                onClick={() => setSelectedCategoryId(category.id)}
-                className={`block w-full px-4 py-3.5 text-left outline-none transition-colors focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
+                onClick={() => {
+                  setSelectedCategorySurface("sheet");
+                  setSelectedCategoryId(category.id);
+                }}
+                className={`block w-full px-4 py-3.5 text-left transition-colors outline-none focus-visible:bg-surface-container-low active:bg-surface-container-low ${index > 0 ? "border-t border-outline-variant/20" : ""}`}
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-2">
@@ -579,7 +678,7 @@ export function ProjectOverview({
                       className="mt-0"
                     />
                   </span>
-                  <span className="w-12 shrink-0 text-right font-mono text-eyebrow font-bold tabular-nums text-on-surface-variant">
+                  <span className="w-12 shrink-0 text-right font-mono text-eyebrow font-bold text-on-surface-variant tabular-nums">
                     {category.usedPercentage.toFixed(1)}%
                   </span>
                 </span>
@@ -590,24 +689,31 @@ export function ProjectOverview({
       ) : null}
 
       <DetailSheet
-        open={Boolean(selectedCategory)}
+        open={Boolean(selectedCategory) && (!desktop || selectedCategorySurface === "sheet")}
         title={selectedCategory?.name ?? "Detail kategori"}
         onClose={() => setSelectedCategoryId(null)}
         footer={
           selectedCategory ? (
-            <button
+            <Button
               type="button"
               onClick={() => {
                 const tab = categoryTab(selectedCategory.code);
                 setSelectedCategoryId(null);
                 onNavigate(tab);
               }}
-              className="min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+              size={desktopControls ? "compact" : "default"}
+              fullWidth
+              className={
+                desktopControls
+                  ? "w-full"
+                  : "min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+              }
+              variant="primary"
             >
               {selectedCategory.code === "OPERASIONAL" || selectedCategory.code === "LAIN_LAIN"
                 ? "Buka pengeluaran"
                 : "Buka rencana internal"}
-            </button>
+            </Button>
           ) : undefined
         }
       >
@@ -636,6 +742,57 @@ export function ProjectOverview({
         ) : null}
       </DetailSheet>
       <OperationalFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <h3 className="px-1 text-support font-semibold text-on-surface">Ringkasan alokasi</h3>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Budget internal"
+                  value={
+                    budget ? (
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(budget.internalBudget) ? 0 : 2}
+                        amount={budget.internalBudget}
+                        variant="fullDynamic"
+                        size="sm"
+                        align="right"
+                      />
+                    ) : (
+                      "Belum tersedia"
+                    )
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Dialokasikan"
+                  value={`${totalRatio.toFixed(1)}%`}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Buffer"
+                  value={`${Math.max(0, 100 - totalRatio).toFixed(1)}%`}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Kategori"
+                  value={budget?.categories.length ?? 0}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Alokasi dibagi dari budget internal. Perubahan budget yang disetujui tetap membutuhkan
+              alasan audit.
+            </p>
+          </div>
+        }
         dismissal={{
           mode: "confirm",
           dirty: reallocationDirty,
@@ -769,6 +926,7 @@ function DetailMoneyRow({
       <span className="text-xs font-semibold text-on-surface-variant">{label}</span>
       <MoneyValue
         amount={amount}
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
         variant="fullDynamic"
         tone={danger ? "danger" : "default"}
         align="right"

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AppIcon, DuotoneIconTile, StatusBadge } from "@/components/ui";
+import { AppIcon, DuotoneIconTile, StatusBadge, Button } from "@/components/ui";
 import { FinancialDefaultsPanel } from "@/features/onboarding/components/panels/financial-defaults-panel";
 import { InitialStockSetupPanel } from "@/features/onboarding/components/panels/initial-stock-setup-panel";
 import { LibraryPanel } from "@/features/onboarding/components/panels/library-panel";
@@ -52,13 +52,14 @@ function SourceError({
       <AppIcon name="sync_problem" className="icon-2xl text-warning" />
       <p className="mt-2 text-row font-bold text-on-surface">Data step belum dapat dimuat</p>
       <p className="mt-1 text-meta text-on-surface-variant">{source.message}</p>
-      <button
+      <Button
         type="button"
         onClick={retry}
         className="mt-4 min-h-12 rounded-full bg-surface-container-low px-5 text-xs font-bold text-on-surface"
+        variant="secondary"
       >
         Coba lagi
-      </button>
+      </Button>
     </div>
   );
 }

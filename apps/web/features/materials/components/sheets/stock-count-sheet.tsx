@@ -1,12 +1,16 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   FormField,
+  FactRow,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
+  MoneyValue,
   MaterialUnsavedChangesModal,
   QuantityStepper,
   AdaptiveSelect,
@@ -21,6 +25,7 @@ import {
 } from "@/features/materials/utils/material-ui-utils";
 
 type StockCountSheetProps = {
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
   readonly open: boolean;
   readonly pending: boolean;
   readonly inventory: MaterialOperationsDashboard["inventory"];
@@ -60,7 +65,9 @@ export function StockCountSheet({
   onClose,
   onSaveDraft,
   onSubmit,
+  returnFocusRef,
 }: StockCountSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const locationInventory = inventory.filter((row) => row.locationId === locationId);
@@ -102,6 +109,61 @@ export function StockCountSheet({
   return (
     <>
       <WorkflowFormSheet
+        returnFocusRef={returnFocusRef}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Dokumen"
+                  wrapLabel
+                  value={documentNumber || "Belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi"
+                  wrapLabel
+                  value={
+                    locationOptions.find((option) => option.value === locationId)?.label ??
+                    "Belum dipilih"
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Material diperiksa"
+                  wrapLabel
+                  value={rows.length}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Material berubah"
+                  wrapLabel
+                  value={varianceSummary.changedCount}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Dampak nilai draft"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(totalVarianceValue) ? 0 : 2}
+                      amount={totalVarianceValue}
+                      variant="fullDynamic"
+                      size="sm"
+                    />
+                  }
+                />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Pengiriman menyimpan hasil pemeriksaan. Stok belum berubah sampai hasil opname
+              disetujui.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={
@@ -132,28 +194,44 @@ export function StockCountSheet({
         {reviewing ? (
           <div className="space-y-md">
             <FormSection
-              title="Tinjau hasil opname"
-              helper="Periksa nomor dokumen dan dampak selisih sebelum mengirim."
+              title={desktop ? "Catatan pemeriksaan" : "Tinjau hasil opname"}
+              helper={
+                desktop
+                  ? "Catatan ikut disimpan bersama hasil pemeriksaan."
+                  : "Periksa nomor dokumen dan dampak selisih sebelum mengirim."
+              }
             >
-              <ReviewFact label="Nomor dokumen" value={documentNumber} />
-              <ReviewFact
-                label="Lokasi"
-                value={locationOptions.find((o) => o.value === locationId)?.label ?? "–"}
-              />
-              <ReviewFact label="Material berubah" value={`${varianceSummary.changedCount} item`} />
-              <ReviewFact
-                label="Dampak nilai"
-                value={
-                  <span className={totalVarianceValue < 0 ? "text-error" : "text-primary"}>
-                    {new Intl.NumberFormat("id-ID", {
-                      style: "currency",
-                      currency: "IDR",
-                      maximumFractionDigits: 0,
-                    }).format(totalVarianceValue)}
-                  </span>
-                }
-              />
+              {!desktop && <ReviewFact label="Nomor dokumen" value={documentNumber} />}
+              {!desktop && (
+                <ReviewFact
+                  label="Lokasi"
+                  value={locationOptions.find((o) => o.value === locationId)?.label ?? "–"}
+                />
+              )}
+              {!desktop && (
+                <ReviewFact
+                  label="Material berubah"
+                  value={`${varianceSummary.changedCount} item`}
+                />
+              )}
+              {!desktop && (
+                <ReviewFact
+                  label="Dampak nilai"
+                  value={
+                    <span className={totalVarianceValue < 0 ? "text-error" : "text-primary"}>
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        maximumFractionDigits: 0,
+                      }).format(totalVarianceValue)}
+                    </span>
+                  }
+                />
+              )}
               {note.trim() && <ReviewFact label="Catatan audit" value={note} />}
+              {desktop && !note.trim() ? (
+                <FactRow label="Catatan audit" value="Tanpa catatan tambahan" />
+              ) : null}
             </FormSection>
 
             {changedRows.length === 0 ? (
@@ -264,7 +342,7 @@ export function StockCountSheet({
                         <p className="truncate text-xs leading-[1.15] font-bold">
                           {row.materialName}
                         </p>
-                        <p className="mt-0.5 truncate text-[10px] leading-tight text-on-surface-variant">
+                        <p className="mt-0.5 truncate text-meta leading-tight text-on-surface-variant">
                           Sistem {formatMaterialQuantity(row.currentStock)} · reservasi{" "}
                           {formatMaterialQuantity(row.reservedStock)} {row.unit}
                         </p>

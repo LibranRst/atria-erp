@@ -1,12 +1,13 @@
 "use client";
 
+import type { InvoiceSettlementStatus } from "../../utils/project-invoices-utils";
 import React from "react";
 
-import { AppIcon, MoneyValue } from "@/components/ui";
+import { AppIcon, MoneyValue, Button } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 export function ProjectInvoicesSummary({
-  isOwnerOrFinance,
+  canCreateInvoice,
   invoicesCount,
   contractValue,
   schedulePending,
@@ -18,8 +19,9 @@ export function ProjectInvoicesSummary({
   onCreateInvoiceClick,
   onGenerateSchedule,
   onNavigateClosing,
+  settlement,
 }: {
-  readonly isOwnerOrFinance: boolean;
+  readonly canCreateInvoice: boolean;
   readonly invoicesCount: number;
   readonly contractValue: number;
   readonly schedulePending: boolean;
@@ -31,137 +33,108 @@ export function ProjectInvoicesSummary({
   readonly onCreateInvoiceClick: () => void;
   readonly onGenerateSchedule: () => void;
   readonly onNavigateClosing?: () => void;
+  readonly settlement?: InvoiceSettlementStatus;
 }): React.JSX.Element {
-  const unbilledContractAmount = Math.max(0, contractValue - totalInvoiceAmount);
-  const billedCoverage = contractValue > 0 ? (totalInvoiceAmount / contractValue) * 100 : 0;
+  const unbilledContractAmount =
+    settlement?.unbilledContractAmount ?? Math.max(0, contractValue - totalInvoiceAmount);
+  const billedCoverage =
+    settlement?.billedCoverage ??
+    (contractValue > 0 ? (totalInvoiceAmount / contractValue) * 100 : 0);
   const isFullySettled =
-    invoicesCount > 0 &&
-    contractValue > 0 &&
-    totalPaidAmount >= contractValue &&
-    unpaidAmount <= 0;
+    settlement?.isFullySettled ??
+    (invoicesCount > 0 &&
+      contractValue > 0 &&
+      totalPaidAmount >= contractValue &&
+      unpaidAmount <= 0);
   const isCurrentInvoicesSettled =
-    invoicesCount > 0 &&
-    unpaidAmount <= 0 &&
-    !isFullySettled &&
-    unbilledContractAmount > 0;
+    settlement?.isCurrentInvoicesSettled ??
+    (invoicesCount > 0 && unpaidAmount <= 0 && !isFullySettled && unbilledContractAmount > 0);
 
   return (
     <section className="rounded-owner bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
-      {isFullySettled ? (
+      <div>
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-meta font-bold text-white ring-1 ring-white/30">
-              <AppIcon name="check_circle" className="text-[13px] text-white" />
+          {isFullySettled ? (
+            <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-meta font-bold text-white ring-1 ring-white/30">
+              <AppIcon name="check_circle" className="shrink-0 text-[13px] text-white" />
               <span>Lunas Sepenuhnya · 100%</span>
             </div>
-            <p className="mt-2 text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
-              Total kas masuk diterima
-            </p>
-            <MoneyValue
-              amount={totalPaidAmount}
-              variant="fullDynamic"
-              tone="inverse"
-              size="hero"
-              className="mt-1"
-            />
-            <p className="mt-1 text-meta text-white/60">
-              {invoicesCount} termin lunas · Rp 0 piutang tersisa
-            </p>
-          </div>
-          {isOwnerOrFinance ? (
-            <button
-              type="button"
-              onClick={onCreateInvoiceClick}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
-              title="Buat invoice jika ada tagihan addendum"
-            >
-              <AppIcon name="add" className="text-[17px]" /> Addendum
-            </button>
-          ) : null}
-        </div>
-      ) : isCurrentInvoicesSettled ? (
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-meta font-bold text-white/90 ring-1 ring-white/20">
-              <AppIcon name="check" className="text-[13px] text-white" />
+          ) : isCurrentInvoicesSettled ? (
+            <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-meta font-bold text-white/90 ring-1 ring-white/20">
+              <AppIcon name="check" className="shrink-0 text-[13px] text-white" />
               <span>Tagihan Berjalan Lunas</span>
             </div>
-            <p className="mt-2 text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
-              Sisa kontrak belum ditagihkan
-            </p>
-            <MoneyValue
-              amount={unbilledContractAmount}
-              variant="fullDynamic"
-              tone="inverse"
-              size="hero"
-              className="mt-1"
-            />
-            <p className="mt-1 text-meta text-white/60">
-              {invoicesCount} termin selesai · {billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan
-            </p>
-          </div>
-          {isOwnerOrFinance ? (
-            <button
-              type="button"
-              onClick={onCreateInvoiceClick}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
-            >
-              <AppIcon name="add" className="text-[17px]" /> Invoice
-            </button>
-          ) : null}
-        </div>
-      ) : (
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
+          ) : (
             <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
               Sisa tagihan klien
             </p>
-            <MoneyValue
-              amount={unpaidAmount}
-              variant="fullDynamic"
-              tone="inverse"
-              size="hero"
-              className="mt-1"
-            />
-            <p className="mt-1 text-meta text-white/60">
-              {invoicesCount} termin · {billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan
-            </p>
-          </div>
-          {isOwnerOrFinance ? (
-            <button
+          )}
+          {canCreateInvoice ? (
+            <Button
               type="button"
               onClick={onCreateInvoiceClick}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-support font-bold text-white ring-1 ring-white/15 hover:bg-white/15"
+              title={isFullySettled ? "Buat invoice jika ada tagihan addendum" : undefined}
+              variant="secondary"
+              size="mini"
             >
-              <AppIcon name="add" className="text-[17px]" /> Invoice
-            </button>
+              <AppIcon name="add" className="text-[17px]" />{" "}
+              {isFullySettled ? "Addendum" : "Invoice"}
+            </Button>
           ) : null}
         </div>
-      )}
+        {isFullySettled || isCurrentInvoicesSettled ? (
+          <p className="mt-2 text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
+            {isFullySettled ? "Total kas masuk diterima" : "Sisa kontrak belum ditagihkan"}
+          </p>
+        ) : null}
+        <MoneyValue
+          amount={
+            isFullySettled
+              ? totalPaidAmount
+              : isCurrentInvoicesSettled
+                ? unbilledContractAmount
+                : unpaidAmount
+          }
+          variant="fullDynamic"
+          tone="inverse"
+          size="hero"
+          className="mt-1"
+        />
+        <p className="mt-1 text-meta text-white/60">
+          {isFullySettled
+            ? `${invoicesCount} termin lunas · Rp 0 piutang tersisa`
+            : isCurrentInvoicesSettled
+              ? `${invoicesCount} termin selesai · ${billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan`
+              : `${invoicesCount} termin · ${billedCoverage.toFixed(0)}% nilai kontrak sudah ditagihkan`}
+        </p>
+      </div>
       <div className="mt-2 flex flex-row gap-3">
         <InvoiceFact label="Kontrak" amount={contractValue} />
         <InvoiceFact label="Ditagihkan" amount={totalInvoiceAmount} />
         <InvoiceFact label="Diterima" amount={totalPaidAmount} />
       </div>
       {isFullySettled && onNavigateClosing ? (
-        <button
+        <Button
           type="button"
           onClick={onNavigateClosing}
-          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 transition-transform active:scale-98 hover:bg-white/95"
+          className="mt-3.5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-4 text-xs font-bold text-primary shadow-sm ring-1 ring-white/20 hover:bg-white/95 active:z-10 active:shadow-raised"
+          variant="secondary"
         >
           <span>Cek Kesiapan Closing</span>
           <AppIcon name="arrow_forward" className="text-[15px]" />
-        </button>
+        </Button>
       ) : null}
-      {isOwnerOrFinance && invoicesCount === 0 ? (
-        <button
+      {canCreateInvoice && invoicesCount === 0 ? (
+        <Button
           type="button"
           onClick={onGenerateSchedule}
           disabled={schedulePending || contractValue <= 0}
           className="mt-4 min-h-12 w-full rounded-full bg-white/10 px-4 text-xs font-bold text-white ring-1 ring-white/15 disabled:opacity-40"
+          variant="secondary"
         >
           {schedulePending ? "Membuat termin…" : "Buat termin 30% · 35% · 25% · 10%"}
-        </button>
+        </Button>
       ) : null}
       {/* Termin dihitung dari nilai kontrak, jadi tanpa nilai itu tidak ada
           yang bisa dibagi. Teksnya memakai tint di atas permukaan gelap ini,

@@ -41,13 +41,7 @@ export type FollowGeometry = {
 };
 
 /**
- * Batas gulir selama jawaban mengalir.
- *
- * Tampilan mengikuti teks yang bertambah, tetapi berhenti begitu gelembung
- * pertanyaan terakhir menyentuh bilah atas: pertanyaan yang memicu jawaban
- * harus tetap terbaca. Menggulungnya keluar layar membuat pengguna kehilangan
- * konteks jawaban yang sedang dibacanya. Jika isi belum cukup panjang untuk
- * mencapai batas itu, dasar percakapan yang menjadi batasnya.
+ * Ikuti jawaban sampai pertanyaan terbaru menyentuh inset baca paling atas.
  */
 export function computeFollowTarget(geometry: FollowGeometry): number {
   const bottom = Math.max(0, geometry.scrollHeight - geometry.clientHeight);
@@ -89,188 +83,193 @@ export type ChatScroll = {
   readonly viewportRef: React.RefObject<HTMLDivElement | null>;
   /** Pembungkus seluruh isi; tinggi dinamisnya dipantau selama jawaban mengalir. */
   readonly contentRef: React.RefObject<HTMLDivElement | null>;
-  /** Lompat ke dasar percakapan — hanya untuk saat halaman baru dibuka. */
+  /** Align opened history briefly; do not opt into following a response. */
+  readonly openAtBottom: () => void;
+  /** Lompat ke dasar percakapan dan aktifkan kembali pengikutan. */
   readonly jumpToBottom: () => void;
-  /** Satu dorongan mengikuti aliran jawaban, terhenti pada batas gelembung pertanyaan. */
+  /** Follow growing content up to the newest question unless the reader opted into its end. */
   readonly followStream: (behavior?: ScrollBehavior) => void;
   /** Memasang kembali pengikutan, dipakai saat pengguna mengirim pertanyaan baru. */
   readonly resumeFollowing: () => void;
+  readonly awayFromBottom: boolean;
 };
 
 /**
  * Pengaturan gulir percakapan AI.
  *
- * Percakapan sengaja **tidak** ditambatkan ke dasar sepanjang waktu. Tampilan
- * hanya bergerak sendiri pada dua kesempatan: saat halaman dibuka, dan selama
- * jawaban mengalir. Di luar itu posisi baca sepenuhnya milik pengguna.
+ * Respons baru mengikuti pertanyaan terbaru sampai inset baca paling atas.
+ * Membaca ke atas menghentikannya. Kembali ke dasar melalui gerakan pengguna
+ * atau tombol jawaban terbaru mengaktifkan pengikutan dasar secara eksplisit.
+ * Pembukaan riwayat hanya menyelaraskan dasar sebentar; pertumbuhan saat idle
+ * memperbarui affordance tanpa memindahkan pembaca.
  */
 export function useChatScroll(isStreaming: boolean): ChatScroll {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const followingRef = React.useRef(true);
-  const frameRef = React.useRef<number | null>(null);
-  const stopSettlingRef = React.useRef<(() => void) | null>(null);
-
-  const cancelPendingFrame = React.useCallback((): void => {
-    if (frameRef.current === null) return;
-    cancelAnimationFrame(frameRef.current);
-    frameRef.current = null;
+  const followMode = React.useRef<"question" | "bottom">("bottom");
+  const [awayFromBottom, setAway] = React.useState(false);
+  const frame = React.useRef<number | null>(null);
+  const settle = React.useRef<(() => void) | null>(null);
+  const cancel = React.useCallback(() => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = null;
+    settle.current?.();
+    settle.current = null;
   }, []);
-
-  const stopSettling = React.useCallback((): void => {
-    stopSettlingRef.current?.();
-    stopSettlingRef.current = null;
-  }, []);
-
-  React.useEffect(
-    () => () => {
-      cancelPendingFrame();
-      stopSettling();
-    },
-    [cancelPendingFrame, stopSettling],
+  React.useEffect(() => () => cancel(), [cancel]);
+  const bottom = React.useCallback(
+    (node: HTMLDivElement) => Math.max(0, node.scrollHeight - node.clientHeight),
+    [],
   );
-
-  const readFollowTarget = React.useCallback((viewport: HTMLDivElement): number => {
-    const anchors = viewport.querySelectorAll<HTMLElement>(`[${USER_MESSAGE_ATTRIBUTE}]`);
-    const last = anchors[anchors.length - 1];
-    const anchorOffset =
-      last === undefined
-        ? null
-        : last.getBoundingClientRect().top -
-          viewport.getBoundingClientRect().top +
-          viewport.scrollTop;
-
+  const target = React.useCallback((node: HTMLDivElement): number => {
+    if (followMode.current === "bottom") return Math.max(0, node.scrollHeight - node.clientHeight);
+    const anchors = node.querySelectorAll<HTMLElement>(`[${USER_MESSAGE_ATTRIBUTE}]`);
+    const anchor = anchors.item(anchors.length - 1);
     return computeFollowTarget({
-      scrollHeight: viewport.scrollHeight,
-      clientHeight: viewport.clientHeight,
-      anchorOffset,
-      topInset: STREAM_TOP_INSET_PX,
+      scrollHeight: node.scrollHeight,
+      clientHeight: node.clientHeight,
+      anchorOffset: anchor
+        ? anchor.getBoundingClientRect().top - node.getBoundingClientRect().top + node.scrollTop
+        : null,
+      topInset: Number.parseFloat(getComputedStyle(node).paddingTop) || 0,
     });
   }, []);
-
-  const resumeFollowing = React.useCallback((): void => {
+  const resumeFollowing = React.useCallback(() => {
+    cancel();
     followingRef.current = true;
-  }, []);
-
-  const jumpToBottom = React.useCallback((): void => {
-    followingRef.current = true;
-    cancelPendingFrame();
-    stopSettling();
-
-    const viewport = viewportRef.current;
-    const content = contentRef.current;
-    if (!viewport) return;
-
-    function snapToBottom(): void {
-      if (!viewport) return;
-      viewport.scrollTop = viewport.scrollHeight;
-    }
-
-    snapToBottom();
-    if (!content) return;
-
-    const observer = new ResizeObserver(snapToBottom);
-    observer.observe(content);
-    const timer = setTimeout(() => {
-      observer.disconnect();
-      stopSettlingRef.current = null;
-    }, SETTLE_WINDOW_MS);
-
-    stopSettlingRef.current = () => {
-      observer.disconnect();
-      clearTimeout(timer);
-    };
-  }, [cancelPendingFrame, stopSettling]);
-
+    followMode.current = "question";
+    setAway(false);
+  }, [cancel]);
+  const alignAtBottom = React.useCallback(
+    (follow: boolean): void => {
+      cancel();
+      followingRef.current = follow;
+      followMode.current = follow ? "bottom" : "question";
+      setAway(false);
+      const node = viewportRef.current,
+        content = contentRef.current;
+      if (!node) return;
+      let active = true;
+      const snap = (): void => {
+        if (active) node.scrollTop = bottom(node);
+      };
+      snap();
+      if (!content) return;
+      const observer = new ResizeObserver(snap);
+      observer.observe(content);
+      const timer = setTimeout(() => {
+        active = false;
+        observer.disconnect();
+        settle.current = null;
+      }, SETTLE_WINDOW_MS);
+      settle.current = () => {
+        active = false;
+        observer.disconnect();
+        clearTimeout(timer);
+      };
+    },
+    [bottom, cancel],
+  );
+  const openAtBottom = React.useCallback((): void => alignAtBottom(false), [alignAtBottom]);
+  const jumpToBottom = React.useCallback((): void => alignAtBottom(true), [alignAtBottom]);
   const followStream = React.useCallback(
     (behavior: ScrollBehavior = "auto"): void => {
       if (!followingRef.current) return;
-      cancelPendingFrame();
-      stopSettling();
-      frameRef.current = requestAnimationFrame(() => {
-        frameRef.current = null;
-        const viewport = viewportRef.current;
-        if (!viewport) return;
-        viewport.scrollTo({ top: readFollowTarget(viewport), behavior });
+      cancel();
+      frame.current = requestAnimationFrame(() => {
+        frame.current = null;
+        const node = viewportRef.current;
+        if (node && followingRef.current) {
+          node.scrollTo({ top: target(node), behavior });
+          setAway(bottom(node) - node.scrollTop > FOLLOW_THRESHOLD_PX);
+        }
       });
     },
-    [cancelPendingFrame, readFollowTarget, stopSettling],
+    [bottom, cancel, target],
   );
-
-  /**
-   * Gerakan pengguna hanya diamati selama jawaban mengalir — di luar itu tidak
-   * ada yang perlu dihentikan, karena tampilan memang tidak bergerak sendiri.
-   */
   React.useEffect(() => {
-    if (!isStreaming || !viewportRef.current) return undefined;
-    const viewport: HTMLDivElement = viewportRef.current;
-
-    let lastTouchY: number | null = null;
-
-    function handleWheel(event: WheelEvent): void {
-      if (isUpwardGesture(event.deltaY)) followingRef.current = false;
-    }
-
-    function handleTouchStart(event: TouchEvent): void {
-      lastTouchY = event.touches[0]?.clientY ?? null;
-    }
-
-    function handleTouchMove(event: TouchEvent): void {
-      const currentY = event.touches[0]?.clientY ?? null;
-      if (currentY === null) return;
-      if (lastTouchY !== null && isUpwardGesture(lastTouchY - currentY)) {
-        followingRef.current = false;
-      }
-      lastTouchY = currentY;
-    }
-
-    function handleKeyDown(event: KeyboardEvent): void {
-      const origin = event.target instanceof HTMLElement ? event.target : null;
-      if (isUpwardScrollKey(event.key, origin)) followingRef.current = false;
-    }
-
-    // Menyusul kembali ke posisi yang dituju berarti pengguna ingin ikut mengalir lagi.
-    function handleScroll(): void {
-      if (viewport.scrollTop >= readFollowTarget(viewport) - FOLLOW_THRESHOLD_PX) {
-        followingRef.current = true;
-      }
-    }
-
-    viewport.addEventListener("wheel", handleWheel, { passive: true });
-    viewport.addEventListener("touchstart", handleTouchStart, { passive: true });
-    viewport.addEventListener("touchmove", handleTouchMove, { passive: true });
-    viewport.addEventListener("scroll", handleScroll, { passive: true });
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      viewport.removeEventListener("wheel", handleWheel);
-      viewport.removeEventListener("touchstart", handleTouchStart);
-      viewport.removeEventListener("touchmove", handleTouchMove);
-      viewport.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("keydown", handleKeyDown);
+    const node = viewportRef.current;
+    if (!node) return;
+    let touchY: number | null = null;
+    let userScrollingDown = false;
+    const pause = (): void => {
+      userScrollingDown = false;
+      followingRef.current = false;
+      cancel();
     };
-  }, [isStreaming, readFollowTarget]);
-
-  /**
-   * Teks yang mengalir menambah tinggi isi tanpa mengubah daftar pesan, jadi
-   * perubahannya diikuti langsung dari dalam callback `ResizeObserver` — yakni
-   * sebelum browser melukis, sehingga tidak ada loncatan satu frame.
-   */
+    const wheel = (event: WheelEvent): void => {
+      if (isUpwardGesture(event.deltaY)) pause();
+      else if (event.deltaY > GESTURE_DEADZONE_PX) userScrollingDown = true;
+    };
+    const start = (event: TouchEvent): void => {
+      touchY = event.touches[0]?.clientY ?? null;
+    };
+    const move = (event: TouchEvent): void => {
+      const y = event.touches[0]?.clientY ?? null;
+      if (y !== null && touchY !== null && isUpwardGesture(touchY - y)) pause();
+      else if (y !== null && touchY !== null && touchY - y > GESTURE_DEADZONE_PX)
+        userScrollingDown = true;
+      touchY = y;
+    };
+    const key = (event: KeyboardEvent): void => {
+      const origin = event.target instanceof HTMLElement ? event.target : null;
+      if (isUpwardScrollKey(event.key, origin)) pause();
+      else if (
+        ["ArrowDown", "PageDown", "End"].includes(event.key) &&
+        (!origin || origin === document.body || node.contains(origin)) &&
+        (!origin ||
+          (!origin.isContentEditable && !["INPUT", "TEXTAREA", "SELECT"].includes(origin.tagName)))
+      )
+        userScrollingDown = true;
+    };
+    const pointer = (): void => {
+      // A reader interaction also cancels a pending history-opening alignment.
+      pause();
+    };
+    const scroll = (): void => {
+      const atBottom = bottom(node) - node.scrollTop <= FOLLOW_THRESHOLD_PX;
+      setAway(!atBottom);
+      if (atBottom && userScrollingDown) {
+        userScrollingDown = false;
+        followMode.current = "bottom";
+        followingRef.current = true;
+      } else if (!isStreaming) followingRef.current = false;
+    };
+    node.addEventListener("wheel", wheel, { passive: true });
+    node.addEventListener("touchstart", start, { passive: true });
+    node.addEventListener("touchmove", move, { passive: true });
+    node.addEventListener("pointerdown", pointer);
+    node.addEventListener("scroll", scroll, { passive: true });
+    document.addEventListener("keydown", key);
+    return () => {
+      node.removeEventListener("wheel", wheel);
+      node.removeEventListener("touchstart", start);
+      node.removeEventListener("touchmove", move);
+      node.removeEventListener("pointerdown", pointer);
+      node.removeEventListener("scroll", scroll);
+      document.removeEventListener("keydown", key);
+    };
+  }, [bottom, cancel, isStreaming]);
   React.useEffect(() => {
-    const viewport = viewportRef.current;
-    const content = contentRef.current;
-    if (!isStreaming || !viewport || !content) return undefined;
-
+    const node = viewportRef.current,
+      content = contentRef.current;
+    if (!node || !content) return;
     const observer = new ResizeObserver(() => {
-      if (!followingRef.current) return;
-      cancelPendingFrame();
-      viewport.scrollTop = readFollowTarget(viewport);
+      // Idle growth updates the latest-answer affordance without moving the reader.
+      if (isStreaming && followingRef.current) node.scrollTop = target(node);
+      setAway(bottom(node) - node.scrollTop > FOLLOW_THRESHOLD_PX);
     });
-
     observer.observe(content);
-
     return () => observer.disconnect();
-  }, [cancelPendingFrame, isStreaming, readFollowTarget]);
-
-  return { viewportRef, contentRef, jumpToBottom, followStream, resumeFollowing };
+  }, [bottom, isStreaming, target]);
+  return {
+    viewportRef,
+    contentRef,
+    openAtBottom,
+    jumpToBottom,
+    followStream,
+    resumeFollowing,
+    awayFromBottom,
+  };
 }

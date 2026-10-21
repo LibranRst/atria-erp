@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -16,6 +16,7 @@ import { join } from "node:path";
  */
 
 const WEB_ROOT = join(import.meta.dir, "..", "..");
+const BACKEND_ROOT = join(WEB_ROOT, "..", "api/src/backend");
 
 /** Direktori yang isinya benar-benar dikirim ke layar pengguna. */
 const RUNTIME_DIRS = ["app", "features", "lib", "server", "components"] as const;
@@ -32,11 +33,13 @@ const ALLOWED: ReadonlyMap<string, string> = new Map([
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {
+  if (!existsSync(dir)) return out;
   for (const entry of readdirSync(dir)) {
     if (entry === "node_modules" || entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) walk(full, out);
-    else if (/\.tsx?$/.test(entry) && !/\.(test|stories)\.tsx?$/.test(entry)) out.push(full);
+    else if (/\.tsx?$/.test(entry) && !/\.(test|stories|fixture)\.tsx?$/.test(entry))
+      out.push(full);
   }
   return out;
 }
@@ -50,12 +53,14 @@ describe("batas satu perusahaan per instance", () => {
   test("tidak ada nama perusahaan yang ditulis mati di kode runtime", () => {
     const offenders: string[] = [];
 
-    for (const dir of RUNTIME_DIRS) {
-      for (const file of walk(join(WEB_ROOT, dir))) {
-        const relative = file.slice(WEB_ROOT.length + 1);
-        if (ALLOWED.has(relative)) continue;
-        if (!/Dekoria/i.test(stripComments(readFileSync(file, "utf8")))) continue;
-        offenders.push(relative);
+    for (const root of [WEB_ROOT, BACKEND_ROOT]) {
+      for (const dir of RUNTIME_DIRS) {
+        for (const file of walk(join(root, dir))) {
+          const relative = file.slice(root.length + 1);
+          if (ALLOWED.has(relative)) continue;
+          if (!/Dekoria/i.test(stripComments(readFileSync(file, "utf8")))) continue;
+          offenders.push(`${root === WEB_ROOT ? "web" : "api"}/${relative}`);
+        }
       }
     }
 
@@ -71,7 +76,7 @@ describe("batas satu perusahaan per instance", () => {
   });
 
   test("prompt AI menerima nama perusahaan, bukan menetapkannya", () => {
-    const prompts = readFileSync(join(WEB_ROOT, "lib", "ai", "prompts.ts"), "utf8");
+    const prompts = readFileSync(join(BACKEND_ROOT, "lib", "ai", "prompts.ts"), "utf8");
 
     // Nama perusahaan harus masuk sebagai parameter yang disisipkan ke teks.
     expect(prompts).toContain("sharedPrompt(companyName)");

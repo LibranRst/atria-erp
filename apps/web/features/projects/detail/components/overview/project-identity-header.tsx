@@ -2,7 +2,12 @@
 
 import React, { useState } from "react";
 
-import { AppIcon, DetailSheet } from "@/components/ui";
+import { AppIcon, DetailSheet, Button, StatusBadge } from "@/components/ui";
+import type { ProjectBudgetSource } from "../../types/project-tabs-types";
+import {
+  useWorkspacePresentation,
+  useWorkspaceControlPresentation,
+} from "@/lib/navigation/workspace-presentation";
 import {
   projectHealthLabel,
   projectHealthReasonLabel,
@@ -42,6 +47,7 @@ export type IdentityProject = {
 
 export function ProjectIdentityHeader({
   project,
+  budgetSource,
   effectiveHealth,
   healthReasons,
   canEdit = false,
@@ -49,6 +55,7 @@ export function ProjectIdentityHeader({
   onAssignPm,
 }: {
   readonly project: IdentityProject;
+  readonly budgetSource?: ProjectBudgetSource;
   readonly effectiveHealth: EffectiveProjectHealth;
   readonly healthReasons: readonly EffectiveProjectHealthReason[];
   readonly canEdit?: boolean;
@@ -56,87 +63,153 @@ export function ProjectIdentityHeader({
   readonly onAssignPm?: () => void;
 }): React.JSX.Element {
   const [detailOpen, setDetailOpen] = useState(false);
+  const desktop = useWorkspacePresentation() === "desktop";
+  const desktopControls = useWorkspaceControlPresentation() === "desktop";
 
   return (
     <>
-      <section className="overflow-hidden rounded-owner bg-primary shadow-inverse ring-1 ring-ring-subtle">
-        <div className="relative aspect-square overflow-hidden bg-primary">
-          <ProjectCoverMedia coverImageUrl={project.coverImageUrl} name={project.name} />
-
-          <div
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.82)_100%)]"
-            aria-hidden="true"
-          />
-
-          <div className="absolute top-3 right-3 flex items-center gap-2">
-            {canEdit && onEdit ? (
-              <button
-                type="button"
-                onClick={onEdit}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
-                aria-label="Edit proyek"
-              >
-                <AppIcon name="edit" className="icon-md" />
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setDetailOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:scale-95"
-              aria-label="Lihat detail proyek"
-            >
-              <AppIcon name="info" className="icon-lg" />
-            </button>
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 p-4">
-            <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 truncate text-eyebrow font-bold tracking-[0.14em] text-white/65 uppercase">
-                {project.client?.name ?? "Klien belum diisi"}
-              </p>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <ProjectHeroStatusPill label={projectStatusLabel(project.status)} />
-                <ProjectHeroStatusPill
-                  label={projectHealthLabel(effectiveHealth)}
-                  health={effectiveHealth}
-                  title={
-                    healthReasons[0]
-                      ? projectHealthReasonLabel(healthReasons[0])
-                      : "Tidak ada sinyal risiko aktif"
-                  }
-                />
-              </div>
-            </div>
-            <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-6.5 font-bold tracking-tight text-white">
+      {desktop ? (
+        <header className="grid min-w-0 items-start gap-3 select-text xl:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-title font-semibold tracking-tight wrap-anywhere text-on-surface">
               {project.name}
             </h1>
-            <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-meta font-medium text-white/70">
-              <AppIcon name="location_on" className="shrink-0 text-[13px] text-white/50" />
-              <span className="min-w-0 truncate">{project.location || "Lokasi belum diisi"}</span>
-              <span className="shrink-0 text-white/30">·</span>
-              {project.projectManager?.name ? (
-                <span className="max-w-[48%] shrink-0 truncate text-white/90">
-                  PM {project.projectManager.name}
-                </span>
-              ) : canEdit && onAssignPm ? (
+            <p className="mt-1 text-support text-on-surface-variant">
+              {project.client?.name ?? "Klien belum diisi"} ·{" "}
+              {project.projectManager?.name
+                ? `PM ${project.projectManager.name}`
+                : "PM belum ditugaskan"}
+            </p>
+            <p className="mt-1 text-meta text-on-surface-variant">
+              {project.location || "Lokasi belum diisi"}
+              {project.roomArea ? ` · ${project.roomArea}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 xl:max-w-104 xl:justify-end">
+            <StatusBadge label={projectStatusLabel(project.status)} tone="neutral" />
+            {budgetSource && budgetSource.status !== "ready" ? (
+              <StatusBadge
+                label={
+                  budgetSource.status === "missing"
+                    ? "Budget belum terbentuk"
+                    : budgetSource.status === "restricted"
+                      ? "Budget terbatas"
+                      : "Budget belum dimuat"
+                }
+                tone="neutral"
+              />
+            ) : (
+              <StatusBadge
+                label={projectHealthLabel(effectiveHealth)}
+                tone={
+                  effectiveHealth === "CRITICAL"
+                    ? "critical"
+                    : effectiveHealth === "WARNING"
+                      ? "warning"
+                      : "healthy"
+                }
+              />
+            )}
+            {canEdit && !project.projectManager && onAssignPm ? (
+              <Button size="compact" variant="secondary" onClick={onAssignPm}>
+                Tugaskan PM
+              </Button>
+            ) : null}
+            <Button size="compact" variant="tertiary" onClick={() => setDetailOpen(true)}>
+              Detail proyek
+            </Button>
+            {canEdit &&
+            onEdit &&
+            project.status !== "COMPLETED" &&
+            project.status !== "CANCELLED" ? (
+              <Button size="compact" variant="secondary" onClick={onEdit}>
+                Edit proyek
+              </Button>
+            ) : null}
+          </div>
+        </header>
+      ) : (
+        <section className="overflow-hidden rounded-owner bg-primary shadow-inverse ring-1 ring-ring-subtle">
+          <div className="relative aspect-square overflow-hidden bg-primary">
+            <ProjectCoverMedia coverImageUrl={project.coverImageUrl} name={project.name} />
+
+            <div
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_40%,rgba(0,0,0,0.82)_100%)]"
+              aria-hidden="true"
+            />
+
+            <div className="absolute top-3 right-3 flex items-center gap-2">
+              {canEdit && onEdit ? (
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAssignPm();
-                  }}
-                  className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 text-eyebrow font-bold tracking-wide text-white uppercase shadow-control ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/25 active:scale-95"
+                  onClick={onEdit}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:z-10 active:scale-[1.05] active:shadow-raised"
+                  aria-label="Edit proyek"
                 >
-                  <AppIcon name="person_add" className="text-[12px]" />
-                  <span>Tugaskan PM</span>
+                  <AppIcon name="edit" className="icon-md" />
                 </button>
-              ) : (
-                <span className="shrink-0 text-white/50">PM belum diisi</span>
-              )}
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setDetailOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-on-surface shadow-control backdrop-blur-2xl transition active:z-10 active:scale-[1.05] active:shadow-raised"
+                aria-label="Lihat detail proyek"
+              >
+                <AppIcon name="info" className="icon-lg" />
+              </button>
+            </div>
+
+            <div className="absolute inset-x-0 bottom-0 p-4">
+              <div className="flex min-w-0 items-center justify-between gap-3">
+                <p className="min-w-0 flex-1 truncate text-eyebrow font-bold tracking-[0.14em] text-white/65 uppercase">
+                  {project.client?.name ?? "Klien belum diisi"}
+                </p>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <ProjectHeroStatusPill label={projectStatusLabel(project.status)} />
+                  <ProjectHeroStatusPill
+                    label={projectHealthLabel(effectiveHealth)}
+                    health={effectiveHealth}
+                    title={
+                      healthReasons[0]
+                        ? projectHealthReasonLabel(healthReasons[0])
+                        : "Tidak ada sinyal risiko aktif"
+                    }
+                  />
+                </div>
+              </div>
+              <h1 className="mt-2 line-clamp-2 max-w-[95%] text-[21px] leading-6.5 font-bold tracking-tight text-white">
+                {project.name}
+              </h1>
+              <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-meta font-medium text-white/70">
+                <AppIcon name="location_on" className="shrink-0 text-[13px] text-white/50" />
+                <span className="min-w-0 truncate">{project.location || "Lokasi belum diisi"}</span>
+                <span className="shrink-0 text-white/30">·</span>
+                {project.projectManager?.name ? (
+                  <span className="max-w-[48%] shrink-0 truncate text-white/90">
+                    PM {project.projectManager.name}
+                  </span>
+                ) : canEdit && onAssignPm ? (
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAssignPm();
+                    }}
+                    className="inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 text-eyebrow font-bold tracking-wide text-white uppercase shadow-control ring-1 ring-white/30 backdrop-blur-md hover:bg-white/25 active:z-10 active:shadow-raised"
+                    variant="secondary"
+                    size="mini"
+                  >
+                    <AppIcon name="person_add" className="text-[12px]" />
+                    <span>Tugaskan PM</span>
+                  </Button>
+                ) : (
+                  <span className="shrink-0 text-white/50">PM belum diisi</span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
       <DetailSheet open={detailOpen} title="Detail Proyek" onClose={() => setDetailOpen(false)}>
         <div className="overflow-hidden rounded-[22px] bg-white shadow-surface ring-1 ring-ring-subtle">
           <DetailRow
@@ -181,17 +254,23 @@ export function ProjectIdentityHeader({
         </div>
         {canEdit && onEdit ? (
           <div className="mt-4 pt-1">
-            <button
+            <Button
               type="button"
               onClick={() => {
                 setDetailOpen(false);
                 onEdit();
               }}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-control transition active:scale-[0.98]"
+              size={desktopControls ? "compact" : "default"}
+              className={
+                desktopControls
+                  ? "w-full"
+                  : "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-control active:z-10 active:shadow-raised"
+              }
+              variant="primary"
             >
               <AppIcon name="edit" className="icon-md" />
               <span>Edit Proyek</span>
-            </button>
+            </Button>
           </div>
         ) : null}
       </DetailSheet>

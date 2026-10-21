@@ -65,6 +65,8 @@ export function getVendorPaymentPresentation(payment: VendorListPayment): {
 } {
   if (payment.status === "COMPLETED")
     return { status: "PAID", label: "Selesai Cair", canDisburse: false };
+  if (payment.approvalStatus === "REJECTED")
+    return { status: "REJECTED", label: "Ditolak Owner", canDisburse: false };
   if (payment.status === "FAILED")
     return { status: "REJECTED", label: "Gagal Cair", canDisburse: false };
   if (payment.status === "PROCESSING")
@@ -73,7 +75,5 @@ export function getVendorPaymentPresentation(payment: VendorListPayment): {
     return { status: "REJECTED", label: "Status Tidak Valid", canDisburse: false };
   if (payment.approvalStatus === "PENDING")
     return { status: "PENDING", label: "Menunggu Owner", canDisburse: false };
-  if (payment.approvalStatus === "REJECTED")
-    return { status: "REJECTED", label: "Ditolak Owner", canDisburse: false };
   return { status: "APPROVED", label: "Siap Cair", canDisburse: true };
 }

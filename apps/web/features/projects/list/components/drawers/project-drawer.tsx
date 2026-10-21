@@ -1,11 +1,18 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { createProjectAction, updateProjectAction } from "@/app/actions/project/crud";
 import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
 import { getErrorMessage } from "@atria/core/utils/error-message";
-import { AppIcon, OperationalFormSheet, SuccessDialog } from "@/components/ui";
+import {
+  GroupedSurface,
+  FactRow,
+  AppIcon,
+  OperationalFormSheet,
+  SuccessDialog,
+} from "@/components/ui";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 import { toast } from "sonner";
 import { ProjectDrawerFormFields } from "./project-drawer-form-fields";
@@ -26,6 +33,7 @@ import {
 export function ProjectDrawer({
   isOpen,
   onClose,
+  onExitComplete,
   clients,
   users,
   editProject,
@@ -68,6 +76,7 @@ export function ProjectDrawer({
     [recovery],
   );
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const busy = isPending || isUploadingCover;
   const [reviewing, setReviewing] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [showOperationalDetails, setShowOperationalDetails] = useState<boolean | null>(null);
@@ -75,6 +84,13 @@ export function ProjectDrawer({
   // Error/Success state
   const [error, setError] = useState<string | null>(null);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+
+  const completeExit = React.useCallback((): void => {
+    if (!isOpen) {
+      setReviewing(false);
+      onExitComplete?.();
+    }
+  }, [isOpen, onExitComplete]);
 
   React.useEffect(() => {
     if (recovery.isDirty || projectManagerId || users.length !== 1) return;
@@ -123,7 +139,6 @@ export function ProjectDrawer({
       router.push(`/projects/${createdProjectId}`);
       return;
     }
-    setReviewing(false);
     setConfirmClose(false);
     onClose();
   }, [onClose, createdProjectId, router]);
@@ -278,6 +293,7 @@ export function ProjectDrawer({
     return (
       <SuccessDialog
         open={isOpen}
+        onExitComplete={completeExit}
         title="Proyek berhasil dibuat"
         description="Proyek dibuat sebagai Draft dan anggaran awal kategorinya sudah disiapkan. Lengkapi setup sebelum proyek diaktifkan."
         facts={[]}
@@ -306,14 +322,50 @@ export function ProjectDrawer({
   return (
     <>
       <OperationalFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-3">
+            <div className="px-1">
+              <h3 className="text-support font-semibold text-on-surface">Ringkasan proyek</h3>
+              <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+                {name.trim() || "Nama proyek belum diisi"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow layout="stacked" wrapLabel label="Klien" value={selectedClientName} />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Project Manager"
+                  value={selectedPmName}
+                />
+                <FactRow
+                  layout="stacked"
+                  wrapLabel
+                  label="Data utama"
+                  value={`${coreCompletedCount} dari 3 lengkap`}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Proyek baru disimpan sebagai draft. Setup budget dan rencana kerja dilengkapi sebelum
+              aktivasi.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={isOpen && !reviewing}
+        onExitComplete={() => {
+          if (!reviewing) completeExit();
+        }}
         title={editProject ? "Edit Proyek" : "Buat Proyek Baru"}
         onClose={() => {
-          if (!isPending) requestClose();
+          if (!busy) requestClose();
         }}
         formId="project-drawer-form"
-        pending={isPending}
+        pending={busy}
         disabled={projectBlockers.length > 0}
         disabledReason={disabledReason}
         submitLabel="Tinjau"
@@ -356,8 +408,11 @@ export function ProjectDrawer({
       </OperationalFormSheet>
       <ProjectReviewSheet
         open={isOpen && reviewing}
+        onExitComplete={() => {
+          if (reviewing) completeExit();
+        }}
         editMode={Boolean(editProject)}
-        pending={isPending}
+        pending={busy}
         draft={recovery.payload}
         clientName={selectedClientName}
         projectManagerName={selectedPmName}

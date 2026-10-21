@@ -1,4 +1,4 @@
-import { actorHasPermission } from "@atria/core/auth/permissions";
+import type { PermissionKey } from "@atria/core/auth/permissions";
 import { calculateQuotationTotal } from "@atria/core/project/quotation-total";
 import type {
   ManualQuotationLine,
@@ -40,6 +40,7 @@ export function createEmptyRabChangeOrderForm(): RabChangeOrderForm {
 }
 
 export interface RabManagerDerivedValues {
+  readonly canCreateRab: boolean;
   readonly canApproveRab: boolean;
   readonly canManageRab: boolean;
   readonly visibleRabValue: number;
@@ -72,7 +73,7 @@ export function getInitialSelectedBaselineManualItemIds(
 }
 
 export function getRabManagerDerivedValues({
-  userRole,
+  permissions,
   rabEstimate,
   revisionHistory,
   selectedRapQuotationIds,
@@ -80,7 +81,7 @@ export function getRabManagerDerivedValues({
   selectedBaselineManualItemIds,
   manualQuotationLine,
 }: {
-  readonly userRole: string;
+  readonly permissions: readonly PermissionKey[];
   readonly rabEstimate: RabEstimateView | null;
   readonly revisionHistory: readonly RabRevisionHistoryView[];
   readonly selectedRapQuotationIds: readonly string[];
@@ -88,7 +89,7 @@ export function getRabManagerDerivedValues({
   readonly selectedBaselineManualItemIds?: readonly string[];
   readonly manualQuotationLine: ManualQuotationLine;
 }): RabManagerDerivedValues {
-  const canApproveRab = actorHasPermission(userRole, "approve:rab");
+  const canApproveRab = permissions.includes("approve:rab");
   const visibleRabValue = rabEstimate
     ? calculateQuotationTotal(rabEstimate.items, rabEstimate.bundles)
     : 0;
@@ -97,8 +98,9 @@ export function getRabManagerDerivedValues({
   const hasManualQuotationLine = Boolean(manualQuotationLine.clientLabel.trim());
 
   return {
+    canCreateRab: permissions.includes("create:rab"),
     canApproveRab,
-    canManageRab: canApproveRab,
+    canManageRab: permissions.includes("update:rab"),
     visibleRabValue,
     approvedBaseline,
     isRevisionDraft:

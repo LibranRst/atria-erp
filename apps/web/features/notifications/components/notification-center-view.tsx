@@ -5,9 +5,11 @@ import {
   ButtonLink,
   EmptyState,
   GroupedSurface,
+  InlineStateRow,
   RowGroup,
   SegmentedTabs,
 } from "@/components/ui";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import type { NotificationCategory, NotificationItem } from "@atria/core/notifications/types";
 import { NotificationRow } from "./notification-row";
 import { useNotifications } from "../hooks/notification-context";
@@ -84,6 +86,13 @@ export function NotificationCenterView({
   const [uncontrolledActiveTab, setUncontrolledActiveTab] =
     useState<NotificationCategory>("ACTION_REQUIRED");
   const activeTab = controlledActiveTab ?? uncontrolledActiveTab;
+  const desktop = useWorkspaceControlPresentation() === "desktop";
+  const emptyTitle =
+    activeTab === "ACTION_REQUIRED" ? "Tidak ada tindakan tertunda" : "Belum ada informasi";
+  const emptyDescription =
+    activeTab === "ACTION_REQUIRED"
+      ? "Tindakan yang menjadi tanggung jawab Anda akan muncul di sini."
+      : "Pembaruan operasional akan muncul di sini.";
   const {
     summary,
     pages,
@@ -152,21 +161,12 @@ export function NotificationCenterView({
       {isLoading ? (
         <NotificationSkeleton />
       ) : page.items.length === 0 ? (
-        !error && (
-          <EmptyState
-            icon="bell"
-            title={
-              activeTab === "ACTION_REQUIRED"
-                ? "Tidak ada tindakan tertunda"
-                : "Belum ada informasi"
-            }
-            description={
-              activeTab === "ACTION_REQUIRED"
-                ? "Tindakan yang menjadi tanggung jawab Anda akan muncul di sini."
-                : "Pembaruan operasional akan muncul di sini."
-            }
-          />
-        )
+        !error &&
+        (desktop && compact ? (
+          <InlineStateRow icon="bell" title={emptyTitle} description={emptyDescription} />
+        ) : (
+          <EmptyState icon="bell" title={emptyTitle} description={emptyDescription} />
+        ))
       ) : (
         <>
           {open.length > 0 && rows(open)}

@@ -3,6 +3,8 @@ import { useState } from "react";
 
 import type { SelectOption } from "./form-control-types";
 import { FilterSelect } from "./select-form-controls";
+import { DesktopUIProvider } from "../desktop/desktop-ui-provider";
+import { WorkspacePresentationProvider } from "@/lib/navigation/workspace-presentation";
 
 const categoryOptions: readonly SelectOption[] = [
   { value: "material", label: "Material", description: "Semen, cat, keramik" },
@@ -64,3 +66,26 @@ export const Default: Story = {
 export const ActivityGrid: Story = {
   render: () => <ActivityGridDemo />,
 };
+
+function DesktopStatusDemo(): React.JSX.Element {
+  const [value, setValue] = useState("all");
+  return (
+    <WorkspacePresentationProvider presentation="desktop">
+      <DesktopUIProvider className="bg-background p-6">
+        <FilterSelect
+          label="Status proyek"
+          value={value}
+          onChange={setValue}
+          searchable={false}
+          options={[
+            { value: "all", label: "Semua", meta: "12 proyek" },
+            { value: "active", label: "Aktif", meta: "8 proyek" },
+            { value: "draft", label: "Draf", meta: "4 proyek" },
+          ]}
+        />
+      </DesktopUIProvider>
+    </WorkspacePresentationProvider>
+  );
+}
+
+export const CompactDesktopStatus: Story = { render: () => <DesktopStatusDemo /> };

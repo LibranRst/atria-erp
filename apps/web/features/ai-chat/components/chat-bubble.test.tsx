@@ -5,9 +5,7 @@ import { ChatBubble } from "./chat-bubble";
 
 describe("ChatBubble", () => {
   test("merender teks pesan pengguna di dalam gelembung bubble", () => {
-    const html = renderToStaticMarkup(
-      <ChatBubble side="user">Tolong periksa anggaran</ChatBubble>,
-    );
+    const html = renderToStaticMarkup(<ChatBubble side="user">Tolong periksa anggaran</ChatBubble>);
     expect(html).toContain("Tolong periksa anggaran");
     expect(html).toContain("bg-surface-inverse");
   });

@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -57,12 +58,14 @@ export function EditProfileSheet({
   imageUrl,
   initials,
   onClose,
+  returnFocusRef,
 }: {
   readonly open: boolean;
   readonly displayName: string;
   readonly imageUrl?: string | null;
   readonly initials: string;
   readonly onClose: () => void;
+  readonly returnFocusRef?: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -241,15 +244,17 @@ export function EditProfileSheet({
             : (nameError ?? "Nama tampilan wajib diisi.")
       }
       onClose={onClose}
+      returnFocusRef={returnFocusRef}
       onSubmit={() => void submit()}
     >
       <section className="flex flex-col items-center gap-3 pt-1" aria-label="Foto profil">
-        <button
+        <Button
           type="button"
           onClick={openFilePicker}
           disabled={busy}
           aria-label={hasPhoto ? "Ganti foto profil" : "Pilih foto profil"}
-          className="relative rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed"
+          className="relative bg-transparent p-0 shadow-none"
+          variant="tertiary"
         >
           <UserAvatar
             imageUrl={shownImageUrl}
@@ -287,7 +292,7 @@ export function EditProfileSheet({
               <AppIcon name="photo_camera" className="icon-sm leading-none" />
             )}
           </span>
-        </button>
+        </Button>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="secondary" disabled={busy} onClick={openFilePicker}>

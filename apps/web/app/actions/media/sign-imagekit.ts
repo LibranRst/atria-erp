@@ -1,23 +1,13 @@
 "use server";
 
-import { resolveActor } from "@/server/actor";
-import { signImagekitUseCase } from "@/server/usecases/media/sign-imagekit";
-import type { ImageKitSignature } from "@/server/usecases/media/sign-imagekit";
-import type { ActionResponse } from "@atria/core/types/action-response";
+import { callBackendAction } from "@/lib/api/backend";
+import type { WebRpcArgs, WebRpcResult } from "@atria/api/contract";
+export type * from "@atria/api/types/app/actions/media/sign-imagekit";
 
-/**
- * Pembungkus tipis di atas `signImagekitUseCase`. Logikanya dipakai bersama
- * prosedur tRPC supaya unggahan kamera dari klien native memakai jalur
- * penandatanganan yang sama.
- */
-export async function signImagekit(): Promise<ActionResponse<ImageKitSignature>> {
-  const actor = await resolveActor();
-  if (!actor) {
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "Sesi tidak valid. Harap login kembali." },
-    };
-  }
-
-  return signImagekitUseCase();
+export async function signImagekit(
+  ...args: WebRpcArgs<"app/actions/media/sign-imagekit.signImagekit">
+): Promise<WebRpcResult<"app/actions/media/sign-imagekit.signImagekit">> {
+  return callBackendAction("app/actions/media/sign-imagekit.signImagekit", args, {
+    allowCookieWrites: true,
+  });
 }

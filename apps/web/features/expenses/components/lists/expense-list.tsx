@@ -1,7 +1,8 @@
 "use client";
 
 import { useCan } from "@/components/auth/permissions-provider";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React, { useState, useTransition } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -9,8 +10,11 @@ import {
   AppIcon,
   type OperationSuccess,
   OperationSuccessDialog,
+  PageState,
   SegmentedTabs,
 } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { parseExpenseFilter, resolveExpenseView } from "../../utils/expense-route-view";
 import { useLocalFormRecovery } from "@/lib/hooks/use-local-form-recovery";
 
 const fieldDisbursementRecoverySchema = z.object({
@@ -41,9 +45,15 @@ import { FieldClaimsPanel } from "@/features/expenses/components/lists/field-cla
 import { ExpenseDraftsPanel } from "@/features/expenses/components/lists/expense-drafts-panel";
 import { VendorBillList } from "./vendor-bill-list";
 
+import type { ProjectExpensesSource } from "@atria/core/types/project-operations";
+
 export type { BankAccountItem, ExpenseCostItem } from "@atria/core/types/expenses";
 
 interface ExpenseListProps {
+  readonly canViewFieldClaims?: boolean;
+  readonly assignedScope?: boolean;
+  readonly onWorkflowActiveChange?: (active: boolean) => void;
+  readonly source?: ProjectExpensesSource;
   projectId?: string;
   initialCosts: ExpenseCostItem[];
   bankAccounts: BankAccountItem[];
@@ -56,32 +66,52 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({
+  canViewFieldClaims,
+  assignedScope = false,
   projectId,
-  initialCosts,
+  source,
+  onWorkflowActiveChange,
+  initialCosts: incomingCosts,
   bankAccounts,
-  vendorBills = [],
-  vendorPayments = [],
+  vendorBills: incomingBills = [],
+  vendorPayments: incomingPayments = [],
   vendorPaymentApprovalThreshold,
   vendors = [],
   projects = [],
   pendingApprovalsCount = 0,
 }: ExpenseListProps): React.JSX.Element {
   const can = useCan();
+  const initialCosts = projectId
+    ? incomingCosts.filter((cost) => cost.project?.id === projectId)
+    : incomingCosts;
+  const vendorBills = projectId
+    ? incomingBills.filter((bill) => bill.projectId === projectId)
+    : incomingBills;
+  const vendorBillIds = new Set(vendorBills.map((bill) => bill.id));
+  const vendorPayments = projectId
+    ? incomingPayments.filter((payment) => vendorBillIds.has(payment.vendorBillId))
+    : incomingPayments;
+  const desktop = useWorkspacePresentation() === "desktop";
   const router = useRouter();
   const shouldOpenVendorBill = useUrlSearchParam("new-vendor-bill") === "true";
-  const shouldShowVendorBills = useUrlSearchParam("view") === "vendor-bills";
-  const filterParam = useUrlSearchParam("filter");
-  const validFilter =
-    filterParam === "NEEDS_VERIFICATION" ||
-    filterParam === "NEEDS_APPROVAL" ||
-    filterParam === "READY_TO_PAY"
-      ? (filterParam as FilterStatus)
-      : "ALL";
-  const shouldForceVendorBills = (shouldOpenVendorBill || shouldShowVendorBills) && !filterParam;
+  const viewParam = useUrlSearchParam(projectId ? `project-${projectId}-expenses-view` : "view");
+  const shouldShowVendorBills = viewParam === "vendor-bills";
+  const filterParam = useUrlSearchParam(
+    projectId ? `project-${projectId}-expenses-filter` : "filter",
+  );
+  const validFilter = parseExpenseFilter(filterParam);
+  const shouldForceVendorBills = shouldOpenVendorBill || shouldShowVendorBills;
   const [activeTab, setActiveTab] = useState<ExpenseListTab>(
     shouldForceVendorBills ? "VENDOR_BILLS" : "FIELD_CLAIMS",
   );
-  const displayedTab = shouldForceVendorBills ? "VENDOR_BILLS" : activeTab;
+  const fieldClaimsAvailable = canViewFieldClaims ?? can("view:cost");
+  const vendorBillsAvailable = can("view:vendor_bill");
+  const displayedTab = resolveExpenseView({
+    vendorIntent: shouldForceVendorBills,
+    fallback: activeTab,
+    canViewFieldClaims: fieldClaimsAvailable,
+    canViewVendorBills: vendorBillsAvailable,
+  });
   const [filter, setFilter] = useState<FilterStatus>(validFilter);
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
@@ -106,12 +136,31 @@ export function ExpenseList({
   const [operationSuccess, setOperationSuccess] = useState<OperationSuccess | null>(null);
 
   const isOwnerOrFinance = can("view:bank_account");
+  const [vendorWorkflowActive, setVendorWorkflowActive] = useState(false);
+  const [draftWorkflowActive, setDraftWorkflowActive] = useState(false);
+  const workflowActive =
+    isPending ||
+    Boolean(selectedCost || activeImage || operationSuccess) ||
+    vendorWorkflowActive ||
+    draftWorkflowActive;
+  React.useEffect((): void => {
+    onWorkflowActiveChange?.(workflowActive);
+  }, [onWorkflowActiveChange, workflowActive]);
+  React.useEffect(
+    () => (): void => {
+      onWorkflowActiveChange?.(false);
+    },
+    [onWorkflowActiveChange],
+  );
 
   const selectTab = React.useCallback(
     (nextTab: ExpenseListTab): void => {
       setActiveTab(nextTab);
-      if (projectId) return;
-      updateUrlSearchParam("view", nextTab === "VENDOR_BILLS" ? "vendor-bills" : null, "replace");
+      updateUrlSearchParam(
+        projectId ? `project-${projectId}-expenses-view` : "view",
+        nextTab === "VENDOR_BILLS" ? "vendor-bills" : null,
+        "replace",
+      );
     },
     [projectId],
   );
@@ -119,8 +168,11 @@ export function ExpenseList({
   const handleFilterChange = React.useCallback(
     (nextFilter: FilterStatus): void => {
       setFilter(nextFilter);
-      if (projectId) return;
-      updateUrlSearchParam("filter", nextFilter === "ALL" ? null : nextFilter, "replace");
+      updateUrlSearchParam(
+        projectId ? `project-${projectId}-expenses-filter` : "filter",
+        nextFilter === "ALL" ? null : nextFilter,
+        "replace",
+      );
     },
     [projectId],
   );
@@ -128,17 +180,21 @@ export function ExpenseList({
   const [prevFilterParam, setPrevFilterParam] = useState(filterParam);
   if (filterParam !== prevFilterParam) {
     setPrevFilterParam(filterParam);
-    if (
-      filterParam === "NEEDS_VERIFICATION" ||
-      filterParam === "NEEDS_APPROVAL" ||
-      filterParam === "READY_TO_PAY"
-    ) {
-      setFilter(filterParam as FilterStatus);
-      setActiveTab("FIELD_CLAIMS");
-    }
+    setFilter(parseExpenseFilter(filterParam));
+  }
+  const [previousViewParam, setPreviousViewParam] = useState(viewParam);
+  if (viewParam !== previousViewParam) {
+    setPreviousViewParam(viewParam);
+    setActiveTab(viewParam === "vendor-bills" ? "VENDOR_BILLS" : "FIELD_CLAIMS");
   }
 
   const openExpenseDrawer = React.useCallback((): void => {
+    updateUrlSearchParam("expense-entry", null, "replace");
+    updateUrlSearchParam("new-expense", "true", "push");
+  }, []);
+
+  const openReceiptDrawer = React.useCallback((): void => {
+    updateUrlSearchParam("expense-entry", "receipt", "replace");
     updateUrlSearchParam("new-expense", "true", "push");
   }, []);
 
@@ -188,6 +244,23 @@ export function ExpenseList({
       label: "Ditolak",
       value: "REJECTED",
       count: initialCosts.filter((cost) => cost.status === "REJECTED").length,
+    },
+  ];
+
+  const viewOptions: ReadonlyArray<{
+    readonly value: ExpenseListTab;
+    readonly label: string;
+    readonly icon: React.ReactNode;
+  }> = [
+    {
+      value: "FIELD_CLAIMS",
+      label: "Pengeluaran Lapangan",
+      icon: <AppIcon name="receipt_long" className="icon-sm" />,
+    },
+    {
+      value: "VENDOR_BILLS",
+      label: "Tagihan Vendor",
+      icon: <AppIcon name="request_quote" className="icon-sm" />,
     },
   ];
 
@@ -295,74 +368,131 @@ export function ExpenseList({
   }
 
   return (
-    <div className="space-y-sm px-1 pb-8 max-[430px]:-mx-1 max-[430px]:pb-6">
+    <div
+      className={
+        desktop
+          ? "min-w-0 space-y-4 pb-8"
+          : "space-y-sm px-1 pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"
+      }
+    >
       {!projectId && (
-        <FinanceInboxHeader activeClaimTotal={activeClaimTotal} fieldClaimTotal={fieldClaimTotal} />
-      )}
-
-      <SegmentedTabs
-        value={displayedTab}
-        onChange={selectTab}
-        ariaLabel="Tampilan kas dan tagihan"
-        density="compact"
-        options={[
-          {
-            value: "FIELD_CLAIMS",
-            label: "Pengeluaran Lapangan",
-            icon: <AppIcon name="receipt_long" className="icon-sm" />,
-          },
-          {
-            value: "VENDOR_BILLS",
-            label: "Tagihan Vendor",
-            icon: <AppIcon name="request_quote" className="icon-sm" />,
-          },
-        ]}
-      />
-
-      {displayedTab === "FIELD_CLAIMS" ? (
-        <FieldClaimsPanel
-          leadingContent={
-            <>
-              {can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
-                <PendingApprovalsBanner count={pendingApprovalsCount} />
-              ) : null}
-              <ExpenseDraftsPanel projectId={projectId} />
-            </>
-          }
-          projectId={projectId}
-          initialCosts={initialCosts}
-          filteredCosts={filteredCosts}
-          filter={filter}
-          filterTabs={filterTabs}
-          needsActionCount={needsActionCount}
-          readyToPayCount={readyToPayCount}
+        <FinanceInboxHeader
           activeClaimTotal={activeClaimTotal}
-          isOwnerOrFinance={isOwnerOrFinance}
-          pending={isPending}
-          historyExpanded={isHistoryExpanded}
-          onFilterChange={handleFilterChange}
-          onHistoryExpandedChange={setIsHistoryExpanded}
-          onOpenExpenseDrawer={openExpenseDrawer}
-          onVerify={handleVerifyClick}
-          onDisburse={handleDisburseClick}
-          onOpenReceipt={setActiveImage}
-        />
-      ) : (
-        <VendorBillList
-          leadingContent={
-            can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
-              <PendingApprovalsBanner count={pendingApprovalsCount} />
-            ) : null
-          }
-          projectId={projectId}
-          vendorBills={vendorBills}
-          vendorPayments={vendorPayments}
-          vendorPaymentApprovalThreshold={vendorPaymentApprovalThreshold}
-          vendors={vendors}
-          projects={projects}
-          bankAccounts={bankAccounts}
+          fieldClaimTotal={fieldClaimTotal}
+          assignedScope={assignedScope}
         />
       )}
+
+      {displayedTab ? (
+        <SegmentedTabs
+          value={displayedTab}
+          onChange={selectTab}
+          ariaLabel="Tampilan kas dan tagihan"
+          density="compact"
+          options={viewOptions.filter((option) =>
+            option.value === "FIELD_CLAIMS" ? fieldClaimsAvailable : vendorBillsAvailable,
+          )}
+        />
+      ) : null}
+
+      {projectId && assignedScope && desktop ? (
+        <p className="px-1 text-support text-on-surface-variant">
+          Pengeluaran lapangan menampilkan pengajuan Anda pada proyek ini. Tagihan mengikuti izin
+          peran Anda.
+        </p>
+      ) : null}
+      {displayedTab === null ? (
+        <PageState
+          kind="restricted"
+          compact
+          title="Pengeluaran tidak tersedia"
+          description="Akses biaya lapangan atau tagihan vendor belum tersedia untuk peran Anda."
+        />
+      ) : null}
+      {fieldClaimsAvailable ? (
+        <div hidden={displayedTab !== "FIELD_CLAIMS"} inert={displayedTab !== "FIELD_CLAIMS"}>
+          {source?.costs.status && source.costs.status !== "ready" ? (
+            <PageState
+              kind={source.costs.status === "restricted" ? "restricted" : "error"}
+              compact
+              title={
+                source.costs.status === "restricted"
+                  ? "Pengeluaran lapangan dibatasi"
+                  : "Pengeluaran belum dapat dimuat"
+              }
+              description={source.costs.message ?? "Muat ulang halaman untuk mencoba kembali."}
+            />
+          ) : (
+            <FieldClaimsPanel
+              leadingContent={
+                <>
+                  {can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
+                    <PendingApprovalsBanner count={pendingApprovalsCount} />
+                  ) : null}
+                  {can("create:cost") ? (
+                    <ExpenseDraftsPanel
+                      projectId={projectId}
+                      onWorkflowActiveChange={setDraftWorkflowActive}
+                    />
+                  ) : null}
+                </>
+              }
+              projectId={projectId}
+              initialCosts={initialCosts}
+              filteredCosts={filteredCosts}
+              filter={filter}
+              filterTabs={filterTabs}
+              needsActionCount={needsActionCount}
+              readyToPayCount={readyToPayCount}
+              activeClaimTotal={activeClaimTotal}
+              isOwnerOrFinance={isOwnerOrFinance}
+              pending={isPending}
+              historyExpanded={isHistoryExpanded}
+              onFilterChange={handleFilterChange}
+              onHistoryExpandedChange={setIsHistoryExpanded}
+              onOpenExpenseDrawer={openExpenseDrawer}
+              onScanReceipt={openReceiptDrawer}
+              onVerify={handleVerifyClick}
+              onDisburse={handleDisburseClick}
+              onOpenReceipt={setActiveImage}
+            />
+          )}
+        </div>
+      ) : null}
+      {vendorBillsAvailable ? (
+        <div hidden={displayedTab !== "VENDOR_BILLS"} inert={displayedTab !== "VENDOR_BILLS"}>
+          {source?.vendorBills.status && source.vendorBills.status !== "ready" ? (
+            <PageState
+              kind={source.vendorBills.status === "restricted" ? "restricted" : "error"}
+              compact
+              title={
+                source.vendorBills.status === "restricted"
+                  ? "Tagihan vendor dibatasi"
+                  : "Tagihan belum dapat dimuat"
+              }
+              description={
+                source.vendorBills.message ?? "Muat ulang halaman untuk mencoba kembali."
+              }
+            />
+          ) : (
+            <VendorBillList
+              onWorkflowActiveChange={setVendorWorkflowActive}
+              leadingContent={
+                can("decide:all_approvals") && pendingApprovalsCount > 0 ? (
+                  <PendingApprovalsBanner count={pendingApprovalsCount} />
+                ) : null
+              }
+              projectId={projectId}
+              vendorBills={vendorBills}
+              vendorPayments={vendorPayments}
+              vendorPaymentApprovalThreshold={vendorPaymentApprovalThreshold}
+              vendors={vendors}
+              projects={projects}
+              bankAccounts={bankAccounts}
+            />
+          )}
+        </div>
+      ) : null}
 
       <ReceiptImageLightbox imageUrl={activeImage} onClose={() => setActiveImage(null)} />
       <FieldDisbursementSheet

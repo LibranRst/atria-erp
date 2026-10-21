@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { AppIcon, MoneyValue } from "@/components/ui";
 import type { DashboardCashDue } from "@/features/finance-dashboard/types/dashboard-types";
 import { formatShortDate } from "@/features/finance-dashboard/utils/dashboard-formatters";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
-const dashboardRowPressScale = { scale: 0.985 } as const;
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
+const dashboardRowPressScale = { scale: buttonTapActiveScale } as const;
 
 export function CashDueRow({
   item,
@@ -39,6 +39,7 @@ export function CashDueRow({
   });
   return (
     <motion.div
+      tabIndex={-1}
       whileTap={reduceMotion ? undefined : dashboardRowPressScale}
       transition={transitionSpringSnappy}
       className="p-1"

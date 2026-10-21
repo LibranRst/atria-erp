@@ -9,7 +9,7 @@ import {
   ONBOARDING_STEP_IDS,
   type OnboardingStepId,
 } from "@atria/core/onboarding/owner-onboarding";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { ONBOARDING_STEP_COPY } from "./onboarding-workspace-presentation";
 
 export function OnboardingWorkspaceHeader({
@@ -36,7 +36,7 @@ export function OnboardingWorkspaceHeader({
         <div className="flex justify-start">
           {stepIndex > 0 ? (
             <motion.button
-              whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+              whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
               transition={transitionSpringSnappy}
               type="button"
               onClick={() => onNavigate(ONBOARDING_STEP_IDS[stepIndex - 1])}
@@ -51,13 +51,13 @@ export function OnboardingWorkspaceHeader({
         </div>
         <div className="min-w-0 text-center">
           <p className="text-[9px] leading-5 font-bold tracking-[0.14em] text-on-surface-variant uppercase">
-            Setup Atria
+            Setup Paduna Build
           </p>
           <p className="truncate text-support font-semibold text-on-surface">{progress.label}</p>
         </div>
         <div className="flex justify-end">
           <motion.button
-            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
             transition={transitionSpringSnappy}
             type="button"
             disabled={busy}

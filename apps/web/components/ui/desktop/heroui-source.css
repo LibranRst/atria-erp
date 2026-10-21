@@ -1,0 +1,712 @@
+/* Compiled and scoped by scripts/build-heroui-styles.ts; never import directly. */
+@reference "../../../app/globals.css";
+@import "tw-animate-css";
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/textfield.css" layer(components);
+@import "@heroui/styles/components/label.css" layer(components);
+@import "@heroui/styles/components/description.css" layer(components);
+@import "@heroui/styles/components/field-error.css" layer(components);
+@import "@heroui/styles/components/select.css" layer(components);
+@import "@heroui/styles/components/list-box.css" layer(components);
+@import "@heroui/styles/components/list-box-item.css" layer(components);
+@import "@heroui/styles/components/table.css" layer(components);
+@import "@heroui/styles/components/avatar.css" layer(components);
+@import "@heroui/styles/components/tabs.css" layer(components);
+@import "@heroui/styles/components/link.css" layer(components);
+@import "@heroui/styles/components/dropdown.css" layer(components);
+@import "@heroui/styles/components/menu-item.css" layer(components);
+@import "@heroui/styles/components/autocomplete.css" layer(components);
+@import "@heroui/styles/components/search-field.css" layer(components);
+@import "@heroui/styles/components/header.css" layer(components);
+@import "@heroui/styles/components/popover.css" layer(components);
+@import "@heroui/styles/components/switch.css" layer(components);
+@import "@heroui/styles/components/textarea.css" layer(components);
+
+/* Only missing aliases: existing Atria theme names remain authoritative. */
+@theme inline {
+  --color-link: var(--primary);
+  --color-default-soft: var(--surface-container-low);
+  --color-default-soft-foreground: var(--on-surface);
+  --color-success-soft: var(--surface-container-low);
+  --color-success-soft-foreground: var(--on-surface);
+  --color-warning-soft: var(--accent-container);
+  --color-warning-soft-foreground: var(--warning-on-container);
+  --color-segment: var(--primary);
+  --color-segment-foreground: var(--on-primary);
+  --color-surface-foreground: var(--on-surface);
+  --color-surface-secondary: var(--surface-container-low);
+  --color-overlay: var(--surface-container-lowest);
+  --color-overlay-foreground: var(--on-surface);
+  --color-default: var(--surface-container-low);
+  --color-default-hover: var(--surface-container);
+  --color-default-foreground: var(--on-surface);
+  --color-accent-foreground: var(--on-accent);
+  --color-accent-soft: var(--accent-container);
+  --color-accent-soft-foreground: var(--warning-on-container);
+  --color-danger: var(--critical);
+  --color-danger-foreground: var(--on-critical);
+  --color-danger-soft: var(--critical-container);
+  --color-danger-soft-foreground: var(--critical);
+  --color-separator: var(--ring-control);
+  --color-separator-tertiary: var(--ring-control);
+  --color-focus: var(--focus-ring-strong);
+  --color-field: var(--surface-container-lowest);
+  --color-field-foreground: var(--on-surface);
+  --color-field-placeholder: var(--muted);
+  --color-field-hover: var(--surface-container-lowest);
+  --color-field-border: var(--ring-control);
+  --radius-field: 9999px;
+  --shadow-field: var(--shadow-control);
+  --shadow-desktop-action: var(--atria-action-shadow);
+  --ease-smooth: var(--ease-out);
+  --ease-out-fluid: var(--ease-out);
+  --ease-out-quad: var(--ease-out);
+}
+
+[data-atria-admin] {
+  --atria-action-bg: var(--surface-container-lowest);
+  --atria-action-hover: var(--surface-container);
+  --atria-action-fg: var(--on-surface);
+  --atria-action-shadow: var(--shadow-control);
+  --accent-foreground: var(--on-accent);
+  --accent-hover: var(--accent);
+  --accent-soft-foreground: var(--warning-on-container);
+  --default: var(--surface-container-low);
+  --default-hover: var(--surface-container);
+  --default-foreground: var(--on-surface);
+  --danger: var(--critical);
+  --danger-hover: var(--critical);
+  --danger-foreground: var(--on-critical);
+  --danger-soft: var(--critical-container);
+  --danger-soft-hover: var(--critical-container);
+  --danger-soft-foreground: var(--critical);
+  --overlay: var(--surface-container-lowest);
+  --overlay-shadow: var(--shadow-floating);
+  --focus: var(--focus-ring-strong);
+  --field-background: var(--surface-container-lowest);
+  --field-focus: var(--surface-container-lowest);
+  --field-border: var(--ring-control);
+  --field-border-hover: var(--ring-control);
+  --field-border-focus: var(--focus-ring-strong);
+  --border-width-field: 0px;
+  --disabled-opacity: 0.5;
+  --cursor-interactive: pointer;
+  --cursor-disabled: not-allowed;
+  --ring-offset-width: 2px;
+  --radius: 8px;
+  --scrollbar-width: auto;
+  --scrollbar-color: auto;
+  --scrollbar-gutter: auto;
+}
+
+.atria-desktop-context-popover {
+  max-width: calc(100vw - 24px);
+  max-height: min(70vh, var(--available-height, 70vh));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.atria-desktop-context-popover .popover__dialog {
+  padding: 16px;
+}
+
+@layer components {
+  .atria-desktop-button {
+    @apply shadow-desktop-action font-semibold;
+    border-radius: 9999px;
+    --button-bg: var(--atria-action-bg);
+    --button-bg-hover: var(--atria-action-hover);
+    --button-fg: var(--atria-action-fg);
+  }
+  .atria-desktop-button[data-atria-variant="secondary"] {
+    --button-bg: var(--atria-action-bg);
+    --button-bg-hover: var(--atria-action-hover);
+    --button-fg: var(--atria-action-fg);
+  }
+  .atria-desktop-button[data-atria-variant="tertiary"] {
+    --button-bg: var(--atria-action-bg);
+    --button-bg-hover: var(--atria-action-hover);
+    --button-fg: var(--atria-action-fg);
+  }
+  .atria-desktop-button[data-atria-variant="critical"] {
+    --button-bg: var(--critical);
+    --button-bg-hover: var(--critical);
+    --button-fg: var(--on-critical);
+  }
+  .atria-desktop-button[data-atria-variant="criticalQuiet"] {
+    --button-bg: var(--critical-container);
+    --button-bg-hover: var(--critical-container);
+    --button-fg: var(--critical);
+    @apply shadow-control;
+  }
+  .atria-desktop-input,
+  .atria-desktop-select-trigger {
+    border-radius: 9999px;
+  }
+  .list-box-item {
+    border-radius: 9999px;
+  }
+  .list-box-item[data-selected="true"] {
+    @apply text-accent;
+  }
+}
+
+@layer components {
+  .atria-desktop-avatar,
+  .atria-desktop-avatar .avatar__fallback,
+  .atria-desktop-avatar .avatar__image {
+    border-radius: 9999px;
+  }
+  .atria-desktop-avatar .avatar__fallback {
+    background-color: var(--primary);
+    color: var(--on-primary);
+  }
+  .atria-desktop-tabs {
+    width: fit-content;
+    max-width: 100%;
+    --segment: var(--primary);
+    --segment-foreground: var(--on-primary);
+  }
+  .atria-desktop-tabs .tabs__list {
+    min-width: 0;
+    max-width: 100%;
+    background-color: var(--surface-container);
+    border-radius: 9999px;
+  }
+  .atria-desktop-tabs .tabs__tab {
+    @apply relative w-auto shrink-0 gap-2;
+    border-radius: 9999px;
+  }
+  .atria-desktop-tabs .tabs__tab-indicator {
+    border-radius: 9999px;
+  }
+  .atria-desktop-switch .switch__control {
+    @apply min-w-11;
+  }
+  .atria-desktop-switch .switch__content {
+    @apply min-h-8 min-w-8;
+  }
+  .atria-desktop-table {
+    --surface: var(--surface-container-lowest);
+    --color-surface: var(--surface-container-lowest);
+    --surface-secondary: var(--surface-container-low);
+    --color-surface-secondary: var(--surface-container-low);
+  }
+}
+
+@layer components {
+  .atria-embedded-field {
+    @apply border-0 bg-transparent p-0 shadow-none focus-visible:shadow-none focus-visible:ring-0;
+  }
+}
+
+@layer components {
+  .atria-desktop-menu {
+    @apply rounded-owner shadow-raised;
+  }
+  .atria-desktop-menu .menu-item {
+    border-radius: 9999px;
+  }
+}
+
+/* Header and footer share the owning tonal surface; white rows carry contrast. */
+.atria-desktop-table :is(.table__header, .table__column) {
+  background-color: var(--surface-container-low);
+}
+.atria-desktop-table .table__column {
+  color: var(--on-surface-variant);
+}
+
+/* Adapter density is an explicit contract. Unlayered geometry outranks legacy
+ * mobile utility classes without removing caller classes or their layout.
+ * Auto height permits long Indonesian labels to wrap instead of clipping. */
+:is(.bg-white, .bg-surface-container-lowest):not(.atria-desktop-button),
+[data-atria-action-surface="white"],
+.table__cell,
+.select__popover,
+.dropdown__popover,
+.popover {
+  --atria-action-bg: var(--primary);
+  --atria-action-hover: var(--primary-container);
+  --atria-action-fg: var(--on-primary);
+  --atria-action-shadow: var(--shadow-primary);
+}
+:is(
+  .bg-background,
+  .bg-surface,
+  .bg-surface-container-low,
+  .bg-surface-container,
+  .bg-surface-container-high,
+  .bg-surface-container-highest,
+  .bg-surface-variant,
+  .bg-primary,
+  .bg-surface-inverse
+):not(.atria-desktop-button),
+.table__header,
+.table__footer,
+.atria-desktop-topbar,
+.table__row:is(:hover, [data-hovered="true"], [data-selected="true"]) .table__cell {
+  --atria-action-bg: var(--surface-container-lowest);
+  --atria-action-hover: var(--surface-container);
+  --atria-action-fg: var(--on-surface);
+  --atria-action-shadow: var(--shadow-control);
+}
+.atria-desktop-button {
+  --atria-control-height: 40px;
+  height: auto;
+  min-height: var(--atria-control-height);
+  padding: 6px 16px;
+  font-size: var(--text-row);
+  line-height: 20px;
+  white-space: normal;
+  background-color: var(--button-bg);
+  color: var(--button-fg);
+}
+.atria-desktop-button:not(
+  [data-atria-variant="critical"],
+  [data-atria-variant="criticalQuiet"],
+  [data-atria-variant="ghost"]
+) {
+  @apply shadow-desktop-action;
+}
+.atria-desktop-button[data-atria-variant="ghost"] {
+  --button-bg: transparent;
+  --button-bg-hover: var(--surface-container-low);
+  --button-fg: var(--on-surface);
+  @apply shadow-none;
+}
+.atria-desktop-button[data-atria-variant="quiet"] {
+  --button-bg: var(--surface-container-low);
+  --button-bg-hover: var(--surface-container);
+  --button-fg: var(--on-surface);
+  @apply shadow-control;
+}
+/* A footer commit keeps its action hierarchy on either owning canvas. */
+.atria-desktop-button[data-atria-footer-action="primary"][data-atria-variant="primary"] {
+  --button-bg: var(--primary);
+  --button-bg-hover: var(--primary-container);
+  --button-fg: var(--on-primary);
+  @apply shadow-primary;
+}
+.atria-desktop-button:is(:hover, [data-hovered="true"]) {
+  background-color: var(--button-bg-hover);
+}
+.atria-desktop-button svg {
+  margin-block: 0;
+}
+.atria-desktop-button.button--full-width {
+  width: 100%;
+}
+.atria-desktop-button:is(:active, [data-pressed="true"]):not(
+    :disabled,
+    [aria-disabled="true"],
+    [data-pending="true"]
+  ) {
+  @apply z-10 shadow-raised;
+}
+.atria-desktop-button[data-atria-size="compact"],
+.atria-desktop-button[data-atria-size="mini"] {
+  --atria-control-height: 32px;
+  padding: 6px 12px;
+  font-size: var(--text-support);
+  line-height: 18px;
+}
+.atria-desktop-topbar .atria-desktop-button {
+  --atria-control-height: 40px;
+  min-height: 40px;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+.atria-desktop-button.button--icon-only {
+  width: var(--atria-control-height);
+  min-width: var(--atria-control-height);
+  padding: 0;
+  aspect-ratio: 1;
+}
+.atria-desktop-button::after {
+  content: none;
+}
+.atria-desktop-input,
+.atria-desktop-select-trigger,
+.atria-desktop-field {
+  min-height: 40px;
+  padding-inline: 14px;
+}
+.atria-desktop-input,
+.atria-desktop-select-trigger {
+  padding-block: 8px;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+.atria-desktop-select-trigger,
+.atria-desktop-filter-trigger {
+  align-items: center;
+}
+.atria-desktop-select-trigger .select__value,
+.atria-desktop-filter-trigger .select__value {
+  display: flex;
+  align-items: center;
+  font-size: inherit;
+  line-height: inherit;
+}
+.atria-desktop-field[data-grouped="true"] {
+  min-height: 32px;
+  padding-inline: 0;
+}
+.atria-desktop-quantity-stepper {
+  min-height: 40px;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+}
+.atria-desktop-quantity-stepper[data-grouped="true"] {
+  min-height: 32px;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+}
+.atria-desktop-field .atria-embedded-field {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  @apply border-0 bg-transparent shadow-none outline-none;
+}
+.atria-desktop-field
+  .atria-embedded-field:is(:focus, [data-focused="true"], [data-focus-visible="true"]) {
+  @apply bg-transparent shadow-none ring-0 outline-none;
+}
+.atria-desktop-textarea {
+  min-height: 80px;
+  padding: 10px 14px;
+  font-size: var(--text-row);
+}
+.atria-desktop-textarea[data-grouped="true"] {
+  min-height: 48px;
+  padding: 4px 0;
+  border-radius: 0;
+  @apply bg-transparent shadow-none outline-none;
+}
+.atria-desktop-textarea[data-grouped="true"]:focus {
+  @apply bg-transparent shadow-none ring-0 outline-none;
+}
+.atria-desktop-switch-row {
+  min-height: 40px;
+  padding-block: 8px;
+}
+.atria-grouped-select .atria-desktop-select-trigger {
+  min-height: 32px;
+  padding-inline: 0;
+}
+.atria-desktop-select-value {
+  @apply flex min-w-0 items-center justify-between gap-3;
+}
+.select__indicator {
+  /* The shared Framer wrapper owns the arrow rotation. */
+  rotate: 0deg;
+}
+.atria-desktop-select-trigger .select__value {
+  min-width: 0;
+  padding-inline-end: 8px;
+}
+.autocomplete__popover .search-field__group {
+  height: 40px;
+}
+.autocomplete__popover .search-field__input {
+  font-size: var(--text-row);
+}
+.atria-desktop-tab-indicator {
+  @apply pointer-events-none absolute inset-0 rounded-full bg-primary shadow-control;
+}
+.atria-desktop-tabs .tabs__tab {
+  height: auto;
+  min-height: 32px;
+  padding: 6px 14px;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+.atria-desktop-tabs .tabs__tab svg {
+  width: 16px;
+  height: 16px;
+}
+.atria-desktop-menu .menu-item,
+.list-box-item {
+  min-height: 36px;
+}
+.atria-desktop-filter {
+  width: fit-content;
+  max-width: 100%;
+}
+.atria-desktop-filter-trigger {
+  min-height: 40px;
+  max-width: 100%;
+  padding-inline: 14px 36px;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+.atria-desktop-filter .select__value {
+  min-width: 0;
+}
+.atria-desktop-filter-popover {
+  --radius: 8px;
+  min-width: max(220px, var(--trigger-width));
+  max-width: calc(100vw - 24px);
+}
+.atria-desktop-filter .select__indicator[data-open="true"] {
+  rotate: 180deg;
+}
+.atria-desktop-filter-popover .list-box-item {
+  border-radius: var(--radius-icon);
+}
+
+/* Desktop touchscreen users keep the same effective 48px interaction targets. */
+@media (pointer: coarse) {
+  .atria-desktop-topbar .atria-desktop-button {
+    --atria-control-height: 48px;
+    min-height: 48px;
+  }
+  .atria-desktop-button,
+  .atria-desktop-input,
+  .atria-desktop-select-trigger,
+  .atria-desktop-filter-trigger,
+  .autocomplete__popover .search-field__group,
+  .atria-desktop-field,
+  .atria-desktop-field[data-grouped="true"],
+  .atria-grouped-select .atria-desktop-select-trigger,
+  .atria-desktop-quantity-stepper,
+  .atria-desktop-quantity-stepper[data-grouped="true"],
+  .atria-desktop-tabs .tabs__tab,
+  .atria-desktop-menu .menu-item,
+  .list-box-item {
+    min-height: 48px;
+  }
+  .atria-desktop-quantity-stepper,
+  .atria-desktop-quantity-stepper[data-grouped="true"] {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+  }
+  .atria-desktop-button.button--icon-only {
+    width: 48px;
+    min-width: 48px;
+  }
+  .atria-desktop-switch .switch__content {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@layer components {
+  .atria-grouped-select .atria-desktop-select-trigger {
+    @apply border-0 bg-transparent px-0 shadow-none focus-visible:ring-0;
+    border-radius: 0;
+  }
+}
+
+/* Opt-in editable review: one input tree reflows into grouped mobile rows. */
+.atria-desktop-table[data-atria-review-layout] .group\/form {
+  padding: 0;
+  background: transparent;
+}
+.atria-desktop-table[data-atria-review-layout="desktop"]
+  .group\/form:not([data-form-layout="inline"])
+  > div:first-child {
+  @apply sr-only;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__scroll-container {
+  overflow: visible;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__content,
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__body {
+  display: block;
+  width: 100%;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__header {
+  @apply sr-only;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-bottom: 1px solid var(--ring-subtle);
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__cell {
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  text-align: start;
+  background: var(--surface-container-lowest);
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .table__cell:first-child {
+  grid-column: 1 / -1;
+}
+.atria-desktop-table[data-atria-review-layout="desktop"] .group\/form input {
+  min-width: 0;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+/* The review's owning FormSection clips one radius; vendor nested corners add slivers. */
+.atria-desktop-table[data-atria-review-layout] {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.atria-desktop-table[data-atria-review-layout] .table__body,
+.atria-desktop-table[data-atria-review-layout] .table__content,
+.atria-desktop-table[data-atria-review-layout] .table__cell {
+  border-radius: 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+/* HeroUI primary-table topology inside desktop overlays: one tonal frame,
+ * cohesive header/footer and a white inset body, distinct from the canvas. */
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table:not([data-atria-review-layout="mobile"]) {
+  --surface-secondary: var(--surface-container);
+  --color-surface-secondary: var(--surface-container);
+  background-color: var(--surface-container);
+  border-radius: var(--radius-owner);
+  padding-inline: 4px;
+  padding-bottom: 4px;
+}
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table:not([data-atria-review-layout="mobile"])
+  :is(.table__header, .table__column, .table__footer) {
+  background-color: var(--surface-container);
+}
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table[data-atria-review-layout="desktop"]
+  .table__body
+  .table__row:first-child
+  .table__cell:first-child {
+  border-start-start-radius: var(--radius-inset);
+}
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table[data-atria-review-layout="desktop"]
+  .table__body
+  .table__row:first-child
+  .table__cell:last-child {
+  border-start-end-radius: var(--radius-inset);
+}
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table[data-atria-review-layout="desktop"]
+  .table__body
+  .table__row:last-child
+  .table__cell:first-child {
+  border-end-start-radius: var(--radius-inset);
+}
+[data-atria-overlay-presentation="desktop"]
+  .atria-desktop-table[data-atria-review-layout="desktop"]
+  .table__body
+  .table__row:last-child
+  .table__cell:last-child {
+  border-end-end-radius: var(--radius-inset);
+}
+[data-atria-overlay-presentation="desktop"]:has(
+    .atria-desktop-table:not([data-atria-review-layout="mobile"])
+  )
+  [data-atria-dialog-surface="true"] {
+  background-color: var(--color-surface);
+}
+
+/* Inline editor rows keep the native input floor, without headline-like numerals. */
+.atria-desktop-table[data-atria-review-layout] .group\/form input,
+.atria-desktop-table[data-atria-review-layout] .group\/form textarea,
+.atria-desktop-table[data-atria-review-layout] .group\/form [data-grouped] {
+  @apply font-sans tabular-nums;
+  font-weight: 400;
+}
+.atria-desktop-table[data-atria-review-layout] .group\/form textarea {
+  field-sizing: content;
+  min-height: 32px;
+  font-size: var(--text-row);
+  line-height: 20px;
+}
+.atria-desktop-table[data-atria-review-layout]
+  .group\/form[data-form-layout="inline"]
+  > div
+  > div:last-child {
+  min-width: 0;
+  width: 64%;
+}
+.atria-desktop-table[data-atria-review-layout="desktop"]
+  .group\/form[data-form-layout="inline"]
+  > div
+  > div:first-child {
+  @apply sr-only;
+}
+.atria-desktop-table[data-atria-review-layout="desktop"]
+  .group\/form[data-form-layout="inline"]
+  > div
+  > div:last-child {
+  width: 100%;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form[data-form-layout="inline"]
+  > div {
+  min-height: 48px;
+  gap: 12px;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .group\/form label {
+  font-size: var(--text-support);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .group\/form input {
+  min-width: 0;
+  font-size: var(--text-input-min);
+  line-height: 24px;
+  font-weight: 400;
+  text-align: right;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .group\/form textarea {
+  min-height: 48px;
+  font-size: var(--text-input-min);
+  line-height: 24px;
+  text-align: right;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .group\/form [data-grouped] {
+  min-height: 48px;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"] .group\/form [data-grouped] > span {
+  font-weight: 400;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form
+  [data-grouped].financial-amount {
+  justify-content: flex-end;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form
+  [data-grouped].financial-amount
+  input {
+  field-sizing: content;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: calc(100% - 28px);
+}
+
+/* Stacked editors follow the same grouped form grammar as material sheets. */
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form:not([data-form-layout="inline"]) {
+  padding-block: 8px;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form:not([data-form-layout="inline"])
+  input,
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form:not([data-form-layout="inline"])
+  textarea {
+  text-align: start;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form:not([data-form-layout="inline"])
+  [data-grouped].financial-amount {
+  justify-content: flex-start;
+}
+.atria-desktop-table[data-atria-review-layout="mobile"]
+  .group\/form:not([data-form-layout="inline"])
+  [data-grouped].financial-amount
+  input {
+  field-sizing: fixed;
+  flex: 1 1 0%;
+  width: 100%;
+  max-width: none;
+}

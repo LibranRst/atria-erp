@@ -141,7 +141,10 @@ export const DialogOptionList = React.forwardRef<
     }, 500);
     const match = options.findIndex(
       (option) =>
-        !option.disabled && option.label.toLocaleLowerCase("id-ID").startsWith(typeahead.current),
+        !option.disabled &&
+        (option.action?.label ?? option.label)
+          .toLocaleLowerCase("id-ID")
+          .startsWith(typeahead.current),
     );
     if (match >= 0) focusIndex(match);
   }
@@ -199,11 +202,25 @@ export const DialogOptionList = React.forwardRef<
                     className={cx(
                       "flex min-h-12 w-full min-w-0 items-center gap-3 bg-white px-5 py-3 text-left text-on-surface transition-colors outline-none hover:bg-surface-container-low/70 focus-visible:bg-surface-container-low focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container",
                       option.disabled && "cursor-not-allowed opacity-55",
+                      option.action && "text-accent",
                     )}
                   >
+                    {option.action ? (
+                      <AppIcon
+                        name="add"
+                        className="icon-sm shrink-0 text-accent"
+                        aria-hidden="true"
+                      />
+                    ) : null}
                     <span className="min-w-0 flex-1">
-                      <span className={cx("block text-row font-bold", selected && "text-accent")}>
-                        {option.label}
+                      <span
+                        className={cx(
+                          "block text-row font-bold",
+                          selected && "text-accent",
+                          option.action && "text-accent",
+                        )}
+                      >
+                        {option.action?.label ?? option.label}
                       </span>
                       {option.description || option.meta || option.disabledReason ? (
                         <span

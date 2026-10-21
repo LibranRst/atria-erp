@@ -12,7 +12,11 @@ import * as React from "react";
  */
 
 export type ProposalCardShellProps = {
-  readonly eyebrow: string;
+  readonly eyebrow?: string;
+  readonly headerAction?: React.ReactNode;
+  readonly disabled?: boolean;
+  readonly disabledReason?: string;
+  readonly showConfirmAction?: boolean;
   readonly title: string;
   readonly status: "idle" | "submitting" | "submitted" | "failed";
   readonly statusLabel?: string;
@@ -33,12 +37,17 @@ export type ProposalCardShellProps = {
   readonly submittedMessage?: string;
   readonly onConfirm: () => Promise<void>;
   readonly children: React.ReactNode;
+  readonly footer?: React.ReactNode;
   readonly viewActionLabel?: string;
   readonly onViewAction?: () => void;
 };
 
 export function ProposalCardShell({
   eyebrow,
+  headerAction,
+  disabled = false,
+  disabledReason,
+  showConfirmAction = true,
   title,
   status,
   statusLabel,
@@ -50,6 +59,7 @@ export function ProposalCardShell({
   submittedMessage = "Aksi berhasil dikonfirmasi dan tercatat di sistem.",
   onConfirm,
   children,
+  footer,
   viewActionLabel,
   onViewAction,
 }: ProposalCardShellProps): React.JSX.Element {
@@ -63,20 +73,27 @@ export function ProposalCardShell({
       aria-label={title}
     >
       {/* Header */}
-      <header className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-3">
+      <header className="flex items-center justify-between gap-3 px-4 pt-3.5 pb-3">
         <div className="min-w-0">
-          <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
-            {eyebrow}
-          </p>
-          <h4 className="mt-1 truncate text-section font-bold tracking-[-0.015em] text-on-surface">
+          {eyebrow && (
+            <p className="text-eyebrow font-bold tracking-widest text-on-surface-variant uppercase">
+              {eyebrow}
+            </p>
+          )}
+          <h4
+            className={`${eyebrow ? "mt-1" : ""} truncate text-section font-bold tracking-[-0.015em] text-on-surface`}
+          >
             {title}
           </h4>
         </div>
-        <StatusBadge
-          tone={isSubmitted ? "completed" : isSubmitting ? "neutral" : "pending"}
-          label={statusLabel ?? (isSubmitted ? "Selesai" : isSubmitting ? "Proses" : "Usulan")}
-          className="shrink-0"
-        />
+        <div className="flex shrink-0 items-center gap-1">
+          <StatusBadge
+            tone={isSubmitted ? "completed" : isSubmitting ? "neutral" : "pending"}
+            label={statusLabel ?? (isSubmitted ? "Selesai" : isSubmitting ? "Proses" : "Usulan")}
+            className="shrink-0"
+          />
+          {headerAction}
+        </div>
       </header>
 
       {/* Main Content & Diff Breakdown */}
@@ -92,7 +109,9 @@ export function ProposalCardShell({
 
       {/* Footer / Aksi Konfirmasi */}
       <div className={`border-t border-black/5.5 px-4 py-3.5 ${quiet ? "bg-surface" : ""}`}>
-        {isSubmitted ? (
+        {footer !== undefined ? (
+          footer
+        ) : isSubmitted ? (
           <div className="space-y-2">
             <p className="flex items-start gap-2 text-support font-semibold text-on-surface-variant">
               <AppIcon
@@ -124,16 +143,19 @@ export function ProposalCardShell({
                 <span>{errorMessage}</span>
               </p>
             )}
-            <Button
-              variant={quiet ? "secondary" : "primary"}
-              className="w-full"
-              disabled={isSubmitting}
-              onClick={() => void onConfirm()}
-            >
-              {isSubmitting ? "Memproses…" : confirmLabel}
-            </Button>
+            {showConfirmAction && (
+              <Button
+                variant={quiet ? "secondary" : "primary"}
+                className="w-full"
+                disabled={isSubmitting || disabled}
+                onClick={() => void onConfirm()}
+              >
+                {isSubmitting ? "Memproses…" : confirmLabel}
+              </Button>
+            )}
             <p className="text-center text-meta font-semibold text-on-surface-variant">
-              Aksi baru dieksekusi setelah Anda menekan tombol konfirmasi di atas.
+              {disabledReason ??
+                "Aksi baru dieksekusi setelah Anda menekan tombol konfirmasi di atas."}
             </p>
           </div>
         )}
@@ -147,17 +169,64 @@ export function ProposalDiffRow({
   before,
   after,
   tone = "neutral",
+  layout = "inline",
+  inset = true,
+  strikeBefore = true,
 }: {
   readonly label: string;
   readonly before: string | React.ReactNode;
   readonly after: string | React.ReactNode;
   readonly tone?: "neutral" | "positive" | "negative";
+  readonly layout?: "inline" | "stacked" | "vertical";
+  readonly inset?: boolean;
+  readonly strikeBefore?: boolean;
 }): React.JSX.Element {
+  if (layout !== "inline")
+    return (
+      <div className={`min-w-0 space-y-2 py-3 ${inset ? "px-4" : ""}`}>
+        <p className="text-support font-semibold text-on-surface">{label}</p>
+        <dl
+          className={`grid min-w-0 gap-3 ${layout === "vertical" ? "grid-cols-1" : "grid-cols-2"}`}
+        >
+          <div className="min-w-0">
+            <dt className="text-meta text-on-surface-variant">Sebelum</dt>
+            <dd className="mt-1 text-support wrap-anywhere whitespace-pre-wrap text-on-surface-variant">
+              {before}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-meta text-on-surface-variant">Sesudah</dt>
+            <dd
+              className={`mt-1 text-support font-semibold wrap-anywhere whitespace-pre-wrap ${tone === "negative" ? "text-critical" : tone === "positive" ? "text-primary" : "text-on-surface"}`}
+            >
+              {after}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    );
   return (
-    <div className="grid grid-cols-12 items-center gap-2 px-4 py-2.5 text-support">
-      <span className="col-span-4 font-semibold text-on-surface-variant">{label}</span>
-      <div className="col-span-8 flex items-center justify-end gap-2 text-right font-semibold">
-        <span className="text-meta text-on-surface-variant/70 line-through">{before}</span>
+    <div
+      className={`${strikeBefore ? "grid grid-cols-12" : "flex flex-wrap justify-between"} items-center gap-2 py-2.5 text-support ${inset ? "px-4" : ""}`}
+    >
+      <span
+        className={`${strikeBefore ? "col-span-4" : "max-w-full"} font-semibold text-on-surface-variant`}
+      >
+        {label}
+      </span>
+      <div
+        className={`${strikeBefore ? "col-span-8" : "max-w-full flex-wrap"} flex items-center justify-end gap-2 text-right font-semibold`}
+      >
+        <span
+          className={
+            strikeBefore
+              ? "text-meta text-on-surface-variant/70 line-through"
+              : "text-support text-on-surface-variant"
+          }
+        >
+          <span className="sr-only">Sebelum: </span>
+          {before}
+        </span>
         <span className="text-on-surface-variant/40">→</span>
         <span
           className={
@@ -168,6 +237,7 @@ export function ProposalDiffRow({
                 : "font-bold text-on-surface"
           }
         >
+          <span className="sr-only">Sesudah: </span>
           {after}
         </span>
       </div>
@@ -179,15 +249,21 @@ export function ProposalItemRow({
   label,
   value,
   subvalue,
+  wrapLabel = false,
 }: {
   readonly label: string;
   readonly value: string | React.ReactNode;
-  readonly subvalue?: string;
+  readonly subvalue?: React.ReactNode;
+  readonly wrapLabel?: boolean;
 }): React.JSX.Element {
   return (
     <div className="flex items-baseline justify-between gap-3 px-4 py-2.5">
-      <dt className="shrink-0 text-support font-semibold text-on-surface-variant">{label}</dt>
-      <dd className="min-w-0 text-right">
+      <dt
+        className={`${wrapLabel ? "min-w-0 flex-1" : "shrink-0"} text-support font-semibold text-on-surface-variant`}
+      >
+        {label}
+      </dt>
+      <dd className={wrapLabel ? "min-w-0 shrink-0 text-right" : "min-w-0 text-right"}>
         <div className="text-row font-semibold text-on-surface">{value}</div>
         {subvalue && <div className="text-meta text-on-surface-variant">{subvalue}</div>}
       </dd>

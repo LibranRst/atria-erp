@@ -30,7 +30,11 @@ export type WebPushDeps = {
  */
 export async function inspectWebPush(deps: WebPushDeps): Promise<PushSignals> {
   const environment = deps.readEnvironment();
-  if (!environment.pushApiSupported || !environment.serverKeyConfigured) {
+  if (
+    !environment.secureContext ||
+    !environment.pushApiSupported ||
+    !environment.serverKeyConfigured
+  ) {
     return {
       environment,
       permission: "unsupported",

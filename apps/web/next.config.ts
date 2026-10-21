@@ -3,10 +3,26 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],
+  // The floating development badge overlaps the chat attachment target at 320px.
+  devIndicators: false,
+  // Keep verification builds separate from an already running development server.
+  distDir: process.env.ATRIA_NEXT_DIST_DIR ?? ".next",
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   // Di monorepo, Next menelusuri dependensi dari direktori app-nya dan akan
   // melewatkan `node_modules` yang di-hoist ke root workspace.
   outputFileTracingRoot: path.join(import.meta.dirname, "../../"),
+  experimental: {
+    /*
+     * Halaman yang baru dikunjungi (kurang dari 30 detik) dipakai ulang dari
+     * memori router: kembali ke tab bawah tidak menampilkan skeleton dan tidak
+     * mengulang proxy sesi, `resolveActor`, serta loader. Kesegaran dijaga oleh
+     * Next sendiri: Server Action yang memanggil `revalidatePath` dan
+     * `router.refresh()` membuang seluruh cache data dinamis ini. Perubahan
+     * oleh pengguna lain paling lama 30 detik terlambat pada kunjungan ulang.
+     * Lihat docs/plans/2026-10-21-navigasi-ringan-dan-cache-klien.md.
+     */
+    staleTimes: { dynamic: 30 },
+  },
   /**
    * Berkas service worker tidak boleh di-cache lama oleh CDN: selama peramban
    * masih memegang salinan lama, perbaikan pada penangan push maupun halaman
@@ -15,6 +31,18 @@ const nextConfig: NextConfig = {
    */
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "same-origin" },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+          },
+        ],
+      },
       {
         source: "/notification-sw.js",
         headers: [

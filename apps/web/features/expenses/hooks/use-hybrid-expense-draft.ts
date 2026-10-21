@@ -76,6 +76,7 @@ export function clearAllExpenseRecoveries(): void {
 export function useHybridExpenseDraft(
   initialPayload: ExpenseDraftPayload,
   recoverLocal = true,
+  projectScope?: string,
 ): {
   readonly payload: ExpenseDraftPayload;
   readonly draftId: string | null;
@@ -150,6 +151,12 @@ export function useHybridExpenseDraft(
 
   const performSave = React.useCallback(
     async (asCopy: boolean): Promise<SaveResult> => {
+      if (projectScope && payloadRef.current.projectId !== projectScope)
+        return {
+          success: false,
+          reason: "error",
+          message: "Draft berasal dari proyek lain. Lanjutkan melalui halaman Pengeluaran.",
+        };
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         setStatus("offline");
         return {
@@ -205,7 +212,7 @@ export function useHybridExpenseDraft(
       inFlightRef.current = null;
       return result;
     },
-    [persistLocal],
+    [persistLocal, projectScope],
   );
 
   const saveNow = React.useCallback((): Promise<SaveResult> => performSave(false), [performSave]);
@@ -260,12 +267,13 @@ export function useHybridExpenseDraft(
   }, []);
 
   React.useEffect(() => {
-    if (status !== "dirty") return undefined;
+    if (status !== "dirty" || (projectScope && payload.projectId !== projectScope))
+      return undefined;
     const timeout = window.setTimeout(() => {
       void saveNow();
     }, AUTOSAVE_DELAY_MS);
     return () => window.clearTimeout(timeout);
-  }, [payload, saveNow, status]);
+  }, [payload, projectScope, saveNow, status]);
 
   React.useEffect(() => {
     function handleOffline(): void {

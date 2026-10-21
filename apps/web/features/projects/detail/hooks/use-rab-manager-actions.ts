@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import { toast } from "sonner";
 
 import {
@@ -31,6 +31,7 @@ import {
   buildRabItemUpdatePayload,
 } from "../types/rab-manager-action-payloads";
 import { emptyManualQuotationLine } from "../utils/rab-manager-utils";
+import { useRapActionFeedback } from "./use-rap-action-feedback";
 
 interface UseRabManagerActionsProps {
   readonly projectId: string;
@@ -62,6 +63,7 @@ interface UseRabManagerActionsResult {
   readonly isPending: boolean;
   readonly error: string | null;
   readonly success: string | null;
+  readonly resetMessages: () => void;
   readonly handleGenerateRab: () => void;
   readonly handleSaveRabItem: (item: RabItemView) => void;
   readonly handleAddManualRabItem: () => void;
@@ -98,37 +100,10 @@ export function useRabManagerActions({
 }: UseRabManagerActionsProps): UseRabManagerActionsResult {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (success) {
-      toast.success(success);
-    }
-  }, [success]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
-
-  function resetMessages(): void {
-    setError(null);
-    setSuccess(null);
-  }
-
-  function showError(message: string): void {
-    setError(message);
-    toast.error(message);
-  }
-
-  function showSuccess(message: string): void {
-    setSuccess(message);
-    toast.success(message);
-  }
+  const { error, success, resetMessages, showError, showSuccess } = useRapActionFeedback();
 
   function handleGenerateRab(): void {
+    if (isPending) return;
     resetMessages();
 
     startTransition(async () => {
@@ -153,6 +128,7 @@ export function useRabManagerActions({
   }
 
   function handleSaveRabItem(item: RabItemView): void {
+    if (isPending) return;
     const draft = rabDraftEdits[item.id];
     if (!draft) {
       const message = "Tidak ada perubahan yang perlu disimpan.";
@@ -163,7 +139,7 @@ export function useRabManagerActions({
     startTransition(async () => {
       const res = await updateRabEstimateItem(buildRabItemUpdatePayload(draft));
       if (!res.success) {
-        toast.error(res.error.message);
+        showError(res.error.message);
         return;
       }
       setRabDraftEdits((current) => {
@@ -171,14 +147,14 @@ export function useRabManagerActions({
         delete next[item.id];
         return next;
       });
-      toast.success(`Tersimpan · Total item ${formatRp(Number(res.data.lineTotal))}`);
+      showSuccess(`Tersimpan · Total item ${formatRp(Number(res.data.lineTotal))}`);
       setRabItemEditorId(null);
       router.refresh();
     });
   }
 
   function handleAddManualRabItem(): void {
-    if (!rabEstimate) return;
+    if (isPending || !rabEstimate) return;
     resetMessages();
     startTransition(async () => {
       const result = await addRabManualItem(
@@ -196,7 +172,7 @@ export function useRabManagerActions({
   }
 
   function handleApproveRab(): void {
-    if (!rabEstimate) return;
+    if (isPending || !rabEstimate) return;
     if (Object.keys(rabDraftEdits).length > 0) {
       showError(
         "Masih ada perubahan quotation line yang belum disimpan. Simpan semua line sebelum approval.",
@@ -216,7 +192,7 @@ export function useRabManagerActions({
   }
 
   function handleRefreshRabSources(): void {
-    if (!rabEstimate) return;
+    if (isPending || !rabEstimate) return;
     resetMessages();
     startTransition(async () => {
       const result = await refreshRabLinkedSources({
@@ -234,7 +210,7 @@ export function useRabManagerActions({
   }
 
   function handleSaveBundle(): void {
-    if (!rabEstimate) return;
+    if (isPending || !rabEstimate) return;
     resetMessages();
     startTransition(async () => {
       const common = buildBundleCommonPayload(bundleForm);
@@ -260,6 +236,7 @@ export function useRabManagerActions({
   }
 
   function handleDeleteBundle(bundleId: string): void {
+    if (isPending) return;
     resetMessages();
     startTransition(async () => {
       const result = await deleteRabBundle({ bundleId });
@@ -267,13 +244,14 @@ export function useRabManagerActions({
         showError(result.error.message);
         return;
       }
+      setBundleEditorOpen(false);
       showSuccess("Paket dibongkar; member kembali menjadi standalone quotation lines.");
       router.refresh();
     });
   }
 
   function handleApproveChangeOrder(): void {
-    if (!rabEstimate || !baselineApprovedRabId) return;
+    if (isPending || !rabEstimate || !baselineApprovedRabId) return;
     resetMessages();
     startTransition(async () => {
       const created = await createProjectChangeOrder(
@@ -306,7 +284,7 @@ export function useRabManagerActions({
   }
 
   function handleVoidRabRevision(): void {
-    if (!rabEstimate) return;
+    if (isPending || !rabEstimate) return;
     resetMessages();
     startTransition(async () => {
       const result = await voidRabRevision({
@@ -328,6 +306,7 @@ export function useRabManagerActions({
     isPending,
     error,
     success,
+    resetMessages,
     handleGenerateRab,
     handleSaveRabItem,
     handleAddManualRabItem,

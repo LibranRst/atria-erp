@@ -84,6 +84,9 @@
   --success-light: var(--success-container);
   --warning-light: var(--warning-container);
   --critical-light: var(--critical-container);
+
+  /* Editable text stays legible without triggering iPhone focus zoom. */
+  --text-input-min: 16px;
 }
 
 @theme {
@@ -211,6 +214,7 @@
 
   /* Calm Modern Luxury geometry roles. */
   --radius-owner: 28px;
+  --radius-desktop-panel: 16px;
   --radius-inset: 20px;
   --radius-icon: 16px;
 
@@ -260,6 +264,16 @@
   height: 28px;
 }
 
+@utility button-press-scale {
+  transition-property: transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  &:active {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
 body {
   background-color: var(--background);
   color: var(--color-on-surface);
@@ -274,6 +288,40 @@ body {
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-outline-variant);
+  }
+
+  /*
+   * Apply the floor on the editable element, never its owning form row. Small
+   * Tailwind type roles read these variables, so shared controls and raw
+   * search/chat/HEX fields share the same behavior while labels stay compact.
+   * Larger roles keep their size; fine-pointer desktop retains its density.
+   */
+  @media (width < 64rem), (any-pointer: coarse) {
+    input:is(
+        :not([type]),
+        [type="text"],
+        [type="email"],
+        [type="password"],
+        [type="search"],
+        [type="tel"],
+        [type="url"],
+        [type="number"],
+        [type="date"],
+        [type="time"],
+        [type="datetime-local"],
+        [type="month"],
+        [type="week"]
+      ):not([readonly]),
+    textarea:not([readonly]),
+    [data-composer-mirror] {
+      font-size: max(var(--text-input-min), 1em);
+      --text-xs: var(--text-input-min);
+      --text-sm: var(--text-input-min);
+      --text-eyebrow: var(--text-input-min);
+      --text-meta: var(--text-input-min);
+      --text-support: var(--text-input-min);
+      --text-row: var(--text-input-min);
+    }
   }
 }
 
@@ -305,6 +353,29 @@ body {
   display: block;
   min-width: 0;
   max-width: 100%;
+}
+
+/* Inline review editors inherit the shared form contract with operational type density. */
+.review-item-editor .group\/form label {
+  font-size: var(--text-support);
+  line-height: var(--text-support--line-height);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.review-item-editor .group\/form :is(input, textarea) {
+  font-size: var(--text-row);
+  line-height: 20px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+@media (width < 64rem), (any-pointer: coarse) {
+  .review-item-editor .group\/form :is(input, textarea) {
+    font-size: var(--text-base);
+  }
+}
+[data-review-presentation="mobile"] .review-item-editor .group\/form :is(input, textarea) {
+  font-size: var(--text-base);
 }
 
 .money-value-compact {
@@ -378,7 +449,7 @@ body {
 }
 
 /* ==========================================================================
-   Atria Custom Toast (Sonner) UI/UX Overrides
+   Paduna Custom Toast (Sonner) UI/UX Overrides
    ========================================================================== */
 
 /* Align toaster container with the mobile shell (max-w-md / 448px) */
@@ -390,7 +461,7 @@ body {
   right: auto !important;
   transform: translateX(-50%) !important;
 
-  /* Set Atria UI/UX Color Variables for Rich Colors */
+  /* Set Paduna UI/UX Color Variables for Rich Colors */
   --success-bg: var(--success-light) !important;
   --success-border: color-mix(in srgb, var(--success) 12%, transparent) !important;
   --success-text: var(--success) !important;
@@ -447,7 +518,7 @@ body {
   opacity: 0.9 !important;
 }
 
-/* Style actions/buttons inside toast to match Atria fully-rounded capsule style */
+/* Style actions/buttons inside toast to match Paduna fully-rounded capsule style */
 [data-sonner-toast] [data-button] {
   font-family: var(--font-manrope), sans-serif !important;
   border-radius: 9999px !important; /* Capsule style */
@@ -461,7 +532,8 @@ body {
 }
 
 [data-sonner-toast] [data-button]:active {
-  transform: scale(0.96) !important;
+  transform: scale(1.05) !important;
+  box-shadow: var(--shadow-raised) !important;
 }
 
 /* Style close button */
@@ -473,6 +545,67 @@ body {
   transition:
     transform 150ms ease,
     opacity 150ms ease !important;
+}
+
+[data-sonner-toast] [data-close-button]:active {
+  transform: scale(1.05) !important;
+}
+
+/* Shared scroll-edge material: a gradual canvas wash, mirrored at the bottom. */
+.scroll-edge-scrim {
+  --scroll-edge-direction: to bottom;
+  --scroll-edge-color: var(--color-background);
+  background-image: linear-gradient(
+    var(--scroll-edge-direction),
+    var(--scroll-edge-color) 0%,
+    var(--scroll-edge-color) var(--scroll-edge-solid-size, 0%),
+    color-mix(in srgb, var(--scroll-edge-color) 98%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.14),
+    color-mix(in srgb, var(--scroll-edge-color) 91%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.28),
+    color-mix(in srgb, var(--scroll-edge-color) 76%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.42),
+    color-mix(in srgb, var(--scroll-edge-color) 54%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.58),
+    color-mix(in srgb, var(--scroll-edge-color) 30%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.74),
+    color-mix(in srgb, var(--scroll-edge-color) 10%, transparent)
+      calc(var(--scroll-edge-solid-size, 0%) + (100% - var(--scroll-edge-solid-size, 0%)) * 0.88),
+    transparent 100%
+  );
+}
+
+.scroll-edge-scrim-sheet {
+  --scroll-edge-color: var(--color-surface-container-low);
+}
+
+/* Desktop work surfaces are lighter than their contained tonal tables. */
+[data-atria-sheet-canvas="true"][data-atria-overlay-presentation="desktop"] {
+  background-color: var(--color-surface);
+}
+[data-atria-overlay-presentation="desktop"] .scroll-edge-scrim-sheet {
+  --scroll-edge-color: var(--color-surface);
+}
+
+.scroll-edge-scrim-sheet-header {
+  --scroll-edge-solid-size: calc(100% - 1rem);
+}
+
+.scroll-edge-scrim-sheet-footer {
+  --scroll-edge-solid-size: calc(100% - 3rem);
+}
+
+.scroll-edge-scrim-bottom {
+  --scroll-edge-direction: to top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="active:scale-"]:active,
+  [data-sonner-toast] [data-button]:active,
+  [data-sonner-toast] [data-close-button]:active {
+    scale: 1;
+    transform: none !important;
+  }
 }
 
 /* Hide native browser search cancel and decoration buttons across WebKit, Blink, and Edge */

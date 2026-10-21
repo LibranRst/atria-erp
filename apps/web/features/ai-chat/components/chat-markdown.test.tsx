@@ -90,6 +90,6 @@ describe("ChatMarkdown component", () => {
 
   test("handles empty or single string without errors", () => {
     expect(renderToStaticMarkup(<ChatMarkdown content="" />)).toContain("space-y-2.5");
-    expect(renderToStaticMarkup(<ChatMarkdown content="Halo Atria" />)).toContain("Halo Atria");
+    expect(renderToStaticMarkup(<ChatMarkdown content="Halo Paduna Build" />)).toContain("Halo Paduna Build");
   });
 });

@@ -14,7 +14,7 @@ import { AppIcon } from "../icon/app-icon";
 import { Button, IconButton } from "../button/button";
 import { SheetFooterActions } from "../overlay/sheet-footer-actions";
 
-describe("Atria control language", () => {
+describe("Paduna control language", () => {
   test("keeps primary and irreversible actions visually distinct and pending-safe", () => {
     const primary = renderToStaticMarkup(<Button pending>Catat</Button>);
     const critical = renderToStaticMarkup(<Button variant="critical">Hapus permanen</Button>);

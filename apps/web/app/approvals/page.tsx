@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { resolveActor } from "@/server/actor";
 
-import { PageHeader, PageState } from "@/components/ui";
+import { PageState } from "@/components/ui";
 import { ApprovalList } from "@/features/approvals/components/views/approval-list";
 import { PendingChangeOrdersBanner } from "@/features/approvals/components/views/pending-change-orders-banner";
 import { getApprovalsPageData } from "@/features/approvals/server/get-approvals-page-data";
@@ -27,20 +27,11 @@ export default async function ApprovalsPage(): Promise<React.JSX.Element> {
   }
 
   return (
-    <section className="space-y-sm px-1 pb-8 select-none max-[430px]:-mx-1 max-[430px]:pb-6">
-      <PageHeader
-        title="Persetujuan"
-        subtitle="Tinjau dampak budget, kas, atau stok sebelum memberi keputusan."
-      />
-      {data.pendingChangeOrders.length > 0 ? (
-        <PendingChangeOrdersBanner orders={data.pendingChangeOrders} />
-      ) : null}
-      <ApprovalList
-        key={data.referenceDateIso}
-        initialApprovals={data.approvals}
-        canEmergencyOverride={data.canEmergencyOverride}
-        referenceDateIso={data.referenceDateIso}
-      />
-    </section>
+    <ApprovalList
+      initialApprovals={data.approvals}
+      canEmergencyOverride={data.canEmergencyOverride}
+      referenceDateIso={data.referenceDateIso}
+      leadingContent={<PendingChangeOrdersBanner orders={data.pendingChangeOrders} />}
+    />
   );
 }

@@ -2,11 +2,12 @@ import type { Preview } from "@storybook/nextjs";
 import React from "react";
 
 import { ProjectStateProvider } from "../features/projects/detail/components/shared/project-state-context";
-import { inter, jetbrains } from "./fonts";
+import { manrope, jetbrains } from "./fonts";
 import "../app/globals.css";
+import "../components/ui/desktop/heroui-scoped.css";
 
 // The real app puts the next/font variable classes on <html> (app/layout.tsx), so
-// --font-sans (which references var(--font-inter)) resolves validly at the root and
+// --font-sans (which references var(--font-manrope)) resolves validly at the root and
 // inherits correctly. A custom property that fails to resolve at its point of
 // declaration becomes permanently invalid for every inheriting descendant even if a
 // deeper element later defines the variable it depends on — so these classes must
@@ -14,7 +15,7 @@ import "../app/globals.css";
 function RootFontClassSetter(): null {
   React.useEffect(() => {
     const root = document.documentElement;
-    const classes = [inter.variable, jetbrains.variable, "antialiased"];
+    const classes = [manrope.variable, jetbrains.variable, "antialiased"];
     root.classList.add(...classes);
     return () => {
       root.classList.remove(...classes);
@@ -53,7 +54,7 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      <div className="min-h-full bg-background font-sans text-[16px] leading-lg font-normal text-on-surface">
+      <div className="min-h-full bg-background font-sans text-base leading-lg font-normal text-on-surface">
         <RootFontClassSetter />
         <ProjectStateProvider>
           <Story />

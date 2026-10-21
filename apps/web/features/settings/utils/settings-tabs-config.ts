@@ -56,3 +56,12 @@ export function settingsTabFromPathname(pathname: string): SettingsTab | null {
 export function settingsTabUrl(value: SettingsTab): string {
   return value === "financial" ? "/settings" : `/settings?tab=${value}`;
 }
+
+/** A missing query honors its canonical/legacy route instead of overwriting the SSR tab. */
+export function resolveSettingsTab(
+  pathname: string,
+  query: string | null,
+  initial: SettingsTab = "financial",
+): SettingsTab {
+  return parseSettingsTab(query ?? settingsTabFromPathname(pathname) ?? initial);
+}

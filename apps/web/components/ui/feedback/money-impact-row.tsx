@@ -64,7 +64,7 @@ export function MoneyImpactRow({
           <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
             Sebelum
           </p>
-          <p className="mt-1 font-mono text-xs font-bold tabular-nums text-on-surface min-[360px]:text-sm">
+          <p className="mt-1 font-mono text-xs font-bold text-on-surface tabular-nums min-[360px]:text-sm">
             {money(before)}
           </p>
         </div>

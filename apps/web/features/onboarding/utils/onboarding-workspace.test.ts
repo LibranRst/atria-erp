@@ -24,7 +24,10 @@ const budgetDefaultsSheetPath = new URL(
   "../components/panels/onboarding-budget-defaults-sheet.tsx",
   import.meta.url,
 );
-const loaderPath = new URL("../server/get-owner-onboarding-workspace-data.ts", import.meta.url);
+const loaderPath = new URL(
+  "../../../../api/src/backend/features/onboarding/server/get-owner-onboarding-workspace-data.ts",
+  import.meta.url,
+);
 const financeReviewPath = new URL(
   "../components/workspaces/onboarding-finance-review.tsx",
   import.meta.url,
@@ -131,7 +134,9 @@ describe("inline owner onboarding workspace", () => {
     expect(workspaceSource).toContain("showExitConfirm");
     expect(workspaceSource).toContain("Jeda setup sekarang?");
     expect(workspaceSource).toContain("grid grid-cols-2 gap-2");
-    expect(workspaceSource).toContain("transition={transitionSpringSnappy}");
+    // Action feedback belongs to the shared Button, rather than per-feature
+    // motion wrappers; the shared button suite verifies its spring and hold.
+    expect(workspaceSource).toContain("<Button");
     expect(dashboardSource).toContain("OrganizationSetupCard");
     expect(setupCardSource).toContain('role="progressbar"');
     expect(setupCardSource).toContain("aria-valuetext");
@@ -156,7 +161,10 @@ describe("inline owner onboarding workspace", () => {
   test("renders only the step whose data payload was loaded by the server", async () => {
     const workspace = await Bun.file(quickStartWorkspacePath).text();
     const loader = await Bun.file(
-      new URL("../server/get-quick-start-workspace-data.ts", import.meta.url),
+      new URL(
+        "../../../../api/src/backend/features/onboarding/server/get-quick-start-workspace-data.ts",
+        import.meta.url,
+      ),
     ).text();
 
     expect(loader).toContain("readonly activeStep: QuickStartStepId");
@@ -234,7 +242,7 @@ describe("inline owner onboarding workspace", () => {
     expect(panel).not.toContain("<FormSheet");
     expect(entry).toContain("<OperationalFormSheet");
     expect(entry).toContain('formId="onboarding-opening-inventory-form"');
-    expect(entry).toContain('submitLabel="Ajukan saldo awal"');
+    expect(entry).toMatch(/submitLabel=\{[^\n]*"Ajukan saldo awal"/);
     expect(entry).toContain("disabledReason={submitDisabledReason}");
   });
 });

@@ -3,7 +3,7 @@
 import React from "react";
 
 import { NativePanel } from "../shared/rap-rab-primitives";
-import { AppIcon } from "@/components/ui";
+import { AppIcon, Button } from "@/components/ui";
 export function RabEmptyState({
   canManageRab,
   setSourcePickerOpen,
@@ -22,13 +22,14 @@ export function RabEmptyState({
           Pilih material dan paket kerja, lalu rapikan harga serta labelnya.
         </p>
         {canManageRab && (
-          <button
+          <Button
             type="button"
             onClick={() => setSourcePickerOpen(true)}
             className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+            variant="primary"
           >
             Buat Draf RAB
-          </button>
+          </Button>
         )}
       </div>
     </NativePanel>

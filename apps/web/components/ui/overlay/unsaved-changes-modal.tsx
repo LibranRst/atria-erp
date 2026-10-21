@@ -1,10 +1,9 @@
 "use client";
+import { Button } from "../button/button";
 
 import React from "react";
-import { motion } from "framer-motion";
 
 import { ConfirmationDialog } from "@/components/ui/overlay/dialogs";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 
 /**
  * Konfirmasi tiga pilihan saat pengguna menutup form yang belum selesai:
@@ -45,40 +44,41 @@ export function UnsavedChangesModal({
       title={title}
       description={description}
       tone="warning"
+      pending={pending}
       onClose={onContinue}
       actions={
         <div className="space-y-2">
-          <motion.button
+          <Button
             type="button"
-            whileTap={{ scale: 0.97 }}
-            transition={transitionSpringSnappy}
-            disabled={pending}
+            pending={pending}
+            pendingLabel={keepPendingLabel}
             onClick={onKeep}
-            className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-bold text-white disabled:opacity-45"
+            fullWidth
+            variant="primary"
           >
             {pending ? keepPendingLabel : keepLabel}
-          </motion.button>
+          </Button>
           <div className="grid grid-cols-2 gap-2">
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onDiscard}
-              className="min-h-12 rounded-full bg-error-container/25 px-4 text-xs font-bold text-error disabled:opacity-45"
+              fullWidth
+              className="min-w-0 px-4"
+              variant="critical"
             >
               Buang Perubahan
-            </motion.button>
-            <motion.button
+            </Button>
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               disabled={pending}
               onClick={onContinue}
-              className="min-h-12 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface disabled:opacity-45"
+              fullWidth
+              className="min-w-0 px-4"
+              variant="secondary"
             >
               Lanjut Mengisi
-            </motion.button>
+            </Button>
           </div>
         </div>
       }

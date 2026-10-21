@@ -111,7 +111,8 @@ export function movementIcon(row: MaterialMovementView): string {
 export function movementIconTone(row: MaterialMovementView): string {
   if (row.movementType === "RESERVE") return "bg-warning-light text-warning ring-1 ring-warning/6";
   if (row.movementType === "WASTE") return "bg-error-container/25 text-error ring-1 ring-error/6";
-  if (row.movementType.includes("TRANSFER")) return "bg-primary/8 text-primary ring-1 ring-primary/6";
+  if (row.movementType.includes("TRANSFER"))
+    return "bg-primary/8 text-primary ring-1 ring-primary/6";
   if (row.movementDirection === "OUT") return "bg-error/10 text-error ring-1 ring-error/6";
   if (row.movementDirection === "IN") return "bg-primary/10 text-primary ring-1 ring-primary/6";
   return "bg-surface-container text-on-surface-variant ring-1 ring-outline-variant/10";

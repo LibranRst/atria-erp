@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ import {
   type AppIconName,
   GroupedSurface,
   IconButtonLink,
+  PageState,
   WorkspaceRowChevron,
   WorkspaceStatusLabel,
 } from "@/components/ui";
@@ -23,6 +25,9 @@ import type {
   OperationalReadinessItem,
   OrganizationSetupOverview,
 } from "@atria/core/onboarding/organization-setup";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import type { SettingsReadSources } from "@atria/core/settings/read-sources";
+import { useBrowserUrlSearchParam } from "@/lib/utils/use-url-search-param";
 
 function getReadinessIcon(id: string): AppIconName {
   switch (id) {
@@ -43,7 +48,13 @@ function getReadinessIcon(id: string): AppIconName {
   }
 }
 
-function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): React.JSX.Element {
+function ReadinessRow({
+  item,
+  desktop,
+}: {
+  readonly item: OperationalReadinessItem;
+  readonly desktop: boolean;
+}): React.JSX.Element {
   const iconName = getReadinessIcon(item.id);
   const statusLabel = item.ready
     ? item.status === "NOT_APPLICABLE"
@@ -62,18 +73,28 @@ function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): Re
       : "critical";
 
   const content = (
-    <div className="flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left">
+    <div
+      className={
+        desktop
+          ? "flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left"
+          : "flex min-h-18 w-full items-center gap-3 px-3.5 py-3 text-left"
+      }
+    >
       <span
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-surface-container-low text-on-surface-variant"
+        className={`flex shrink-0 items-center justify-center bg-surface-container-low text-on-surface-variant ${desktop ? "h-8 w-8 rounded-full" : "h-10 w-10 rounded-icon"}`}
         aria-hidden="true"
       >
         <AppIcon name={iconName} className="icon-md" />
       </span>
       <div className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] leading-5 font-bold text-on-surface">
-          {item.label}
-        </span>
-        <span className="block truncate text-meta text-on-surface-variant">
+        <span className="block text-row font-semibold text-on-surface">{item.label}</span>
+        <span
+          className={
+            desktop
+              ? "mt-0.5 block text-support text-on-surface-variant"
+              : "block truncate text-meta text-on-surface-variant"
+          }
+        >
           {item.detail}
         </span>
       </div>
@@ -87,7 +108,7 @@ function ReadinessRow({ item }: { readonly item: OperationalReadinessItem }): Re
   return item.action ? (
     <Link
       href={item.action.href}
-      className="block w-full text-left outline-none transition-colors hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
+      className="block w-full text-left transition-colors outline-none hover:bg-surface-container-low/50 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset active:bg-surface-container-low/70"
       aria-label={`${item.action.label}: ${item.label}`}
     >
       {content}
@@ -101,15 +122,17 @@ export function SetupReadinessManager({
   overview,
   inventory,
   batches,
+  sources,
 }: {
   readonly overview: OrganizationSetupOverview;
   readonly inventory: readonly InitialStockCandidate[];
   readonly batches: readonly InventoryOpeningBatchView[];
+  readonly sources?: SettingsReadSources;
 }): React.JSX.Element {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const desktop = useWorkspacePresentation() === "desktop";
   const [pending, startTransition] = React.useTransition();
-  const showInitialStock = searchParams.get("flow") === "initial-stock";
+  const showInitialStock = useBrowserUrlSearchParam("flow") === "initial-stock";
 
   function decide(decision: "NO_LEGACY_STOCK" | "SKIPPED"): void {
     startTransition(async () => {
@@ -128,8 +151,11 @@ export function SetupReadinessManager({
   }
 
   if (showInitialStock) {
+    const failed = sources
+      ? [sources.initialStock, sources.openingBatches].find((source) => source.status !== "ready")
+      : undefined;
     return (
-      <section className="space-y-4">
+      <section className="min-w-0 space-y-4">
         <header className="flex items-center gap-3">
           <IconButtonLink
             href="/settings?tab=readiness"
@@ -141,24 +167,56 @@ export function SetupReadinessManager({
             <AppIcon name="arrow_back" className="icon-md" />
           </IconButtonLink>
           <div className="min-w-0 flex-1">
-            <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+            <p
+              className={
+                desktop
+                  ? "hidden"
+                  : "text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase"
+              }
+            >
               Kesiapan operasional
             </p>
-            <h2 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h2>
+            <h1 className="text-lg font-bold tracking-tight text-on-surface">Saldo awal stok</h1>
           </div>
         </header>
         <p className="text-support text-on-surface-variant">
-          Finalkan posisi stok fisik yang sudah dimiliki sebelum operasi inventory Atria berjalan.
+          Finalkan posisi stok fisik yang sudah dimiliki sebelum operasi inventory Paduna Build
+          berjalan.
         </p>
 
-        <InitialStockSetupPanel
-          candidates={inventory}
-          batches={batches}
-          simulation={null}
-          onMutationComplete={() => router.refresh()}
-          onNoLegacyStock={() => decide("NO_LEGACY_STOCK")}
-          onSkip={() => decide("SKIPPED")}
-        />
+        {failed ? (
+          <PageState
+            kind={
+              failed.status === "restricted" || failed.status === "unauthorized"
+                ? "restricted"
+                : "error"
+            }
+            title="Saldo awal stok belum dapat dimuat"
+            description={
+              "message" in failed
+                ? failed.message
+                : "Muat ulang untuk membaca stok dan pengajuan yang tersedia."
+            }
+            actionLabel={
+              failed.status === "restricted" || failed.status === "unauthorized"
+                ? undefined
+                : "Coba lagi"
+            }
+            onAction={() => router.refresh()}
+            compact
+          />
+        ) : (
+          <InitialStockSetupPanel
+            presentation="settings"
+            candidates={inventory}
+            batches={batches}
+            simulation={null}
+            pending={pending}
+            onMutationComplete={() => router.refresh()}
+            onNoLegacyStock={() => decide("NO_LEGACY_STOCK")}
+            onSkip={() => decide("SKIPPED")}
+          />
+        )}
         {pending ? (
           <p className="text-center text-meta text-on-surface-variant">Menyimpan keputusan…</p>
         ) : null}
@@ -167,18 +225,20 @@ export function SetupReadinessManager({
   }
 
   return (
-    <section className="min-w-0 space-y-sm">
+    <section
+      className={desktop ? "grid min-w-0 items-start gap-4 lg:grid-cols-2" : "min-w-0 space-y-sm"}
+    >
       <section className="space-y-2">
         <div className="flex min-h-8 items-center justify-between gap-3 px-1">
           <h3 className="text-section font-bold text-on-surface">Fondasi utama</h3>
-          <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
+          <span className="text-meta font-semibold text-on-surface-variant">
             {overview.requiredReadyCount} aktif dari {overview.requiredTotal}
           </span>
         </div>
-        <GroupedSurface>
+        <GroupedSurface variant={desktop ? "desktopPanel" : "default"}>
           <div className="divide-y divide-outline-variant/20">
             {overview.requiredReadiness.map((item) => (
-              <ReadinessRow key={item.id} item={item} />
+              <ReadinessRow key={item.id} item={item} desktop={desktop} />
             ))}
           </div>
         </GroupedSurface>
@@ -187,14 +247,14 @@ export function SetupReadinessManager({
       <section className="space-y-2">
         <div className="flex min-h-8 items-center justify-between gap-3 px-1">
           <h3 className="text-section font-bold text-on-surface">Katalog & pendukung</h3>
-          <span className="text-[9px] leading-4 font-semibold text-on-surface-variant">
+          <span className="text-meta font-semibold text-on-surface-variant">
             Opsional untuk RAP & RAB
           </span>
         </div>
-        <GroupedSurface>
+        <GroupedSurface variant={desktop ? "desktopPanel" : "default"}>
           <div className="divide-y divide-outline-variant/20">
             {overview.recommendedReadiness.map((item) => (
-              <ReadinessRow key={item.id} item={item} />
+              <ReadinessRow key={item.id} item={item} desktop={desktop} />
             ))}
           </div>
         </GroupedSurface>

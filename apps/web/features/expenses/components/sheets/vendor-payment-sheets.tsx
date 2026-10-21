@@ -6,6 +6,8 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
   MoneyInput,
   MoneyValue,
   AdaptiveSelect,
@@ -14,8 +16,10 @@ import {
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type {
   VendorListBankAccount,
@@ -61,6 +65,7 @@ export function VendorSchedulePaymentSheet({
   onScheduleAmountChange,
   onScheduleDateChange,
 }: VendorSchedulePaymentSheetProps): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const {
     presentedValue: presentedBill,
     open,
@@ -117,6 +122,72 @@ export function VendorSchedulePaymentSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Tagihan"
+                wrapLabel
+                value={presentedBill.billNumber}
+              />
+              <FactRow
+                layout="stacked"
+                label="Vendor"
+                wrapLabel
+                value={presentedBill.vendor?.name ?? "–"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Belum dijadwalkan"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(remaining) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={remaining}
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Nominal rencana"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Rekening rencana"
+                wrapLabel
+                value={
+                  selectedAccount?.name ??
+                  (selectedBankId ? "Rekening tidak tersedia" : "Belum dipilih")
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Tanggal rencana"
+                wrapLabel
+                value={
+                  scheduleDate
+                    ? new Date(scheduleDate).toLocaleDateString("id-ID", { dateStyle: "medium" })
+                    : "Belum dipilih"
+                }
+              />
+              <p className="px-4 py-3 text-support text-on-surface-variant">
+                Penjadwalan belum mengurangi saldo rekening.
+              </p>
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         onExitComplete={handleExit}
         title={reviewing ? "Tinjau rencana pembayaran" : "Jadwalkan pembayaran vendor"}
@@ -132,11 +203,13 @@ export function VendorSchedulePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <VendorBillScheduleContextCard
-            bill={presentedBill}
-            remaining={remaining}
-            totalScheduledOrPaid={totalScheduledOrPaid}
-          />
+          {!desktop ? (
+            <VendorBillScheduleContextCard
+              bill={presentedBill}
+              remaining={remaining}
+              totalScheduledOrPaid={totalScheduledOrPaid}
+            />
+          ) : null}
           {reviewing ? (
             <div className="space-y-3">
               <FormSection
@@ -146,9 +219,7 @@ export function VendorSchedulePaymentSheet({
                 <ReviewFact
                   label="Rekening rencana"
                   value={
-                    selectedAccount
-                      ? `${selectedAccount.bankName} · ${selectedAccount.name}`
-                      : "–"
+                    selectedAccount ? `${selectedAccount.bankName} · ${selectedAccount.name}` : "–"
                   }
                 />
                 <ReviewFact
@@ -265,6 +336,7 @@ export function VendorDisbursePaymentSheet({
   onDisburseBankIdChange,
   onRefNumberChange,
 }: VendorDisbursePaymentSheetProps): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const {
     presentedValue: presentedPayment,
     open,
@@ -327,6 +399,76 @@ export function VendorDisbursePaymentSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Tagihan"
+                wrapLabel
+                value={presentedPayment.vendorBill?.billNumber ?? "–"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Vendor"
+                wrapLabel
+                value={presentedPayment.vendorBill?.vendor?.name ?? "–"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Pembayaran"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Sumber dana"
+                wrapLabel
+                value={
+                  selectedAccount?.name ??
+                  (disburseBankId ? "Rekening tidak tersedia" : "Belum dipilih")
+                }
+              />
+              {selectedAccount ? (
+                <>
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(before) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={before}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo pratinjau"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(after) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={after}
+                        tone={after < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                </>
+              ) : null}
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         onExitComplete={handleExit}
         title={reviewing ? "Tinjau pembayaran vendor" : "Cairkan pembayaran vendor"}
@@ -343,10 +485,9 @@ export function VendorDisbursePaymentSheet({
       >
         <div className="space-y-md">
           <PaymentError error={error} />
-          <VendorPaymentDisburseContextCard
-            payment={presentedPayment}
-            amount={amount}
-          />
+          {!desktop ? (
+            <VendorPaymentDisburseContextCard payment={presentedPayment} amount={amount} />
+          ) : null}
           {reviewing ? (
             <div className="space-y-3">
               <FormSection
@@ -357,9 +498,7 @@ export function VendorDisbursePaymentSheet({
                 <ReviewFact
                   label="Saldo Rekening"
                   value={
-                    <span
-                      className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
-                    >
+                    <span className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}>
                       Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                     </span>
                   }
@@ -411,13 +550,15 @@ export function VendorDisbursePaymentSheet({
                       Format standar:{" "}
                       <strong className="font-mono text-on-surface">{suggestedRef}</strong>
                     </span>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => onRefNumberChange(suggestedRef)}
-                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:z-10 active:shadow-raised"
+                      variant="secondary"
+                      size="mini"
                     >
                       Gunakan
-                    </button>
+                    </Button>
                   </div>
                 ) : null}
               </FormSection>
@@ -481,11 +622,7 @@ export function VendorBillScheduleContextCard({
   const dueDate = bill.dueDate ? new Date(bill.dueDate) : null;
   const hasValidDueDate = Boolean(dueDate && !Number.isNaN(dueDate.getTime()));
   const statusTone: StatusBadgeTone =
-    bill.status === "PAID"
-      ? "healthy"
-      : bill.status === "PARTIALLY_PAID"
-        ? "pending"
-        : "warning";
+    bill.status === "PAID" ? "healthy" : bill.status === "PARTIALLY_PAID" ? "pending" : "warning";
   const statusLabel =
     bill.status === "PAID"
       ? "Lunas"
@@ -535,7 +672,7 @@ export function VendorBillScheduleContextCard({
               className="font-bold text-primary"
             />
           </div>
-          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+          <p className="mt-0.5 truncate text-meta text-on-surface-variant">
             {totalScheduledOrPaid > 0
               ? `Sudah terjadwal Rp ${totalScheduledOrPaid.toLocaleString("id-ID")}`
               : "Belum ada rencana"}
@@ -554,7 +691,7 @@ export function VendorBillScheduleContextCard({
               className="font-bold text-on-surface"
             />
           </div>
-          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+          <p className="mt-0.5 truncate text-meta text-on-surface-variant">
             {bill.budgetItem?.name ? `Budget ${bill.budgetItem.name}` : "Nilai tagihan vendor"}
           </p>
         </div>
@@ -616,7 +753,7 @@ export function VendorPaymentDisburseContextCard({
               className="font-bold text-primary"
             />
           </div>
-          <p className="mt-0.5 truncate text-[10px] text-on-surface-variant">
+          <p className="mt-0.5 truncate text-meta text-on-surface-variant">
             {payment.bankAccount?.name
               ? `Rekening sumber: ${payment.bankAccount.name}`
               : "Pencairan kas"}

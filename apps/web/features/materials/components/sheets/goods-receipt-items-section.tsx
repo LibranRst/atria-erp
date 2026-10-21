@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import {
   AppIcon,
   FormField,
@@ -11,8 +11,8 @@ import {
   NumericInput,
   TextInput,
   AdaptiveSelect,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import {
   newGoodsReceiptItem,
   type GoodsReceiptItemDraft,
@@ -176,10 +176,8 @@ export function GoodsReceiptItemsSection({
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <motion.button
+                    <Button
                       type="button"
-                      whileTap={{ scale: 0.97 }}
-                      transition={transitionSpringSnappy}
                       aria-label={`Duplikat item ${index + 1}`}
                       onClick={() => {
                         const copy = { ...item, key: newGoodsReceiptItem().key };
@@ -191,139 +189,142 @@ export function GoodsReceiptItemsSection({
                         });
                       }}
                       className="relative inline-flex h-8 items-center gap-1 rounded-full bg-surface-container-lowest px-2.5 text-meta font-bold text-on-surface-variant shadow-surface ring-1 ring-ring-subtle transition-colors outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] hover:text-on-surface focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-surface-container-high"
+                      variant="secondary"
+                      size="mini"
                     >
                       <AppIcon name="content_copy" className="icon-xs" />
                       Duplikat
-                    </motion.button>
-                  {items.length > 1 ? (
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.97 }}
-                      transition={transitionSpringSnappy}
-                      aria-label={`Hapus item ${index + 1}`}
-                      onClick={() => {
-                        onItemsChange((current) => current.filter((row) => row.key !== item.key));
-                      }}
-                      className="relative inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-meta font-bold text-error transition-colors outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-error/10"
-                    >
-                      <AppIcon name="delete" className="icon-xs" />
-                      Hapus
-                    </motion.button>
-                  ) : null}
+                    </Button>
+                    {items.length > 1 ? (
+                      <Button
+                        type="button"
+                        aria-label={`Hapus item ${index + 1}`}
+                        onClick={() => {
+                          onItemsChange((current) => current.filter((row) => row.key !== item.key));
+                        }}
+                        className="relative inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-meta font-bold text-error transition-colors outline-none after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-error/10"
+                        variant="secondary"
+                        size="mini"
+                      >
+                        <AppIcon name="delete" className="icon-xs" />
+                        Hapus
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
-              {/* Row 2: AdaptiveSelect untuk Material */}
-              <AdaptiveSelect
-                label="Material"
-                value={item.materialId}
-                options={materialOptions}
-                onChange={(value) =>
-                  onUpdateItem(item.key, {
-                    materialId: value,
-                    projectRapItemId: "",
-                  })
-                }
-                placeholder="Pilih material"
-                searchPlaceholder="Cari material..."
-                required
-              />
-
-              {/* Row 2 (kondisional): AdaptiveSelect untuk Tautan RAP */}
-              {relevantRapItems.length > 0 ? (
+                {/* Row 2: AdaptiveSelect untuk Material */}
                 <AdaptiveSelect
-                  label="Tautan RAP"
-                  optional
-                  value={item.projectRapItemId}
-                  options={[
-                    {
-                      value: "",
-                      label: "Tanpa tautan RAP",
-                      description: "Tidak dikaitkan ke anggaran RAP spesifik.",
-                    },
-                    ...relevantRapItems.map((row) => ({
-                      value: row.id,
-                      label: row.name,
-                      description: row.area,
-                      meta:
-                        row.quantity && row.unitCost
-                          ? `${row.quantity.toLocaleString("id-ID")} × Rp ${row.unitCost.toLocaleString("id-ID")}`
-                          : undefined,
-                    })),
-                  ]}
-                  onChange={(value) => {
-                    const rapItem = relevantRapItems.find((row) => row.id === value);
+                  label="Material"
+                  value={item.materialId}
+                  options={materialOptions}
+                  onChange={(value) =>
                     onUpdateItem(item.key, {
-                      projectRapItemId: value,
-                      ...(rapItem && typeof rapItem.quantity === "number" && rapItem.quantity > 0
-                        ? { quantity: rapItem.quantity }
-                        : {}),
-                      ...(rapItem && typeof rapItem.unitCost === "number" && rapItem.unitCost >= 0
-                        ? { unitCost: rapItem.unitCost }
-                        : {}),
-                    });
-                  }}
-                  placeholder="Tanpa tautan RAP"
-                  searchPlaceholder="Cari item RAP..."
+                      materialId: value,
+                      projectRapItemId: "",
+                    })
+                  }
+                  placeholder="Pilih material"
+                  searchPlaceholder="Cari material..."
+                  required
                 />
-              ) : null}
 
-              {/* Row 3: Grid 2 kolom dengan divider */}
-              <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
-                <FormField label="Jumlah fisik" required>
-                  <NumericInput
-                    value={item.quantity === 0 ? "" : item.quantity}
-                    onChange={(value) => onUpdateItem(item.key, { quantity: value })}
-                    min={0}
-                    placeholder="0"
-                    suffix={material?.unit}
+                {/* Row 2 (kondisional): AdaptiveSelect untuk Tautan RAP */}
+                {relevantRapItems.length > 0 ? (
+                  <AdaptiveSelect
+                    label="Tautan RAP"
+                    optional
+                    value={item.projectRapItemId}
+                    options={[
+                      {
+                        value: "",
+                        label: "Tanpa tautan RAP",
+                        description: "Tidak dikaitkan ke anggaran RAP spesifik.",
+                      },
+                      ...relevantRapItems.map((row) => ({
+                        value: row.id,
+                        label: row.name,
+                        description: row.area,
+                        meta:
+                          row.quantity && row.unitCost
+                            ? `${row.quantity.toLocaleString("id-ID")} × Rp ${row.unitCost.toLocaleString("id-ID")}`
+                            : undefined,
+                      })),
+                    ]}
+                    onChange={(value) => {
+                      const rapItem = relevantRapItems.find((row) => row.id === value);
+                      onUpdateItem(item.key, {
+                        projectRapItemId: value,
+                        ...(rapItem && typeof rapItem.quantity === "number" && rapItem.quantity > 0
+                          ? { quantity: rapItem.quantity }
+                          : {}),
+                        ...(rapItem && typeof rapItem.unitCost === "number" && rapItem.unitCost >= 0
+                          ? { unitCost: rapItem.unitCost }
+                          : {}),
+                      });
+                    }}
+                    placeholder="Tanpa tautan RAP"
+                    searchPlaceholder="Cari item RAP..."
+                  />
+                ) : null}
+
+                {/* Row 3: Grid 2 kolom dengan divider */}
+                <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
+                  <FormField label="Jumlah fisik" required>
+                    <NumericInput
+                      value={item.quantity === 0 ? "" : item.quantity}
+                      onChange={(value) => onUpdateItem(item.key, { quantity: value })}
+                      min={0}
+                      placeholder="0"
+                      suffix={material?.unit}
+                    />
+                  </FormField>
+                  <FormField label="Harga per unit" required>
+                    <MoneyInput
+                      value={item.unitCost === 0 ? "" : item.unitCost}
+                      onChange={(value) => onUpdateItem(item.key, { unitCost: value })}
+                      placeholder="0"
+                      showPreview={false}
+                    />
+                  </FormField>
+                </div>
+
+                {/* Row 4: FormField Catatan item (TextInput 1 baris ringkas opsional) */}
+                <FormField label="Catatan item" optional>
+                  <TextInput
+                    value={item.note || ""}
+                    onChange={(value) => onUpdateItem(item.key, { note: value })}
+                    placeholder="Catatan spesifikasi atau kondisi (opsional)"
                   />
                 </FormField>
-                <FormField label="Harga per unit" required>
-                  <MoneyInput
-                    value={item.unitCost === 0 ? "" : item.unitCost}
-                    onChange={(value) => onUpdateItem(item.key, { unitCost: value })}
-                    placeholder="0"
-                    showPreview={false}
-                  />
-                </FormField>
-              </div>
 
-              {/* Row 4: FormField Catatan item (TextInput 1 baris ringkas opsional) */}
-              <FormField label="Catatan item" optional>
-                <TextInput
-                  value={item.note || ""}
-                  onChange={(value) => onUpdateItem(item.key, { note: value })}
-                  placeholder="Catatan spesifikasi atau kondisi (opsional)"
-                />
-              </FormField>
-
-              {/* Row 5: Strip subtotal item di bagian bawah kartu menggunakan MoneyValue */}
-              <div className="flex min-h-11 items-center justify-between gap-3 bg-surface-container-low/40 px-4 py-2.5">
-                <span className="text-meta font-medium text-on-surface-variant">Subtotal item</span>
-                <MoneyValue amount={subtotal} variant="fullDynamic" size="sm" align="right" />
-              </div>
-            </FormSection>
-          </div>
-        );
-      })}
+                {/* Row 5: Strip subtotal item di bagian bawah kartu menggunakan MoneyValue */}
+                <div className="flex min-h-11 items-center justify-between gap-3 bg-surface-container-low/40 px-4 py-2.5">
+                  <span className="text-meta font-medium text-on-surface-variant">
+                    Subtotal item
+                  </span>
+                  <MoneyValue amount={subtotal} variant="fullDynamic" size="sm" align="right" />
+                </div>
+              </FormSection>
+            </div>
+          );
+        })}
       </div>
 
       {/* Tombol Tambah Material */}
-      <motion.button
+      <Button
         type="button"
-        whileTap={{ scale: 0.97 }}
-        transition={transitionSpringSnappy}
         onClick={() => {
           const item = newGoodsReceiptItem();
           setPendingScrollKey(item.key);
           onItemsChange((current) => [...current, item]);
         }}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-5 text-row font-bold text-on-surface shadow-control ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+        variant="secondary"
       >
         <AppIcon name="add" className="icon-sm text-primary" />
         Tambah Material
-      </motion.button>
+      </Button>
     </section>
   );
 }

@@ -20,6 +20,7 @@ import {
   MainSection,
   MoneyValue,
   SegmentedTabs,
+  Button,
 } from "@/components/ui";
 import { MovementRow } from "@/features/materials/components/sheets/material-operation-sheets";
 import {
@@ -192,14 +193,15 @@ export function MaterialActivityTab({
           )}
           {movementsHasMore ? (
             <div className="border-t border-black/5.5 p-3">
-              <button
+              <Button
                 type="button"
                 onClick={onLoadMore}
                 disabled={pending}
                 className="min-h-12 w-full rounded-full bg-accent/8 px-5 text-support font-bold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:bg-accent/[0.14] disabled:opacity-45"
+                variant="secondary"
               >
                 {pending ? "Memuat…" : "Muat aktivitas sebelumnya"}
-              </button>
+              </Button>
             </div>
           ) : null}
         </GroupedSurface>

@@ -1,5 +1,6 @@
 "use client";
 
+import { workspaceHistoryHref } from "@/lib/navigation/workspace-routes";
 import { useCallback, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -36,7 +37,7 @@ function ensureHistoryEventsPatched(): void {
   historyEventsPatched = true;
 }
 
-function subscribeToUrl(onStoreChange: () => void): () => void {
+export function subscribeToUrl(onStoreChange: () => void): () => void {
   ensureHistoryEventsPatched();
   window.addEventListener("popstate", onStoreChange);
   window.addEventListener(URL_CHANGE_EVENT, onStoreChange);
@@ -57,7 +58,7 @@ function getUrlSnapshot(): string {
  */
 export function useUrlSearchParam(key: string): string | null {
   const nextSearchParams = useSearchParams();
-  const serverSearch = `?${nextSearchParams.toString()}`;
+  const serverSearch = `?${nextSearchParams?.toString() ?? ""}`;
   const getServerSnapshot = useCallback(() => serverSearch, [serverSearch]);
   const search = useSyncExternalStore(subscribeToUrl, getUrlSnapshot, getServerSnapshot);
 
@@ -88,7 +89,7 @@ export function updateUrlSearchParam(
     params.set(key, value);
   }
   const query = params.toString();
-  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}`;
+  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
   if (mode === "replace") {
     window.history.replaceState({}, "", nextUrl);
   } else {
@@ -98,9 +99,10 @@ export function updateUrlSearchParam(
 }
 
 export function updateBrowserUrl(nextUrl: string, mode: "push" | "replace" = "push"): void {
+  const href = workspaceHistoryHref(nextUrl, window.location.href);
   if (mode === "replace") {
-    window.history.replaceState({}, "", nextUrl);
+    window.history.replaceState({}, "", href);
   } else {
-    window.history.pushState({}, "", nextUrl);
+    window.history.pushState({}, "", href);
   }
 }

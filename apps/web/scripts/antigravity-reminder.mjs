@@ -2,7 +2,7 @@
 
 /**
  * Antigravity PreInvocation Context Hook
- * Injects helpful persistent reminders for Atria ERP invariants into agent context.
+ * Injects helpful persistent reminders for Paduna Build invariants into agent context.
  */
 
 let inputData = "";
@@ -24,7 +24,7 @@ process.stdin.on("end", () => {
         injectSteps: [
           {
             ephemeralMessage:
-              "[Atria ERP Context] Invariants: Strict TypeScript (no any), Drizzle db.transaction + audit_log for balance/stock mutations, mobile 320-430px truth, iOS Paten form styling (rounded-full standalone, FormSection borderless grouped), MoneyValue formatting, RAP vs RAB isolation.",
+              "[Paduna Build Context] Invariants: Strict TypeScript (no any), Drizzle db.transaction + audit_log for balance/stock mutations, mobile 320-430px truth, iOS Paten form styling (rounded-full standalone, FormSection borderless grouped), MoneyValue formatting, RAP vs RAB isolation.",
           },
         ],
       }),

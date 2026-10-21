@@ -1,8 +1,9 @@
 "use client";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+import { importFailureMessage } from "@/lib/utils/import-failure";
 
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import { toast } from "sonner";
 import {
   createInventoryOpening,
@@ -14,13 +15,15 @@ import {
   AppIcon,
   ConfirmationDialog,
   DuotoneIconTile,
+  FactRow,
+  FormRiskNotice,
   GroupedSurface,
   MoneyValue,
   OperationalFormSheet,
   SegmentedTabs,
   SheetFooterActions,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import { OpeningInventoryCsvEntry } from "./opening-inventory-csv-entry";
 import { OpeningInventoryManualEntry } from "./opening-inventory-manual-entry";
 import { OpeningInventoryMetadataFields } from "./opening-inventory-metadata-fields";
@@ -32,6 +35,14 @@ import {
   type EntryMode,
   type Metadata,
 } from "./opening-inventory-utils";
+import type { OpeningInventoryCsvInput } from "@atria/core/import/material-csv";
+
+type OpeningPhase = "idle" | "preview" | "submit";
+type OpeningFailure = {
+  readonly kind: "read" | "preview" | "submit";
+  readonly message: string;
+  readonly outcomeUnknown?: boolean;
+};
 
 interface OpeningInventoryEntryFormProps {
   readonly eligibleInventory: readonly InitialStockCandidate[];
@@ -39,6 +50,7 @@ interface OpeningInventoryEntryFormProps {
   readonly presentation?: "page" | "sheet";
   readonly open?: boolean;
   readonly onClose?: () => void;
+  readonly desktopLayout?: boolean;
 }
 
 export function OpeningInventoryEntryForm({
@@ -47,15 +59,58 @@ export function OpeningInventoryEntryForm({
   presentation = "page",
   open = false,
   onClose,
+  desktopLayout = false,
 }: OpeningInventoryEntryFormProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const router = useRouter();
+  const csvInputRef = React.useRef<HTMLInputElement | null>(null);
+  const requestRef = React.useRef(0);
+  const phaseRef = React.useRef<OpeningPhase>("idle");
+  const active = presentation !== "sheet" || open;
+  const activeRef = React.useRef(active);
   const [mode, setMode] = React.useState<EntryMode>("MANUAL");
   const [metadata, setMetadata] = React.useState<Metadata>(EMPTY_METADATA);
   const [lines, setLines] = React.useState<readonly DraftLine[]>([newLine()]);
   const [preview, setPreview] = React.useState<InitialStockImportPreview | null>(null);
   const [fileName, setFileName] = React.useState("");
-  const [pending, setPending] = React.useState(false);
+  const [phase, setPhase] = React.useState<OpeningPhase>("idle");
+  const [csvInput, setCsvInput] = React.useState<OpeningInventoryCsvInput | null>(null);
+  const [failure, setFailure] = React.useState<OpeningFailure | null>(null);
+  const pending = phase !== "idle";
   const [confirmDiscard, setConfirmDiscard] = React.useState(false);
+  const [previousActive, setPreviousActive] = React.useState(active);
+  if (previousActive !== active) {
+    setPreviousActive(active);
+    if (!active) {
+      setPhase("idle");
+      setPreview(null);
+      setCsvInput(null);
+      setFileName("");
+      setFailure(null);
+    }
+  }
+
+  React.useLayoutEffect(() => {
+    activeRef.current = active;
+    if (!active) {
+      requestRef.current += 1;
+      phaseRef.current = "idle";
+    }
+  }, [active]);
+  React.useEffect(
+    () => () => {
+      requestRef.current += 1;
+    },
+    [],
+  );
+
+  function setOpeningPhase(next: OpeningPhase): void {
+    phaseRef.current = next;
+    setPhase(next);
+  }
+  function currentRequest(request: number): boolean {
+    return requestRef.current === request && activeRef.current;
+  }
 
   const duplicateIds = lines
     .map((line) => line.materialInventoryId)
@@ -116,15 +171,20 @@ export function OpeningInventoryEntryForm({
     );
 
   function resetForm(): void {
+    requestRef.current += 1;
+    setOpeningPhase("idle");
     setMode("MANUAL");
     setMetadata(EMPTY_METADATA);
     setLines([newLine()]);
     setPreview(null);
     setFileName("");
+    setCsvInput(null);
+    setFailure(null);
+    if (csvInputRef.current) csvInputRef.current.value = "";
   }
 
   function requestClose(): void {
-    if (pending || !onClose) return;
+    if (phaseRef.current !== "idle" || !onClose) return;
     if (dirty) {
       setConfirmDiscard(true);
       return;
@@ -133,81 +193,183 @@ export function OpeningInventoryEntryForm({
   }
 
   function patchLine(key: string, patch: Partial<DraftLine>): void {
+    if (phaseRef.current !== "idle") return;
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
   }
 
   async function readCsv(file: File): Promise<void> {
+    if (phaseRef.current === "submit") return;
+    const request = ++requestRef.current;
+    setOpeningPhase("preview");
     setFileName(file.name);
     setPreview(null);
-
+    setCsvInput(null);
+    setFailure(null);
+    let parsedInput: OpeningInventoryCsvInput | null = null;
     try {
-      const parsed = parseImportRows(await file.text());
-      setPending(true);
-      const result = await previewInitialStockImport(parsed);
-      setPending(false);
-      if (!result.success) {
-        toast.error(result.error.message);
-        return;
-      }
+      const source = await file.text();
+      if (!currentRequest(request)) return;
+      const parsed: OpeningInventoryCsvInput = { rows: [...parseImportRows(source).rows] };
+      parsedInput = parsed;
+      setCsvInput(parsed);
+      await validateCsv(parsed, request);
+    } catch (error: unknown) {
+      if (!currentRequest(request)) return;
+      const message = importFailureMessage(
+        error,
+        parsedInput
+          ? "Validasi CSV belum dapat dimuat. Coba validasi lagi setelah koneksi tersedia."
+          : "CSV tidak dapat dibaca. Pilih ulang file dan coba lagi.",
+      );
+      setFailure({ kind: parsedInput ? "preview" : "read", message });
+      toast.error(message);
+    } finally {
+      if (currentRequest(request)) setOpeningPhase("idle");
+    }
+  }
 
-      setPreview(result.data);
-      if (result.data.errors.length > 0) {
-        toast.warning(`${result.data.errors.length} baris perlu diperbaiki.`);
-      } else {
-        toast.success(`${result.data.items.length} baris valid dan belum mengubah stok.`);
+  async function validateCsv(input: OpeningInventoryCsvInput, request: number): Promise<void> {
+    const result = await previewInitialStockImport(input);
+    if (!currentRequest(request)) return;
+    if (!result.success) {
+      setFailure({ kind: "preview", message: result.error.message });
+      toast.error(result.error.message);
+      return;
+    }
+    setPreview(result.data);
+    if (result.data.errors.length > 0)
+      toast.warning(`${result.data.errors.length} baris perlu diperbaiki.`);
+    else toast.success(`${result.data.items.length} baris valid dan belum mengubah stok.`);
+  }
+
+  async function retryPreview(): Promise<void> {
+    if (phaseRef.current !== "idle" || !csvInput) return;
+    const request = ++requestRef.current;
+    setOpeningPhase("preview");
+    setFailure(null);
+    setPreview(null);
+    try {
+      await validateCsv(csvInput, request);
+    } catch (error: unknown) {
+      if (currentRequest(request)) {
+        const message = importFailureMessage(
+          error,
+          "Validasi CSV belum dapat dimuat. Coba validasi lagi setelah koneksi tersedia.",
+        );
+        setFailure({ kind: "preview", message });
+        toast.error(message);
       }
-    } catch (error) {
-      setPending(false);
-      toast.error(error instanceof Error ? error.message : "CSV tidak dapat dibaca.");
+    } finally {
+      if (currentRequest(request)) setOpeningPhase("idle");
     }
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (!formComplete) return;
-
-    setPending(true);
-    const result = await createInventoryOpening({
-      cutoverDate: new Date(`${metadata.balanceDate}T00:00:00`),
-      note: metadata.note,
-      referenceNumber: metadata.referenceNumber,
-      items: submittedItems,
-    });
-    setPending(false);
-    if (!result.success) {
-      toast.error(result.error.message);
-      return;
+    if (phaseRef.current !== "idle" || !formComplete) return;
+    const request = ++requestRef.current;
+    setOpeningPhase("submit");
+    setFailure(null);
+    try {
+      const result = await createInventoryOpening({
+        cutoverDate: new Date(`${metadata.balanceDate}T00:00:00`),
+        note: metadata.note,
+        referenceNumber: metadata.referenceNumber,
+        items: submittedItems,
+      });
+      if (!currentRequest(request)) return;
+      if (!result.success) {
+        setFailure({ kind: "submit", message: result.error.message });
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success("Saldo awal stok diajukan. Stok belum berubah sampai disetujui.");
+      resetForm();
+      onMutationComplete?.();
+      router.refresh();
+    } catch (error: unknown) {
+      if (!currentRequest(request)) return;
+      const message = importFailureMessage(
+        error,
+        "Respons pengajuan belum diterima. Periksa daftar saldo awal sebelum mengajukan ulang.",
+      );
+      setFailure({ kind: "submit", message, outcomeUnknown: true });
+      toast.error(message);
+    } finally {
+      if (currentRequest(request)) setOpeningPhase("idle");
     }
-
-    toast.success("Saldo awal stok diajukan. Stok belum berubah sampai disetujui.");
-    resetForm();
-    onMutationComplete?.();
-    router.refresh();
   }
 
   const content = (
     <>
+      {failure && (
+        <div role="alert">
+          <FormRiskNotice
+            title={
+              failure.outcomeUnknown
+                ? "Hasil pengajuan belum dapat dipastikan"
+                : failure.kind === "submit"
+                  ? "Saldo awal belum diajukan"
+                  : "CSV belum dapat divalidasi"
+            }
+            tone="danger"
+          >
+            <p>{failure.message}</p>
+            {failure.kind !== "submit" && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="compact"
+                disabled={pending}
+                className="mt-2"
+                onClick={() =>
+                  failure.kind === "preview" ? void retryPreview() : csvInputRef.current?.click()
+                }
+              >
+                {failure.kind === "preview" ? "Coba validasi lagi" : "Pilih ulang file"}
+              </Button>
+            )}
+          </FormRiskNotice>
+        </div>
+      )}
       <SegmentedTabs<EntryMode>
         value={mode}
         onChange={(next) => {
+          if (phaseRef.current !== "idle") return;
+          requestRef.current += 1;
           setMode(next);
           setPreview(null);
+          setCsvInput(null);
+          setFileName("");
+          setFailure(null);
         }}
         ariaLabel="Cara memasukkan saldo awal stok"
         options={[
-          { value: "MANUAL", label: "Isi manual" },
-          { value: "CSV", label: "Import CSV" },
+          { value: "MANUAL", label: "Isi manual", disabled: pending },
+          { value: "CSV", label: "Import CSV", disabled: pending },
         ]}
       />
-      <OpeningInventoryMetadataFields value={metadata} onChange={setMetadata} pending={pending} />
+      <OpeningInventoryMetadataFields
+        value={metadata}
+        onChange={(next) => {
+          if (phaseRef.current === "idle") setMetadata(next);
+        }}
+        pending={pending}
+      />
 
       {mode === "MANUAL" ? (
         <OpeningInventoryManualEntry
+          desktopLayout={desktopLayout}
           eligibleInventory={eligibleInventory}
           lines={lines}
           pending={pending}
-          onAddLine={() => setLines((current) => [...current, newLine()])}
-          onRemoveLine={(key) => setLines((current) => current.filter((item) => item.key !== key))}
+          onAddLine={() => {
+            if (phaseRef.current === "idle") setLines((current) => [...current, newLine()]);
+          }}
+          onRemoveLine={(key) => {
+            if (phaseRef.current === "idle")
+              setLines((current) => current.filter((item) => item.key !== key));
+          }}
           onPatchLine={patchLine}
         />
       ) : (
@@ -216,10 +378,11 @@ export function OpeningInventoryEntryForm({
           fileName={fileName}
           pending={pending}
           onFileSelected={readCsv}
+          inputRef={csvInputRef}
         />
       )}
 
-      <GroupedSurface>
+      <GroupedSurface className={presentation === "sheet" && desktop ? "hidden" : ""}>
         <div className="divide-y divide-outline-variant/20">
           <div className="flex min-h-16 items-center gap-3.5 px-4 py-3.5">
             <DuotoneIconTile name="inventory_2" tone="accent" />
@@ -252,16 +415,95 @@ export function OpeningInventoryEntryForm({
     return (
       <>
         <OperationalFormSheet
+          desktopSize="wide"
+          desktopFooterPlacement="aside"
+          desktopAsideSummary={
+            <div className="space-y-4">
+              <GroupedSurface>
+                <div className="divide-y divide-outline-variant/20">
+                  <FactRow
+                    layout="stacked"
+                    label="Cara pengisian"
+                    wrapLabel
+                    value={mode === "CSV" ? "Import CSV" : "Isi manual"}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Tanggal saldo awal"
+                    wrapLabel
+                    value={metadata.balanceDate || "Belum dipilih"}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Dokumen sumber"
+                    wrapLabel
+                    value={metadata.referenceNumber || "Tidak ada"}
+                  />
+                  {mode === "CSV" ? (
+                    <FactRow
+                      layout="stacked"
+                      label="File"
+                      wrapLabel
+                      value={fileName || "Belum dipilih"}
+                    />
+                  ) : null}
+                  <FactRow
+                    layout="stacked"
+                    label="Baris draft"
+                    wrapLabel
+                    value={submittedItems.length}
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Nilai draft"
+                    wrapLabel
+                    value={
+                      Number.isFinite(total) ? (
+                        <MoneyValue
+                          fractionDigits={Number.isInteger(total) ? 0 : 2}
+                          amount={total}
+                          variant="fullDynamic"
+                          size="sm"
+                        />
+                      ) : (
+                        "Periksa jumlah dan harga"
+                      )
+                    }
+                  />
+                  {mode === "CSV" ? (
+                    <FactRow
+                      layout="stacked"
+                      label="Validasi CSV"
+                      wrapLabel
+                      value={
+                        preview
+                          ? `${preview.errors.length} baris perlu diperbaiki`
+                          : "Belum divalidasi"
+                      }
+                    />
+                  ) : null}
+                </div>
+              </GroupedSurface>
+              <p className="text-support leading-relaxed text-on-surface-variant">
+                Saldo awal diajukan untuk persetujuan. Kas dan stok fisik belum berubah sampai
+                disetujui.
+              </p>
+            </div>
+          }
           dismissal={{ mode: "managed" }}
           open={open}
           title="Catat saldo awal stok"
           formId="onboarding-opening-inventory-form"
-          submitLabel="Ajukan saldo awal"
-          submittingLabel="Mengajukan…"
+          submitLabel={failure?.kind === "submit" ? "Coba ajukan lagi" : "Ajukan saldo awal"}
+          submittingLabel={phase === "preview" ? "Memvalidasi CSV…" : "Mengajukan…"}
           pending={pending}
           disabled={!formComplete}
           disabledReason={submitDisabledReason}
-          statusText={`${submittedItems.length} item · Rp ${total.toLocaleString("id-ID")} · Perlu persetujuan`}
+          statusText={
+            desktop
+              ? undefined
+              : `${submittedItems.length} item · Rp ${total.toLocaleString("id-ID")} · Perlu persetujuan`
+          }
           statusTone={formComplete ? "success" : "default"}
           onClose={requestClose}
         >
@@ -307,12 +549,11 @@ export function OpeningInventoryEntryForm({
         </div>
       ) : null}
 
-      <motion.button
+      <Button
         type="submit"
-        whileTap={pending || !formComplete ? undefined : { scale: 0.98 }}
-        transition={transitionSpringSnappy}
         disabled={pending || !formComplete}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-row font-bold text-on-primary shadow-primary transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-row font-bold text-on-primary shadow-primary active:z-10 active:shadow-raised disabled:cursor-not-allowed disabled:opacity-40"
+        variant="primary"
       >
         {pending ? (
           <>
@@ -322,7 +563,7 @@ export function OpeningInventoryEntryForm({
         ) : (
           <span>Ajukan saldo awal</span>
         )}
-      </motion.button>
+      </Button>
     </form>
   );
 }

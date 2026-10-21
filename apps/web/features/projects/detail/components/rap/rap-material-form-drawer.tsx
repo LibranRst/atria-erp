@@ -1,12 +1,16 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import {
+  GroupedSurface,
+  FactRow,
   ComboboxField,
   COMMON_ROOM_OPTIONS,
   COMMON_UNIT_OPTIONS,
   FormField,
+  FormRiskNotice,
   FormSection,
   MoneyInput,
   MoneyValue,
@@ -42,6 +46,7 @@ export function RapMaterialFormDrawer({
   formTotalQty,
   formNeedToBuy,
   formEstimatedTotal,
+  error,
 }: {
   readonly showRapForm: boolean;
   readonly closeRapForm: () => void;
@@ -58,16 +63,67 @@ export function RapMaterialFormDrawer({
   readonly formTotalQty: number;
   readonly formNeedToBuy: number;
   readonly formEstimatedTotal: number;
+  readonly error?: string | null;
 }): React.JSX.Element | null {
+  const desktop = useWorkspacePresentation() === "desktop";
   const dirty = useFormDirtySnapshot(
     showRapForm,
     editingRapItemId ?? "new-rap-material",
     JSON.stringify(rapForm),
   );
+  function updateRapForm(value: React.SetStateAction<RapFormState>): void {
+    if (!isPending) setRapForm(value);
+  }
   if (!rap) return null;
 
   return (
     <OperationalFormSheet
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <div className="space-y-3">
+          <div className="px-1">
+            <h3 className="text-support font-semibold text-on-surface">Ringkasan material</h3>
+            <p className="mt-1 text-support wrap-anywhere text-on-surface-variant">
+              {rapForm.name.trim() || "Nama material belum diisi"}
+            </p>
+          </div>
+          <GroupedSurface variant="desktopPanel" className="wrap-anywhere">
+            <div className="divide-y divide-outline-variant/20">
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Kebutuhan"
+                value={`${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Perlu diamankan"
+                value={`${formNeedToBuy.toLocaleString("id-ID")} ${rapForm.unit || "unit"}`}
+              />
+              <FactRow
+                layout="stacked"
+                wrapLabel
+                label="Estimasi biaya"
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(formEstimatedTotal) ? 0 : 2}
+                    amount={formEstimatedTotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                  />
+                }
+              />
+            </div>
+          </GroupedSurface>
+          <p className="px-1 text-support text-on-surface-variant">
+            Rencana RAP tidak memindahkan stok atau membayar material. Periksa sumber material dan
+            kebutuhan proyek.
+          </p>
+        </div>
+      }
       dismissal={{
         mode: "confirm",
         dirty,
@@ -81,13 +137,26 @@ export function RapMaterialFormDrawer({
       submitLabel={editingRapItemId ? "Perbarui" : "Tambah"}
       submittingLabel="Menyimpan…"
       pending={isPending}
+      error={
+        error ? (
+          <div role="alert">
+            <FormRiskNotice title="Material RAP belum tersimpan" tone="danger">
+              {error}
+            </FormRiskNotice>
+          </div>
+        ) : undefined
+      }
       disabled={!rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity}
       disabledReason={
         !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
           ? "Lengkapi nama, area, satuan, dan jumlah material."
           : undefined
       }
-      statusText={`${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit} · Perlu diamankan ${formNeedToBuy.toLocaleString("id-ID")} · ${formatRp(formEstimatedTotal)}`}
+      statusText={
+        desktop
+          ? undefined
+          : `${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit} · Perlu diamankan ${formNeedToBuy.toLocaleString("id-ID")} · ${formatRp(formEstimatedTotal)}`
+      }
       statusTone={
         !rapForm.name || !rapForm.area || !rapForm.unit || !rapForm.requiredQuantity
           ? "warning"
@@ -97,45 +166,49 @@ export function RapMaterialFormDrawer({
       }
     >
       <div className="space-y-md">
-        <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
-                Item RAP Material
-              </p>
-              <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
-                {rapForm.name || "Material belum diisi"}
-              </h3>
-              <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
-                {rapForm.area ? `Area ${rapForm.area}` : "Tanpa area"}
-                {rapForm.unit ? ` · Total ${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}` : ""}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
-                Estimasi Biaya
-              </p>
-              <div className="mt-0.5">
-                <MoneyValue
-                  amount={formEstimatedTotal}
-                  variant="fullDynamic"
-                  size="sm"
-                  align="right"
-                  className="font-bold text-primary"
-                />
+        {!desktop && (
+          <div className="overflow-hidden rounded-owner bg-white p-4 shadow-surface ring-1 ring-ring-subtle">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-eyebrow font-bold tracking-[0.14em] text-on-surface-variant uppercase">
+                  Item RAP Material
+                </p>
+                <h3 className="mt-0.5 truncate text-row font-bold tracking-[-0.01em] text-on-surface">
+                  {rapForm.name || "Material belum diisi"}
+                </h3>
+                <p className="mt-0.5 truncate text-meta font-medium text-on-surface-variant/75">
+                  {rapForm.area ? `Area ${rapForm.area}` : "Tanpa area"}
+                  {rapForm.unit
+                    ? ` · Total ${formTotalQty.toLocaleString("id-ID")} ${rapForm.unit}`
+                    : ""}
+                </p>
               </div>
-              {formNeedToBuy > 0 ? (
-                <span className="mt-1 inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[9px] font-bold text-warning ring-1 ring-warning/20">
-                  Perlu {formNeedToBuy.toLocaleString("id-ID")} {rapForm.unit}
-                </span>
-              ) : (
-                <span className="mt-1 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-bold text-success ring-1 ring-success/20">
-                  Stok aman
-                </span>
-              )}
+              <div className="shrink-0 text-right">
+                <p className="text-eyebrow font-bold tracking-wide text-on-surface-variant uppercase">
+                  Estimasi Biaya
+                </p>
+                <div className="mt-0.5">
+                  <MoneyValue
+                    amount={formEstimatedTotal}
+                    variant="fullDynamic"
+                    size="sm"
+                    align="right"
+                    className="font-bold text-primary"
+                  />
+                </div>
+                {formNeedToBuy > 0 ? (
+                  <span className="mt-1 inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[9px] font-bold text-warning ring-1 ring-warning/20">
+                    Perlu {formNeedToBuy.toLocaleString("id-ID")} {rapForm.unit}
+                  </span>
+                ) : (
+                  <span className="mt-1 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-bold text-success ring-1 ring-success/20">
+                    Stok aman
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <form id="rap-material-item-form" onSubmit={handleSubmitRapItem} className="space-y-md">
           <FormSection
             title="Sumber material"
@@ -146,7 +219,10 @@ export function RapMaterialFormDrawer({
                 <AdaptiveSelect
                   label="Gunakan template Library"
                   value={rapForm.templateId}
-                  onChange={handleRapTemplateChange}
+                  disabled={isPending}
+                  onChange={(value): void => {
+                    if (!isPending) handleRapTemplateChange(value);
+                  }}
                   options={[
                     {
                       value: "",
@@ -171,7 +247,10 @@ export function RapMaterialFormDrawer({
             <AdaptiveSelect
               label="Material Master"
               value={rapForm.materialId}
-              onChange={handleMaterialChange}
+              disabled={isPending}
+              onChange={(value): void => {
+                if (!isPending) handleMaterialChange(value);
+              }}
               options={[
                 { value: "", label: "Isi manual / belum pilih material" },
                 ...materials.map((material) => ({
@@ -190,31 +269,35 @@ export function RapMaterialFormDrawer({
             helper="Nama dan area akan menjadi konteks utama saat item muncul di daftar RAP."
           >
             <ComboboxField
+              disabled={isPending}
               label="Area / Ruangan"
               value={rapForm.area}
-              onChange={(value) => setRapForm((curr) => ({ ...curr, area: value }))}
+              onChange={(value) => updateRapForm((curr) => ({ ...curr, area: value }))}
               options={COMMON_ROOM_OPTIONS}
               placeholder="Contoh: Dapur"
             />
             <ComboboxField
+              disabled={isPending}
               label="Satuan"
               value={rapForm.unit}
-              onChange={(value) => setRapForm((curr) => ({ ...curr, unit: value }))}
+              onChange={(value) => updateRapForm((curr) => ({ ...curr, unit: value }))}
               options={COMMON_UNIT_OPTIONS}
               placeholder="Contoh: lembar"
             />
             <FormField label="Nama Material">
               <TextInput
+                disabled={isPending}
                 value={rapForm.name}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, name: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, name: value }))}
                 placeholder="Contoh: Multipleks 18mm"
               />
             </FormField>
             <FormField label="Deskripsi Internal">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={rapForm.description}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, description: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, description: value }))}
                 placeholder="Spesifikasi atau penggunaan"
               />
             </FormField>
@@ -227,33 +310,45 @@ export function RapMaterialFormDrawer({
             <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
               <FormField label="Jumlah">
                 <NumericInput
+                  disabled={isPending}
                   value={rapForm.requiredQuantity}
                   min={0}
-                  onChange={(value) => setRapForm((curr) => ({ ...curr, requiredQuantity: value }))}
+                  onChange={(value) =>
+                    updateRapForm((curr) => ({ ...curr, requiredQuantity: value }))
+                  }
                   suffix={rapForm.unit || undefined}
                 />
               </FormField>
               <FormField label="Biaya per Satuan">
                 <MoneyInput
+                  disabled={isPending}
                   value={rapForm.estimatedUnitCost}
-                  onChange={(value) => setRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))}
+                  onChange={(value) =>
+                    updateRapForm((curr) => ({ ...curr, estimatedUnitCost: value }))
+                  }
                   showPreview={false}
                 />
               </FormField>
             </div>
-            <FormField label="Buffer / Cadangan" optional helper="Tambahan kuantitas untuk antisipasi pemborosan/waste.">
+            <FormField
+              label="Buffer / Cadangan"
+              optional
+              helper="Tambahan kuantitas untuk antisipasi pemborosan/waste."
+            >
               <NumericInput
+                disabled={isPending}
                 value={rapForm.bufferQuantity}
                 min={0}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, bufferQuantity: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, bufferQuantity: value }))}
                 suffix={rapForm.unit || undefined}
               />
             </FormField>
             <AdaptiveSelect
               label="Sumber Pemenuhan"
+              disabled={isPending}
               value={rapForm.source}
               onChange={(value) =>
-                setRapForm((curr) => ({
+                updateRapForm((curr) => ({
                   ...curr,
                   source: value as RapFormState["source"],
                 }))
@@ -267,9 +362,10 @@ export function RapMaterialFormDrawer({
             />
             <FormField label="Catatan Internal">
               <Textarea
+                disabled={isPending}
                 rows={2}
                 value={rapForm.internalNote}
-                onChange={(value) => setRapForm((curr) => ({ ...curr, internalNote: value }))}
+                onChange={(value) => updateRapForm((curr) => ({ ...curr, internalNote: value }))}
                 placeholder="Tidak tampil ke klien"
               />
             </FormField>

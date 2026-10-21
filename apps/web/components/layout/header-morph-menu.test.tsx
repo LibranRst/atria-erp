@@ -146,3 +146,20 @@ describe("header menu configuration", () => {
     expect(ai?.match("/ledger", new URLSearchParams())).toBe(false);
   });
 });
+
+describe("HeaderMorphMenu iOS active feedback contract", () => {
+  test("renders closed pill with active shadow and z-index elevation", () => {
+    const html = render({ title: "Proyek", isOpen: false });
+
+    expect(html).toContain("active:shadow-raised");
+    expect(html).toContain("active:z-10");
+  });
+
+  test("renders menu item links with scale-up active animation classes", () => {
+    const html = render({ title: "Proyek", isOpen: true });
+
+    expect(html).toContain("active:scale-[1.05]");
+    expect(html).toContain("active:shadow-raised");
+    expect(html).toContain("active:z-10");
+  });
+});

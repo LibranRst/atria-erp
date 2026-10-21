@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { usePermission } from "@/components/auth/permissions-provider";
 import { toast } from "sonner";
 import { createInventoryLocation } from "@/app/actions/material/warehouse";
 import type { MaterialSettingRow } from "@/app/actions/settings/system";
@@ -11,9 +13,15 @@ import {
   EmptyState,
   FilterSelect,
   FormRiskNotice,
+  SearchInput,
+  Button,
 } from "@/components/ui";
 import { InventoryLocationSheet } from "@/features/materials/components/sheets/inventory-location-sheet";
 import { VendorCreateSheet } from "@/features/administration/components/forms/vendor-create-sheet";
+import {
+  useSettingsFilterState,
+  useSettingsTableState,
+} from "../../hooks/use-settings-table-state";
 import { SettingsFilterBar } from "../shared/settings-filter-bar";
 import { MaterialImportSheet } from "./material-import-sheet";
 import { MaterialCategoryComposerDialog } from "./material-category-composer-dialog";
@@ -53,6 +61,12 @@ export function MaterialSettingsManager({
   presentation = "settings",
   onMutationComplete,
 }: MaterialSettingsManagerProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const fallbackFocusRef = React.useRef<HTMLElement | null>(null);
+  const desktopSettings = desktop && presentation === "settings";
+  const namespace = presentation === "settings" ? "settings-material" : undefined;
+  const table = useSettingsTableState<MaterialSettingRow>("material", namespace);
+  const canCreateVendor = usePermission("manage:vendors");
   const [materials, setMaterials] = React.useState(initialMaterials);
   const [categories, setCategories] = React.useState(initialCategories);
   const [addedVendors, setAddedVendors] = React.useState<readonly SettingsOption[]>([]);
@@ -72,12 +86,12 @@ export function MaterialSettingsManager({
   const [showMaterialDetails, setShowMaterialDetails] = React.useState(false);
   const [categoryName, setCategoryName] = React.useState("");
   const [newLocationName, setNewLocationName] = React.useState("");
-  const [search, setSearch] = React.useState("");
-  const [categoryFilter, setCategoryFilter] = React.useState("ALL");
-  const [vendorFilter, setVendorFilter] = React.useState("ALL");
+  const [search, setSearch] = useSettingsFilterState(namespace, "search", "");
+  const [categoryFilter, setCategoryFilter] = useSettingsFilterState(namespace, "category", "ALL");
+  const [vendorFilter, setVendorFilter] = useSettingsFilterState(namespace, "vendor", "ALL");
   const [categoryFilterDraft, setCategoryFilterDraft] = React.useState("ALL");
   const [vendorFilterDraft, setVendorFilterDraft] = React.useState("ALL");
-  const [status, setStatus] = React.useState("ACTIVE");
+  const [status, setStatus] = useSettingsFilterState(namespace, "status", "ACTIVE");
   const [message, setMessage] = React.useState<string | null>(null);
   const [showImport, setShowImport] = React.useState(false);
   const [locationPending, startLocationTransition] = React.useTransition();
@@ -255,16 +269,95 @@ export function MaterialSettingsManager({
       setMessage,
     });
   return (
-    <section className={`min-w-0 ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}>
+    <section
+      ref={fallbackFocusRef}
+      aria-label="Material Master"
+      tabIndex={-1}
+      className={`min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${presentation === "onboarding" ? "space-y-3" : "space-y-sm"}`}
+    >
       {message && (
         <FormRiskNotice title="Status material" tone="success">
           {message}
         </FormRiskNotice>
       )}
-      {presentation === "onboarding" ? (
+      {desktopSettings ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-title font-bold text-on-surface">Material Master</h2>
+              <p className="mt-1 text-support text-on-surface-variant">
+                {materials.filter((material) => material.isActive).length} material aktif ·{" "}
+                {categories.length} kategori
+              </p>
+            </div>
+            {canManage ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="compact"
+                  onClick={() => setShowImport(true)}
+                >
+                  <AppIcon name="upload_file" className="icon-sm" aria-hidden="true" />
+                  Import CSV
+                </Button>
+                <Button type="button" size="compact" onClick={() => openMaterial(blank())}>
+                  <AppIcon name="add" className="icon-sm" aria-hidden="true" />
+                  Tambah material
+                </Button>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="min-w-44 flex-1">
+              <SearchInput
+                value={search}
+                onChange={(next) => {
+                  setSearch(next);
+                  table.resetPage();
+                }}
+                ariaLabel="Cari material master"
+                placeholder="Cari material, kode, merek"
+                showClear={false}
+              />
+            </div>
+            <FilterSelect
+              label="Status material"
+              value={status}
+              options={STATUS_FILTERS}
+              onChange={(next) => {
+                setStatus(next);
+                table.resetPage();
+              }}
+              presentation="menu"
+            />
+            <FilterSelect
+              label="Kategori material"
+              value={categoryFilter}
+              options={categoryFilters}
+              onChange={(next) => {
+                setCategoryFilter(next);
+                table.resetPage();
+              }}
+              presentation="menu"
+            />
+            <FilterSelect
+              label="Vendor default"
+              value={vendorFilter}
+              options={vendorFilters}
+              onChange={(next) => {
+                setVendorFilter(next);
+                table.resetPage();
+              }}
+              presentation="menu"
+              searchable={vendors.length > 6}
+            />
+          </div>
+        </div>
+      ) : presentation === "onboarding" ? (
         <div className="flex min-w-0 items-center justify-between gap-3 px-1">
           <span className="min-w-0">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+            <span className="block text-row leading-5 font-bold text-on-surface">
               Material Master
             </span>
             <span className="block text-meta text-on-surface-variant">
@@ -272,22 +365,26 @@ export function MaterialSettingsManager({
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-1">
-            <button
+            <Button
               type="button"
               onClick={() => setShowImport(true)}
               disabled={!canManage}
               className="relative min-h-10 rounded-full bg-accent/8 px-3 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              variant="secondary"
+              size="compact"
             >
               Import
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => openMaterial(blank())}
               disabled={!canManage}
               className="relative min-h-10 rounded-full bg-accent/8 px-3.5 text-meta font-bold text-accent outline-none after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] disabled:opacity-40"
+              variant="secondary"
+              size="compact"
             >
               Tambah
-            </button>
+            </Button>
           </span>
         </div>
       ) : (
@@ -302,8 +399,14 @@ export function MaterialSettingsManager({
               searchAriaLabel="Cari material master"
               layoutPrefix="settings-material"
               filterTitle="Filter material"
-              onStatusChange={setStatus}
-              onSearchChange={setSearch}
+              onStatusChange={(next) => {
+                setStatus(next);
+                table.resetPage();
+              }}
+              onSearchChange={(next) => {
+                setSearch(next);
+                table.resetPage();
+              }}
               onEnterSearch={() => {
                 suspendedFiltersRef.current = {
                   category: categoryFilter,
@@ -313,6 +416,7 @@ export function MaterialSettingsManager({
                 setCategoryFilter("ALL");
                 setVendorFilter("ALL");
                 setStatus("ALL");
+                table.resetPage();
               }}
               onExitSearch={() => {
                 const suspended = suspendedFiltersRef.current;
@@ -329,6 +433,7 @@ export function MaterialSettingsManager({
               onApplyFilters={() => {
                 setCategoryFilter(categoryFilterDraft);
                 setVendorFilter(vendorFilterDraft);
+                table.resetPage();
               }}
               onResetFilterDraft={() => {
                 setCategoryFilterDraft("ALL");
@@ -349,32 +454,35 @@ export function MaterialSettingsManager({
               />
               {canManage ? (
                 <div className="mt-2 border-t border-black/5.5 pt-3">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowImport(true)}
                     className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-surface-container px-4 text-xs font-bold text-on-surface hover:bg-surface-container-high"
+                    variant="secondary"
+                    size="compact"
                   >
                     <AppIcon name="upload_file" className="icon-sm" />
                     Import Material dari CSV
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </SettingsFilterBar>
           </div>
           {canManage ? (
-            <button
+            <Button
               type="button"
               onClick={() => openMaterial(blank())}
               className="hover:bg-primary-hover flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-3.5 text-xs font-bold text-white shadow-control max-[420px]:w-12 max-[420px]:px-0"
               title="Tambah Material Baru"
+              variant="primary"
             >
               <AppIcon name="add" className="icon-sm" />
               <span className="ml-1 max-[420px]:hidden">Tambah</span>
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !desktopSettings ? (
         <EmptyState
           title={materials.length === 0 ? "Belum ada material" : "Material tidak ditemukan"}
           description={
@@ -384,7 +492,17 @@ export function MaterialSettingsManager({
           }
         />
       ) : (
-        <MaterialSettingsList materials={filtered} onSelect={setSelectedMaterial} />
+        <MaterialSettingsList
+          materials={filtered}
+          onSelect={setSelectedMaterial}
+          table={presentation === "settings" ? table : undefined}
+          emptyTitle={materials.length === 0 ? "Belum ada material" : "Material tidak ditemukan"}
+          emptyDescription={
+            materials.length === 0
+              ? "Tambahkan Material Master pertama untuk menyiapkan default inventori."
+              : "Ubah kata pencarian atau reset filter."
+          }
+        />
       )}
 
       <MaterialDetailSheet
@@ -400,7 +518,11 @@ export function MaterialSettingsManager({
         onNextAction={setDetailNextAction}
         onToggle={setConfirmMaterial}
       />
-      <MaterialImportSheet open={showImport} onClose={() => setShowImport(false)} />
+      <MaterialImportSheet
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        fallbackFocusRef={fallbackFocusRef}
+      />
 
       <MaterialEditorSheet
         draft={draft}
@@ -420,7 +542,7 @@ export function MaterialSettingsManager({
         onDetailsOpenChange={setShowMaterialDetails}
         onCreateCategory={() => setShowCategoryComposer(true)}
         onCreateLocation={() => setShowLocationComposer(true)}
-        onCreateVendor={() => setShowVendorComposer(true)}
+        onCreateVendor={canCreateVendor ? () => setShowVendorComposer(true) : undefined}
       />
       <MaterialCategoryComposerDialog
         open={showCategoryComposer}
@@ -446,7 +568,7 @@ export function MaterialSettingsManager({
         onSubmit={handleAddLocation}
       />
       <VendorCreateSheet
-        open={showVendorComposer}
+        open={canCreateVendor && showVendorComposer}
         onClose={() => setShowVendorComposer(false)}
         onSuccess={(newVendor) => {
           setAddedVendors((curr) => [...curr, newVendor]);

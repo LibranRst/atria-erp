@@ -1,7 +1,7 @@
 "use client";
 
 import { AppIcon, Button } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
@@ -94,7 +94,7 @@ export function ConversationPicker({
                 <motion.button
                   type="button"
                   onClick={() => onSelect(conversation.id)}
-                  whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                  whileTap={reduceMotion ? undefined : { scale: buttonTapActiveScale }}
                   transition={transitionSpringSnappy}
                   className="flex min-h-14 min-w-0 flex-1 cursor-pointer items-center gap-3 px-3.5 py-2.5 text-left focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
                   aria-current={isActive ? "true" : undefined}
@@ -122,7 +122,7 @@ export function ConversationPicker({
                   type="button"
                   onClick={() => setPendingDeleteId(conversation.id)}
                   aria-label={`Hapus percakapan ${conversation.title ?? "baru"}`}
-                  className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors duration-200 after:absolute after:-inset-1.5 after:content-[''] hover:text-critical focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none active:scale-95"
+                  className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors duration-200 after:absolute after:-inset-1.5 after:content-[''] hover:text-critical focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none active:z-10 active:scale-[1.05] active:shadow-raised"
                 >
                   <AppIcon name="delete" aria-hidden="true" className="icon-sm" />
                 </button>

@@ -1,11 +1,12 @@
 import { AppIcon } from "@/components/ui";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import * as React from "react";
 
 /**
  * Gelembung teks percakapan.
  *
  * Hanya teks dan lampiran berkas yang masuk gelembung. Kartu data sengaja
- * pecah keluar menjadi lebar penuh: menumpuk padding gelembung di atas padding
+ * pecah keluar ke jalur kartu: menumpuk padding gelembung di atas padding
  * kartu akan menyempitkan kolom angka sampai nilai uang utama terpaksa wrap di
  * layar 320px, dan itu dilarang oleh aturan tabular money di DESIGN.md.
  */
@@ -32,7 +33,12 @@ function formatSize(bytes?: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps): React.JSX.Element {
+export function ChatBubble({
+  side,
+  children,
+  attachments = [],
+}: ChatBubbleProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   const normalizedAttachments = React.useMemo(() => {
     return attachments.map((item) => {
       const att = item as BubbleAttachment;
@@ -69,7 +75,9 @@ export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps
     return (
       <div className="flex flex-col items-end gap-1.5">
         {hasAttachments ? (
-          <div className="flex max-w-[85%] flex-col items-end gap-1.5">
+          <div
+            className={`flex min-w-0 flex-col items-end gap-1.5 ${desktop ? "max-w-120" : "max-w-[85%]"}`}
+          >
             {/* Dokumen / file non-gambar */}
             {fileAttachments.length > 0 ? (
               <div className="flex w-full flex-col items-end gap-1">
@@ -79,7 +87,7 @@ export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps
                     href={att.url || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 rounded-2xl bg-white px-3.5 py-2 text-on-surface shadow-control ring-1 ring-ring-control transition-colors hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    className="flex max-w-full min-w-0 items-center gap-2.5 rounded-2xl bg-white px-3.5 py-2 text-on-surface shadow-control ring-1 ring-ring-control transition-colors hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
                   >
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-surface-container text-primary">
                       <AppIcon name="description" className="icon-xs" />
@@ -114,7 +122,7 @@ export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group relative block overflow-hidden rounded-2xl bg-surface-container shadow-control ring-1 ring-ring-control transition-all hover:ring-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+                    className={`group relative block overflow-hidden rounded-2xl bg-surface-container shadow-control ring-1 ring-ring-control transition-all hover:ring-primary focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none ${
                       imageCount === 1 ? "h-36 w-full" : "h-24 w-full"
                     }`}
                   >
@@ -132,7 +140,9 @@ export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps
         ) : null}
 
         {hasText ? (
-          <div className="max-w-[85%] rounded-[22px] rounded-br-md bg-surface-inverse px-4.5 py-2.5 text-row font-semibold text-on-surface-inverse shadow-inverse">
+          <div
+            className={`min-w-0 rounded-[22px] rounded-br-md bg-surface-inverse px-4.5 py-2.5 text-row font-semibold wrap-anywhere text-on-surface-inverse shadow-inverse ${desktop ? "max-w-120" : "max-w-[85%]"}`}
+          >
             {children}
           </div>
         ) : null}
@@ -142,7 +152,9 @@ export function ChatBubble({ side, children, attachments = [] }: ChatBubbleProps
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[94%] rounded-[22px] rounded-tl-md bg-white px-4.5 py-3 shadow-surface ring-1 ring-ring-subtle">
+      <div
+        className={`min-w-0 rounded-[22px] rounded-tl-md bg-white px-4.5 py-3 shadow-surface ring-1 ring-ring-subtle ${desktop ? "max-w-150" : "max-w-[94%]"}`}
+      >
         {children}
       </div>
     </div>

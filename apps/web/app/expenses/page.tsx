@@ -20,6 +20,8 @@ export default async function ExpensesPage(): Promise<React.JSX.Element> {
   return (
     <section className="space-y-sm select-none">
       <ExpenseList
+        canViewFieldClaims={actor.dataScope !== "NONE" && actor.permissions.includes("view:cost")}
+        assignedScope={actor.dataScope === "ASSIGNED"}
         initialCosts={data.initialCosts}
         bankAccounts={data.bankAccounts}
         vendorBills={data.vendorBills}

@@ -1,8 +1,15 @@
+"use client";
+
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { ExpensesDesktopSkeleton } from "@/features/expenses/components/shared/expenses-desktop-skeleton";
+
 function SkeletonLine({ className }: { readonly className: string }): React.JSX.Element {
   return <div className={`rounded-full bg-surface-container ${className}`} aria-hidden="true" />;
 }
 
 export default function ExpensesLoading(): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  if (desktop) return <ExpensesDesktopSkeleton />;
   return (
     <div
       className="space-y-sm px-1 pb-8 max-[430px]:-mx-1 max-[430px]:pb-6"

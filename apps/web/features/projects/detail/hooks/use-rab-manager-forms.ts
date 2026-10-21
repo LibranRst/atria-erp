@@ -66,6 +66,8 @@ interface UseRabManagerFormsResult {
   readonly openCreateBundle: () => void;
   readonly openEditBundle: (bundle: RabBundleView) => void;
   readonly toggleBundleItem: (id: string) => void;
+  readonly discardSourceSelection: () => void;
+  readonly discardManualLine: () => void;
 }
 
 export function useRabManagerForms({
@@ -96,6 +98,16 @@ export function useRabManagerForms({
   const [changeOrderOpen, setChangeOrderOpen] = useState(false);
   const [voidRevisionOpen, setVoidRevisionOpen] = useState(false);
   const [voidReason, setVoidReason] = useState("");
+  const sourceVersion = `${rap?.id ?? "none"}:${rabEstimate?.id ?? "none"}:${categoryPlanItems.map((item) => item.id).join(",")}`;
+  const [selectedSourceVersion, setSelectedSourceVersion] = useState(sourceVersion);
+  // An adopted revision may clone source IDs. The manager freezes incoming data
+  // while editing; reconcile only after the source picker has released its draft.
+  if (!sourcePickerOpen && selectedSourceVersion !== sourceVersion) {
+    setSelectedSourceVersion(sourceVersion);
+    setSelectedRapQuotationIds(getInitialSelectedRapQuotationIds(rap));
+    setSelectedCategoryQuotationIds(getInitialSelectedCategoryQuotationIds(categoryPlanItems));
+    setSelectedBaselineManualItemIds(getInitialSelectedBaselineManualItemIds(rabEstimate));
+  }
 
   function handleRabEditChange(item: RabItemView, updates: Partial<RabItemView>): void {
     setRabDraftEdits((current) => ({
@@ -132,6 +144,17 @@ export function useRabManagerForms({
 
   function toggleBundleItem(id: string): void {
     setBundleForm((current) => toggleBundleItemInForm({ current, itemId: id, rabEstimate }));
+  }
+
+  function discardSourceSelection(): void {
+    setSelectedRapQuotationIds(getInitialSelectedRapQuotationIds(rap));
+    setSelectedCategoryQuotationIds(getInitialSelectedCategoryQuotationIds(categoryPlanItems));
+    setSelectedBaselineManualItemIds(getInitialSelectedBaselineManualItemIds(rabEstimate));
+    setManualQuotationLine(emptyManualQuotationLine);
+  }
+
+  function discardManualLine(): void {
+    setManualQuotationLine(emptyManualQuotationLine);
   }
 
   return {
@@ -172,5 +195,7 @@ export function useRabManagerForms({
     openCreateBundle,
     openEditBundle,
     toggleBundleItem,
+    discardSourceSelection,
+    discardManualLine,
   };
 }

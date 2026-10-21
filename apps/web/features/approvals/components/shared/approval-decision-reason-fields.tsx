@@ -66,6 +66,7 @@ export function ApprovalDecisionReasonFields({
         >
           <Textarea
             id={`${idPrefix}-approval-reason`}
+            aria-label="Alasan persetujuan"
             autoFocus
             rows={3}
             value={approvalReason}

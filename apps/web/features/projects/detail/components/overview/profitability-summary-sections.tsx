@@ -11,30 +11,39 @@ export function ProfitProjectionSection({
   projectedGrossProfit,
   projectedGrossMargin,
   totalRemaining,
+  targetGrossPercentage,
+  finalSnapshotAt,
 }: {
   readonly contractValue: number;
   readonly totalAllocated: number;
   readonly projectedGrossProfit: number;
   readonly projectedGrossMargin: number;
   readonly totalRemaining: number;
+  readonly targetGrossPercentage?: number;
+  readonly finalSnapshotAt?: Date;
 }): React.JSX.Element {
-  const risky = projectedGrossProfit < 0 || projectedGrossMargin < 10;
+  const risky =
+    projectedGrossProfit < 0 ||
+    (targetGrossPercentage !== undefined && projectedGrossMargin < targetGrossPercentage);
   return (
     <section className="rounded-owner bg-primary p-5 text-white shadow-inverse max-[430px]:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-eyebrow font-bold tracking-[0.16em] text-white/55 uppercase">
-            Margin proyeksi
+            {finalSnapshotAt ? "Margin akhir tersimpan" : "Margin proyeksi"}
           </p>
           <MoneyValue
             amount={projectedGrossProfit}
+            fractionDigits={Number.isInteger(projectedGrossProfit) ? 0 : 2}
             variant="fullDynamic"
             tone={projectedGrossProfit < 0 ? "danger" : "inverse"}
             size="hero"
             className="mt-1"
           />
           <p className="mt-1 text-meta text-white/60">
-            Nilai kontrak dikurangi plafon budget internal
+            {finalSnapshotAt
+              ? `Disimpan ${new Date(finalSnapshotAt).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })}`
+              : "Kontrak dikurangi nilai terbesar antara biaya terpakai dan budget internal"}
           </p>
         </div>
         <span
@@ -49,9 +58,11 @@ export function ProfitProjectionSection({
         <MarginFact label="Sisa plafon" amount={totalRemaining} danger={totalRemaining < 0} />
       </div>
       <div className="mt-3 rounded-[18px] bg-white/[0.07] px-3 py-2.5 text-meta text-white/65">
-        {risky
-          ? "Margin berada di bawah batas aman. Periksa realisasi biaya dan perubahan scope."
-          : "Margin proyeksi masih positif berdasarkan budget yang disetujui."}
+        {finalSnapshotAt
+          ? "Margin realisasi tersimpan saat penutupan proyek."
+          : risky
+            ? "Margin berada di bawah target proyek atau bernilai negatif. Periksa biaya dan perubahan lingkup."
+            : "Margin mengikuti budget proyek; posisi ini bukan laba final sebelum penutupan."}
       </div>
     </section>
   );
@@ -100,11 +111,12 @@ function MarginFact({
   const className = align === "right" ? "pl-2 text-right" : "pr-2";
   return (
     <div className={cn("flex w-full flex-col gap-2 rounded-2xl bg-white/7.5 p-3", className)}>
-      <p className="truncate text-[8px] leading-none font-bold tracking-wide text-white/50 uppercase">
+      <p className="truncate text-meta leading-none font-bold tracking-wide text-white/50 uppercase">
         {label}
       </p>
       <MoneyValue
         amount={amount}
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
         variant="compact"
         tone={danger ? "danger" : "inverse"}
         size="xs"
@@ -139,6 +151,7 @@ function CashRow({
       </span>
       <MoneyValue
         amount={amount}
+        fractionDigits={Number.isInteger(amount) ? 0 : 2}
         variant="fullDynamic"
         tone={danger ? "danger" : strong ? "primary" : "default"}
         align="right"

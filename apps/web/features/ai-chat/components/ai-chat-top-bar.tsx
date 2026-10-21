@@ -2,7 +2,7 @@
 
 import type { TopBarSlots } from "@/components/layout/top-bar-slots";
 import { TopBarControl } from "@/components/layout/app-top-bar";
-import { AppIcon, IconButton } from "@/components/ui";
+import { AppIcon, IconButton, Button } from "@/components/ui";
 import * as React from "react";
 
 /**
@@ -20,6 +20,8 @@ import * as React from "react";
  */
 
 type AiChatSlotOptions = {
+  readonly desktop?: boolean;
+  readonly conversationTitle?: string;
   readonly showPicker: boolean;
   readonly isBusy: boolean;
   /** Satu tingkat ke atas: riwayat → percakapan → keluar rute. */
@@ -34,7 +36,39 @@ export function aiChatTopBarSlots({
   onBack,
   onNewConversation,
   onOpenPicker,
+  desktop = false,
+  conversationTitle,
 }: AiChatSlotOptions): TopBarSlots {
+  if (desktop)
+    return {
+      title: conversationTitle || "Percakapan baru",
+      subtitle: "Asisten AI",
+      left: [],
+      right: (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            className="bg-surface-container-lowest! text-on-surface!"
+            size="compact"
+            onClick={onOpenPicker}
+            aria-pressed={showPicker}
+          >
+            <AppIcon name="history" className="icon-sm" />
+            Riwayat
+          </Button>
+          <Button
+            variant="primary"
+            className="bg-primary! text-on-primary! [--atria-action-shadow:var(--shadow-primary)]"
+            size="compact"
+            disabled={isBusy}
+            onClick={onNewConversation}
+          >
+            <AppIcon name="add" className="icon-sm" />
+            Percakapan baru
+          </Button>
+        </div>
+      ),
+    };
   return {
     /**
      * Judulnya berganti mengikuti keadaan di dalam halaman, bukan mengikuti

@@ -6,6 +6,7 @@ export type SelectOption = {
   readonly group?: string;
   readonly disabled?: boolean;
   readonly disabledReason?: string;
+  readonly action?: { readonly kind: "create"; readonly label: string };
 };
 
 export const COMMON_UNIT_OPTIONS = [
@@ -26,14 +27,4 @@ export const COMMON_UNIT_OPTIONS = [
   "paket",
 ] as const;
 
-export const COMMON_ROOM_OPTIONS = [
-  "Kitchen",
-  "Living Room",
-  "Bedroom",
-  "Bathroom",
-  "Wardrobe",
-  "Pantry",
-  "Dining",
-  "Foyer",
-  "Umum",
-] as const;
+export { COMMON_ROOM_OPTIONS } from "@atria/core/presentation/project-input-options";

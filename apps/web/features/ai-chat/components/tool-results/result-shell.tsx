@@ -1,7 +1,7 @@
 "use client";
 
 import { AppIcon } from "@/components/ui";
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import * as React from "react";
 
 /**

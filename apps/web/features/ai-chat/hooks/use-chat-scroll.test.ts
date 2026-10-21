@@ -9,41 +9,29 @@ import {
 
 const VIEWPORT = { scrollHeight: 2400, clientHeight: 800, topInset: STREAM_TOP_INSET_PX };
 
-describe("batas gulir selama jawaban mengalir", () => {
-  test("berhenti tepat saat gelembung pertanyaan menyentuh bilah atas", () => {
-    // Diturunkan dari konstantanya, bukan ditulis ulang sebagai 72. Angka itu
-    // dulu benar hanya karena kebetulan cocok dengan geometri bilah yang lama.
+describe("following latest question", () => {
+  test("stops when the user question reaches the top reading inset", () => {
     expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 1000 })).toBe(
       1000 - STREAM_TOP_INSET_PX,
     );
   });
-
-  /**
-   * Tanpa batas ini, jawaban panjang akan menggulung pertanyaan yang memicunya
-   * keluar layar dan pengguna kehilangan konteks bacaannya.
-   */
-  test("tidak pernah melewati gelembung pertanyaan meski dasar masih jauh", () => {
-    const target = computeFollowTarget({ ...VIEWPORT, anchorOffset: 1000 });
-    expect(target).toBeLessThan(VIEWPORT.scrollHeight - VIEWPORT.clientHeight);
+  test("longer answers cannot move beyond the same question", () => {
+    expect(computeFollowTarget({ ...VIEWPORT, scrollHeight: 5000, anchorOffset: 1000 })).toBe(
+      1000 - STREAM_TOP_INSET_PX,
+    );
   });
-
-  test("dasar percakapan menjadi batas ketika isi belum cukup panjang", () => {
-    // Gelembung pertanyaan baru saja terkirim dan berada dekat dasar.
-    expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 2300 })).toBe(1600);
-  });
-
-  test("pesan pertama tidak menarik tampilan ke posisi negatif", () => {
-    expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 40 })).toBe(0);
-  });
-
-  test("tanpa gelembung pertanyaan, dasar percakapan yang dituju", () => {
+  test("short answers stop at the available bottom and missing anchors fall back safely", () => {
+    expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 2000 })).toBe(1600);
     expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: null })).toBe(1600);
+    expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 20 })).toBe(0);
   });
-
-  test("isi yang lebih pendek dari viewport tidak menghasilkan gulir", () => {
+  test("desktop uses its contextual reading inset", () => {
+    expect(computeFollowTarget({ ...VIEWPORT, anchorOffset: 1000, topInset: 16 })).toBe(984);
+  });
+  test("short content never scrolls to a negative position", () => {
     expect(
       computeFollowTarget({
-        scrollHeight: 500,
+        scrollHeight: 400,
         clientHeight: 800,
         anchorOffset: null,
         topInset: 72,

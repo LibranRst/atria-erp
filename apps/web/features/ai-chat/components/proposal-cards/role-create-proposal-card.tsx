@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import * as React from "react";
 
 import { confirmAiCreateRoleProposal } from "@/app/actions/ai/confirm-create-role-proposal";
@@ -94,47 +95,48 @@ export function RoleCreateProposalCard({
       }}
     >
       {/* Panel Ringkasan Peran & Wawasan Keamanan */}
-      <div className="px-4 py-3.5 space-y-3">
+      <div className="space-y-3 px-4 py-3.5">
         {proposal.description ? (
-          <p className="text-support leading-relaxed text-on-surface">
-            {proposal.description}
-          </p>
+          <p className="text-support leading-relaxed text-on-surface">{proposal.description}</p>
         ) : null}
 
         {/* Inset Grid: Cakupan Proyek & Keamanan Akses */}
         <div className="grid grid-cols-2 gap-2">
           {/* Sel 1: Cakupan Proyek */}
-          <div className="rounded-xl border border-black/5.5 bg-surface-container-low/40 p-2.5 space-y-1">
-            <div className="flex items-center gap-1.5 text-eyebrow font-bold text-on-surface-variant uppercase tracking-wider">
-              <AppIcon name="folder" className="icon-xs text-on-surface-variant/70" aria-hidden="true" />
+          <div className="space-y-1 rounded-xl border border-black/5.5 bg-surface-container-low/40 p-2.5">
+            <div className="flex items-center gap-1.5 text-eyebrow font-bold tracking-wider text-on-surface-variant uppercase">
+              <AppIcon
+                name="folder"
+                className="icon-xs text-on-surface-variant/70"
+                aria-hidden="true"
+              />
               <span>Cakupan proyek</span>
             </div>
-            <p className="text-meta font-bold text-on-surface truncate capitalize">
+            <p className="truncate text-meta font-bold text-on-surface capitalize">
               {proposal.scopeEffect}
             </p>
           </div>
 
           {/* Sel 2: Status Pemegang */}
-          <div className="rounded-xl border border-black/5.5 bg-surface-container-low/40 p-2.5 space-y-1">
-            <div className="flex items-center gap-1.5 text-eyebrow font-bold text-on-surface-variant uppercase tracking-wider">
+          <div className="space-y-1 rounded-xl border border-black/5.5 bg-surface-container-low/40 p-2.5">
+            <div className="flex items-center gap-1.5 text-eyebrow font-bold tracking-wider text-on-surface-variant uppercase">
               <AppIcon name="check_circle" className="icon-xs text-success" aria-hidden="true" />
               <span>Keamanan Akses</span>
             </div>
-            <p className="text-meta font-bold text-on-surface truncate">
-              Belum dipakai siapa pun
-            </p>
+            <p className="truncate text-meta font-bold text-on-surface">Belum dipakai siapa pun</p>
           </div>
         </div>
 
         {/* Penjelasan Keamanan Tenang */}
-        <div className="flex min-w-0 items-start gap-2 text-meta text-on-surface-variant leading-tight">
+        <div className="flex min-w-0 items-start gap-2 text-meta leading-tight text-on-surface-variant">
           <AppIcon
             name="info"
             className="mt-0.5 icon-xs shrink-0 text-on-surface-variant/70"
             aria-hidden="true"
           />
           <p className="min-w-0">
-            Peran baru tidak mengubah akses siapa pun sampai Anda menugaskan seseorang di Pengaturan.
+            Peran baru tidak mengubah akses siapa pun sampai Anda menugaskan seseorang di
+            Pengaturan.
           </p>
         </div>
       </div>

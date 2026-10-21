@@ -1,13 +1,20 @@
 "use client";
 
-import { IconButton } from "@/components/ui";
+import { IconButton, ActionMenu, Textarea } from "@/components/ui";
 import { AppIcon } from "@/components/ui";
 import { uploadToImageKit } from "@/lib/media/upload-to-imagekit";
+import { useWorkspaceControlPresentation } from "@/lib/navigation/workspace-presentation";
 import { transitionSpringSnappy, transitionSpringSmooth } from "@/lib/utils/motion";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 import { toast } from "sonner";
-import { ACCEPTED_ATTACHMENT_INPUT, isSupportedAttachment } from "../utils/attachment-validation";
+import {
+  ACCEPTED_ATTACHMENT_INPUT,
+  CHAT_ATTACHMENT_OPTIONS,
+  MAX_CHAT_ATTACHMENTS,
+  isSupportedAttachment,
+  validateAttachmentBatch,
+} from "../utils/attachment-validation";
 
 /**
  * Baris penulisan pesan.
@@ -18,7 +25,6 @@ import { ACCEPTED_ATTACHMENT_INPUT, isSupportedAttachment } from "../utils/attac
  */
 
 const MAX_LENGTH = 2000;
-const MAX_TEXTAREA_HEIGHT = 120;
 
 export const COMPOSER_MORPH_LAYOUT_ID = "ai-composer-surface";
 
@@ -58,7 +64,10 @@ export function shouldSubmitOnKey(event: {
   return event.nativeEvent?.isComposing !== true;
 }
 
-type ChatComposerProps = {
+export type ChatComposerProps = {
+  readonly disabled?: boolean;
+  readonly embedded?: boolean;
+  readonly autoFocus?: boolean;
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly onSubmit: () => void;
@@ -72,6 +81,9 @@ type ChatComposerProps = {
 };
 
 export function ChatComposer({
+  disabled = false,
+  embedded = false,
+  autoFocus = false,
   value,
   onChange,
   onSubmit,
@@ -84,21 +96,21 @@ export function ChatComposer({
   onUploadFiles,
 }: ChatComposerProps): React.JSX.Element {
   const reduceMotion = useReducedMotion();
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const actionSize = useWorkspaceControlPresentation() === "desktop" ? "default" : "compact";
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [internalIsUploading, setInternalIsUploading] = React.useState(false);
   const isUploading = externalIsUploading ?? internalIsUploading;
-  const canSend = canSendDraft(value, isBusy, attachments.length);
-  const [isMultiline, setIsMultiline] = React.useState(false);
-
-  React.useLayoutEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    const nextHeight = Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT);
-    textarea.style.height = `${nextHeight}px`;
-    setIsMultiline(nextHeight > 32);
-  }, [value]);
+  const canSend = canSendDraft(value, isBusy, attachments.length) && !isUploading && !disabled;
+  const [inputHeight, setInputHeight] = React.useState(40);
+  const uploadLock = React.useRef(false);
+  function chooseAttachment(accept: string): void {
+    const input = fileInputRef.current;
+    if (!input || disabled || isBusy || isUploading || attachments.length >= MAX_CHAT_ATTACHMENTS)
+      return;
+    input.accept = accept;
+    input.value = "";
+    input.click();
+  }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>): void {
     if (!shouldSubmitOnKey(event)) return;
@@ -109,6 +121,14 @@ export function ChatComposer({
   async function handleFilesSelected(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    if (uploadLock.current) return;
+    const validation = validateAttachmentBatch(Array.from(files), attachments.length);
+    if (!validation.valid) {
+      toast.error(validation.reason);
+      event.target.value = "";
+      return;
+    }
+    uploadLock.current = true;
 
     try {
       if (onUploadFiles) {
@@ -142,130 +162,171 @@ export function ChatComposer({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal mengunggah lampiran.");
     } finally {
+      uploadLock.current = false;
       if (!onUploadFiles) setInternalIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
+  const expanded = inputHeight > 40 || attachments.length > 0 || isUploading;
   return (
-    <div className="flex flex-col gap-1.5">
-      {/* Tray pratinjau lampiran berkas */}
-      {attachments.length > 0 || isUploading ? (
-        <div className="flex flex-wrap items-center gap-1.5 px-2">
-          {attachments.map((att, index) => {
-            const isImage = att.mimeType.startsWith("image/");
-            return (
-              <div
-                key={`${att.url}-${index}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-meta font-semibold text-on-surface shadow-control ring-1 ring-ring-control"
-              >
-                {isImage ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={att.url}
-                    alt={att.fileName}
-                    className="h-4 w-4 rounded-full object-cover"
-                  />
-                ) : (
-                  <AppIcon name="description" className="icon-xs text-primary" />
-                )}
-                <span className="max-w-30 truncate text-meta leading-tight">
-                  {att.fileName}
-                </span>
-                <span className="text-[10px] font-normal text-on-surface-variant">
-                  ({formatFileSize(att.size)})
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onRemoveAttachment?.(index)}
-                  className="ml-0.5 rounded-full p-0.5 text-on-surface-variant hover:bg-surface-container-high hover:text-error focus:outline-none"
-                  aria-label={`Hapus ${att.fileName}`}
-                >
-                  <AppIcon name="close" className="icon-xs" />
-                </button>
-              </div>
-            );
-          })}
-
-          {isUploading ? (
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-low px-2.5 py-1 text-meta font-medium text-primary ring-1 ring-ring-subtle animate-pulse">
-              <AppIcon name="sync" className="icon-xs animate-spin" />
-              <span>Mengunggah…</span>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="flex items-end gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={ACCEPTED_ATTACHMENT_INPUT}
-          className="sr-only"
-          onChange={handleFilesSelected}
-        />
-
-        <motion.div
-          layout
-          layoutId={reduceMotion ? undefined : COMPOSER_MORPH_LAYOUT_ID}
-          transition={reduceMotion ? undefined : transitionSpringSmooth}
-          className={`relative flex min-h-12 min-w-0 flex-1 gap-1.5 bg-white py-1.5 pl-2 pr-4 shadow-control ring-1 ring-ring-control transition-all duration-200 focus-within:ring-2 focus-within:ring-focus-ring ${
-            isMultiline ? "items-end rounded-[22px]" : "items-center rounded-full"
-          }`}
-        >
-          <button
-            type="button"
-            disabled={isUploading || isBusy}
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Lampirkan berkas"
-            title="Lampirkan berkas"
-            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring after:absolute after:-inset-1.5 after:content-[''] disabled:pointer-events-none disabled:opacity-40"
+    <motion.div
+      initial={false}
+      animate={embedded ? undefined : { borderRadius: expanded ? 28 : 32 }}
+      transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
+      className={
+        embedded
+          ? "min-w-0 p-2"
+          : "min-w-0 bg-surface-container-lowest p-2 shadow-control ring-1 ring-ring-control focus-within:ring-2 focus-within:ring-focus-ring"
+      }
+      data-chat-composer=""
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED_ATTACHMENT_INPUT}
+        hidden
+        onChange={handleFilesSelected}
+      />
+      <AnimatePresence initial={false}>
+        {(attachments.length > 0 || isUploading) && (
+          <motion.div
+            key="attachments"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={reduceMotion ? { duration: 0 } : transitionSpringSmooth}
+            className="overflow-hidden"
           >
-            <AppIcon name="attach_file" className="icon-md" />
-          </button>
-
-          <label htmlFor="ai-chat-input" className="sr-only">
-            Tulis pertanyaan untuk asisten AI
-          </label>
-          <textarea
-            id="ai-chat-input"
-            ref={textareaRef}
-            rows={1}
-            value={value}
-            maxLength={MAX_LENGTH}
-            onChange={(event) => onChange(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Tanya soal budget, mutasi, atau proyek…"
-            className="block max-h-30 w-full resize-none bg-transparent py-1.5 text-row leading-[20px] font-semibold text-on-surface placeholder:text-on-surface-variant focus:outline-none"
+            <div
+              className="mb-2 space-y-1 border-b border-ring-subtle px-2 pb-2"
+              aria-label="Lampiran pesan"
+            >
+              <AnimatePresence initial={false}>
+                {attachments.map((att, index) => (
+                  <motion.div
+                    layout="position"
+                    key={att.url}
+                    initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
+                    className="flex min-w-0 items-center gap-2"
+                  >
+                    {att.mimeType.startsWith("image/") ? (
+                      /* eslint-disable @next/next/no-img-element -- private original thumbnails use the authenticated media route */ <img
+                        src={att.url}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <AppIcon
+                        name="description"
+                        className="icon-lg shrink-0 text-on-surface-variant"
+                      />
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-support font-semibold">
+                        {att.fileName}
+                      </span>
+                      <span className="block text-meta text-on-surface-variant">
+                        {formatFileSize(att.size)}
+                      </span>
+                    </span>
+                    <IconButton
+                      label={`Hapus ${att.fileName}`}
+                      icon={<AppIcon name="close" className="icon-sm" />}
+                      variant="tertiary"
+                      size="compact"
+                      className="bg-surface-container-lowest! text-on-surface! shadow-none!"
+                      disabled={isBusy || isUploading}
+                      onClick={() => onRemoveAttachment?.(index)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {isUploading && (
+                <p role="status" className="py-2 text-support text-on-surface-variant">
+                  Mengunggah lampiran…
+                </p>
+              )}
+              <p className="text-meta text-on-surface-variant">
+                {attachments.length} / {MAX_CHAT_ATTACHMENTS} lampiran · maksimal 10 MB per berkas
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="flex min-w-0 items-end gap-1">
+        <div className="flex h-10 shrink-0 items-center justify-center">
+          <ActionMenu
+            label="Pilih jenis lampiran"
+            placement="top-start"
+            trigger={
+              <IconButton
+                label="Lampirkan berkas"
+                icon={<AppIcon name="attach_file" className="icon-md" />}
+                size={actionSize}
+                variant="tertiary"
+                className="shrink-0 bg-surface-container-lowest! text-on-surface! shadow-none!"
+                disabled={
+                  disabled || isUploading || isBusy || attachments.length >= MAX_CHAT_ATTACHMENTS
+                }
+              />
+            }
+            items={CHAT_ATTACHMENT_OPTIONS.map((option) => ({
+              id: option.id,
+              label: option.label,
+              icon: option.icon,
+              description: option.description,
+              onSelect: () => chooseAttachment(option.accept),
+            }))}
           />
-        </motion.div>
-
-        <motion.div
-          layout
-          key={isBusy ? "busy-state" : "idle-state"}
-          initial={reduceMotion ? undefined : { scale: 0.92, opacity: 0.8 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={transitionSpringSnappy}
-          className="shrink-0"
-        >
-          {isBusy ? (
-            <IconButton
-              label="Hentikan jawaban"
-              onClick={onStop}
-              icon={<AppIcon name="close" className="icon-lg" />}
-            />
-          ) : (
-            <IconButton
-              label="Kirim pertanyaan"
-              variant="primary"
-              disabled={!canSend}
-              onClick={onSubmit}
-              icon={<AppIcon name="send" className="icon-lg" />}
-            />
-          )}
-        </motion.div>
+        </div>
+        <label htmlFor="ai-chat-input" className="sr-only">
+          Tulis pertanyaan untuk asisten AI
+        </label>
+        <Textarea
+          id="ai-chat-input"
+          variant="composer"
+          disabled={disabled}
+          autoFocus={autoFocus}
+          rows={1}
+          value={value}
+          onChange={onChange}
+          maxLength={MAX_LENGTH}
+          onKeyDown={handleKeyDown}
+          onHeightChange={setInputHeight}
+          placeholder="Tulis pesan…"
+        />
+        <div className="flex h-10 shrink-0 items-center justify-center">
+          <IconButton
+            label={isBusy ? "Hentikan jawaban" : "Kirim pertanyaan"}
+            variant="primary"
+            size={actionSize}
+            className="shrink-0 bg-primary! text-on-primary! shadow-none!"
+            disabled={disabled || (!isBusy && !canSend)}
+            onClick={isBusy ? onStop : onSubmit}
+            icon={
+              <span className="relative block h-5 w-5">
+                <AnimatePresence initial={false}>
+                  <motion.span
+                    key={isBusy ? "stop" : "send"}
+                    initial={reduceMotion ? false : { opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -3 }}
+                    transition={reduceMotion ? { duration: 0 } : transitionSpringSnappy}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <AppIcon name={isBusy ? "stop" : "arrow_upward"} className="icon-md" />
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            }
+          />
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

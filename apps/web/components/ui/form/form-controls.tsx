@@ -17,11 +17,7 @@ export {
   isValidHex,
   normalizeHex,
 } from "./color-picker";
-export type {
-  ColorPresetOption,
-  CustomColorPickerProps,
-  HsvColor,
-} from "./color-picker";
+export type { ColorPresetOption, CustomColorPickerProps, HsvColor } from "./color-picker";
 export {
   AdaptiveSelect,
   ComboboxField,

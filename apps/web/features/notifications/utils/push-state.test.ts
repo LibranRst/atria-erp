@@ -39,6 +39,7 @@ function signals(input: {
 }): PushSignals {
   return {
     environment: {
+      secureContext: true,
       install: input.install,
       pushApiSupported: input.install.pushSupported,
       serverKeyConfigured: input.serverKeyConfigured ?? true,
@@ -50,6 +51,16 @@ function signals(input: {
 }
 
 describe("resolvePushState", () => {
+  test("alamat LAN HTTP menjelaskan HTTPS tanpa menawarkan izin yang gagal", () => {
+    const input = signals({ install: ANDROID_CHROME });
+    const state = resolvePushState({
+      ...input,
+      environment: { ...input.environment, secureContext: false },
+    });
+    expect(state).toBe("insecure");
+    expect(PUSH_STATE_COPY[state].description).toContain("HTTPS");
+    expect(PUSH_STATE_COPY[state].action).toBeNull();
+  });
   test("iOS Safari di tab biasa meminta pemasangan, bukan menyebut browser tidak mendukung", () => {
     const state = resolvePushState(signals({ install: IOS_SAFARI_TAB }));
     expect(state).toBe("ios-install-required");

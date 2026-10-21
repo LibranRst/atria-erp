@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 
 import { usePermissions } from "@/components/auth/permissions-provider";
@@ -156,8 +157,8 @@ export function BottomNav(): React.JSX.Element | null {
     <>
       <div
         aria-hidden="true"
-        style={{ height: "calc(5.5rem + env(safe-area-inset-bottom))" }}
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md bg-linear-to-t from-background via-background/90 to-transparent"
+        style={{ height: "calc(7rem + env(safe-area-inset-bottom))" }}
+        className="scroll-edge-scrim scroll-edge-scrim-bottom pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md"
       />
       <div
         className={`pointer-events-none fixed right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] left-0 mx-auto flex w-fit max-w-md items-center gap-2 select-none ${

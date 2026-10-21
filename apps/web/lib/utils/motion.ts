@@ -17,9 +17,13 @@ import {
   transitionSpringDefault as sharedTransitionSpringDefault,
   transitionSpringSmooth as sharedTransitionSpringSmooth,
   transitionSpringSnappy as sharedTransitionSpringSnappy,
+  buttonTapActiveScale as sharedButtonTapActiveScale,
 } from "@atria/tokens/motion";
 
-/** Adapter bertipe Framer Motion untuk preset lintas-platform Atria. */
+/** Skala pembesaran tombol saat ditekan/ditahan bergaya haptic iOS. */
+export const buttonTapActiveScale: number = sharedButtonTapActiveScale;
+
+/** Adapter bertipe Framer Motion untuk preset lintas-platform Paduna Build. */
 export const transitionSpringSnappy: Transition = sharedTransitionSpringSnappy;
 export const transitionSpringSmooth: Transition = sharedTransitionSpringSmooth;
 export const transitionSpringBouncy: Transition = sharedTransitionSpringBouncy;
@@ -28,6 +32,18 @@ export const transitionSpringDefault: Transition = sharedTransitionSpringDefault
 export const transitionEaseSmooth: Transition = sharedTransitionEaseSmooth;
 export const transitionSpinLinear: Transition = sharedTransitionSpinLinear;
 export const transitionPulseSmooth: Transition = sharedTransitionPulseSmooth;
+
+/** Anchored panels share the Dashboard dropdown's compact travel and scale. */
+export const anchoredPopoverClosed: Readonly<{ opacity: number; scale: number; y: number }> = {
+  opacity: 0,
+  scale: 0.96,
+  y: 4,
+};
+export const anchoredPopoverOpen: Readonly<{ opacity: number; scale: number; y: number }> = {
+  opacity: 1,
+  scale: 1,
+  y: 0,
+};
 
 export const spinAnimation: TargetAndTransition = sharedSpinAnimation;
 export const pulseAnimation: TargetAndTransition = sharedPulseAnimation;

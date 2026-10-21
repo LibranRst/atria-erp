@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-import { fadeVariants, transitionSpringSnappy } from "@/lib/utils/motion";
+import { buttonTapActiveScale, fadeVariants, transitionSpringSnappy } from "@/lib/utils/motion";
 import { DuotoneIconTile } from "@/components/ui/icon/icon-tile";
 import { AppIcon } from "@/components/ui/icon/app-icon";
 
@@ -65,6 +65,7 @@ export function PageState({
   compact = false,
   className = "",
 }: PageStateProps): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
   const meta = STATE_META[kind];
 
   return (
@@ -94,10 +95,10 @@ export function PageState({
       {actionLabel && onAction ? (
         <motion.button
           type="button"
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
           transition={transitionSpringSnappy}
           onClick={onAction}
-          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+          className="mt-5 min-h-12 rounded-full bg-primary px-6 text-xs font-bold text-on-primary outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised"
         >
           {actionLabel}
         </motion.button>

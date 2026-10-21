@@ -1,6 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useWorkspaceHref } from "@/lib/navigation/workspace-presentation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import React from "react";
 import { toast } from "sonner";
 
@@ -9,7 +11,7 @@ import {
   type InventoryOpeningBatchView,
 } from "@/app/actions/material/opening-inventory";
 import { stopDeveloperAccountSimulation } from "@/app/actions/developer-account-simulation";
-import { AppIcon, FormField, MoneyValue, Textarea } from "@/components/ui";
+import { AppIcon, FormField, MoneyValue, Textarea, Button } from "@/components/ui";
 import { InventoryOpeningApprovalItems } from "@/features/approvals/components/shared/inventory-opening-approval-items";
 export function OnboardingFinanceReview({
   pendingBatches,
@@ -19,6 +21,7 @@ export function OnboardingFinanceReview({
   readonly simulated: boolean;
 }): React.JSX.Element {
   const router = useRouter();
+  const workspaceHref = useWorkspaceHref();
   const [remainingBatches, setRemainingBatches] =
     React.useState<readonly InventoryOpeningBatchView[]>(pendingBatches);
   const [activeId, setActiveId] = React.useState<string | null>(pendingBatches[0]?.id ?? null);
@@ -59,7 +62,9 @@ export function OnboardingFinanceReview({
           return;
         }
         window.location.replace(
-          decision === "APPROVE" ? "/onboarding?step=summary" : "/onboarding?step=initial_stock",
+          workspaceHref(
+            decision === "APPROVE" ? "/onboarding?step=summary" : "/onboarding?step=initial_stock",
+          ),
         );
       } else {
         const nextBatches = remainingBatches.filter((batch) => batch.id !== active.id);
@@ -79,7 +84,7 @@ export function OnboardingFinanceReview({
         toast.error(result.error.message);
         return;
       }
-      window.location.replace("/onboarding?step=initial_stock");
+      window.location.replace(workspaceHref("/onboarding?step=initial_stock"));
     });
   }
 
@@ -96,22 +101,24 @@ export function OnboardingFinanceReview({
             sedangkan penolakan sudah dikembalikan kepada Owner.
           </p>
           {simulated ? (
-            <button
+            <Button
               type="button"
               disabled={pending}
               onClick={returnOwner}
               className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary disabled:opacity-45"
+              variant="primary"
             >
               Kembali ke Owner
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
               onClick={() => router.replace("/ledger")}
               className="mt-5 min-h-12 w-full rounded-full bg-primary px-5 text-xs font-bold text-on-primary"
+              variant="primary"
             >
               Masuk Dashboard
-            </button>
+            </Button>
           )}
         </div>
       </section>
@@ -194,32 +201,35 @@ export function OnboardingFinanceReview({
         />
       </FormField>
       <div className="grid grid-cols-2 gap-2.5">
-        <button
+        <Button
           type="button"
           disabled={pending || reason.trim().length < 10}
           onClick={() => decide("REJECT")}
           className="min-h-12 rounded-full bg-white px-4 text-xs font-bold text-error ring-1 ring-error/15 disabled:opacity-40"
+          variant="secondary"
         >
           Tolak
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           disabled={pending || reason.trim().length < 10}
           onClick={() => decide("APPROVE")}
           className="min-h-12 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+          variant="primary"
         >
           Setujui & posting
-        </button>
+        </Button>
       </div>
       {simulated ? (
-        <button
+        <Button
           type="button"
           disabled={pending}
           onClick={returnOwner}
           className="min-h-12 w-full rounded-full px-5 text-xs font-bold text-on-surface-variant disabled:opacity-40"
+          variant="tertiary"
         >
           Kembali ke Owner tanpa keputusan
-        </button>
+        </Button>
       ) : null}
     </section>
   );

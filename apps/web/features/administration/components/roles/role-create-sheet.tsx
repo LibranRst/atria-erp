@@ -5,8 +5,10 @@ import React from "react";
 import {
   AdaptiveSelect,
   ChoiceRow,
+  FactRow,
   FormField,
   FormSection,
+  GroupedSurface,
   OperationalFormSheet,
   Textarea,
   TextInput,
@@ -68,6 +70,37 @@ export function RoleCreateSheet({
       }}
       open={open}
       title="Peran baru"
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        <GroupedSurface>
+          <div className="divide-y divide-outline-variant/20">
+            <FactRow
+              layout="stacked"
+              label="Peran"
+              wrapLabel
+              value={form.name.trim() || "Belum diisi"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Cakupan"
+              wrapLabel
+              value={DATA_SCOPE_OPTIONS.find((option) => option.value === form.dataScope)?.label}
+            />
+            <FactRow
+              layout="stacked"
+              label="Sumber izin"
+              wrapLabel
+              value={source ? formatRoleName(source.name) : "Tanpa izin"}
+            />
+            <FactRow
+              layout="stacked"
+              label="Izin awal"
+              value={`${source?.permissions.length ?? 0} izin`}
+            />
+          </div>
+        </GroupedSurface>
+      }
       submitLabel="Buat peran"
       submittingLabel="Membuat…"
       pending={pending}

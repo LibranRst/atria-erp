@@ -2,6 +2,7 @@
 
 import { MoneyValue, StatusBadge } from "@/components/ui";
 import type { StatusBadgeTone } from "@/components/ui";
+import { formatBusinessLabel } from "@atria/core/presentation/business-labels";
 import {
   getExpenseCategoriesOutputSchema,
   getMaterialShortageOutputSchema,
@@ -216,7 +217,7 @@ export function RecentExpensesResult({
       <div className="divide-y divide-black/5.5 border-t border-black/5.5">
         {shown.map((expense, index) => (
           <ResultRow
-            key={`${expense.description}-${index}`}
+            key={expense.id ?? `${expense.description}-${index}`}
             label={expense.description}
             meta={`${expense.projectName} · ${expense.categoryName} · ${expense.expenseDate}`}
             value={
@@ -229,7 +230,9 @@ export function RecentExpensesResult({
                 />
                 <StatusBadge
                   tone={EXPENSE_STATUS_TONE[expense.status] ?? "neutral"}
-                  label={EXPENSE_STATUS_LABEL[expense.status] ?? expense.status}
+                  label={
+                    EXPENSE_STATUS_LABEL[expense.status] ?? formatBusinessLabel(expense.status)
+                  }
                 />
               </div>
             }

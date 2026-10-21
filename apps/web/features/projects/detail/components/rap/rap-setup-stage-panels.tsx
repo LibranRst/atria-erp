@@ -1,6 +1,16 @@
 "use client";
-import { AppIcon, Badge, MetricGrid, MetricPill, MoneyMetricPill } from "@/components/ui";
+import {
+  AppIcon,
+  Badge,
+  MetricGrid,
+  MetricPill,
+  MoneyMetricPill,
+  DesktopTable,
+  MoneyValue,
+  Button,
+} from "@/components/ui";
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import { formatShortIdr as formatShortRp } from "@atria/core/utils/money";
 import type {
@@ -31,6 +41,7 @@ export function MaterialRapStagePanel({
   readonly setRapDetailItemId: (id: string | null) => void;
   readonly handleAdvanceRapSetup: (stage: "TUKANG") => void;
 }): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
   return (
     <NativePanel
       eyebrow="Tahap 1"
@@ -47,60 +58,110 @@ export function MaterialRapStagePanel({
           danger={needToBuy > 0}
         />
       </MetricGrid>
-      <div className="mt-sm space-y-2">
-        {rap.items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setRapDetailItemId(item.id)}
-            className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
-              <AppIcon name="inventory_2" className="text-[19px]" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
-              <span className="block truncate text-meta text-on-surface-variant">
-                {item.area} - {item.totalQuantity} {item.unit}
+      {desktop ? (
+        <DesktopTable
+          className="mt-4"
+          ariaLabel="Material dalam draf RAP"
+          rows={rap.items}
+          rowKey={(item) => item.id}
+          onRowAction={(item) => setRapDetailItemId(item.id)}
+          columns={[
+            {
+              key: "material",
+              label: "Material",
+              render: (item) => (
+                <div>
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="text-meta text-on-surface-variant">{item.area}</p>
+                </div>
+              ),
+            },
+            {
+              key: "qty",
+              label: "Kebutuhan",
+              align: "end",
+              render: (item) => `${item.totalQuantity} ${item.unit}`,
+            },
+            {
+              key: "stock",
+              label: "Stok tersedia",
+              align: "end",
+              render: (item) => `${item.availableStock} ${item.unit}`,
+            },
+            {
+              key: "purchase",
+              label: "Perlu beli",
+              align: "end",
+              render: (item) => `${item.needToBuy} ${item.unit}`,
+            },
+            {
+              key: "cost",
+              label: "Estimasi",
+              align: "end",
+              render: (item) => (
+                <MoneyValue amount={Number(item.estimatedTotalCost)} variant="compact" size="sm" />
+              ),
+            },
+          ]}
+        />
+      ) : (
+        <div className="mt-sm space-y-2">
+          {rap.items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setRapDetailItemId(item.id)}
+              className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-surface-container-low p-3 text-left"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary">
+                <AppIcon name="inventory_2" className="text-[19px]" />
               </span>
-            </span>
-            <span className="max-w-[38%] shrink-0 text-right">
-              <span className="financial-amount block font-mono text-[10px] leading-5 font-bold wrap-anywhere wrap-break-word">
-                {formatShortRp(Number(item.estimatedTotalCost))}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm leading-5 font-bold">{item.name}</span>
+                <span className="block truncate text-meta text-on-surface-variant">
+                  {item.area} - {item.totalQuantity} {item.unit}
+                </span>
               </span>
-              <span
-                className={`block text-[9px] leading-4 font-bold ${
-                  item.needToBuy > 0 ? "text-warning" : "text-primary"
-                }`}
-              >
-                {item.needToBuy > 0 ? `Beli ${item.needToBuy}` : "Ready"}
+              <span className="max-w-[38%] shrink-0 text-right">
+                <span className="financial-amount block font-mono text-[10px] leading-5 font-bold wrap-anywhere wrap-break-word">
+                  {formatShortRp(Number(item.estimatedTotalCost))}
+                </span>
+                <span
+                  className={`block text-[9px] leading-4 font-bold ${
+                    item.needToBuy > 0 ? "text-warning" : "text-primary"
+                  }`}
+                >
+                  {item.needToBuy > 0 ? `Beli ${item.needToBuy}` : "Ready"}
+                </span>
               </span>
-            </span>
-          </button>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
+      )}
       {rap.items.length === 0 && (
         <div className="mt-sm rounded-2xl bg-surface-container-low p-md text-center text-xs text-on-surface-variant">
           Belum ada material. Tambahkan item pertama untuk memulai baseline.
         </div>
       )}
       {canEditRap && (
-        <button
+        <Button
           type="button"
           onClick={openAddRapForm}
           className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary"
+          variant="primary"
         >
           Tambah Material
-        </button>
+        </Button>
       )}
-      <button
+      <Button
         type="button"
         onClick={() => handleAdvanceRapSetup("TUKANG")}
         disabled={isPending || rap.items.length === 0 || rap.setupStage !== "MATERIAL"}
         className="mt-2 min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
+        variant="secondary"
       >
         {rap.setupStage === "MATERIAL" ? "Lanjut ke Tukang" : "Tahap Tukang Sudah Terbuka"}
-      </button>
+      </Button>
     </NativePanel>
   );
 }
@@ -161,7 +222,7 @@ export function PackageSetupStagePanel({
         onOpen={setPackageDetailItemId}
         onSkip={(nextSkipped) => handleScopeSkip(stage, nextSkipped)}
       />
-      <button
+      <Button
         type="button"
         onClick={() => handleAdvanceRapSetup(nextStage)}
         disabled={
@@ -170,6 +231,7 @@ export function PackageSetupStagePanel({
           (!skipped && (items.length === 0 || items.some((item) => item.status === "DRAFT")))
         }
         className="mt-sm min-h-12 w-full rounded-full bg-on-surface text-xs font-bold text-surface disabled:opacity-35"
+        variant="secondary"
       >
         {currentSetupStage
           ? stage === "TUKANG"
@@ -178,7 +240,7 @@ export function PackageSetupStagePanel({
           : stage === "TUKANG"
             ? "Tahap Subcon Sudah Terbuka"
             : "Review Sudah Terbuka"}
-      </button>
+      </Button>
     </NativePanel>
   );
 }
@@ -278,14 +340,15 @@ export function ReviewInternalPlanPanel({
           Menunggu Owner/Finance untuk finalisasi. Progress tetap dapat dilihat semua role.
         </p>
       )}
-      <button
+      <Button
         type="button"
         onClick={handleFinalizeInternalPlan}
         disabled={isPending || !canFinalizeRap}
         className="mt-sm min-h-12 w-full rounded-full bg-primary text-xs font-bold text-on-primary disabled:opacity-35"
+        variant="primary"
       >
         Finalisasi Internal Plan
-      </button>
+      </Button>
     </NativePanel>
   );
 }

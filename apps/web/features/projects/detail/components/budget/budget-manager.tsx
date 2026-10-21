@@ -2,10 +2,11 @@
 
 import { useCan } from "@/components/auth/permissions-provider";
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
+
 import { getErrorMessage } from "@atria/core/utils/error-message";
 import { toast } from "sonner";
-import { ConfirmationDialog } from "@/components/ui";
+import { ConfirmationDialog, Button } from "@/components/ui";
 import {
   createProjectBudget,
   createBudgetItem,
@@ -308,14 +309,15 @@ export function BudgetManager({
             }}
           />
 
-          <button
+          <Button
             type="button"
             disabled={isPending}
             onClick={() => setShowItemForm(true)}
             className="min-h-12 w-full rounded-full bg-surface-container-low px-5 text-xs font-bold text-primary ring-1 ring-primary/15 disabled:opacity-40"
+            variant="secondary"
           >
             Tambah Item Project Budget
-          </button>
+          </Button>
 
           <BudgetDraftActions
             hasItems={budgetItems.length > 0}

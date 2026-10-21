@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { cashTransactionNeedsAction, statementRowNeedsAction } from "./reconciliation-presentation";
 
 describe("reconciliation hybrid presentation", () => {
-  test("separates actionable Atria records from recorded exceptions", () => {
+  test("separates actionable Paduna Build records from recorded exceptions", () => {
     expect(cashTransactionNeedsAction({ exceptionReason: null })).toBe(true);
     expect(cashTransactionNeedsAction({ exceptionReason: "Menunggu bukti eksternal" })).toBe(false);
   });

@@ -42,6 +42,7 @@ interface RapRabWorkflowDrawersProps {
   readonly changeOrders: readonly ChangeOrderHistoryView[];
   readonly rapManager: ReturnType<typeof useRapManager>;
   readonly rabManager: ReturnType<typeof useRabManager>;
+  readonly fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function RapRabWorkflowDrawers({
@@ -55,6 +56,7 @@ export function RapRabWorkflowDrawers({
   changeOrders,
   rapManager,
   rabManager,
+  fallbackFocusRef,
 }: RapRabWorkflowDrawersProps): React.JSX.Element {
   return (
     <>
@@ -92,9 +94,12 @@ export function RapRabWorkflowDrawers({
         toggleRevisionPackage={rapManager.toggleRevisionPackage}
         handleCreateInternalPlanRevision={rapManager.handleCreateInternalPlanRevision}
         isPending={rapManager.isPending}
+        canReviseMaterial={rapManager.canEditRap}
+        canRevisePackages={rapManager.canEditCategoryPlan}
       />
 
       <RabSourcePickerDrawer
+        onDiscard={rabManager.discardSourceSelection}
         sourcePickerOpen={rabManager.sourcePickerOpen}
         setSourcePickerOpen={rabManager.setSourcePickerOpen}
         rap={rap}
@@ -111,15 +116,20 @@ export function RapRabWorkflowDrawers({
         isPending={rabManager.isPending}
         selectedQuotationSourceCount={rabManager.selectedQuotationSourceCount}
         rabEstimate={rabEstimate}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <ManualRabLineDrawer
+        onDiscard={rabManager.discardManualLine}
         manualLineOpen={rabManager.manualLineOpen}
         setManualLineOpen={rabManager.setManualLineOpen}
         manualQuotationLine={rabManager.manualQuotationLine}
         setManualQuotationLine={rabManager.setManualQuotationLine}
         handleAddManualRabItem={rabManager.handleAddManualRabItem}
         isPending={rabManager.isPending}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <RabItemEditDrawer
@@ -132,6 +142,8 @@ export function RapRabWorkflowDrawers({
         isPending={rabManager.isPending}
         rabEstimate={rabEstimate}
         canManageRab={rabManager.canManageRab}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <RabBundleDrawer
@@ -145,6 +157,9 @@ export function RapRabWorkflowDrawers({
         isPending={rabManager.isPending}
         rabEstimate={rabEstimate}
         setBundleForm={rabManager.setBundleForm}
+        canManageRab={rabManager.canManageRab}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <ChangeOrderDrawer
@@ -156,6 +171,8 @@ export function RapRabWorkflowDrawers({
         isPending={rabManager.isPending}
         approvedBaseline={rabManager.approvedBaseline}
         visibleRabValue={rabManager.visibleRabValue}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <VoidRevisionDrawer
@@ -165,6 +182,8 @@ export function RapRabWorkflowDrawers({
         setVoidReason={rabManager.setVoidReason}
         handleVoidRabRevision={rabManager.handleVoidRabRevision}
         isPending={rabManager.isPending}
+        error={rabManager.error}
+        fallbackFocusRef={fallbackFocusRef}
       />
 
       <ChangeOrderDetailDrawer
@@ -186,6 +205,7 @@ export function RapRabWorkflowDrawers({
         handleSubmitCategoryPlanItem={rapManager.handleSubmitCategoryPlanItem}
         isPending={rapManager.isPending}
         categoryFormEstimatedTotal={rapManager.categoryFormEstimatedTotal}
+        error={rapManager.error}
       />
 
       <RapMaterialFormDrawer
@@ -204,6 +224,7 @@ export function RapRabWorkflowDrawers({
         formTotalQty={rapManager.formTotalQty}
         formNeedToBuy={rapManager.formNeedToBuy}
         formEstimatedTotal={rapManager.formEstimatedTotal}
+        error={rapManager.error}
       />
     </>
   );

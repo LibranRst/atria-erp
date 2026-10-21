@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation/workspace-navigation";
 import React from "react";
 
 export const DASHBOARD_AUTO_REFRESH_AFTER_MS = 5 * 60_000;
@@ -55,7 +55,10 @@ export function shouldAutoRefreshDashboard({
   return snapshotAge >= DASHBOARD_AUTO_REFRESH_AFTER_MS && cooldownElapsed;
 }
 
-export function useDashboardRefresh(generatedAt: string | Date): DashboardRefreshControl {
+export function useDashboardRefresh(
+  generatedAt: string | Date,
+  onRefreshStarted?: () => void,
+): DashboardRefreshControl {
   const router = useRouter();
   const [refreshing, startRefresh] = React.useTransition();
   const [refreshFailed, setRefreshFailed] = React.useState(false);
@@ -104,9 +107,10 @@ export function useDashboardRefresh(generatedAt: string | Date): DashboardRefres
       attemptedGeneratedAtRef.current = generatedAtTimestamp;
       lastAttemptAtRef.current = now.getTime();
       setRefreshFailed(false);
+      onRefreshStarted?.();
       startRefresh((): void => router.refresh());
     },
-    [generatedAtTimestamp, router],
+    [generatedAtTimestamp, router, onRefreshStarted],
   );
 
   React.useEffect(() => {

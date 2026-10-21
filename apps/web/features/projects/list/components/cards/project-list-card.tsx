@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/navigation/workspace-link";
 import React from "react";
 
 import { AppIcon, BudgetSplitIndicator, MoneyValue } from "@/components/ui";

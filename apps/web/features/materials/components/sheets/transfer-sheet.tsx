@@ -1,17 +1,22 @@
 "use client";
 
 import React from "react";
+import { useCan } from "@/components/auth/permissions-provider";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 
 import type { MaterialOperationsDashboard } from "@/app/actions/material/operations-dashboard";
 import {
   ConfirmationDialog,
+  FactRow,
   FormField,
   FormRiskNotice,
   FormSection,
+  GroupedSurface,
   AdaptiveSelect,
   Textarea,
   TextInput,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import { StockImpactRow } from "@/features/materials/components/shared/stock-impact-row";
 import { ItemRows } from "@/features/materials/components/sheets/material-operation-sheets";
@@ -68,6 +73,8 @@ export function TransferSheet({
   onClose,
   onSubmit,
 }: TransferSheetProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  const canCreateLocation = useCan()("manage:material_settings");
   const [reviewing, setReviewing] = React.useState(false);
   const [confirmClose, setConfirmClose] = React.useState(false);
   const duplicateMaterial =
@@ -125,6 +132,39 @@ export function TransferSheet({
   return (
     <>
       <WorkflowFormSheet
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <div className="space-y-4">
+            <GroupedSurface>
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Dokumen"
+                  wrapLabel
+                  value={documentNumber || "Belum diisi"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi asal"
+                  wrapLabel
+                  value={fromLocationName ?? "Belum dipilih"}
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Lokasi tujuan"
+                  wrapLabel
+                  value={toLocationName ?? "Belum dipilih"}
+                />
+                <FactRow layout="stacked" label="Baris material" wrapLabel value={items.length} />
+              </div>
+            </GroupedSurface>
+            <p className="text-support leading-relaxed text-on-surface-variant">
+              Posting mencatat stok keluar dan masuk antar lokasi dalam satu transaksi. Tidak
+              mencatat pembayaran.
+            </p>
+          </div>
+        }
         dismissal={{ mode: "managed" }}
         open={open}
         title={reviewing ? "Tinjau Transfer Stok" : "Transfer Antar Lokasi"}
@@ -159,12 +199,14 @@ export function TransferSheet({
               title="Tinjau rencana transfer"
               helper="Periksa detail perpindahan sebelum memposting."
             >
-              <ReviewFact label="Lokasi asal" value={fromLocationName ?? "–"} />
-              <ReviewFact label="Lokasi tujuan" value={toLocationName ?? "–"} />
-              <ReviewFact
-                label="Total barang"
-                value={`${items.length} material · ${totalQuantity.toLocaleString("id-ID")} unit`}
-              />
+              {!desktop && <ReviewFact label="Lokasi asal" value={fromLocationName ?? "–"} />}
+              {!desktop && <ReviewFact label="Lokasi tujuan" value={toLocationName ?? "–"} />}
+              {!desktop && (
+                <ReviewFact
+                  label="Total barang"
+                  value={`${items.length} material · ${totalQuantity.toLocaleString("id-ID")} unit`}
+                />
+              )}
               {note.trim() && <ReviewFact label="Catatan" value={note} />}
             </FormSection>
             <div className="space-y-2">
@@ -199,25 +241,30 @@ export function TransferSheet({
             {locations.length < 2 && (
               <section className="space-y-2.5">
                 <FormRiskNotice title="Lokasi transfer belum cukup" tone="warning">
-                  Tambahkan satu lokasi aktif lagi sebelum memindahkan stok.
+                  {canCreateLocation
+                    ? "Tambahkan satu lokasi aktif lagi sebelum memindahkan stok."
+                    : "Minta pengelola menambahkan satu lokasi aktif lagi sebelum memindahkan stok."}
                 </FormRiskNotice>
-                <div className="flex items-center gap-2">
-                  <TextInput
-                    value={newLocationName}
-                    onChange={onNewLocationNameChange}
-                    className="min-h-12 flex-1 bg-surface-container-lowest"
-                    placeholder="Nama lokasi baru"
-                    aria-label="Nama lokasi inventory baru"
-                  />
-                  <button
-                    type="button"
-                    onClick={onAddLocation}
-                    disabled={pending || newLocationName.trim().length < 3}
-                    className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
-                  >
-                    Tambah
-                  </button>
-                </div>
+                {canCreateLocation ? (
+                  <div className="flex items-center gap-2">
+                    <TextInput
+                      value={newLocationName}
+                      onChange={onNewLocationNameChange}
+                      className="min-h-12 flex-1 bg-surface-container-lowest"
+                      placeholder="Nama lokasi baru"
+                      aria-label="Nama lokasi inventory baru"
+                    />
+                    <Button
+                      type="button"
+                      onClick={onAddLocation}
+                      disabled={pending || newLocationName.trim().length < 3}
+                      className="min-h-12 shrink-0 rounded-full bg-primary px-4 text-xs font-bold text-on-primary disabled:opacity-40"
+                      variant="primary"
+                    >
+                      Tambah
+                    </Button>
+                  </div>
+                ) : null}
               </section>
             )}
             <FormSection

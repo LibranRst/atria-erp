@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { RapDesktopWorkspace } from "./rap-desktop-workspace";
 
 import { Badge, SegmentedTabs } from "@/components/ui";
 import {
@@ -16,11 +18,12 @@ import {
 } from "./rap-setup-stage-panels";
 import type {
   RapView,
+  RapItemView,
   RapSetupStage,
   ProjectCategoryPlanItemView,
 } from "../shared/rap-rab-manager";
 
-export function RapSetupPanel({
+function RapSetupMobile({
   rap,
   activeRapStage,
   setActiveRapStage,
@@ -143,6 +146,47 @@ export function RapSetupPanel({
           handleFinalizeInternalPlan={handleFinalizeInternalPlan}
         />
       )}
+    </>
+  );
+}
+
+export function RapSetupPanel(
+  props: React.ComponentProps<typeof RapSetupMobile> & {
+    readonly openEditRapForm?: (item: RapItemView) => void;
+    readonly openEditCategoryPlanForm?: (item: ProjectCategoryPlanItemView) => void;
+  },
+): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop";
+  return (
+    <>
+      <div hidden={desktop} inert={desktop} className="space-y-4">
+        <RapSetupMobile {...props} />
+      </div>
+      <div hidden={!desktop} inert={!desktop}>
+        <RapDesktopWorkspace
+          rap={props.rap}
+          plannedCost={props.plannedCost}
+          tukangPlanItems={props.tukangPlanItems}
+          subconPlanItems={props.subconPlanItems}
+          canEditRap={props.canEditRap}
+          onMaterialOpen={props.setRapDetailItemId}
+          onPackageOpen={props.setPackageDetailItemId}
+          setup={{
+            activeStage: props.activeRapStage,
+            onStageChange: props.setActiveRapStage,
+            isPending: props.isPending,
+            canEditCategoryPlan: props.canEditCategoryPlan,
+            onAddMaterial: props.openAddRapForm,
+            onEditMaterial: props.openEditRapForm,
+            onEditPackage: props.openEditCategoryPlanForm,
+            onAddPackage: props.openAddCategoryPlanForm,
+            onAdvance: props.handleAdvanceRapSetup,
+            onScopeSkip: props.handleScopeSkip,
+            canFinalize: props.canFinalizeRap,
+            onFinalize: props.handleFinalizeInternalPlan,
+          }}
+        />
+      </div>
     </>
   );
 }

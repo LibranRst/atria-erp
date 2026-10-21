@@ -70,7 +70,10 @@ function readLocal(): LocalPayload | null {
   }
 }
 
-export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload): {
+export function useHybridVendorBillDraft(
+  initialPayload: VendorBillDraftPayload,
+  projectScope?: string,
+): {
   readonly payload: VendorBillDraftPayload;
   readonly draftId: string | null;
   readonly revision: number | null;
@@ -131,6 +134,12 @@ export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload)
 
   const performSave = React.useCallback(
     async (asCopy: boolean): Promise<SaveResult> => {
+      if (projectScope && payloadRef.current.projectId !== projectScope)
+        return {
+          success: false,
+          reason: "error",
+          message: "Draft berasal dari proyek lain. Lanjutkan melalui halaman Pengeluaran.",
+        };
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         setStatus("offline");
         return {
@@ -173,7 +182,7 @@ export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload)
       inFlightRef.current = null;
       return result;
     },
-    [persist],
+    [persist, projectScope],
   );
 
   const hydrate = React.useCallback(
@@ -217,12 +226,13 @@ export function useHybridVendorBillDraft(initialPayload: VendorBillDraftPayload)
   );
 
   React.useEffect(() => {
-    if (status !== "dirty") return undefined;
+    if (status !== "dirty" || (projectScope && payload.projectId !== projectScope))
+      return undefined;
     const timer = window.setTimeout(() => {
       void performSave(false);
     }, SAVE_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [payload, performSave, status]);
+  }, [payload, projectScope, performSave, status]);
 
   React.useEffect(() => {
     function offline(): void {

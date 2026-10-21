@@ -9,6 +9,7 @@ import { toast } from "sonner";
 export function GlobalExpenseDrawer(): React.JSX.Element | null {
   const showDrawer = useUrlSearchParam("new-expense") === "true";
   const requestedDraftId = useUrlSearchParam("expense-draft");
+  const receiptIntent = useUrlSearchParam("expense-entry") === "receipt";
   const [projects, setProjects] = useState<ProjectForExpense[]>([]);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function GlobalExpenseDrawer(): React.JSX.Element | null {
   const handleClose = React.useCallback(() => {
     updateUrlSearchParam("new-expense", null, "replace");
     updateUrlSearchParam("expense-draft", null, "replace");
+    updateUrlSearchParam("expense-entry", null, "replace");
   }, []);
 
   return (
@@ -41,6 +43,7 @@ export function GlobalExpenseDrawer(): React.JSX.Element | null {
       projects={projects}
       inventoryLocations={projects[0]?.inventoryLocations ?? []}
       requestedDraftId={requestedDraftId}
+      entryIntent={receiptIntent ? "receipt" : "manual"}
     />
   );
 }

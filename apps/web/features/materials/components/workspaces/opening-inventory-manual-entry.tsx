@@ -1,6 +1,5 @@
 "use client";
-
-import { motion } from "framer-motion";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
 import type { InitialStockCandidate } from "@/app/actions/material/opening-inventory";
 import {
   AppIcon,
@@ -12,8 +11,8 @@ import {
   NumericInput,
   type SelectOption,
   AdaptiveSelect,
+  Button,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
 import type { DraftLine } from "./opening-inventory-utils";
 
 interface OpeningInventoryManualEntryProps {
@@ -23,6 +22,7 @@ interface OpeningInventoryManualEntryProps {
   readonly onAddLine: () => void;
   readonly onRemoveLine: (key: string) => void;
   readonly onPatchLine: (key: string, patch: Partial<DraftLine>) => void;
+  readonly desktopLayout?: boolean;
 }
 
 export function OpeningInventoryManualEntry({
@@ -32,7 +32,9 @@ export function OpeningInventoryManualEntry({
   onAddLine,
   onRemoveLine,
   onPatchLine,
+  desktopLayout = false,
 }: OpeningInventoryManualEntryProps): React.JSX.Element {
+  const desktop = useWorkspacePresentation() === "desktop" && desktopLayout;
   const selectedInventoryCount = new Set(
     lines.map((line) => line.materialInventoryId).filter(Boolean),
   ).size;
@@ -68,21 +70,21 @@ export function OpeningInventoryManualEntry({
       meta={`${selectedInventoryCount} dari ${eligibleInventory.length} dipilih`}
       action={
         canAddLine ? (
-          <motion.button
+          <Button
             type="button"
-            whileTap={pending ? undefined : { scale: 0.96 }}
-            transition={transitionSpringSnappy}
             onClick={onAddLine}
             disabled={pending}
             className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/8 px-3 text-meta font-bold text-primary transition-colors active:bg-primary/12 disabled:opacity-40"
+            variant="secondary"
+            size="mini"
           >
             <AppIcon name="add" className="icon-xs" />
             Tambah item
-          </motion.button>
+          </Button>
         ) : undefined
       }
     >
-      <div className="space-y-3">
+      <div className={desktop ? "grid items-start gap-4 xl:grid-cols-2" : "space-y-3"}>
         {lines.map((line, index) => {
           const duplicate = duplicateIds.includes(line.materialInventoryId);
           const selectedInventory = eligibleInventory.find(
@@ -101,15 +103,17 @@ export function OpeningInventoryManualEntry({
               }
               action={
                 lines.length > 1 ? (
-                  <button
+                  <Button
                     type="button"
                     aria-label={`Hapus item stok ${index + 1}`}
                     onClick={() => onRemoveLine(line.key)}
                     className="inline-flex h-7 items-center gap-1 rounded-full px-2 text-meta font-bold text-error transition-colors active:bg-error/10"
+                    variant="secondary"
+                    size="mini"
                   >
                     <AppIcon name="delete" className="icon-xs" />
                     Hapus
-                  </button>
+                  </Button>
                 ) : undefined
               }
             >
@@ -155,17 +159,16 @@ export function OpeningInventoryManualEntry({
       </div>
 
       {canAddLine ? (
-        <motion.button
+        <Button
           type="button"
-          whileTap={pending ? undefined : { scale: 0.97 }}
-          transition={transitionSpringSnappy}
           onClick={onAddLine}
           disabled={pending}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-5 text-row font-bold text-on-surface shadow-xs ring-1 ring-ring-subtle transition-transform outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:scale-[0.98] disabled:opacity-40"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-5 text-row font-bold text-on-surface shadow-xs ring-1 ring-ring-subtle outline-none focus-visible:ring-2 focus-visible:ring-focus-ring active:z-10 active:shadow-raised disabled:opacity-40"
+          variant="secondary"
         >
           <AppIcon name="add" className="icon-md text-on-surface-variant" />
           Tambah item stok lainnya
-        </motion.button>
+        </Button>
       ) : allEligibleSelected ? (
         <p className="px-3 text-center text-meta text-on-surface-variant">
           Semua {eligibleInventory.length} inventory yang memenuhi syarat sudah dimasukkan.

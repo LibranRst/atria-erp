@@ -7,6 +7,8 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
   MoneyInput,
   MoneyValue,
   SwitchRow,
@@ -35,10 +37,10 @@ function AccountBalanceImpact({
           <DuotoneIconTile
             name="account_balance_wallet"
             className="h-9 w-9"
-            iconClassName="text-[19px]"
+            iconClassName="icon-md"
           />
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] leading-5 font-bold text-on-surface">
+            <span className="block text-support leading-5 font-bold text-on-surface">
               Saldo awal rekening
             </span>
             <span className="mt-0.5 block text-meta text-on-surface-variant">
@@ -89,7 +91,7 @@ function AccountReviewRow({
     <div className="grid min-w-0 grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] items-start gap-4 px-4 py-3.5">
       <dt className="pt-0.5 text-meta font-semibold text-on-surface-variant">{label}</dt>
       <dd
-        className={`min-w-0 text-right text-[13px] leading-5 font-bold wrap-break-word text-on-surface ${
+        className={`min-w-0 text-right text-support leading-5 font-bold wrap-break-word text-on-surface ${
           tabular ? "font-numeral tabular-nums" : ""
         }`}
       >
@@ -200,6 +202,57 @@ export function AccountFormSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Bank"
+                wrapLabel
+                value={draft.bankName || "Belum diisi"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Rekening"
+                wrapLabel
+                value={draft.name || "Belum diisi"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Pemegang"
+                wrapLabel
+                value={draft.holderName || "Belum diisi"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Status"
+                wrapLabel
+                value={draft.isActive ? "Aktif" : "Diarsipkan"}
+              />
+              {!draft.id ? (
+                <FactRow
+                  layout="stacked"
+                  label="Saldo awal"
+                  wrapLabel
+                  value={
+                    <MoneyValue
+                      fractionDigits={Number.isInteger(openingBalance) ? 0 : 2}
+                      variant="fullDynamic"
+                      amount={openingBalance}
+                    />
+                  }
+                />
+              ) : null}
+              {!draft.id && openingBalance > 0 ? (
+                <p className="px-4 py-3 text-support text-on-surface-variant">
+                  Saldo awal dicatat satu kali sebagai mutasi pembukaan saat rekening dibuat.
+                </p>
+              ) : null}
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         title={reviewing ? "Tinjau rekening" : title}
         onClose={requestClose}

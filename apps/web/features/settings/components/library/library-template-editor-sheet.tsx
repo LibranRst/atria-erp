@@ -1,8 +1,14 @@
+"use client";
+
 import React from "react";
-import { motion } from "framer-motion";
+import { useWorkspacePresentation } from "@/lib/navigation/workspace-presentation";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ExpenseCategorySettingRow } from "@/app/actions/settings/system";
 import {
   AppIcon,
+  Button,
+  FactRow,
+  GroupedSurface,
   ComboboxField,
   COMMON_UNIT_OPTIONS,
   DatePickerField,
@@ -18,7 +24,7 @@ import {
   Textarea,
   TextInput,
 } from "@/components/ui";
-import { transitionSpringSnappy } from "@/lib/utils/motion";
+import { transitionSpringSnappy, buttonTapActiveScale } from "@/lib/utils/motion";
 import type {
   CostComponentDraft,
   Draft,
@@ -100,27 +106,13 @@ export function LibraryTemplateEditorSheet({
   onSourceOpenChange,
   onRequestToggle,
 }: Props): React.JSX.Element {
-  return (
-    <OperationalFormSheet
-      dismissal={{ mode: "managed" }}
-      open={Boolean(draft)}
-      title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
-      onClose={onClose}
-      pending={pending}
-      disabled={!canManage || !canSave}
-      disabledReason={disabledReason}
-      submitLabel="Simpan"
-      submittingLabel="Menyimpan..."
-      onSubmit={onSubmit}
-      statusText={
-        draft
-          ? `${draft.components.length} komponen · ${money(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
-          : undefined
-      }
-      statusTone={!canSave ? "warning" : grossMargin < 0 ? "danger" : "success"}
-    >
+  const reduceMotion = useReducedMotion();
+
+  const desktop = useWorkspacePresentation() === "desktop";
+  const content = (
+    <>
       {draft ? (
-        <div className="space-y-md">
+        <div className={desktop ? "grid items-start gap-6 xl:grid-cols-2" : "space-y-md"}>
           <FormSection
             title="Identitas template"
             helper="Tipe menentukan konteks dan kategori budget yang digunakan."
@@ -144,7 +136,7 @@ export function LibraryTemplateEditorSheet({
               options={categories.map((row) => ({
                 value: row.id,
                 label: row.name,
-                description: row.code,
+                description: row.description || undefined,
               }))}
             />
             <FormField
@@ -205,15 +197,15 @@ export function LibraryTemplateEditorSheet({
             title="Rincian biaya"
             helper={`${draft.components.length} komponen membentuk biaya internal.`}
             action={
-              <motion.button
+              <Button
                 type="button"
-                whileTap={{ scale: 0.97 }}
-                transition={transitionSpringSnappy}
                 onClick={onAddComponent}
                 className="flex min-h-10 items-center gap-1.5 rounded-full px-2.5 text-meta font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                variant="tertiary"
+                size="compact"
               >
                 <AppIcon name="add_circle" className="icon-sm" aria-hidden="true" /> Tambah
-              </motion.button>
+              </Button>
             }
           >
             {draft.components.map((component, index) => {
@@ -225,7 +217,7 @@ export function LibraryTemplateEditorSheet({
                 <motion.button
                   key={component.key}
                   type="button"
-                  whileTap={{ scale: 0.985 }}
+                  whileTap={{ scale: reduceMotion ? 1 : buttonTapActiveScale }}
                   transition={transitionSpringSnappy}
                   onClick={() => onOpenComponent(component)}
                   className="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left outline-none focus-visible:bg-surface-container-low"
@@ -238,7 +230,7 @@ export function LibraryTemplateEditorSheet({
                     <span className="block truncate text-xs leading-[1.15] font-bold text-on-surface">
                       {component.label.trim() || `Komponen ${index + 1}`}
                     </span>
-                    <span className="mt-1 block truncate text-[10px] leading-[1.2] text-on-surface-variant">
+                    <span className="mt-1 block truncate text-meta text-on-surface-variant">
                       {component.quantity} {component.unit} ·{" "}
                       {componentLabels[component.componentType]} ·{" "}
                       {complete ? "Lengkap" : "Perlu diperiksa"}
@@ -300,7 +292,7 @@ export function LibraryTemplateEditorSheet({
                 />
               </FormField>
             )}
-            <div className="p-3">
+            <div hidden={desktop} className="p-3">
               <div className="overflow-hidden rounded-inset bg-surface-container-low ring-1 ring-ring-subtle">
                 <div className="grid grid-cols-2 divide-x divide-outline-variant/20">
                   <div className="min-w-0 p-3">
@@ -427,19 +419,92 @@ export function LibraryTemplateEditorSheet({
             </FormSection>
           </FormDisclosure>
           {draft.id ? (
-            <motion.button
+            <Button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              transition={transitionSpringSnappy}
               disabled={!canManage || pending || dirty}
               onClick={onRequestToggle}
               className="min-h-12 w-full rounded-full bg-error-container/20 px-5 text-xs font-bold text-error disabled:opacity-35"
+              variant="criticalQuiet"
             >
               {draft.isActive ? "Arsipkan template" : "Aktifkan kembali"}
-            </motion.button>
+            </Button>
           ) : null}
         </div>
       ) : null}
+    </>
+  );
+  return (
+    <OperationalFormSheet
+      dismissal={{ mode: "managed" }}
+      desktopSize="wide"
+      desktopFooterPlacement="aside"
+      desktopAsideSummary={
+        draft ? (
+          <div className="space-y-3">
+            <div className="px-1">
+              <p className="text-row font-semibold text-on-surface">
+                {draft.name.trim() || "Template baru"}
+              </p>
+              <p className="mt-1 text-support text-on-surface-variant">
+                {draft.components.length} komponen · Satuan {draft.unit || "belum diisi"}
+              </p>
+            </div>
+            <GroupedSurface variant="desktopPanel">
+              <div className="divide-y divide-outline-variant/20">
+                <FactRow
+                  layout="stacked"
+                  label="Biaya internal"
+                  value={
+                    <MoneyValue
+                      amount={internalCost}
+                      variant="fullDynamic"
+                      fractionDigits={Number.isInteger(internalCost) ? 0 : 2}
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  layout="stacked"
+                  label="Harga klien"
+                  value={
+                    <MoneyValue
+                      amount={clientPrice}
+                      variant="fullDynamic"
+                      fractionDigits={Number.isInteger(clientPrice) ? 0 : 2}
+                      size="sm"
+                    />
+                  }
+                />
+                <FactRow
+                  label="Margin kotor"
+                  value={`${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`}
+                />
+              </div>
+            </GroupedSurface>
+            <p className="px-1 text-support text-on-surface-variant">
+              Harga referensi untuk penggunaan berikutnya. Rincian template tersimpan setelah Anda
+              memilih Simpan.
+            </p>
+          </div>
+        ) : undefined
+      }
+      open={Boolean(draft)}
+      title={draft?.id ? "Edit Template Harga" : "Tambah Template Harga"}
+      onClose={onClose}
+      pending={pending}
+      disabled={!canManage || !canSave}
+      disabledReason={disabledReason}
+      submitLabel="Simpan"
+      submittingLabel="Menyimpan..."
+      onSubmit={onSubmit}
+      statusText={
+        draft && !desktop
+          ? `${draft.components.length} komponen · ${money(internalCost)} · Margin ${grossMargin.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
+          : undefined
+      }
+      statusTone={!canSave ? "warning" : grossMargin < 0 ? "danger" : "success"}
+    >
+      {content}
     </OperationalFormSheet>
   );
 }

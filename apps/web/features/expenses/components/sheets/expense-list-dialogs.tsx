@@ -5,11 +5,15 @@ import {
   FormField,
   FormRiskNotice,
   FormSection,
+  FactRow,
+  GroupedSurface,
+  MoneyValue,
   MediaPreviewDialog,
   AdaptiveSelect,
   TextInput,
   useSheetPresenceValue,
   WorkflowFormSheet,
+  Button,
 } from "@/components/ui";
 import React from "react";
 
@@ -32,6 +36,7 @@ export function ReceiptImageLightbox({
     <MediaPreviewDialog
       open={Boolean(imageUrl)}
       title="Pratinjau nota"
+      purpose="document"
       imageUrl={imageUrl}
       alt="Bukti nota pengeluaran"
       caption="Ketuk di luar dialog atau tekan Escape untuk menutup."
@@ -135,6 +140,70 @@ export function FieldDisbursementSheet({
     <>
       <WorkflowFormSheet
         dismissal={{ mode: "managed" }}
+        desktopSize="wide"
+        desktopFooterPlacement="aside"
+        desktopAsideSummary={
+          <GroupedSurface>
+            <div className="divide-y divide-ring-subtle">
+              <FactRow
+                layout="stacked"
+                label="Proyek"
+                wrapLabel
+                value={presentedCost.project?.name ?? "–"}
+              />
+              <FactRow
+                layout="stacked"
+                label="Jumlah pencairan"
+                wrapLabel
+                value={
+                  <MoneyValue
+                    fractionDigits={Number.isInteger(amount) ? 0 : 2}
+                    variant="fullDynamic"
+                    amount={amount}
+                  />
+                }
+              />
+              <FactRow
+                layout="stacked"
+                label="Sumber dana"
+                wrapLabel
+                value={
+                  selectedAccount?.name ??
+                  (selectedBankId ? "Rekening tidak tersedia" : "Belum dipilih")
+                }
+              />
+              {selectedAccount ? (
+                <>
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo saat ini"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(before) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={before}
+                      />
+                    }
+                  />
+                  <FactRow
+                    layout="stacked"
+                    label="Saldo pratinjau"
+                    wrapLabel
+                    value={
+                      <MoneyValue
+                        fractionDigits={Number.isInteger(after) ? 0 : 2}
+                        variant="fullDynamic"
+                        amount={after}
+                        tone={after < 0 ? "danger" : "default"}
+                      />
+                    }
+                  />
+                </>
+              ) : null}
+            </div>
+          </GroupedSurface>
+        }
         open={open}
         onExitComplete={handleExit}
         title={reviewing ? "Tinjau pencairan dana" : "Pencairan dana"}
@@ -189,9 +258,7 @@ export function FieldDisbursementSheet({
                 <ReviewFact
                   label="Saldo Rekening"
                   value={
-                    <span
-                      className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}
-                    >
+                    <span className={after < 0 ? "font-bold text-error" : "font-bold text-primary"}>
                       Rp {before.toLocaleString("id-ID")} → Rp {after.toLocaleString("id-ID")}
                     </span>
                   }
@@ -245,13 +312,15 @@ export function FieldDisbursementSheet({
                       Format standar:{" "}
                       <strong className="font-mono text-on-surface">{suggestedRef}</strong>
                     </span>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => onRefNumberChange(suggestedRef)}
-                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                      className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary/15 active:z-10 active:shadow-raised"
+                      variant="secondary"
+                      size="mini"
                     >
                       Gunakan
-                    </button>
+                    </Button>
                   </div>
                 ) : null}
               </FormSection>

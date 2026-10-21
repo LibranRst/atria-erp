@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { AppIcon, Badge, MoneyValue } from "@/components/ui";
+import { AppIcon, Badge, MoneyValue, Button } from "@/components/ui";
 import type { ClientInvoiceItem } from "../../types/project-invoices-types";
 import {
   calculateInvoicePaidAmount,
@@ -15,11 +15,11 @@ import {
 
 export function ProjectInvoicesList({
   invoices,
-  isOwnerOrFinance,
+  canRecordPayment,
   onRecordPayment,
 }: {
   readonly invoices: readonly ClientInvoiceItem[];
-  readonly isOwnerOrFinance: boolean;
+  readonly canRecordPayment: boolean;
   readonly onRecordPayment: (invoice: ClientInvoiceItem) => void;
 }): React.JSX.Element {
   const orderedInvoices = [...invoices].sort(
@@ -44,7 +44,7 @@ export function ProjectInvoicesList({
             <ProjectInvoiceTimelineRow
               key={invoice.id}
               invoice={invoice}
-              isOwnerOrFinance={isOwnerOrFinance}
+              canRecordPayment={canRecordPayment}
               onRecordPayment={onRecordPayment}
               connected={index < orderedInvoices.length - 1}
             />
@@ -57,12 +57,12 @@ export function ProjectInvoicesList({
 
 function ProjectInvoiceTimelineRow({
   invoice,
-  isOwnerOrFinance,
+  canRecordPayment,
   onRecordPayment,
   connected,
 }: {
   readonly invoice: ClientInvoiceItem;
-  readonly isOwnerOrFinance: boolean;
+  readonly canRecordPayment: boolean;
   readonly onRecordPayment: (invoice: ClientInvoiceItem) => void;
   readonly connected: boolean;
 }): React.JSX.Element {
@@ -75,7 +75,7 @@ function ProjectInvoiceTimelineRow({
   const handleOpenDetail = React.useCallback(() => {
     openActivityDetail(
       { kind: "CLIENT_INVOICE", id: invoice.id },
-      remaining > 0 && isOwnerOrFinance
+      remaining > 0 && canRecordPayment
         ? {
             actions: {
               primary: {
@@ -84,16 +84,18 @@ function ProjectInvoiceTimelineRow({
               },
             },
           }
-        : remaining <= 0
-          ? {
-              footerStatus: {
-                label: "Invoice telah lunas",
-                tone: "success",
-              },
-            }
-          : undefined,
+        : invoice.status === "VOID"
+          ? { footerStatus: { label: "Invoice dibatalkan", tone: "neutral" } }
+          : remaining <= 0
+            ? {
+                footerStatus: {
+                  label: "Invoice telah lunas",
+                  tone: "success",
+                },
+              }
+            : undefined,
     );
-  }, [openActivityDetail, invoice, remaining, isOwnerOrFinance, onRecordPayment]);
+  }, [openActivityDetail, invoice, remaining, canRecordPayment, onRecordPayment]);
 
   return (
     <div
@@ -106,7 +108,7 @@ function ProjectInvoiceTimelineRow({
           handleOpenDetail();
         }
       }}
-      className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:scale-98 active:bg-surface-container-low/40"
+      className="relative flex min-h-12 gap-3 rounded-2xl p-2 transition-all outline-none focus-visible:bg-surface-container-low active:z-10 active:scale-[1.05] active:bg-surface-container-low/40 active:shadow-raised"
       aria-label={`Lihat detail invoice ${invoice.invoiceNumber}`}
     >
       {connected ? (
@@ -155,12 +157,7 @@ function ProjectInvoiceTimelineRow({
                 </p>
                 <div className="flex items-center gap-1">
                   <AppIcon name="check_circle" className="text-[13px] text-success" />
-                  <MoneyValue
-                    amount={totalPaid}
-                    variant="compact"
-                    tone="default"
-                    size="sm"
-                  />
+                  <MoneyValue amount={totalPaid} variant="compact" tone="default" size="sm" />
                 </div>
               </>
             ) : (
@@ -177,17 +174,18 @@ function ProjectInvoiceTimelineRow({
               </>
             )}
           </div>
-          {remaining > 0 && isOwnerOrFinance ? (
-            <button
+          {remaining > 0 && canRecordPayment ? (
+            <Button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 onRecordPayment(invoice);
               }}
               className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-primary/7 px-4 text-support font-bold text-primary"
+              variant="secondary"
             >
               Catat bayar
-            </button>
+            </Button>
           ) : (
             <ActivityDetailChevron />
           )}
