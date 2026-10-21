@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["bun-types"],
+    "paths": {
+      "@backend/*": ["./src/backend/*"],
+      "@runtime/*": ["./src/runtime/*"],
+      "@atria/core": ["../../packages/core/src/index.ts"],
+      "@atria/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

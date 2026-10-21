@@ -1,0 +1,3 @@
+ALTER TABLE "session" ADD COLUMN "developer_actor_user_id" uuid;--> statement-breakpoint
+ALTER TABLE "session" ADD CONSTRAINT "session_developer_actor_user_id_user_id_fk" FOREIGN KEY ("developer_actor_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "session_developer_actor_user_id_idx" ON "session" USING btree ("developer_actor_user_id");

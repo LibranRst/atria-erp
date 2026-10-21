@@ -1,0 +1,349 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781182503021,
+      "tag": "0000_panoramic_quicksilver",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781183702858,
+      "tag": "0001_next_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781259668435,
+      "tag": "0002_fancy_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781264426532,
+      "tag": "0003_pretty_alex_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781341299972,
+      "tag": "0004_petite_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781344436560,
+      "tag": "0005_overjoyed_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781524978603,
+      "tag": "0006_concerned_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781530487679,
+      "tag": "0007_chunky_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781536794446,
+      "tag": "0008_moaning_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781592265598,
+      "tag": "0009_slow_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781600400000,
+      "tag": "0010_plain_settings_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781601982860,
+      "tag": "0011_small_smiling_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781664000000,
+      "tag": "0012_project_cover_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1781751600000,
+      "tag": "0013_pricing_revision_profitability",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1781920800000,
+      "tag": "0014_project_workflow_ui_gaps",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1781928000000,
+      "tag": "0015_global_stock_control",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782104400000,
+      "tag": "0016_rab_revision_void",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782111600000,
+      "tag": "0017_guided_rap_builder",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1783036800000,
+      "tag": "0018_bank_account_cash_control",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1783929600000,
+      "tag": "0019_form_draft_expense_flow",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784190138717,
+      "tag": "0020_production_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784190287892,
+      "tag": "0021_opening_inventory_cutover",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784352774356,
+      "tag": "0022_developer_account_simulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784360445418,
+      "tag": "0023_onboarding_control_room",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784685572689,
+      "tag": "0024_finance_reconciliation_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784686477969,
+      "tag": "0025_bank_statement_row_fingerprint",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784692800000,
+      "tag": "0026_cash_direction_semantics",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1784696400000,
+      "tag": "0027_reconciliation_history_exceptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1784697300000,
+      "tag": "0028_reconciliation_exception_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1786700380977,
+      "tag": "0029_past_cable",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786708419225,
+      "tag": "0030_demonic_dreadnoughts",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1787238550328,
+      "tag": "0031_ai_history_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1787640156909,
+      "tag": "0032_add_requires_owner_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1787640691489,
+      "tag": "0033_add_role_permission",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1787652935610,
+      "tag": "0034_grant_owner_manage_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1787843842880,
+      "tag": "0035_tenant_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788171326426,
+      "tag": "0036_nice_jean_grey",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1788343898196,
+      "tag": "0037_glorious_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1788568928349,
+      "tag": "0038_notification_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1788673162035,
+      "tag": "0039_notification_sse_cursor",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1788771517482,
+      "tag": "0040_notification_delivery_outbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789868642872,
+      "tag": "0041_rab_item_nature",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1790816400000,
+      "tag": "0042_grant_desktop_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791080623641,
+      "tag": "0043_private_attachment_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791273851422,
+      "tag": "0044_ai_material_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791274304614,
+      "tag": "0045_material_analysis_tenant",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791283004037,
+      "tag": "0046_grant_purchasing_ai",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791311567688,
+      "tag": "0047_user_role_guide_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791735989968,
+      "tag": "0048_warehouse_intake",
+      "breakpoints": true
+    }
+  ]
+}

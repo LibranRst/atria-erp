@@ -1,0 +1,1 @@
+ALTER TABLE "project_budget_item" ADD COLUMN "budget_category" varchar(255) DEFAULT 'Umum' NOT NULL;

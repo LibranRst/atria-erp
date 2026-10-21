@@ -1,0 +1,2 @@
+ALTER TABLE "cash_transaction" ADD COLUMN "bank_reference" varchar(100);--> statement-breakpoint
+CREATE UNIQUE INDEX "ct_bank_account_reference_uidx" ON "cash_transaction" USING btree ("bank_account_id","bank_reference");
