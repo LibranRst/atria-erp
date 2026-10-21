@@ -9,17 +9,17 @@ workspace-package,packages/core/package.json,name,@atria/core,@paduna/build-core
 workspace-package,packages/icons/package.json,name,@atria/icons,@paduna/icons,workspace-migration-planned
 workspace-package,packages/tokens/package.json,name,@atria/tokens,@paduna/tokens,workspace-migration-planned
 project,render-frontend-qa.yaml,repo,https://github.com/LibranRst/atria-erp,paduna-build (repo target; remote owner/URL to verify),repository-rename-planned
-web,apps/web/app/layout.tsx,title / applicationName / appleWebApp.title,Atria,Paduna Build,display-rollout-planned
-pwa,apps/web/app/manifest.ts,name / short_name,Atria ERP / Atria,Paduna Build / Paduna Build,display-rollout-planned
+web,apps/web/app/layout.tsx,title / applicationName / appleWebApp.title,Paduna Build,Paduna Build,display-rollout-planned
+pwa,apps/web/app/manifest.ts,name / short_name,Paduna Build / Paduna Build,Paduna Build / Paduna Build,display-rollout-planned
 pwa,apps/web/app/manifest.ts,id / start_url / scope,each value is /,preserve current values,compatibility-review
-mobile,apps/mobile/app.json,expo.name,Atria ERP,Paduna Build,display-rollout-planned
+mobile,apps/mobile/app.json,expo.name,Paduna Build,Paduna Build,display-rollout-planned
 mobile,apps/mobile/app.json,expo.slug,atria-erp,paduna-build (verify project association first),native-migration-planned
 mobile,apps/mobile/app.json,expo.scheme,atria,padunabuild + legacy atria compatibility,auth-deeplink-migration-planned
 auth,apps/api/src/backend/lib/auth.ts,NATIVE_ORIGINS,atria://,preserve legacy; add verified new scheme with client rollout,auth-deeplink-migration-planned
 mobile,apps/mobile/app.json,expo.ios.bundleIdentifier,com.anonymous.atria-erp,not decided; review distribution identity and owned domain,separate-identity-decision
 mobile,apps/mobile/app.json,expo.ios.icon,./assets/expo.icon,retain Composer project; import supplied foreground,native-asset-rollout-planned
-mobile,apps/mobile/app.json,permission copy,Izinkan Atria ...,Izinkan Paduna Build ... (retain action context),display-rollout-planned
-admin-transition,apps/admin/app/layout.tsx,metadata title,Atria Admin,Paduna Build - Admin (during transition only),display-rollout-planned
+mobile,apps/mobile/app.json,permission copy,Izinkan Paduna Build ...,Izinkan Paduna Build ... (retain action context),display-rollout-planned
+admin-transition,apps/admin/app/layout.tsx,metadata title,Paduna Build Admin,Paduna Build - Admin (during transition only),display-rollout-planned
 deployment-config,render.yaml,service name,atria-pilot-api,paduna-build-api (verify cloud target),external-service-planned
 deployment-config,render-frontend-qa.yaml,service name,atria-dekoria,paduna-build-web (verify tenant/deployment role),external-service-planned
 environment,netlify.toml,NEXT_PUBLIC_ATRIA_PILOT_MODE,existing ATRIA prefix,preserve until explicit per-variable mapping,compatibility-review
