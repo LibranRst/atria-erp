@@ -10,14 +10,14 @@ import { actorHasPermission } from "./permissions";
  * `use:ai_chat` ke peran gudang atau sales tidak akan menggagalkan apa pun.
  */
 describe("akses asisten AI", () => {
-  test.each(["OWNER", "FINANCE_ADMIN", "PROJECT_MANAGER"])("%s boleh membuka chat", (role) => {
-    expect(actorHasPermission(role, "use:ai_chat")).toBe(true);
-  });
-
-  test.each(["PURCHASING", "SITE_SUPERVISOR", "UNKNOWN_ROLE"])(
-    "%s tidak boleh membuka chat",
+  test.each(["OWNER", "FINANCE_ADMIN", "PROJECT_MANAGER", "PURCHASING"])(
+    "%s boleh membuka chat",
     (role) => {
-      expect(actorHasPermission(role, "use:ai_chat")).toBe(false);
+      expect(actorHasPermission(role, "use:ai_chat")).toBe(true);
     },
   );
+
+  test.each(["SITE_SUPERVISOR", "UNKNOWN_ROLE"])("%s tidak boleh membuka chat", (role) => {
+    expect(actorHasPermission(role, "use:ai_chat")).toBe(false);
+  });
 });

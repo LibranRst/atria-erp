@@ -174,6 +174,19 @@ export const voidRabRevisionSchema = z.object({
   rabEstimateId: uuid,
   reason: z.string().trim().min(3, "Alasan pembatalan minimal 3 karakter.").max(1000),
 });
+export const createRabRevisionSchema = z
+  .object({ rabEstimateId: uuid, reason: z.string().trim().min(10).max(2000) })
+  .strict();
+export const rejectChangeOrderSchema = z
+  .object({ changeOrderId: uuid, reason: z.string().trim().min(10).max(2000) })
+  .strict();
+export const updateRabHeaderSchema = z
+  .object({
+    rabEstimateId: uuid,
+    title: z.string().trim().min(3).max(255),
+    clientNotes: z.string().trim().max(1000),
+  })
+  .strict();
 export const rapSetupStageSchema = z.enum(["MATERIAL", "TUKANG", "SUBCON", "REVIEW", "COMPLETE"]);
 export const advanceProjectRapSetupSchema = z.object({
   projectRapId: uuid,

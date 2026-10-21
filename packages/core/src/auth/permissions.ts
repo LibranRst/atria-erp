@@ -9,6 +9,7 @@
 
 // 1. Kunci Izin Finansial (Permission Keys)
 export type PermissionKey =
+  | "use:desktop_admin"
   | "view:bank_account"
   | "create:bank_account"
   | "update:bank_account"
@@ -84,6 +85,7 @@ export type PermissionKey =
 // 2. Matriks Otorisasi Berdasarkan Peran (Role Permission Matrix)
 export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
   OWNER: [
+    "use:desktop_admin",
     "manage:roles",
     "manage:approval_settings",
     "manage:onboarding",
@@ -156,6 +158,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "reverse:opening_inventory",
   ],
   FINANCE_ADMIN: [
+    "use:desktop_admin",
     "review:onboarding",
     "view:project",
     "create:project",
@@ -231,6 +234,7 @@ export const ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
     "view:rab",
   ],
   PURCHASING: [
+    "use:ai_chat",
     "view:budget",
     "view:vendor_bill",
     "create:vendor_bill",

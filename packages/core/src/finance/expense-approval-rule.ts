@@ -53,6 +53,7 @@ export function decideExpenseApproval(input: ExpenseApprovalInput): ExpenseAppro
   return {
     isOverrun,
     requiresOwnerApproval:
-      input.amount >= (input.ownerApprovalThreshold ?? OWNER_APPROVAL_AMOUNT_THRESHOLD) || isOverrun,
+      input.amount >= (input.ownerApprovalThreshold ?? OWNER_APPROVAL_AMOUNT_THRESHOLD) ||
+      isOverrun,
   };
 }

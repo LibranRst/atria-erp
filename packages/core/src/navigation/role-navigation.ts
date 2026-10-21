@@ -49,9 +49,7 @@ const NAV_PRIORITY: readonly string[] = ["Dashboard", "Projects", "Expenses", "M
  * di daftar nama mana pun, dan sebelum perubahan ini setiap peran baru mendarat
  * di cabang "tidak dikenal" — dua tab, apa pun yang diberikan Owner padanya.
  */
-export function getRoleNavItems(
-  permissions: readonly PermissionKey[],
-): readonly RoleNavItem[] {
+export function getRoleNavItems(permissions: readonly PermissionKey[]): readonly RoleNavItem[] {
   const held = new Set<PermissionKey>(permissions);
   const eligible = ROLE_NAV_ITEMS.filter((item) =>
     (NAV_REQUIREMENTS[item.label] ?? []).some((permission) => held.has(permission)),

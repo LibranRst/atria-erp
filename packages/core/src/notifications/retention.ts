@@ -12,7 +12,7 @@ export interface NotificationRetentionCandidate {
 
 /**
  * Memeriksa apakah suatu notifikasi masih aktif dan layak ditampilkan
- * berdasarkan aturan retensi Atria ERP:
+ * berdasarkan aturan retensi Paduna Build:
  * 1. ACTION_REQUIRED: Selalu aktif jika isResolved=false. Jika isResolved=true, hanya aktif selama 30 hari.
  * 2. INFORMATIONAL: Selalu aktif jika read=false. Jika read=true, hanya aktif selama 30 hari.
  */

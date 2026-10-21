@@ -1,0 +1,28 @@
+{
+  "name": "@atria/icons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./native-images": "./src/native-images.ts"
+  },
+  "scripts": {
+    "lint": "eslint",
+    "test": "bun test",
+    "generate:native-images": "bun scripts/generate-native-images.ts"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "4.3.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "bun-types": "^1.3.14",
+    "eslint": "^9.20.0",
+    "sharp": "0.35.5",
+    "typescript": "^5",
+    "typescript-eslint": "^8.67.0"
+  }
+}

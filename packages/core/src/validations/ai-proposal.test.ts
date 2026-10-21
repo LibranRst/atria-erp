@@ -91,7 +91,9 @@ describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
       notes: "Sesuai anggaran",
     };
     expect(aiExpenseReviewProposalSchema.safeParse(valid).success).toBe(true);
-    expect(aiExpenseReviewProposalSchema.safeParse({ ...valid, action: "INVALID" }).success).toBe(false);
+    expect(aiExpenseReviewProposalSchema.safeParse({ ...valid, action: "INVALID" }).success).toBe(
+      false,
+    );
   });
 
   it("validasi usulan pembuatan proyek baru", () => {
@@ -142,7 +144,9 @@ describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
       amountPaid: 15000000,
     };
     expect(aiPayVendorBillProposalSchema.safeParse(valid).success).toBe(true);
-    expect(aiPayVendorBillProposalSchema.safeParse({ ...valid, amountPaid: 0 }).success).toBe(false);
+    expect(aiPayVendorBillProposalSchema.safeParse({ ...valid, amountPaid: 0 }).success).toBe(
+      false,
+    );
   });
 
   it("validasi usulan pencatatan pembayaran klien", () => {
@@ -156,7 +160,9 @@ describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
       referenceNumber: "BCA-IN-9921",
     };
     expect(aiRecordClientPaymentProposalSchema.safeParse(valid).success).toBe(true);
-    expect(aiRecordClientPaymentProposalSchema.safeParse({ ...valid, referenceNumber: "" }).success).toBe(false);
+    expect(
+      aiRecordClientPaymentProposalSchema.safeParse({ ...valid, referenceNumber: "" }).success,
+    ).toBe(false);
   });
 
   it("validasi usulan goods receipt", () => {
@@ -189,10 +195,16 @@ describe("validasi konfirmasi usulan aksi ERP lainnya", () => {
       temporaryPassword: "Dekoria-2026-Xk9mQz",
     };
     expect(aiCreateUserProposalSchema.safeParse(valid).success).toBe(true);
-    expect(aiCreateUserProposalSchema.safeParse({ ...valid, email: "bukan-email" }).success).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, email: "bukan-email" }).success).toBe(
+      false,
+    );
     expect(aiCreateUserProposalSchema.safeParse({ ...valid, name: "A" }).success).toBe(false);
-    expect(aiCreateUserProposalSchema.safeParse({ ...valid, temporaryPassword: "pendek" }).success).toBe(false);
-    expect(aiCreateUserProposalSchema.safeParse({ ...valid, roleId: "bukan-uuid" }).success).toBe(false);
+    expect(
+      aiCreateUserProposalSchema.safeParse({ ...valid, temporaryPassword: "pendek" }).success,
+    ).toBe(false);
+    expect(aiCreateUserProposalSchema.safeParse({ ...valid, roleId: "bukan-uuid" }).success).toBe(
+      false,
+    );
     expect(aiCreateUserProposalSchema.safeParse({ ...valid, toolCallId: "" }).success).toBe(false);
   });
 

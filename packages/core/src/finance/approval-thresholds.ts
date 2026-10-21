@@ -50,7 +50,7 @@ export function parseThresholdCents(value: string | null | undefined): bigint | 
   return BigInt(trimmed);
 }
 
-/** Sen → rupiah bulat, untuk aturan yang masih bekerja dalam rupiah. */
+/** Sen → rupiah dengan presisi sen, termasuk aturan pengeluaran lapangan. */
 export function thresholdCentsToRupiah(cents: bigint): number {
-  return Number(cents / BigInt(100));
+  return Number(cents) / 100;
 }

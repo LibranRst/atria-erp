@@ -13,3 +13,7 @@ export const activityDetailRequestSchema = z.object({
   kind: z.enum(ACTIVITY_DETAIL_KINDS),
   id: databaseUuidSchema,
 });
+
+export const cashActivityDetailRequestSchema = activityDetailRequestSchema.extend({
+  kind: z.literal("CASH_TRANSACTION"),
+});

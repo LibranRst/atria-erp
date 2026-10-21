@@ -54,7 +54,11 @@ export function calculateOutstandingProjectReservations(
     if (!Number.isFinite(quantity) || quantity <= 0) continue;
     if (movement.movementType === "RESERVE") {
       outstandingBySource.set(key, current + quantity);
-    } else if (movement.movementType === "USE" || movement.movementType === "WASTE") {
+    } else if (
+      movement.movementType === "USE" ||
+      movement.movementType === "WASTE" ||
+      movement.movementType === "RELEASE_RESERVATION"
+    ) {
       outstandingBySource.set(key, Math.max(0, current - quantity));
     }
   }

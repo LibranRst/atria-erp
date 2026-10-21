@@ -34,10 +34,17 @@ export interface ProjectItem {
   readonly coverImageUrl?: string | null;
   readonly notes?: string | null;
   readonly budgetStatus: string;
+  /** Absent on older clients; null explicitly means no canonical budget exists. */
+  readonly budgetId?: string | null;
   readonly actualCost: number;
   readonly internalBudget: number;
   readonly usedPercentage: number;
   readonly remainingBudget: number;
+  readonly paidCost?: number;
+  readonly pendingCost?: number;
+  readonly projectedMarginAmount?: number | null;
+  readonly projectedMarginPercentage?: number | null;
+  readonly targetGrossPercentage?: number | null;
   readonly clientName: string;
   readonly pmName: string;
 }

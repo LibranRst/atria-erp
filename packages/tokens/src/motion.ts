@@ -25,6 +25,11 @@ export const transitionSpringSnappy: SpringMotionPreset = {
   mass: 0.8,
 };
 
+/**
+ * Nilai pembesaran (scale up) saat tombol ditekan atau ditahan bergaya haptic iOS.
+ */
+export const buttonTapActiveScale = 1.05;
+
 export const transitionSpringSmooth: SpringMotionPreset = {
   type: "spring",
   stiffness: 300,

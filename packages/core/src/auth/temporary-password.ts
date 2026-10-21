@@ -21,9 +21,9 @@ function getRandomChar(chars: string): string {
 
 /**
  * Menghasilkan kata sandi sementara yang aman, mudah dibaca, dan dijamin
- * memenuhi kebijakan password Atria ERP (`passwordPolicySchema`).
+ * memenuhi kebijakan password Paduna Build (`passwordPolicySchema`).
  *
- * Pola format: `Dekoria-2026-XXXXXX` (minimal 16 karakter, memuat huruf besar,
+ * Pola format: `Paduna-2026-XXXXXX` (minimal 16 karakter, memuat huruf besar,
  * huruf kecil, angka, dan pemisah ramah baca).
  */
 export function generateSecureTemporaryPassword(): string {
@@ -46,13 +46,13 @@ export function generateSecureTemporaryPassword(): string {
     suffixArray[j] = temp;
   }
 
-  const generated = `Atria-${year}-${suffixArray.join("")}`;
+  const generated = `Paduna-${year}-${suffixArray.join("")}`;
 
   // Validasi mandiri terhadap skema kebijakan password
   const validation = passwordPolicySchema.safeParse(generated);
   if (!validation.success) {
     // Fallback darurat jika ada anomali
-    return `Atria-2026-Xy9kQm`;
+    return `Paduna-2026-Xy9kQm`;
   }
 
   return generated;

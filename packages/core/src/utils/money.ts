@@ -7,6 +7,9 @@ export const idrMoney = new Intl.NumberFormat("id-ID", {
 export function formatIdr(value: number): string {
   return `Rp ${value.toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
 }
+export function formatExactIdr(value: number): string {
+  return `Rp ${value.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export function formatShortIdr(value: number): string {
   const absolute = Math.abs(value);
