@@ -73,7 +73,7 @@ export default function ChangeTemporaryPasswordScreen(): React.JSX.Element {
         return;
       }
 
-      setErrorMessage("Server Atria tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
+      setErrorMessage("Server Paduna Build tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
     } finally {
       setIsSubmitting(false);
     }

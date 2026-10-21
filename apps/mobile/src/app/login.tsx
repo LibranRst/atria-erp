@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import type { TextInput as NativeTextInput } from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, FormField, FormSection, TextInput } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/providers/auth-provider";
 import { theme } from "@/theme";
+import { PadunaLogo } from "@/components/brand/paduna-logo";
 
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -14,6 +16,7 @@ export default function LoginScreen(): React.JSX.Element {
   const [password, setPassword] = useState(process.env.EXPO_PUBLIC_DEMO_PASSWORD ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordInput = useRef<NativeTextInput>(null);
 
   async function handleSignIn(): Promise<void> {
     if (!email.trim() || !password) {
@@ -21,6 +24,7 @@ export default function LoginScreen(): React.JSX.Element {
       return;
     }
 
+    Keyboard.dismiss();
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
@@ -34,7 +38,7 @@ export default function LoginScreen(): React.JSX.Element {
 
       await refresh();
     } catch {
-      setErrorMessage("Server Atria tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
+      setErrorMessage("Server Paduna Build tidak dapat dijangkau. Periksa koneksi lalu coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -57,11 +61,9 @@ export default function LoginScreen(): React.JSX.Element {
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.brandMark} accessibilityLabel="Atria ERP">
-          <Text style={styles.brandLetter}>A</Text>
-        </View>
+        <PadunaLogo />
         <View style={styles.header}>
-          <Text style={styles.title}>Masuk ke Atria</Text>
+          <Text style={styles.title}>Masuk ke Paduna Build</Text>
           <Text style={styles.description}>
             Lanjutkan kontrol budget proyek, biaya, dan material dari perangkat ini.
           </Text>
@@ -71,18 +73,24 @@ export default function LoginScreen(): React.JSX.Element {
           <FormField label="Email" required>
             <TextInput
               accessibilityLabel="Email"
+              autoFocus
+              autoCorrect={false}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
               onChangeText={setEmail}
               placeholder="nama@dekoria.id"
               returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordInput.current?.focus()}
               value={email}
             />
           </FormField>
           <FormField label="Kata sandi" required>
             <TextInput
               accessibilityLabel="Kata sandi"
+              ref={passwordInput}
+              autoCorrect={false}
               autoCapitalize="none"
               autoComplete="current-password"
               onChangeText={setPassword}
@@ -116,20 +124,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: theme.spacing.lg,
     paddingHorizontal: theme.spacing.marginMobile,
-  },
-  brandMark: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radii.icon,
-    backgroundColor: theme.colors.primary,
-  },
-  brandLetter: {
-    color: theme.colors.onPrimary,
-    fontFamily: theme.fonts.extrabold,
-    fontSize: 23,
-    lineHeight: 27,
   },
   header: { maxWidth: 360, gap: theme.spacing.xs },
   title: {

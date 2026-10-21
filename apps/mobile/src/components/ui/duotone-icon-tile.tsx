@@ -17,7 +17,7 @@ const toneStyle: Record<IconTileTone, { backgroundColor: string; color: string }
 };
 
 /**
- * Tile identitas bertekstur duotone — dipakai untuk kartu keputusan, kategori,
+ * Tile identitas dengan ikon outline — dipakai untuk kartu keputusan, kategori,
  * dan baris berulang yang butuh penanda ikon. Selalu datar (Nested-Stays-Flat):
  * jangan tambahkan `boxShadow` di sini.
  */
@@ -35,7 +35,7 @@ export function DuotoneIconTile({
   const colors = toneStyle[tone];
   return (
     <View style={[styles.tile, { backgroundColor: colors.backgroundColor }, style]}>
-      <AppIcon color={colors.color} name={name} size={iconSize} weight="duotone" />
+      <AppIcon color={colors.color} name={name} size={iconSize} />
     </View>
   );
 }

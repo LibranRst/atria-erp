@@ -1,6 +1,7 @@
 import {
   colors,
   maxWidths,
+  nativeShadows,
   opacityColors,
   radii,
   shadows,
@@ -19,8 +20,12 @@ export const fonts = {
 
 export const theme = {
   colors,
+  chrome: {
+    lightGlassTint: `${colors.surfaceContainerLowest}BF`,
+  },
   fonts,
   maxWidths,
+  nativeShadows,
   motion: {
     reducedDuration: 0,
   },

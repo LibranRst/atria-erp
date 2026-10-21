@@ -78,7 +78,7 @@ export function ProductPlaceholderScreen({
       ) : null}
 
       <GroupedSurface>
-        <FactRow label="Akun" value={user?.name ?? "Pengguna Atria"} />
+        <FactRow label="Akun" value={user?.name ?? "Pengguna Paduna Build"} />
         <FactRow
           label="Akses"
           value={roleName ? (roleLabels[roleName] ?? "Pengguna") : "Pengguna"}

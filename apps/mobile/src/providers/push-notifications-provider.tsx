@@ -1,15 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { type Href, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo } from "react";
 import { Alert, Platform } from "react-native";
 
 import { trpcClient } from "@/lib/trpc-client";
+import { useAtriaNavigation } from "@/lib/use-atria-navigation";
 import { resolveMobileNotificationRoute } from "@/lib/notification-route";
 import { writeStoredPushToken } from "@/lib/push-token-storage";
 import { useAuth } from "@/providers/auth-provider";
-import { ROLE_PERMISSIONS } from "@atria/core/auth/permissions";
 import { getRoleNavItems } from "@atria/core/navigation/role-navigation";
 import {
   ANDROID_NOTIFICATION_CHANNEL_ID,
@@ -84,14 +84,14 @@ export function PushNotificationsProvider({
 }: {
   readonly children: React.ReactNode;
 }): React.JSX.Element {
-  const { isAuthenticated, roleName, user } = useAuth();
+  const { isAuthenticated, permissions, user } = useAuth();
   const router = useRouter();
+  const navigate = useAtriaNavigation();
   const userId = user?.id ?? null;
   /** Rute cadangan mengikuti tab navigasi peran, bukan peta rute terpisah. */
   const fallbackRoute = useMemo<"/ledger" | "/projects" | "/materials" | "/expenses">(
-    () =>
-      getRoleNavItems(roleName ? (ROLE_PERMISSIONS[roleName] ?? []) : [])[0]?.href ?? "/projects",
-    [roleName],
+    () => getRoleNavItems(permissions)[0]?.href ?? "/projects",
+    [permissions],
   );
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export function PushNotificationsProvider({
       // yang terjadi pada build tanpa konfigurasi EAS; jangan menawarkan izin
       // yang hasilnya tidak akan pernah terpakai.
       if (__DEV__)
-        console.warn("[push] projectId EAS belum dikonfigurasi; registrasi token dilewati.");
+        console.info("[push] projectId EAS belum dikonfigurasi; registrasi token dilewati.");
       return undefined;
     }
     const pushProjectId = projectId;
@@ -112,7 +112,8 @@ export function PushNotificationsProvider({
       const destination = notificationUrl(response);
       if (!destination) return;
       const route = resolveMobileNotificationRoute(destination, fallbackRoute);
-      router.push(route as Href);
+      if (route.kind === "web") navigate(route.path, true);
+      else router.push(route.href);
       void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
     }
 
@@ -132,7 +133,7 @@ export function PushNotificationsProvider({
       if (!active) return;
       Alert.alert(
         "Aktifkan notifikasi?",
-        "Atria dapat memberi tahu saat approval, pembayaran, atau material perlu tindakan.",
+        "Paduna Build dapat memberi tahu saat approval, pembayaran, atau material perlu tindakan.",
         [
           { text: "Nanti", style: "cancel" },
           {
@@ -168,7 +169,7 @@ export function PushNotificationsProvider({
       tokenListener.remove();
       responseListener.remove();
     };
-  }, [fallbackRoute, isAuthenticated, router, userId]);
+  }, [fallbackRoute, isAuthenticated, navigate, router, userId]);
 
   return <>{children}</>;
 }

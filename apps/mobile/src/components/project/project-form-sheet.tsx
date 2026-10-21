@@ -1,24 +1,35 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useScreenQuery, useOnline } from "@/lib/use-screen-query";
+import { isAccessRevoked } from "@/lib/access-error";
+import { screenLoadState } from "@/lib/screen-query-state";
+import { ScreenQueryState, ScreenRefreshNotice } from "@/components/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
 import { toast } from "sonner-native";
 
 import {
   Button,
   FormField,
   FormSection,
-  ScreenMessage,
-  ScreenSkeleton,
-  SelectionSheet,
-  SheetSelect,
+  AdaptiveSelect,
+  ComboboxField,
+  DatePickerField,
+  FormDisclosure,
+  SmartDefaultHint,
+  ProjectFormSkeleton,
+  SkeletonFooter,
+  SuccessDialog,
   TextInput,
   WorkflowFormSheet,
+  BottomSheet,
+  useSheetDismissal,
+  useSheetFormFields,
   type SelectOption,
 } from "@/components/ui";
 import { trpcClient } from "@/lib/trpc-client";
-
-const NEW_CLIENT_VALUE = "__new_client__";
+import {
+  COMMON_ROOM_OPTIONS,
+  PROJECT_TYPE_OPTIONS,
+} from "@atria/core/presentation/project-input-options";
 
 type ProjectFormDraft = {
   readonly name: string;
@@ -39,7 +50,6 @@ type ProjectFormDraft = {
 
 type ProjectBootstrapResult = Awaited<ReturnType<typeof trpcClient.project.bootstrap.query>>;
 type ProjectBootstrapReady = Extract<ProjectBootstrapResult, { readonly status: "ready" }>;
-type SelectionTarget = "client" | "projectManager" | null;
 
 function blankDraft(): ProjectFormDraft {
   return {
@@ -95,27 +105,28 @@ function ReadyProjectForm({
   readonly data: ProjectBootstrapReady;
   readonly projectId?: string;
 }): React.JSX.Element {
-  const router = useRouter();
+  const online = useOnline();
   const queryClient = useQueryClient();
   const editMode = Boolean(projectId);
   const [draft, setDraft] = useState<ProjectFormDraft>(() => createInitialDraft(data));
-  const [selection, setSelection] = useState<SelectionTarget>(null);
+  const [initialDraft] = useState(() => JSON.stringify(draft));
+  const fields = useSheetFormFields();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [operationalExpanded, setOperationalExpanded] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const clientOptions = useMemo<readonly SelectOption[]>(() => {
-    const options = data.clients.map((client) => ({ value: client.id, label: client.name }));
-    return editMode
-      ? options
-      : [
-          ...options,
-          {
-            value: NEW_CLIENT_VALUE,
-            label: "Klien baru",
-            description: "Isi identitas klien tanpa meninggalkan form.",
-          },
-        ];
-  }, [data.clients, editMode]);
+  const dismissal = useSheetDismissal({
+    dirty: JSON.stringify(draft) !== initialDraft,
+    pending: submitting || successMessage !== null,
+    fields,
+  });
+
+  const clientOptions = useMemo<readonly SelectOption[]>(
+    () => data.clients.map((client) => ({ value: client.id, label: client.name })),
+    [data.clients],
+  );
   const projectManagerOptions = useMemo<readonly SelectOption[]>(
     () =>
       data.projectManagers.map((manager) => ({
@@ -128,21 +139,30 @@ function ReadyProjectForm({
 
   function patch(next: Partial<ProjectFormDraft>): void {
     setDraft((current) => ({ ...current, ...next }));
+    setFieldErrors({});
+    setError(null);
   }
 
-  function validate(): string | null {
-    if (!draft.name.trim()) return "Nama proyek wajib diisi.";
-    if (draft.isNewClient && !draft.newClientName.trim()) return "Nama klien baru wajib diisi.";
-    if (!draft.isNewClient && !draft.clientId) return "Pilih klien untuk proyek ini.";
-    if (!draft.projectManagerId) return "Pilih Project Manager untuk proyek ini.";
-    return dateError;
+  function validate(): { readonly field: string; readonly message: string } | null {
+    if (!draft.name.trim()) return { field: "name", message: "Nama proyek wajib diisi." };
+    if (draft.isNewClient && !draft.newClientName.trim())
+      return { field: "newClientName", message: "Nama klien baru wajib diisi." };
+    if (!draft.isNewClient && !draft.clientId)
+      return { field: "client", message: "Pilih klien untuk proyek ini." };
+    if (!draft.projectManagerId)
+      return { field: "projectManager", message: "Pilih Project Manager untuk proyek ini." };
+    return dateError ? { field: "endDate", message: dateError } : null;
   }
 
   async function submit(): Promise<void> {
+    if (!online) {
+      toast.error("Hubungkan ke internet untuk mengirim form.");
+      return;
+    }
     const validationError = validate();
     if (validationError) {
-      setError(validationError);
-      toast.error(validationError);
+      setFieldErrors({ [validationError.field]: validationError.message });
+      requestAnimationFrame(() => fields.focus(validationError.field));
       return;
     }
 
@@ -186,7 +206,7 @@ function ReadyProjectForm({
       }
       await queryClient.invalidateQueries({ queryKey: ["screen", "projects"] });
       toast.success(editMode ? "Proyek berhasil diperbarui." : "Proyek berhasil dibuat.");
-      router.back();
+      setSuccessMessage(editMode ? "Proyek diperbarui" : "Proyek berhasil dibuat");
     } catch {
       const message = "Perubahan belum tersimpan. Periksa koneksi lalu coba lagi.";
       setError(message);
@@ -196,210 +216,219 @@ function ReadyProjectForm({
     }
   }
 
-  const picker =
-    selection === "client"
-      ? {
-          title: "Pilih klien",
-          value: draft.isNewClient ? NEW_CLIENT_VALUE : draft.clientId,
-          options: clientOptions,
-        }
-      : {
-          title: "Pilih Project Manager",
-          value: draft.projectManagerId,
-          options: projectManagerOptions,
-        };
-
+  const operationalCount = [
+    draft.startDate,
+    draft.endDate,
+    draft.location,
+    draft.roomArea,
+    draft.projectType,
+    draft.notes,
+  ].filter(Boolean).length;
   return (
-    <>
-      <WorkflowFormSheet
-        description={
-          editMode
-            ? "Perbarui data operasional proyek tanpa mengubah budget atau status aktivasi."
-            : "Isi identitas utama. Budget dan aktivasi disiapkan pada langkah terpisah."
-        }
-        footer={
-          <>
-            <Button
-              disabled={submitting}
-              onPress={() => router.back()}
-              style={styles.footerButton}
-              variant="secondary"
-            >
-              Batal
-            </Button>
-            <Button loading={submitting} onPress={() => void submit()} style={styles.footerButton}>
-              {editMode ? "Simpan" : "Buat proyek"}
-            </Button>
-          </>
-        }
-        title={editMode ? "Ubah proyek" : "Proyek baru"}
-      >
-        <FormSection title="Identitas proyek">
-          <FormField
-            error={!draft.name.trim() && error ? "Nama proyek wajib diisi." : undefined}
-            label="Nama proyek"
-            required
-          >
-            <TextInput
-              accessibilityLabel="Nama proyek"
-              autoCapitalize="words"
-              invalid={!draft.name.trim() && Boolean(error)}
-              onChangeText={(name) => patch({ name })}
-              placeholder="Contoh: Renovasi Rumah Cilandak"
-              returnKeyType="next"
-              value={draft.name}
-            />
-          </FormField>
-          <SheetSelect
-            error={!draft.isNewClient && !draft.clientId && error ? "Pilih klien." : undefined}
+    <WorkflowFormSheet
+      description={
+        editMode
+          ? "Perbarui data operasional proyek tanpa mengubah budget atau status aktivasi."
+          : "Isi identitas utama. Budget dan aktivasi disiapkan pada langkah terpisah."
+      }
+      loadingContent={<ProjectFormSkeleton editMode={editMode} />}
+      dismissal={dismissal}
+      fields={fields}
+      bodyOverlay={
+        <SuccessDialog
+          visible={successMessage !== null}
+          title={successMessage ?? "Proyek tersimpan"}
+          description="Data proyek sudah tersimpan."
+          facts={[{ label: "Proyek", value: draft.name }]}
+          onClose={dismissal.complete}
+        />
+      }
+      footerStatus={error}
+      footer={
+        <Button
+          disabled={!online || successMessage !== null}
+          loading={submitting}
+          onPress={() => void submit()}
+        >
+          {editMode ? "Simpan" : "Buat proyek"}
+        </Button>
+      }
+      title={editMode ? "Ubah proyek" : "Proyek baru"}
+    >
+      {!online ? <ScreenRefreshNotice query={{ data, error: null, fetchStatus: "idle" }} /> : null}
+      <FormSection title="Identitas inti" helper="Nama, klien, dan PM menentukan ownership proyek.">
+        <FormField fieldId="name" error={fieldErrors.name} label="Nama proyek" required>
+          <TextInput
+            editable={!submitting && successMessage === null}
+            accessibilityLabel="Nama proyek"
+            autoCapitalize="words"
+            invalid={Boolean(fieldErrors.name)}
+            onChangeText={(name) => patch({ name })}
+            placeholder="Contoh: Renovasi Rumah Cilandak"
+            returnKeyType="next"
+            value={draft.name}
+          />
+        </FormField>
+        {!editMode ? (
+          <AdaptiveSelect
+            disabled={submitting || successMessage !== null}
+            fieldId="clientKind"
+            label="Jenis klien"
+            value={draft.isNewClient ? "new" : "existing"}
+            options={[
+              { value: "existing", label: "Klien terdaftar" },
+              { value: "new", label: "Klien baru" },
+            ]}
+            onChange={(value) => patch({ isNewClient: value === "new" })}
+          />
+        ) : null}
+        {!draft.isNewClient ? (
+          <AdaptiveSelect
+            disabled={submitting || successMessage !== null}
+            fieldId="client"
+            error={fieldErrors.client}
             label="Klien"
-            onPress={() => setSelection("client")}
             options={clientOptions}
             required
-            value={draft.isNewClient ? NEW_CLIENT_VALUE : draft.clientId}
+            value={draft.clientId}
+            onChange={(clientId) => patch({ clientId })}
           />
-          {draft.isNewClient ? (
-            <>
-              <FormField
-                error={
-                  draft.isNewClient && !draft.newClientName.trim() && error
-                    ? "Nama klien baru wajib diisi."
-                    : undefined
-                }
-                label="Nama klien baru"
-                required
-              >
-                <TextInput
-                  accessibilityLabel="Nama klien baru"
-                  autoCapitalize="words"
-                  invalid={draft.isNewClient && !draft.newClientName.trim() && Boolean(error)}
-                  onChangeText={(newClientName) => patch({ newClientName })}
-                  placeholder="Nama klien"
-                  value={draft.newClientName}
-                />
-              </FormField>
-              <FormField label="Email klien" optional>
-                <TextInput
-                  accessibilityLabel="Email klien"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  onChangeText={(newClientEmail) => patch({ newClientEmail })}
-                  placeholder="nama@email.com"
-                  value={draft.newClientEmail}
-                />
-              </FormField>
-              <FormField label="Nomor telepon" optional>
-                <TextInput
-                  accessibilityLabel="Nomor telepon klien"
-                  keyboardType="phone-pad"
-                  onChangeText={(newClientPhone) => patch({ newClientPhone })}
-                  placeholder="08xx"
-                  value={draft.newClientPhone}
-                />
-              </FormField>
-              <FormField label="Alamat klien" optional>
-                <TextInput
-                  accessibilityLabel="Alamat klien"
-                  onChangeText={(newClientAddress) => patch({ newClientAddress })}
-                  placeholder="Alamat korespondensi"
-                  value={draft.newClientAddress}
-                />
-              </FormField>
-            </>
-          ) : null}
-          <SheetSelect
-            error={!draft.projectManagerId && error ? "Pilih Project Manager." : undefined}
-            label="Project Manager"
-            onPress={() => setSelection("projectManager")}
-            options={projectManagerOptions}
-            required
-            value={draft.projectManagerId}
+        ) : (
+          <>
+            <FormField
+              fieldId="newClientName"
+              error={fieldErrors.newClientName}
+              label="Nama klien baru"
+              required
+            >
+              <TextInput
+                editable={!submitting && successMessage === null}
+                accessibilityLabel="Nama klien baru"
+                autoCapitalize="words"
+                invalid={Boolean(fieldErrors.newClientName)}
+                onChangeText={(newClientName) => patch({ newClientName })}
+                placeholder="Nama klien"
+                value={draft.newClientName}
+              />
+            </FormField>
+            <FormField label="Email klien" optional>
+              <TextInput
+                editable={!submitting && successMessage === null}
+                accessibilityLabel="Email klien"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                onChangeText={(newClientEmail) => patch({ newClientEmail })}
+                placeholder="nama@email.com"
+                value={draft.newClientEmail}
+              />
+            </FormField>
+            <FormField label="Nomor telepon" optional>
+              <TextInput
+                editable={!submitting && successMessage === null}
+                accessibilityLabel="Nomor telepon klien"
+                keyboardType="phone-pad"
+                onChangeText={(newClientPhone) => patch({ newClientPhone })}
+                placeholder="08xx"
+                value={draft.newClientPhone}
+              />
+            </FormField>
+            <FormField label="Alamat klien" optional>
+              <TextInput
+                editable={!submitting && successMessage === null}
+                accessibilityLabel="Alamat klien"
+                onChangeText={(newClientAddress) => patch({ newClientAddress })}
+                placeholder="Alamat korespondensi"
+                value={draft.newClientAddress}
+              />
+            </FormField>
+          </>
+        )}
+        <AdaptiveSelect
+          disabled={submitting || successMessage !== null}
+          fieldId="projectManager"
+          error={fieldErrors.projectManager}
+          label="Project Manager"
+          options={projectManagerOptions}
+          required
+          value={draft.projectManagerId}
+          onChange={(projectManagerId) => patch({ projectManagerId })}
+        />
+        {data.projectManagers.length === 1 && draft.projectManagerId ? (
+          <SmartDefaultHint>
+            Project Manager otomatis dipilih karena hanya ada satu opsi aktif.
+          </SmartDefaultHint>
+        ) : null}
+      </FormSection>
+      <FormDisclosure
+        title="Detail operasional"
+        description="Jadwal, lokasi, dan catatan proyek"
+        summary={operationalCount ? `${operationalCount} terisi` : "Opsional"}
+        expanded={operationalExpanded}
+        onToggle={() => setOperationalExpanded((value) => !value)}
+        fieldIds={["startDate", "endDate", "location", "roomArea", "projectType", "notes"]}
+      >
+        <FormSection title="Jadwal dan lokasi" helper="Konteks utama untuk pelaksanaan proyek.">
+          <DatePickerField
+            disabled={submitting || successMessage !== null}
+            fieldId="startDate"
+            label="Tanggal mulai"
+            value={draft.startDate}
+            optional
+            onChange={(startDate) => patch({ startDate })}
           />
-        </FormSection>
-
-        <FormSection helper="Gunakan format tanggal YYYY-MM-DD." title="Jadwal dan lokasi">
-          <FormField label="Tanggal mulai" optional>
+          <DatePickerField
+            disabled={submitting || successMessage !== null}
+            fieldId="endDate"
+            label="Tanggal selesai"
+            value={draft.endDate}
+            optional
+            error={fieldErrors.endDate ?? dateError ?? undefined}
+            minimumDate={draft.startDate || undefined}
+            onChange={(endDate) => patch({ endDate })}
+          />
+          <FormField fieldId="location" label="Lokasi" optional>
             <TextInput
-              accessibilityLabel="Tanggal mulai"
-              autoCapitalize="none"
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onChangeText={(startDate) => patch({ startDate })}
-              placeholder="2026-08-16"
-              value={draft.startDate}
-            />
-          </FormField>
-          <FormField error={dateError ?? undefined} label="Tanggal selesai" optional>
-            <TextInput
-              accessibilityLabel="Tanggal selesai"
-              autoCapitalize="none"
-              invalid={Boolean(dateError)}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onChangeText={(endDate) => patch({ endDate })}
-              placeholder="2026-12-16"
-              value={draft.endDate}
-            />
-          </FormField>
-          <FormField label="Lokasi" optional>
-            <TextInput
+              editable={!submitting && successMessage === null}
               accessibilityLabel="Lokasi proyek"
               onChangeText={(location) => patch({ location })}
               placeholder="Area atau alamat proyek"
               value={draft.location}
             />
           </FormField>
-          <FormField label="Area ruangan" optional>
-            <TextInput
-              accessibilityLabel="Area ruangan"
-              onChangeText={(roomArea) => patch({ roomArea })}
-              placeholder="Contoh: Lantai 1 dan dapur"
-              value={draft.roomArea}
-            />
-          </FormField>
-          <FormField label="Jenis proyek" optional>
-            <TextInput
-              accessibilityLabel="Jenis proyek"
-              onChangeText={(projectType) => patch({ projectType })}
-              placeholder="Contoh: Renovasi interior"
-              value={draft.projectType}
-            />
-          </FormField>
+          <ComboboxField
+            disabled={submitting || successMessage !== null}
+            fieldId="roomArea"
+            label="Ruangan/Area"
+            value={draft.roomArea}
+            options={COMMON_ROOM_OPTIONS}
+            placeholder="Pilih atau ketik area"
+            onChange={(roomArea) => patch({ roomArea })}
+          />
+          <ComboboxField
+            disabled={submitting || successMessage !== null}
+            fieldId="projectType"
+            label="Tipe proyek"
+            value={draft.projectType}
+            options={PROJECT_TYPE_OPTIONS}
+            placeholder="Pilih atau ketik tipe"
+            onChange={(projectType) => patch({ projectType })}
+          />
         </FormSection>
-
-        <FormSection title="Catatan">
-          <FormField label="Catatan internal" optional>
+        <FormSection title="Catatan" helper="Informasi pendukung yang dapat dilengkapi nanti.">
+          <FormField fieldId="notes" label="Catatan proyek" optional>
             <TextInput
+              editable={!submitting && successMessage === null}
               accessibilityLabel="Catatan internal proyek"
               multiline
               onChangeText={(notes) => patch({ notes })}
               placeholder="Konteks singkat untuk tim proyek"
-              style={styles.notesInput}
               textAlignVertical="top"
               value={draft.notes}
             />
           </FormField>
         </FormSection>
-      </WorkflowFormSheet>
-
-      <SelectionSheet
-        onClose={() => setSelection(null)}
-        onSelect={(value) => {
-          if (selection === "client") {
-            patch({
-              clientId: value === NEW_CLIENT_VALUE ? "" : value,
-              isNewClient: value === NEW_CLIENT_VALUE,
-            });
-          } else if (selection === "projectManager") {
-            patch({ projectManagerId: value });
-          }
-        }}
-        options={picker.options}
-        title={picker.title}
-        value={picker.value}
-        visible={selection !== null}
-      />
-    </>
+      </FormDisclosure>
+    </WorkflowFormSheet>
   );
 }
 
@@ -408,53 +437,52 @@ export function ProjectFormSheet({
 }: {
   readonly projectId?: string;
 }): React.JSX.Element {
-  const router = useRouter();
-  const query = useQuery({
-    queryKey: ["project", "form", projectId ?? "new"],
-    queryFn: () => trpcClient.project.bootstrap.query({ projectId }),
-  });
-
-  if (query.isPending) return <ScreenSkeleton rows={5} />;
-  if (query.isError || !query.data) {
+  const online = useOnline();
+  const query = useScreenQuery(
+    "project-form",
+    (signal) => trpcClient.project.bootstrap.query({ projectId }, { signal }),
+    [projectId ?? "new"],
+  );
+  const loading = screenLoadState(query, online) === "loading";
+  if (query.data === undefined || isAccessRevoked(query.error))
     return (
-      <ScreenMessage
-        description="Pilihan klien dan Project Manager belum dapat dimuat."
-        onAction={() => void query.refetch()}
-        title="Form belum siap"
-      />
+      <BottomSheet
+        title={projectId ? "Ubah proyek" : "Proyek baru"}
+        sizing="maximum"
+        description={
+          projectId
+            ? "Perbarui data operasional proyek tanpa mengubah budget atau status aktivasi."
+            : "Isi identitas utama. Budget dan aktivasi disiapkan pada langkah terpisah."
+        }
+        contentPhase={loading ? "loading" : "ready"}
+        footer={loading ? <SkeletonFooter /> : undefined}
+      >
+        <ScreenQueryState
+          query={query}
+          skeleton={<ProjectFormSkeleton editMode={Boolean(projectId)} />}
+          onRetry={() => void query.refetch()}
+        />
+      </BottomSheet>
     );
-  }
-  if (query.data.status === "notFound") {
+  if (query.data.status === "notFound")
     return (
-      <ScreenMessage
-        actionLabel="Kembali"
-        description="Proyek yang ingin diubah tidak ditemukan."
-        icon="folder_open"
-        onAction={() => router.back()}
+      <BottomSheet
         title="Proyek tidak tersedia"
+        description="Proyek yang ingin diubah tidak ditemukan."
       />
     );
-  }
   if (
     query.data.status === "restricted" ||
     (!projectId && !query.data.canCreate) ||
     (Boolean(projectId) && !query.data.canUpdate)
   ) {
     return (
-      <ScreenMessage
-        actionLabel="Kembali"
-        description="Peran atau cakupan proyek Anda tidak mengizinkan perubahan ini."
-        icon="lock"
-        onAction={() => router.back()}
+      <BottomSheet
         title="Akses dibatasi"
+        description="Peran atau cakupan proyek Anda tidak mengizinkan perubahan ini."
       />
     );
   }
 
   return <ReadyProjectForm key={projectId ?? "new"} data={query.data} projectId={projectId} />;
 }
-
-const styles = StyleSheet.create({
-  footerButton: { flex: 1 },
-  notesInput: { minHeight: 88 },
-});

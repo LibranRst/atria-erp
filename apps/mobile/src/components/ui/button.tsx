@@ -1,116 +1,115 @@
-import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import type { PressableProps, StyleProp, ViewStyle } from "react-native";
-import Animated, { useAnimatedStyle, useReducedMotion, withSpring } from "react-native-reanimated";
-
-import { transitionSpringSnappy } from "@atria/tokens/motion";
-
+import type { ButtonProps, ButtonVariant } from "./button.types";
+import { useButtonSize } from "./button-size-context";
 import { theme } from "@/theme";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./button.types";
 
-const variantStyle: Record<ButtonVariant, { backgroundColor: string; color: string }> = {
-  primary: { backgroundColor: theme.colors.primary, color: theme.colors.onPrimary },
-  secondary: {
-    backgroundColor: theme.colors.surfaceContainerLowest,
-    color: theme.colors.onSurface,
-  },
-  ghost: { backgroundColor: "transparent", color: theme.colors.onSurface },
+const palettes: Record<ButtonVariant, { backgroundColor: string; color: string }> = {
+  primary: { backgroundColor: theme.colors.accent, color: theme.colors.onPrimary },
+  secondary: { backgroundColor: theme.colors.surfaceContainerLowest, color: theme.colors.accent },
+  ghost: { backgroundColor: "transparent", color: theme.colors.accent },
   danger: { backgroundColor: theme.colors.critical, color: theme.colors.onCritical },
+  section: {
+    backgroundColor: "transparent",
+    color: theme.colors.onSurfaceVariant,
+  },
 };
 
+/** Browser fallback; iOS and Android resolve their native platform siblings. */
 export function Button({
   children,
-  disabled,
   leading,
+  trailing,
   loading = false,
-  style,
+  disabled = false,
   variant = "primary",
-  ...props
-}: Omit<PressableProps, "children" | "style"> & {
-  readonly children: string;
-  readonly leading?: React.ReactNode;
-  readonly loading?: boolean;
-  readonly style?: StyleProp<ViewStyle>;
-  readonly variant?: ButtonVariant;
-}): React.JSX.Element {
-  const reduceMotion = useReducedMotion();
-  const [pressed, setPressed] = useState(false);
-  const palette = variantStyle[variant];
+  size,
+  style,
+  onPress,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityState,
+  testID,
+}: ButtonProps): React.JSX.Element {
   const unavailable = disabled || loading;
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: reduceMotion
-          ? 1
-          : withSpring(pressed ? 0.97 : 1, {
-              stiffness: transitionSpringSnappy.stiffness,
-              damping: transitionSpringSnappy.damping,
-              mass: transitionSpringSnappy.mass,
-            }),
-      },
-    ],
-  }));
-
+  const resolvedSize = useButtonSize(size);
+  const palette = palettes[variant];
   return (
-    <Animated.View style={[animatedStyle, style]}>
-      <Pressable
-        {...props}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: unavailable, busy: loading }}
-        disabled={unavailable}
-        hitSlop={4}
-        onPressIn={(event) => {
-          setPressed(true);
-          props.onPressIn?.(event);
-        }}
-        onPressOut={(event) => {
-          setPressed(false);
-          props.onPressOut?.(event);
-        }}
-        style={({ pressed }) => [
-          styles.button,
-          { backgroundColor: palette.backgroundColor },
-          variant === "secondary" && styles.secondary,
-          unavailable && styles.disabled,
-          pressed && reduceMotion && styles.pressed,
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? children}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ ...accessibilityState, disabled: unavailable, busy: loading }}
+      disabled={unavailable}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.button,
+        resolvedSize === "compact" && styles.compact,
+        variant === "section" && styles.section,
+        resolvedSize === "sheet" && styles.sheet,
+        { backgroundColor: palette.backgroundColor },
+        style,
+        (unavailable || pressed) && styles.dimmed,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={palette.color} />
+      ) : leading ? (
+        <View
+          pointerEvents="none"
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={styles.leading}
+        >
+          {leading}
+        </View>
+      ) : null}
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.label,
+          resolvedSize === "compact" && styles.compactLabel,
+          resolvedSize === "sheet" && styles.sheetLabel,
+          { color: palette.color },
         ]}
       >
-        {loading ? (
-          <ActivityIndicator color={palette.color} size="small" />
-        ) : (
-          <View style={styles.content}>
-            {leading}
-            <Text numberOfLines={1} style={[styles.label, { color: palette.color }]}>
-              {children}
-            </Text>
-          </View>
-        )}
-      </Pressable>
-    </Animated.View>
+        {children}
+      </Text>
+      {trailing ? (
+        <View
+          pointerEvents="none"
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={styles.leading}
+        >
+          {trailing}
+        </View>
+      ) : null}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
     minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    minWidth: 48,
     borderRadius: theme.radii.capsule,
     paddingHorizontal: 20,
-    boxShadow: theme.shadows.primary,
-  },
-  secondary: { boxShadow: theme.shadows.control },
-  content: {
-    maxWidth: "100%",
-    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
-  label: { minWidth: 0, flexShrink: 1, fontFamily: theme.fonts.bold, ...theme.typography.row },
-  disabled: { opacity: 0.45 },
-  pressed: { opacity: 0.82 },
+  label: { flexShrink: 1, fontSize: 16, fontWeight: "600" },
+  compact: { flexGrow: 0, flexShrink: 0, alignSelf: "flex-start", paddingHorizontal: 8 },
+  compactLabel: { fontSize: 13 },
+  section: { paddingHorizontal: 0, gap: 4 },
+  sheet: { minHeight: 52, paddingHorizontal: 24 },
+  sheetLabel: { fontSize: 17 },
+  leading: { width: 24, height: 24, alignItems: "center", justifyContent: "center" },
+  dimmed: { opacity: 0.5 },
 });

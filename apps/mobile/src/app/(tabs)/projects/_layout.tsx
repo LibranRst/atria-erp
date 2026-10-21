@@ -1,20 +1,5 @@
-import { Stack } from "expo-router/stack";
-
-import { theme } from "@/theme";
+import { WorkspaceStack } from "@/components/shell/workspace-chrome";
 
 export default function ProjectsLayout(): React.JSX.Element {
-  return (
-    <Stack
-      screenOptions={{
-        contentStyle: { backgroundColor: theme.colors.background },
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: theme.colors.background },
-        headerTintColor: theme.colors.onSurface,
-        headerTitleStyle: { fontFamily: theme.fonts.bold },
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: "Proyek" }} />
-      <Stack.Screen name="[projectId]/index" options={{ title: "Proyek" }} />
-    </Stack>
-  );
+  return <WorkspaceStack title="Proyek" hasProjectDetail />;
 }

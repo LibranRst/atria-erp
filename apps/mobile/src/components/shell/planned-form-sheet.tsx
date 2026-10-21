@@ -1,28 +1,22 @@
-import { useRouter } from "expo-router";
-
-import { BottomSheet, Button, FactRow, GroupedSurface } from "@/components/ui";
+import { BottomSheet, Button } from "@/components/ui";
+import { useAtriaNavigation } from "@/lib/use-atria-navigation";
 
 export function PlannedFormSheet({
   description,
-  sourceLabel,
+  webDestination,
   title,
 }: {
   readonly description: string;
-  readonly sourceLabel: string;
+  readonly webDestination: string;
   readonly title: string;
 }): React.JSX.Element {
-  const router = useRouter();
+  const navigate = useAtriaNavigation();
 
   return (
-    <BottomSheet description={description} title={title}>
-      <GroupedSurface>
-        <FactRow label="Presentasi" value="Form sheet native" />
-        <FactRow label="Pemetaan" value={sourceLabel} />
-        <FactRow label="Status" value="Route siap" />
-      </GroupedSurface>
-      <Button onPress={() => router.back()} variant="secondary">
-        Tutup
-      </Button>
-    </BottomSheet>
+    <BottomSheet
+      description={description}
+      title={title}
+      footer={<Button onPress={() => navigate(webDestination, true)}>Buka di web</Button>}
+    />
   );
 }

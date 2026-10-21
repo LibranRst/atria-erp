@@ -1,56 +1,62 @@
-# Welcome to your Expo app 👋
+# Paduna Build mobile client
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The Expo SDK 57 / React Native client talks to the standalone `@atria/api`
+backend through tRPC and Better Auth. Native sessions remain in SecureStore;
+mobile imports only the generated API contract types.
 
-## Get started
+The display identity is **Paduna Build**, with the primary **Paduna** wordmark
+(no Build suffix) on login and launch screens. Canonical assets and decisions
+live under `docs/brand/paduna/`. The Temu launcher icon uses white on terracotta;
+Android layers and the iOS Icon Composer document use the same approved artwork.
 
-1. Install dependencies
+Technical identities remain compatible: package `@atria/mobile`, slug
+`atria-erp`, scheme `atria`, bundle ID `com.anonymous.atria-erp`, and the existing
+native workspace/scheme `AtriaERP`. Branding does not rename these or change
+auth, routing, database or financial/material behavior.
 
-   ```bash
-   npm install
-   ```
+Run these commands from the monorepo root:
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+bun install
+bun run dev:mobile
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This starts API on port 3001 and Expo Metro on port 8081. It starts no Next.js
+process. Backend secrets and database configuration belong in `apps/api/.env`.
+Copy `apps/mobile/.env.example` to `apps/mobile/.env` for client overrides.
+Development defaults derive the reachable API and web hosts from Metro.
 
-### Other setup steps
+`EXPO_PUBLIC_API_URL` points to the API. `EXPO_PUBLIC_WEB_URL` points to the web
+frontend for features that still open in a browser. Start `bun run dev:web`
+separately when testing one of those features locally. Browser and native login
+keep separate sessions. Release builds need explicit service URLs.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+To use a remote API, set the client URL and run `bun run dev:expo` for Metro
+alone. Routes live in `src/app/`, with native UI and feature code under `src/`.
 
-## Learn more
+```sh
+bun run --cwd apps/mobile typecheck
+bun run --cwd apps/mobile lint
+bun run --cwd apps/mobile test
+bun run build:mobile
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Typecheck regenerates API contract declarations first. The native bundle build
+exports iOS and Android to `apps/mobile/dist/ios` and `apps/mobile/dist/android`.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Changing the app name, launcher icon, splash or permission messages requires a
+new native build; Metro reload alone does not replace installed app metadata.
+The checked-in Expo assets/config remain the source of truth for regenerated
+native projects. Local `ios/` files are ignored and were synchronized without
+cleaning the existing workspace or custom native modules.
 
-## Join the community
+For the installed Xcode 27.1 / Swift 6.4 toolchain, the local iOS workspace uses
+Expo modules built from source (`EXPO_USE_PRECOMPILED_MODULES=0 pod install`,
+with `EXPO_USE_PRECOMPILED_MODULES: "false"` in `ios/Podfile.properties.json`).
+This avoids importing Expo modules compiled with Swift 6.3.1. The narrow Bun
+patch `patches/expo-modules-jsi@57.0.4.patch` also lets Expo's existing interface
+cleanup recognize Swift 6.4's `__ObjC::` namespace syntax. It retains the
+existing package version and the helper's intended C++ extension filtering.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+See the [mobile development guide](../../docs/guide/mobile-api-development.md)
+for simulator, LAN, separate-terminal, and process shutdown details.
