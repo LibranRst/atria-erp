@@ -1,6 +1,6 @@
-# Antigravity Agent Guidelines for Atria ERP
+# Antigravity Agent Guidelines for Paduna Build
 
-You are working on **Atria ERP** for **Dekoria**, an interior design and build company in Indonesia. The product direction is **Project Finance & Material Control**, not a generic ERP.
+You are working on **Paduna Build** for **Dekoria**, an interior design and build company in Indonesia. The product direction is **Project Finance & Material Control**, not a generic ERP.
 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** Workbook logic is source material for ratios and team habits, but user-facing screens must not be labeled as Excel.
 

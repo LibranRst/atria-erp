@@ -119,7 +119,7 @@ Completion runs only through the closing action. It validates client invoices, v
 
 ```mermaid
 flowchart TD
-  A["Atria records an internal cash movement"] --> B["Cash record remains Belum cocok"]
+  A["Paduna Build records an internal cash movement"] --> B["Cash record remains Belum cocok"]
   C["Finance imports or manually records bank mutations"] --> D["System suggests exact account, direction, and amount matches"]
   B --> D
   D --> E{"Finance decision"}

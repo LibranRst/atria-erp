@@ -6,6 +6,13 @@ database tetap berada di schema Drizzle; dokumen ini tidak menyalin SQL atau pse
 Seed adalah **sandbox pembelajaran**, bukan bootstrap production. Untuk acceptance test dari data
 operasional kosong, gunakan `docs/guide/financial_workflow_guide.md`.
 
+Untuk dataset development lokal yang lebih padat, gunakan
+[profil development](../guide/development-seed.md): `bun run db:dev:seed`,
+`bun run db:dev:reset --confirm-reset`, dan `bun run db:dev:verify`. Profil ini menambah
+rincian RAP/RAB per ruangan, histori biaya proyek selesai, price library, draft stok,
+notifikasi tiap peran dan histori percakapan. Kontrak baseline demo di bawah tetap
+khusus command `db:seed` / `db:demo:*`.
+
 ## Menjalankan dengan aman
 
 ```bash
@@ -40,7 +47,7 @@ fixture, dan test dapat merujuk record yang sama.
 | Finance Admin   | Lisa Permata  | `lisa@dekoria.com`   | `password123` |
 | Project Manager | Budi Santoso  | `budi@dekoria.com`   | `password123` |
 | Project Manager | Siti Aminah   | `siti@dekoria.com`   | `password123` |
-| Purchasing      | Agus Setiawan | `agus@dekoria.com`   | `password123` |
+| Purchasing      | Agus Pratama  | `agus@dekoria.com`   | `password123` |
 
 Password tersebut hanya untuk development. Walkthrough mengutamakan Developer Account Switcher
 dengan `ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED="true"`.
@@ -113,12 +120,12 @@ buffer, bukan gross margin.
 
 State awal mempunyai sembilan pasangan history dan dua pasangan terbuka:
 
-| Tampilan Catatan Atria                                 | Mutasi bank                           | Nominal     |
+| Tampilan Catatan Paduna Build                                 | Mutasi bank                           | Nominal     |
 | ------------------------------------------------------ | ------------------------------------- | ----------- |
 | Pembelian lakban, sekrup, dan mata bor cadangan        | PENCAIRAN KLAIM SITE TRF-FLD-0606     | Rp850.000   |
 | Pembelian lem kayu khusus sintetis & aksesoris bengkel | PENCAIRAN KLAIM WORKSHOP TRF-FLD-0609 | Rp2.500.000 |
 
-Tab **Catatan Atria** mengambil deskripsi expense asli dan nama proyek dari `project_cost` yang
+Tab **Catatan Paduna Build** mengambil deskripsi expense asli dan nama proyek dari `project_cost` yang
 direferensikan cash transaction. Deskripsi ledger internal tetap menyimpan konteks pencairan,
 misalnya `Pencairan klaim aksesoris Workshop Cikupa`, tetapi tidak dipakai sebagai judul utama jika
 sumber bisnisnya tersedia.

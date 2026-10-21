@@ -1,0 +1,29 @@
+# AI staff and role administration verification — 12 October 2026
+
+## Workflow
+
+The ADMINISTRATION family completes partial staff name/role/activity updates, atomic batches of up to fifty explicit people, role name/description/project scope, and unused custom-role deletion. getAdministrationContext supplies actual company references and twenty-row pagination; one-character/ambiguous searches require a human choice. Proposal tools prepare only; each write requires the reviewed human action and reason. Existing staff/role creation and governed permission proposals remain separate. Email/password and protected Owner/sensitive-access operations retain ordinary Settings.
+
+Actual manage:users/manage:roles grants and current company membership govern administration independently of project scope. Shared manual/AI writers serialize company/role/user/membership changes and refresh persisted Actor authority after locking. Full projected batches protect the last active critical holder. Self lockout, escalation, Owner/system restrictions, cross-company accounts and inconsistent membership are explicit blockers. Role/status changes synchronize membership and revoke relevant sessions, preserving project assignments, credentials and business history. Scope changes disclose affected people. Referenced custom roles cannot be deleted, including references from inactive accounts.
+
+Owned tool/action proofs expire after thirty days. Get/confirm accept only conversation/tool identity. Exact relevant source snapshots, current grants and atomic writer/audit/receipt protect stale data, concurrent manual edits and replay. Deleted-source receipt lookup happens first. Name-only edits do not rewrite membership/session state or invalidate unrelated noncritical roster proposals.
+
+## Presentation
+
+Reused ProposalCardShell, ProposalDiffRow, FactRow, GroupedSurface, ReviewCollection/ReviewItem, FormSheet, ConfirmationDialog and SheetFooterActions. No shared primitive was added. Complete simple differences stay inline; access/status/scope/delete add one short confirmation. Complex/batch reviews retain grouped contextual rows, five per page, desktop main column plus summary/action aside and mobile summary-first/footer-bottom order. All reasons and access/session consequences are readable before commit. Stale/expired/blocked states retain clear recovery. Denied refresh/commit hides cached staff identity/email/differences/reason/summary across retained overlays; correction cannot resend hidden source context. Saved results use the canonical Settings team/role destination.
+
+## Browser evidence
+
+The visible @Browser preview at http://127.0.0.1:3004/ai uses API3005 and the named disposable atria_audit_reconciliation database. Eight synthetic examples use real backend-prepared stored proofs: name, role assignment, inactivity, batch six, scope with two affected people, unused role, a role referenced after preview, and manually changed staff. The normal localhost3003 application and company data were not modified.
+
+Review screenshots and viewport-checks.json in output/ai-chat-qa/administration cover320/360/390/430 and1024/1280/1440. No horizontal review overflow appeared; mobile actions stack at320 and share a row when room permits. Five-row pagination and page-two selection survive desktop/mobile resize. Role deletion and access/status confirmations were opened and cancelled in Browser; actual deletion/replay is tested only in disposable backend integration. The successful name correction was saved through the real UI/API/session/database path and its canonical Settings link opened the Tim tab. browser-save-result.json records one audit/receipt, unchanged role/membership/session and identical project/finance/stock digest.
+
+The source-denial test opened a batch review, temporarily revoked only the synthetic actor's manage:users grant via a guarded disposable operator, then attempted a names-only save. Server refusal removed private source details from the retained desktop/mobile review and kept explicit Periksa lagi feedback. Restoring that exact test grant and checking again recovered the review and enabled actions without the old failure. No staff changes were committed by the denied attempt. Temporary viewport overrides are restored; the preview tab remains visible for manual inspection.
+
+## Checks and limits
+
+The focused disposable PostgreSQL run passed21 cases: sixteen new administration cases and five existing role-proposal regressions. Coverage includes strict partial preservation, exact access differences, session/membership synchronization, project/history invariants, Owner/system/self/escalation/sensitive guards, active critical holders across a batch, tenant and inactive-role references, duplicate names, expiry/ownership/revocation, rollback, relevant fingerprints, cached-Actor revocation and concurrent manual/AI edits. The integration database atria_audit_administration is separate from the Browser fixture. Normal workspace tests passed2119 cases; integration suites are skipped unless an explicit disposable database is supplied.
+
+API/web/mobile typechecks, workspace build with refreshed API/web builds, lint and HeroUI styles checks passed. Lint retains the pre-existing Material Master hook warning. Changed-file formatting passes; global formatting retains104 unrelated pre-existing failures. Independent Impeccable finish review ended with disposition ship after resolving its source-denial finding. Screenshots do not independently certify runtime motion or all keyboard/reduced-motion behavior; the feature reuses the accepted shared owners/presets.
+
+The QA server disables external model keys: tool preparation, UI/API/database confirmation and refusal/recovery are real; live provider generation/tool choice is not certified here. No deployment, commit, production staff mutation or Browser role deletion was performed.

@@ -5,33 +5,30 @@ Notifikasi web memisahkan **belum dibaca** dari **aksi belum selesai**. Membaca 
 ## Pengoperasian
 
 1. Terapkan migrasi `0038_notification_hardening.sql`, `0039_notification_sse_cursor.sql`, dan `0040_notification_delivery_outbox.sql` melalui prosedur migrasi instance. Migrasi ini mengisi waktu baca data lama, menambahkan cursor SSE, mengikat subscription baru ke sesi, dan membuat outbox push.
-2. Pengiriman awal dipicu dari outbox setelah transaksi bisnis berhasil commit. Scheduler merupakan pemulihan untuk retry/receipt; frekuensinya harus mengikuti anggaran compute Neon, selain batas paket Vercel:
-   - **Pro/Enterprise:** Vercel mendukung jadwal lebih sering, tetapi untuk Neon Free gunakan fallback 30 menit agar database sempat suspend. Isi `CRON_SECRET` pada environment Production; interval lebih rapat perlu anggaran compute dan kebutuhan latency yang sesuai.
-   - **Hobby:** cron Vercel hanya boleh berjalan sekali sehari, dan Vercel menolak deploy yang memuat jadwal lebih sering. Berkas yang ada sekarang menjalankan `task=all` sekali sehari (00:00 WIB) sebagai jaring pengaman; fallback 30 menit ditangani penjadwal eksternal di bawah.
-     Root Directory proyek Vercel harus `apps/web` agar `vercel.json` terbaca.
+2. Pengiriman awal dipicu dari outbox setelah transaksi bisnis berhasil commit. Scheduler API menjalankan fallback delivery setiap 30 menit dan `task=all` setiap 00:00 WIB. Kedua jadwal berada di `apps/api/workers/notification-scheduler/wrangler.jsonc` dan memanggil host API langsung; web tidak memiliki cron lagi. Frekuensi lebih rapat perlu anggaran compute Neon dan kebutuhan latency yang sesuai.
 3. Scheduler selain Vercel dapat memakai `NOTIFICATION_JOB_SECRET` dan HTTP **POST**. Semua panggilan memakai header `Authorization: Bearer <secret>`; jangan menaruh secret di URL, frontend, atau repository.
 4. Endpoint menerima `task=reconcile`, `task=deliveries`, atau `task=all`. Jalankan `reconcile` sekali setelah migrasi untuk membentuk aksi/kondisi yang masih aktif tanpa memutar ulang seluruh event historis.
 5. Monitor status HTTP serta ringkasan `reconciliation` dan `deliveries`. HTTP 401 berarti secret salah/tidak terpasang, 400 berarti task tidak dikenal, dan 500 berarti worker gagal serta aman dicoba lagi. Row lock, lease kedaluwarsa, dan unique index mencegah klaim paralel/event duplikat. Pengiriman bersifat at-least-once: crash setelah provider menerima pesan tetapi sebelum status tersimpan dapat mengulang pengiriman.
 
 ### Penjadwal eksternal 30 menit (profil Neon Free)
 
-`apps/web/workers/notification-scheduler` adalah Cloudflare Worker yang memanggil endpoint worker Atria setiap 30 menit untuk retry dan receipt. Percobaan kirim awal tetap memakai pemicu setelah commit. Ia tidak menduplikasi logika notifikasi, jadi perilakunya sama dengan pemicu Vercel Cron.
+`apps/api/workers/notification-scheduler` adalah Cloudflare Worker yang memanggil endpoint worker Paduna Build setiap 30 menit untuk retry dan receipt. Percobaan kirim awal tetap memakai pemicu setelah commit. Ia tidak menduplikasi logika notifikasi, jadi perilakunya sama dengan pemicu Vercel Cron.
 
 ```bash
-cd apps/web/workers/notification-scheduler
+cd apps/api/workers/notification-scheduler
 bun install
 npx wrangler deploy
-npx wrangler secret put NOTIFICATION_JOB_SECRET   # nilai sama dengan environment Production Vercel
+npx wrangler secret put NOTIFICATION_JOB_SECRET   # nilai sama dengan environment Production API
 ```
 
-Opsional: set `ATRIA_APP_URL` (default `https://atria-erp.vercel.app`) bila domain produksinya berbeda. Verifikasi manual:
+Wajib set `ATRIA_API_URL` ke origin deployment API. Tidak ada fallback ke domain web. Verifikasi manual:
 
 ```bash
 curl -X POST "https://atria-notification-scheduler.<subdomain>.workers.dev?task=deliveries" \
   -H "Authorization: Bearer $NOTIFICATION_JOB_SECRET"
 ```
 
-Jadwal source `*/30 * * * *` ada di `wrangler.jsonc`. Deploy Worker diperlukan untuk menerapkan source/config ini pada runtime yang sudah ada. Scheduler eksternal lain (mis. cron-job.org) juga sah selama ia mengirim POST ke `/api/internal/notifications?task=deliveries` dengan bearer secret yang sama.
+Jadwal source `*/30 * * * *` (delivery) dan `0 17 * * *` (harian 00:00 WIB) ada di `wrangler.jsonc`. Deploy Worker diperlukan untuk menerapkan source/config ini pada runtime yang sudah ada. Scheduler eksternal lain (mis. cron-job.org) juga sah selama ia mengirim POST ke `/api/internal/notifications?task=deliveries` dengan bearer secret yang sama.
 
 **Pemasangan awal (2026-09-11, jadwal lima menit):** worker bernama `atria-notification-scheduler` di akun Cloudflare `hyuzin`, subdomain `hyuzin-atria.workers.dev`. Endpoint:
 
@@ -44,7 +41,7 @@ Source hardening 30 September mewajibkan POST dan bearer secret pada endpoint ma
 
 Tanggal jatuh tempo menggunakan **Asia/Jakarta**: H-3, hari jatuh tempo, terlambat. Pembayaran parsial mempertahankan pengingat selama saldo masih terutang. Perubahan tingkat kondisi menghasilkan notifikasi belum dibaca; kondisi pulih menutup peringatan. Tidak ada pengingat berulang harian untuk kondisi yang sama.
 
-Event mutasi yang sudah tersambung, termasuk request/approve/reject/reversal opening inventory, dicatat dalam transaksi bisnis yang sama. Job melakukan pemulihan aksi dan evaluasi periodik jatuh tempo, kesehatan keuangan proyek, budget kategori, stok minimum, dan kekurangan material RAP. Perubahan kondisi yang tidak melalui event bisnis perlu job rekonsiliasi, yang pada konfigurasi Hobby saat ini berjalan harian. Scheduler eksternal default hanya delivery/receipt; jangan menjanjikan semua kondisi budget/material berubah terdeteksi setiap 30 menit.
+Event mutasi yang sudah tersambung, termasuk request/approve/reject/reversal opening inventory, dicatat dalam transaksi bisnis yang sama. Job melakukan pemulihan aksi dan evaluasi periodik jatuh tempo, kesehatan keuangan proyek, budget kategori, stok minimum, dan kekurangan material RAP. Perubahan kondisi yang tidak melalui event bisnis perlu job rekonsiliasi, yang berjalan harian melalui scheduler API. Scheduler eksternal default hanya delivery/receipt; jangan menjanjikan semua kondisi budget/material berubah terdeteksi setiap 30 menit.
 
 ## Sinkronisasi web
 
@@ -69,7 +66,7 @@ perubahan dari server; tidak ada pesan dua arah yang membutuhkan WebSocket.
   browser, proxy, atau hosting.
 
 Event transaksi biasanya terlihat dalam sekitar 0–5 detik. Event jatuh tempo
-bergantung pada job rekonsiliasi (harian pada konfigurasi Hobby saat ini), kemudian dikirim melalui SSE setelah job
+bergantung pada job rekonsiliasi (harian melalui scheduler API), kemudian dikirim melalui SSE setelah job
 commit. Dibanding polling lama, client tidak lagi menjalankan tiga Server Action
 setiap 20 detik; fetch summary dan dua daftar hanya terjadi pada initial load,
 invalidation, focus/online recovery, atau fallback.
@@ -80,11 +77,13 @@ Setiap notifikasi yang dibuat akan menambahkan satu row `notification_delivery` 
 
 ### Web Push
 
-Isi `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, dan `WEB_PUSH_SUBJECT` dengan satu pasangan VAPID stabil per environment. Halaman `/notifications` menyediakan kontrol opt-in; browser tidak meminta izin sampai pengguna menekan **Aktifkan**. Tombol nonaktif mencabut subscription browser dan credential server. Service worker hanya membuka tujuan internal yang lolos allowlist. HTTP 404/410 dari push service menonaktifkan endpoint kedaluwarsa.
+Isi `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, dan `WEB_PUSH_SUBJECT` pada **API** dengan satu pasangan VAPID stabil per environment. Profil saya → **Perangkat & notifikasi** (`/profile#notifications`) menyediakan kontrol opt-in; browser tidak meminta izin sampai pengguna menekan **Aktifkan**. DTO profil mengirim hanya public key dari konfigurasi API yang lengkap; tidak perlu menyalin VAPID ke environment Next.js. Private key dan subject tetap di API. Tombol nonaktif mencabut subscription browser dan credential server. Service worker hanya membuka tujuan internal yang lolos allowlist. HTTP 404/410 dari push service menonaktifkan endpoint kedaluwarsa.
 
-**Prasyarat operasional (2026-09-12).** Service worker dan Push API hanya hidup di _secure context_: HTTPS, atau `localhost`/`127.0.0.1`. Alamat LAN pengembangan biasa (`http://192.168.x.x:3000`) tidak akan pernah mendaftarkan service worker, sehingga tombol **Aktifkan** di halaman ini akan gagal di sana — uji push lewat `localhost`, tunnel HTTPS, atau domain produksi. Halaman `/notifications` juga sekarang menampilkan kontrol **Pasang aplikasi** karena iOS Safari hanya mengekspos `PushManager` dan `Notification` setelah aplikasi dipasang ke Layar Utama (Bagikan → Tambahkan ke Layar Utama); di iOS, push tidak dapat diminta dari tab Safari biasa. Setelah dipasang, buka kembali dari ikon Layar Utama sebelum menekan **Aktifkan**. Registrasi service worker seluruh aplikasi tidak pernah meminta izin notifikasi; izin tetap hanya muncul dari klik **Aktifkan**.
+Setelah status **Aktif**, **Kirim percobaan** mengirim pesan melalui pengirim Web Push yang sama ke endpoint tersimpan milik akun dan sesi saat ini saja. Percobaan dibatasi 15 kali per menit per pengguna pada proses API. Pesan berhasil berarti provider menerima pengiriman; penerimaan banner, suara, layar kunci, dan tap harus diperiksa di perangkat. Pengirim hanya menghubungi endpoint HTTPS layanan push Apple, Google, Mozilla, atau Windows; URL arbitrer tidak diizinkan. Percobaan tidak mengubah finance/material atau mengirim ke akun lain.
 
-**Rekonsiliasi langganan.** Setiap kali halaman `/notifications` dibuka dan izin sudah `granted` serta langganan perangkat masih hidup, klien mendaftarkan ulang langganan itu secara idempoten melalui Server Action yang sama. Ini memperbaiki catatan server yang hilang karena reset basis data, perpindahan tenant, atau POST yang gagal — sebelumnya pengguna melihat keadaan "Aktif" padahal tidak ada baris `user_push_subscription` yang menargetkan perangkatnya. Rekonsiliasi tidak meminta izin dan tidak membuat langganan baru: perangkat yang belum berlangganan tidak menghasilkan panggilan server sama sekali. Bila pencatatan gagal, kontrol menampilkan **Sambung ulang** alih-alih "Aktif".
+**Prasyarat operasional.** Service worker dan Push API hanya hidup di _secure context_: HTTPS, atau `localhost`/`127.0.0.1`. Alamat LAN pengembangan biasa (`http://192.168.x.x:3000`) menampilkan **Perlu HTTPS** tanpa tombol izin yang akan gagal. Uji push lewat `localhost` atau domain HTTPS. Profil juga menampilkan kontrol pemasangan aplikasi karena iOS 16.4+ hanya mendukung Web Push setelah aplikasi dipasang ke Layar Utama (Bagikan → Tambahkan ke Layar Utama); di iOS, push tidak dapat diminta dari tab Safari biasa. Setelah dipasang, buka kembali dari ikon Layar Utama sebelum menekan **Aktifkan**. Android Chrome dapat berlangganan tanpa pemasangan aplikasi. Registrasi service worker seluruh aplikasi tidak pernah meminta izin notifikasi; izin tetap hanya muncul dari klik **Aktifkan**.
+
+**Rekonsiliasi langganan.** Setiap kali kontrol notifikasi profil dibuka dan izin sudah `granted` serta langganan perangkat masih hidup, klien mendaftarkan ulang langganan itu secara idempoten melalui Server Action yang sama. Ini memperbaiki catatan server yang hilang karena reset basis data, perpindahan tenant, atau POST yang gagal — sebelumnya pengguna melihat keadaan "Aktif" padahal tidak ada baris `user_push_subscription` yang menargetkan perangkatnya. Rekonsiliasi tidak meminta izin dan tidak membuat langganan baru: perangkat yang belum berlangganan tidak menghasilkan panggilan server sama sekali. Bila pencatatan gagal, kontrol menampilkan **Sambung ulang** alih-alih "Aktif".
 
 Urutan matikan juga dikunci: pencabutan di server dijalankan lebih dulu, dan langganan perangkat baru dicabut setelah server mengonfirmasi. Dengan begitu kegagalan jaringan tidak meninggalkan baris server yang masih menargetkan perangkat yang sudah tidak berlangganan.
 

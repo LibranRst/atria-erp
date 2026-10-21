@@ -1,97 +1,169 @@
-# Walkthrough Sandbox Demo Atria
+# Walkthrough Seed Development Paduna Build — Neon, API, dan Web
 
-Panduan ini memakai connected demo seed untuk belajar sambil menjalankan flow Atria. Dataset sudah
-berisi histori dan pekerjaan terbuka. Ikuti urutan karena transaksi dari satu langkah menjadi input
-untuk rekonsiliasi dan dashboard pada langkah berikutnya.
+Panduan ini memakai **profil development baru** untuk mencoba UI dan alur Paduna Build dengan data
+proyek interior yang saling terhubung. Web berjalan di komputer lokal, sedangkan database tetap
+Neon yang sudah dikonfigurasi di `apps/api/.env`. Tidak perlu Docker atau mengganti database app.
 
-Untuk UAT production-style dari data kosong, gunakan
-[`financial_workflow_guide.md`](./financial_workflow_guide.md), bukan panduan ini.
+Mulai dari bagian 1 untuk menyiapkan data dan menyalakan server. Lakukan tur baca pada bagian 3–5
+sebelum mengubah data. Untuk rangkaian pembayaran dan rekonsiliasi, ikuti bagian 6–10 berurutan;
+transaksi dari satu langkah menjadi counterpart pada langkah berikutnya.
+
+Untuk UAT dari data operasional kosong, gunakan
+[`financial_workflow_guide.md`](./financial_workflow_guide.md).
+Detail kontrak dataset dan sumber fixture berada di [development-seed](./development-seed.md).
 
 ## Status verifikasi
 
-Diperiksa 6 September 2026 terhadap database demo hasil `db:demo:reset`, bukan
-database pengguna. Verifier membaca ulang saldo, budget, stock, approval, RAP,
-RAB, source linkage, nilai quotation, dan Change Order setelah seed selesai.
+Diperiksa 6 Oktober 2026 pada PostgreSQL disposable, bukan dengan mereset Neon pengguna.
+Seed/reset dan verifier lolos; 70 test unit/kontrak serta 5 test invariant PostgreSQL lolos.
+Login API, loader tujuh proyek, scoping PM, dan export delapan dokumen RAB juga diperiksa pada
+clone terpisah. API, web, dan mobile lolos typecheck. Langkah klik/mutasi di bawah merupakan
+walkthrough manual; jawaban AI baru bergantung pada provider yang dikonfigurasi.
 
-Dataset mempunyai dua kelompok yang sengaja dipisahkan:
+Baseline development:
 
-- **baseline UI** untuk melihat state lengkap tanpa melakukan setup manual;
-- **walkthrough berurutan** untuk menguji mutasi finance, material,
-  rekonsiliasi, dan closing lewat Server Action asli.
+| Data                              |       Jumlah |
+| --------------------------------- | -----------: |
+| Proyek / Project Budget           |        9 / 8 |
+| Dokumen RAP / baris material      |      8 / 231 |
+| Paket Tukang/Subcon               |           67 |
+| Dokumen RAB / bundle / detail     | 8 / 52 / 326 |
+| Vendor bill / expense canonical   |      54 / 90 |
+| Transaksi kas / stock movement    |     86 / 124 |
+| Item & Price Library              |           20 |
+| Notifikasi / percakapan contoh AI |       25 / 5 |
 
-Baseline UI mencakup Project Budget menunggu approval, RAP draft pada tahap
-Review, RAP locked, RAB awal draft dengan bundle dan hidden line, RAB approved,
-RAB revision void, serta Change Order R2 menunggu approval. Antrean approval
-langsung mempunyai contoh Lapangan normal, Lapangan kritis, Vendor, dan Stok.
+Tujuh proyek mempunyai RAP utama dengan 6–8 area kerja. Pakubuwono belum mempunyai RAP/RAB karena
+budget menunggu keputusan, Cipete belum mempunyai RAB karena RAP belum final, dan PIK dibatalkan
+sebelum transaksi. Kondisi kosong tersebut adalah skenario gating yang sengaja disediakan.
 
-Hasil verifier baseline: 4 rekening, 11 transaksi kas, 2 pasangan rekonsiliasi
-terbuka, 6 canonical budget, 5 dokumen RAP, 6 dokumen RAB, 6 row approval
-`PENDING` (4 eligible langsung di UI), 12 notifikasi (9 belum dibaca), dan 12
-baris inventory.
+Angka di panduan ini berlaku pada baseline baru sebelum transaksi manual. Harga adalah asumsi
+fixture development, bukan penawaran vendor aktual. Tanggal bergeser mengikuti hari seed dalam
+zona Asia/Jakarta; ID dokumen perencanaan dan nomor referensi tetap stabil.
 
-Rantai finance pada bagian 6–12 tetap memakai fixture lama. Saldo awalnya masih:
-BCA Rp655.000.000, Kas Budi Rp14.150.000, Mandiri Rp500.000.000, dan Kas Siti
-Rp9.500.000. Menambah skenario project tidak membuat cash transaction baru.
+## 1. Persiapan, seed Neon, dan menyalakan API + web
 
-Hal yang belum deterministik hanya jawaban model pada bagian Asisten AI. Akses,
-proposal, dan penjagaan duplikasi tetap diuji otomatis. Jalur klik perlu diuji
-manual dengan matriks skenario di bagian 3 dan 5.
+### 1.1 Periksa konfigurasi yang sudah ada
 
-### Menjalankan ulang rantainya
+Jalankan semua command dari root repo. Pada workspace ini:
 
-Suite ini mengonsumsi fixture-nya, jadi ia memeriksa baseline demo lebih dulu
-dan menyebut perintah yang harus dijalankan alih-alih gagal beruntun:
-
-```bash
-bun run db:demo:reset --confirm-reset
-cd apps/web && ATRIA_TEST_DATABASE_URL="<url database demo>" bun test lib/finance/demo-walkthrough.integration.test.ts
+```sh
+cd "/Volumes/DekoriaSSD/App Projects/Websites/atria-erp"
 ```
 
-Arahkan `ATRIA_TEST_DATABASE_URL` hanya ke database demo sekali pakai, tidak
-pernah ke database development.
+Periksa file berikut tanpa mengganti credentials yang sudah bekerja:
 
-## 1. Persiapan dan reset
+| File                                       | Yang perlu benar                                                                                                                 |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api/.env`                            | `DATABASE_URL` menunjuk Neon development yang akan diisi; `NODE_ENV=development`; auth settings dan `API_BRIDGE_SECRET` tersedia |
+| `apps/web/.env` atau `apps/web/.env.local` | `API_BRIDGE_SECRET` sama dengan API; `API_ORIGIN=http://localhost:3001`                                                          |
 
-Pastikan `DATABASE_URL` menunjuk database development/sandbox, kemudian jalankan:
+Backend credentials berada di API, tidak di `NEXT_PUBLIC_*`. Nilai env yang sudah diekspor di
+terminal mengalahkan file `.env`; jangan meninggalkan `DATABASE_URL` dari percobaan database lain.
+Schema Neon harus sudah mengikuti migration repo. Seed tidak melakukan migration/schema push.
 
-```bash
-bun run db:reset --dry-run
-bun run db:demo:reset --confirm-reset
-```
-
-Command kedua akan:
-
-1. mengosongkan tabel data;
-2. memasukkan connected demo seed;
-3. membuat CSV di `.atria-demo/`;
-4. menjalankan verifier read-only.
-
-Expected terminal terakhir:
-
-```text
-Connected demo seed verification passed.
-Sandbox demo siap digunakan.
-```
-
-Aktifkan switcher pada `.env`, lalu restart server:
+Jika ingin memakai Developer Account Switcher, set flag berikut **di env API dan web**, lalu
+restart server. Ini opsional; login biasa tetap bisa digunakan.
 
 ```env
-ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED="true"
+ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED=true
 ```
 
-```bash
-bun run dev
+### 1.2 Hentikan server, isi ulang data, lalu verifikasi
+
+**Reset berikut menghapus seluruh data pada database Neon development yang dipilih oleh
+`DATABASE_URL`, termasuk akun lama, lalu menggantinya dengan dataset development baru.**
+Periksa target host/database yang dicetak command dan gunakan hanya database yang memang ingin
+dikembalikan ke fixture.
+
+```sh
+bun run dev:stop
+bun install
+bun run db:dev:reset --confirm-reset
+bun run db:dev:verify
 ```
 
-Login awal:
+`bun install` cukup saat dependencies belum terpasang atau telah berubah. `dev:stop` menghentikan
+proses development checkout ini agar tidak membaca/menulis data ketika reset berlangsung.
+
+Reset mempertahankan schema dan metadata migration, mengisi data dalam satu transaksi,
+menulis CSV ke `apps/api/.atria-demo/`, lalu memverifikasi relasi dan perhitungannya.
+Command menolak `NODE_ENV=production`. Kegagalan invariant sebelum commit membatalkan insert.
+
+Expected output sukses memuat jumlah baseline pada tabel di atas dan:
 
 ```text
-ronald@dekoria.com
-password123
+Database development siap; koneksi RAP, RAB, keuangan, dan stok sudah diverifikasi.
 ```
 
-Jika switcher tidak tersedia, gunakan akun fallback pada
-[`SEED_DATA.md`](../04-data/SEED_DATA.md#akun-demo) dan login ulang setiap berganti role.
+Command verify mencetak jumlah dataset dan:
+
+```text
+Data development sudah diverifikasi. Tidak ada data yang diubah.
+```
+
+Jika database migrated benar-benar kosong, gunakan **seed biasa sebagai pengganti reset**:
+
+```sh
+bun run db:dev:seed
+bun run db:dev:verify
+```
+
+Seed biasa menolak database berisi data. Jangan memakai `db:demo:reset` untuk dataset baru ini;
+command tersebut membuat baseline demo lama yang lebih kecil.
+
+### 1.3 Nyalakan kedua server dalam satu terminal
+
+Setelah seed/verifikasi sukses:
+
+```sh
+bun run dev:web-api
+```
+
+Biarkan terminal ini berjalan. Preset menyiapkan deklarasi API, menjalankan API sekali, dan
+menjalankan web dengan origin yang sesuai. Ia tetap memakai Neon dari env backend dan tidak
+melakukan seed/reset otomatis.
+
+| Layanan                        | Alamat default                                                 |
+| ------------------------------ | -------------------------------------------------------------- |
+| Web app yang dibuka di browser | <http://localhost:3003>                                        |
+| API                            | <http://localhost:3001>                                        |
+| API health / koneksi database  | <http://localhost:3001/health> / <http://localhost:3001/ready> |
+
+Tidak perlu menjalankan `bun run dev:api` atau `bun run dev` lagi ketika preset ini sudah aktif.
+Untuk melihat health dari terminal lain:
+
+```sh
+curl --fail http://localhost:3001/health
+curl --fail http://localhost:3001/ready
+```
+
+`/ready` memeriksa koneksi database. Jika port terpakai, preset berhenti dengan pesan konflik;
+lihat bagian 15. Ctrl-C menghentikan API dan web bersama. `bun run dev:stop` juga dapat dipakai
+untuk menghentikan preset dari terminal lain.
+
+### 1.4 Login dan mulai tur
+
+Buka <http://localhost:3003>, lalu login sebagai Owner:
+
+```text
+Email: ronald@dekoria.com
+Password: password123
+```
+
+Setelah reset, session akun sebelumnya tidak berlaku; muat ulang dan login kembali. Seluruh akun
+seed menggunakan password `password123`:
+
+| Peran         | Nama          | Email                |
+| ------------- | ------------- | -------------------- |
+| Owner         | Ronald Wijaya | `ronald@dekoria.com` |
+| Finance Admin | Lisa Permata  | `lisa@dekoria.com`   |
+| PM            | Budi Santoso  | `budi@dekoria.com`   |
+| PM            | Siti Aminah   | `siti@dekoria.com`   |
+| Purchasing    | Agus Pratama  | `agus@dekoria.com`   |
+
+Mulai sebagai Ronald untuk melihat semua proyek dan ringkasan keuangan. Berganti akun pada
+bagian 2 untuk memeriksa hak akses dan data masing-masing peran.
 
 ## 2. Cara mengganti role
 
@@ -112,7 +184,7 @@ Sebagai Owner atau Finance, baca:
 
 - saldo BCA Operasional: **Rp655.000.000**;
 - Kas Kecil PM Budi: **Rp14.150.000**;
-- Mandiri Giro Utama: **Rp500.000.000**;
+- Mandiri Giro Utama: **Rp394.955.000**;
 - Kas Kecil PM Siti: **Rp9.500.000**;
 - indikator transaksi yang belum rekonsiliasi: **2**.
 
@@ -128,7 +200,11 @@ Gunakan tab/filter untuk menemukan:
 - expense Cipete Rp7.500.000 dan Rp18.000.000 yang sudah Verified dan langsung
   terlihat pada antrean Owner;
 - payment vendor Rp4.000.000 dan Rp10.000.000 berstatus terjadwal;
-- dua vendor bill paid sebagai histori.
+- histori vendor bill paid Menteng, Senopati, dan BSD; total dataset mempunyai 54 bill.
+
+Gunakan pencarian dan filter status/proyek untuk membedakan pekerjaan terbuka dari histori
+lunas. Paket Tukang/Subcon Senopati dan BSD mempunyai expense dengan link ke scope pekerjaan;
+expense pemakaian stok mempunyai consumed cost tanpa cash-out baru.
 
 ### 3.3 Projects — `/projects`
 
@@ -140,8 +216,8 @@ Gunakan tab/filter untuk menemukan:
 | Cipete House         | Active, RAP draft tahap Review                     | Finalisasi internal plan lalu generate RAB       |
 | Pakubuwono Apartment | Draft, Project Budget pending approval             | Approve/reject budget dan downstream gating      |
 | Senopati Office      | Active, seluruh kewajiban selesai                  | Project closing                                  |
-| Kemang Townhouse     | On Hold                                            | Filter lifecycle                                 |
-| BSD Boutique Cafe    | Completed                                          | Histori project selesai                          |
+| Kemang Townhouse     | On Hold, RAP final, RAB draft Rp260 juta           | Rencana siap lanjut dan filter lifecycle         |
+| BSD Boutique Cafe    | Completed, kontrak Rp380 juta dan pembayaran lunas | Histori biaya, stock, payment, dan margin akhir  |
 | PIK Shophouse        | Cancelled                                          | Histori pembatalan project                       |
 
 Sebagai PM Budi hanya Menteng, Brawijaya, Cipete, Senopati, dan PIK yang boleh
@@ -161,13 +237,31 @@ Expense Menteng Rp5.000.000 dan Sudirman Rp6.200.000 belum tampil pada baseline
 karena masih `SUBMITTED`. Keduanya baru masuk antrean sesudah Lisa melakukan
 verifikasi pada langkah 6.2 dan 6.3. Ini perilaku yang benar, bukan data hilang.
 
-### 3.4 Reconciliation — `/reconciliation`
+### 3.5 Reconciliation — `/reconciliation`
 
 - **Mutasi bank**: dua row belum cocok.
-- **Catatan Atria**: dua transaksi perlu tindakan.
-- **Riwayat**: sembilan pasangan selesai.
+- **Catatan Paduna Build**: dua transaksi perlu tindakan.
+- **Riwayat**: 84 pasangan selesai, termasuk histori Senopati dan BSD.
 
 Setiap row awal yang belum cocok mempunyai tepat satu counterpart.
+
+### 3.6 Materials, Settings, notifikasi, dan draft
+
+- Buka `/materials`: cari material, pindah lokasi, bandingkan stok fisik/reservasi/tersedia,
+  lalu buka histori penerimaan, transfer, penggunaan dan stock count.
+- Buka `/settings/library`: 20 template memiliki unit, harga internal/jual, vendor/context dan
+  rincian komponen biaya. Buka `/settings/materials` serta `/settings/categories` untuk master
+  material dan lima kategori expense.
+- Buka `/notifications` sebagai Ronald, Lisa, kedua PM, dan Agus: tiap peran mempunyai notifikasi
+  yang sesuai pekerjaannya. Coba status dibaca/belum dibaca dan tujuan tautannya.
+- Sebagai PM, buka form expense/vendor bill yang mempunyai draft tersimpan; periksa pemulihan
+  isian dan scope proyek sebelum mengirim. Seed tidak otomatis mengirim draft.
+- Buka histori AI sebagai akun yang mempunyai izin asisten; contoh percakapan sudah tersedia
+  tanpa harus mengirim pertanyaan baru. Bagian 12A menjelaskan provider untuk chat baru.
+
+Periksa mobile 320/360/390/430 px dan desktop 1024/1280/1440 px. Utamakan angka uang yang tidak
+terpotong, filter/pencarian, isi detail/sheet, tombol keyboard/touch, dan posisi baca saat berganti
+tab. Data yang hanya dibaca mempertahankan seluruh state awal untuk langkah berikutnya.
 
 ## 4. Settings dan master data
 
@@ -186,6 +280,10 @@ Sebagai Owner, buka `/settings` dan periksa:
 Buka Settings Material dan Item & Price Library. Material, vendor, unit, dan harga di sana menjadi
 referensi RAP serta form, tetapi mengubah default tidak menulis ulang budget project yang sudah ada.
 
+Alokasi proyek pada profil development sudah disesuaikan dengan RAP dan paket tiap proyek.
+Karena itu persentase pada budget Menteng/Sudirman tidak harus sama dengan default Settings.
+Cipete sengaja mempertahankan Subcon Rp0 untuk mengetes risiko dan approval biaya tanpa alokasi.
+
 ## 5. Project Budget, RAP, dan RAB
 
 ### 5.1 Membaca Menteng
@@ -197,8 +295,9 @@ Sebagai Owner, buka **Menteng Villa**:
 - target gross Rp80.000.000;
 - RAP material revision 1 sudah locked;
 - RAB client Rp800.000.000 sudah approved.
-- histori RAB mempunyai R2 berstatus **Dibatalkan** karena mini bar dibatalkan
-  klien; Change Order terkait juga `CANCELLED`.
+- 6 area, 26 baris material RAP, dan 9 paket Tukang/Subcon;
+- histori RAB mempunyai R2 berstatus **Dibatalkan**: baseline Rp800 juta ditambah opsi mini bar
+  Rp90 juta menjadi Rp890 juta; Change Order juga dibatalkan dan tidak mengubah kontrak aktif.
 
 Di budget category, bedakan:
 
@@ -236,7 +335,9 @@ State awal:
 
 - budget Approved: Rp420.000.000 dengan Internal Budget Rp378.000.000;
 - RAP R1 `DRAFT`, `setupStage=REVIEW`;
-- tiga item Material, satu paket Tukang, dan satu paket Subcon;
+- 6 area, 27 baris Material, 6 paket Tukang, dan 3 paket Subcon;
+- planned Material Rp174.260.000, Tukang Rp68.000.000, Subcon Rp64.940.000;
+- alokasi budget Subcon masih Rp0: periksa risiko usulan ini sebelum finalisasi;
 - belum mempunyai RAB.
 
 Di tab RAP, pindah antar tahap 1–4 untuk memeriksa state lengkap. Pada Review,
@@ -257,24 +358,26 @@ RAB tanpa mengubah skenario Menteng dan Sudirman.
 
 State awal:
 
-- budget Approved, RAP R1 locked dengan empat material;
-- paket Tukang Rp95.000.000 dan Subcon Rp75.000.000;
+- budget Approved, RAP R1 locked dengan 6 area dan 28 baris material;
+- 6 paket Tukang berbiaya internal total Rp120.850.000 dan 3 paket Subcon Rp114.150.000;
 - RAB R1 `DRAFT` dengan ketiga source type: Material, Category Plan, dan Manual;
-- satu bundle **Paket built-in joinery** Rp610.000.000;
-- satu hidden line **Provisional sum dekorasi** Rp60.000.000;
+- 6 bundle sesuai area kerja dengan child Material dan Tukang;
+- pekerjaan spesialis Subcon, loose furniture, dan proteksi/mobilisasi ditampilkan terpisah;
+- hidden line **Opsi dekorasi tambahan** Rp15.000.000, tidak termasuk total aktif;
 - nilai visible RAB tepat **Rp950.000.000**.
 
 Uji edit label/harga, buka detail bundle, tampilkan/sembunyikan line, tambah item
 manual, dan buat bundle baru. Hidden line tidak boleh ikut total. Pilih
 **Tinjau & Setujui RAB** untuk menguji approval awal.
 
-Expected setelah approval:
+Expected setelah approval **jika nilai total belum Anda ubah**:
 
 - RAB menjadi Approved dan project value tetap Rp950.000.000;
+- bila harga/line yang Anda edit mengubah total, nilai approved mengikuti total visible terbaru;
 - RAP serta package yang dipakai menjadi locked;
 - perubahan berikutnya hanya dapat dilakukan melalui revision + Change Order.
 
-Reset demo untuk mengembalikan RAB ini ke Draft.
+Reset development dengan `bun run db:dev:reset --confirm-reset` untuk mengembalikan RAB ini ke Draft.
 
 ### 5.5 Sudirman — Change Order R2 menunggu approval
 
@@ -284,14 +387,18 @@ State awal:
 
 - RAB R1 Approved Rp1.200.000.000;
 - RAP R1 locked sebagai baseline;
-- RAP R2 Draft dan RAB R2 Draft sebagai revisi aktif;
+- RAP R2 sudah Locked/Complete agar sumber internal siap untuk keputusan scope;
+- RAB R2 masih Draft sebagai revisi aktif;
+- setiap RAP R1/R2 memiliki 8 area dan 36 baris material; paket sumber R2 mencakup
+  9 paket Tukang dan 3 paket Subcon;
 - revisi visible Rp1.335.000.000, delta **+Rp135.000.000**;
 - Change Order sudah mempunyai bukti konfirmasi klien dan berstatus
   `PENDING_APPROVAL`;
 - pembuatnya Lisa/Finance, sehingga Ronald/Owner memenuhi maker-checker.
 
 Buka ringkasan revisi dan histori Change Order. Periksa reference
-`WA-CLIENT-SUD-CO-02 / 20-07-2026`, lalu setujui sebagai Owner.
+`WA-CLIENT-SUD-CO-02 / 20-07-2026` dan tanggal konfirmasi pada histori, lalu setujui sebagai Owner.
+Nomor referensi adalah fixture stabil; tanggal record mengikuti anchor seed.
 
 Expected:
 
@@ -349,7 +456,7 @@ Expected:
 - Material pending/actual/paid tersinkron;
 - ledger OUTFLOW Rp5.000.000 menunggu rekonsiliasi.
 
-### 6.3 Expense Rp6.200.000 — over-budget Subcon
+### 6.3 Expense Rp6.200.000 — approval Subcon berdasarkan nominal
 
 1. Sebagai Lisa, verifikasi **Pekerjaan perbaikan waterproofing mendesak** milik Sudirman.
 2. Sebagai Owner, setujui dari `/approvals`.
@@ -357,10 +464,12 @@ Expected:
 
 Expected:
 
-- approval tetap wajib karena nominal > Rp5 juta dan category Subcon seed beralokasi Rp0;
-- saldo Mandiri Rp500.000.000 → Rp493.800.000;
+- approval wajib karena nominal Rp6,2 juta melewati threshold Owner Rp5 juta;
+- alokasi Subcon Sudirman pada baseline development adalah Rp194.953.500, sehingga expense ini
+  bukan contoh Subcon tanpa alokasi; gunakan expense Cipete Rp18 juta untuk contoh kritis itu;
+- saldo Mandiri Rp394.955.000 → Rp388.755.000;
 - ledger OUTFLOW Rp6.200.000 belum reconciled;
-- Sudirman menampilkan risk category, bukan menyembunyikannya sebagai material issue.
+- cost Subcon dan paid amount kategori terbarui; bandingkan risk dengan alokasi proyek tersebut.
 
 ## 7. Vendor bill dan partial payment
 
@@ -428,7 +537,7 @@ Expected:
 
 ### 10.1 Test exception pada pasangan seed
 
-1. Buka `/reconciliation` → **Catatan Atria**.
+1. Buka `/reconciliation` → **Catatan Paduna Build**.
 2. Pilih transaksi Rp850.000.
 3. Tekan **Catat pengecualian** dan isi alasan minimal 10 karakter, misalnya
    `Menunggu konfirmasi tanggal dari kasir proyek.`
@@ -440,7 +549,7 @@ exception. Tekan lagi **Hapus pengecualian** agar transaksi kembali perlu tindak
 
 Untuk Rp850.000 dan Rp2.500.000:
 
-1. pilih Catatan Atria;
+1. pilih Catatan Paduna Build;
 2. pilih satu saran Mutasi Bank yang nominal/rekening/arahnya sama;
 3. tekan **Cocokkan**.
 
@@ -452,7 +561,7 @@ nama pemeriksa. Saldo bank tidak berubah.
 Setelah langkah expense, vendor, invoice, dan transfer selesai, impor tiga file berikut melalui
 tab **Mutasi bank** → **Impor CSV**:
 
-| File `.atria-demo/`            | Pilih rekening     | Counterpart                     |
+| File `apps/api/.atria-demo/`   | Pilih rekening     | Counterpart                     |
 | ------------------------------ | ------------------ | ------------------------------- |
 | `bca-operasional-<anchor>.csv` | BCA Operasional    | Client, vendor, transfer keluar |
 | `kas-pm-budi-<anchor>.csv`     | Kas Kecil PM Budi  | Transfer masuk dan dua expense  |
@@ -470,7 +579,7 @@ Jika file yang sama diimpor ulang, fingerprint duplicate harus dilewati dan sald
 3. Setujui hanya setelah maker dan approver berbeda.
 
 Expected: batch posted, setiap item mempunyai stock movement IN, inventory location bertambah, dan
-audit mencatat approver.
+audit mencatat approver. Buka lokasi Workshop Cikupa untuk membandingkan stok sebelum/sesudah.
 
 ### 11.2 Goods Receipt
 
@@ -478,8 +587,11 @@ Sebagai Agus/Purchasing, buka Materials. Histori GRN menunjukkan hubungan:
 
 `Vendor Bill → Goods Receipt → Goods Receipt Item → Stock Movement → Material Inventory`.
 
-Untuk mencoba entry baru, gunakan **Tinjau** lalu **Posting**. Quantity yang diposting harus muncul
-sebagai movement IN; posting ulang record yang sama harus ditolak.
+Development juga menyediakan draft **DEV-GRN-DRAFT-1** (Menteng) dan **DEV-GRN-DRAFT-2** (Sudirman).
+Buka draft sebagai Agus, periksa RAP, lokasi, quantity shortage dan unit cost, lalu gunakan
+**Tinjau → Posting**. Kedua draft ini belum ditautkan ke vendor bill; hubungan tagihan dapat
+diperiksa pada histori receipt Senopati/BSD. Quantity yang diterima muncul sebagai movement IN; posting ulang record yang
+sama harus ditolak. Histori Senopati/BSD sudah Posted dan tidak perlu diposting ulang.
 
 ### 11.3 Reserve, use, return, waste
 
@@ -497,10 +609,15 @@ Setiap form memakai **Tinjau** lalu **Catat**. Operasi stock tidak membuat cash 
 - Transfer material memakai **Tinjau → Posting** dan menghasilkan movement OUT asal serta IN tujuan.
   Material harus **sudah mempunyai baris inventory di kedua lokasi**; tombolnya
   dinonaktifkan dengan alasan "Inventory material belum tersedia di lokasi sumber
-  atau tujuan" bila belum. Pada seed demo hanya dua pasangan yang memenuhi syarat:
-  Multipleks 18mm (Gudang Utama ↔ Gudang Transit Menteng) dan Cabinet Hardware Set
-  Soft-close (Gudang Utama ↔ Workshop Cikupa).
-- Stock count memakai **Tinjau → Kirim**. Hanya variance non-zero yang menghasilkan adjustment,
+  atau tujuan" bila belum. Contoh yang mudah dipakai: Multipleks 18mm
+  (Gudang Utama ↔ Gudang Transit Menteng) dan Cabinet Hardware Set Soft-close
+  (Gudang Utama ↔ Workshop Cikupa). Dataset juga mempunyai lokasi Site BSD Boutique Cafe dan
+  Site Senopati Executive Suite dengan stok akhir nol; jangan mengubah histori proyek selesai
+  bila masih ingin memeriksa baseline closing/margin.
+- Buka stock count draft **DEV-STC-GUDANG-DRAFT** di Gudang Utama: 8 baris dimulai dengan
+  counted quantity sama dengan system quantity. Ubah satu hasil hitung fisik untuk membuat
+  variance, isi catatan, lalu gunakan **Tinjau → Kirim**.
+- Hanya variance non-zero yang menghasilkan adjustment,
   dan **penghitungnya sendiri tidak boleh menyetujui** — approval menuntut user lain
   (Owner dapat memakai emergency override dengan alasan).
 - Emergency adjustment wajib mempunyai alasan audit dan memakai **Tinjau → Posting**.
@@ -522,10 +639,15 @@ Kembali ke `/ledger` dan Menteng/Sudirman. Periksa bahwa:
 
 1. Sebagai Owner, buka Senopati → Overview/Profitability.
 2. Tekan **Periksa kesiapan closing**.
-3. Expected blocker kosong, dengan invoice Rp500 juta sudah paid dan reconciled, satu RAB approved,
-   approved canonical budget, tanpa bill/expense/reservation terbuka.
-4. Isi catatan minimal 10 karakter, misalnya `Seluruh dokumen final sudah diperiksa.`
-5. Tekan action penyelesaian project.
+3. Pada baseline baru, expected blocker kosong: invoice Rp500 juta sudah paid/reconciled,
+   satu RAB approved, budget approved, dan tanpa bill/expense/reservation terbuka.
+   Histori tetap lengkap: 25 tagihan material lunas, 25 receipt Posted, 25 penggunaan material,
+   9 expense paket Tukang/Subcon lunas, serta 2 expense Operasional/Lain-lain lunas.
+4. Bandingkan biaya aktual **Rp260.395.000** dan margin aktual/cash position proyek
+   **Rp239.605.000**. Saldo rekening Mandiri adalah saldo gabungan beberapa proyek, bukan cash
+   position Senopati saja.
+5. Isi catatan minimal 10 karakter, misalnya `Seluruh dokumen final sudah diperiksa.`
+6. Tekan action penyelesaian project.
 
 Expected: status Active → Completed, final profitability snapshot dibuat, end date diisi, dan audit
 `COMPLETE_PROJECT` tercatat.
@@ -533,15 +655,28 @@ Expected: status Active → Completed, final profitability snapshot dibuat, end 
 Sebagai negative test, buka Menteng dan tekan **Periksa kesiapan closing**. Menteng harus tetap
 blocked karena masih mempunyai invoice/vendor/payment/reservation yang belum final.
 
+Buka BSD sebagai referensi proyek yang sudah Completed: kontrak Rp380 juta, seluruh termin
+30%/45%/25% lunas, biaya aktual **Rp224.650.000**, dan margin akhir **Rp155.350.000**.
+Telusuri satu baris RAP ke tagihan, pembayaran, receipt, pemakaian stok, dan expense kategorinya.
+Penggunaan material mencatat input produksi termasuk buffer potongan; kas keluar berasal dari
+pembayaran vendor dan tidak dibuat lagi ketika stok dipakai.
+
 ## 12A. Asisten AI
 
-Prasyarat: `DEEPSEEK_API_KEY` terisi di `.env` (lihat `.env.example`). Tanpa key mana pun, tombol
-asisten tetap muncul untuk peran yang berhak tetapi setiap pertanyaan gagal dijawab.
+Profil development membuat **5 percakapan contoh**, masing-masing terkait pengguna seed.
+Buka histori untuk memeriksa list percakapan, message bubble, judul, dan pemulihan percakapan.
+Pesan tersebut adalah snapshot sintetis yang ditulis fixture; membacanya tidak membutuhkan key
+atau panggilan provider dan tidak membuat transaksi.
 
-Seed demo tidak membuat percakapan apa pun — percakapan adalah data pengguna, bukan fixture. Setelah
-reset, chat dimulai kosong dan riwayat terbentuk dari yang Anda tanyakan sendiri.
+Untuk mengirim **pertanyaan baru**, gunakan konfigurasi provider pada `apps/api/.env` sesuai
+`apps/api/.env.example`: misalnya NINEROUTER beserta key/base URL jika itu provider aktif, atau
+GEMINI/DEEPSEEK sesuai konfigurasi yang dipilih. Provider yang tidak dikonfigurasi tidak dapat
+menghasilkan jawaban baru; ini berbeda dari histori seed yang sudah bisa dibaca.
 
-Buka tombol chat di header (kiri atas). Tombol hanya muncul untuk Owner, Finance Admin, dan PM.
+Tombol asisten mengikuti permission `use:ai_chat`. Owner, Finance, PM, dan Purchasing pada role
+saat ini dapat mengaksesnya, dengan data/tool sesuai izin dan project scope masing-masing.
+Gunakan Owner/Finance untuk pengujian finance, PM untuk proyeknya sendiri, dan Agus untuk
+pertanyaan material yang diizinkan.
 
 ### 12A.1 Jawaban berbasis data
 
@@ -572,8 +707,8 @@ konfirmasi. Ini penjaga terhadap dokumen ganda.
 
 | Test                                                   | Expected                                        |
 | ------------------------------------------------------ | ----------------------------------------------- |
-| `db:seed` dijalankan lagi pada DB berisi data          | Ditolak tanpa delete                            |
-| Demo reset tanpa `--confirm-reset`                     | Ditolak                                         |
+| `db:dev:seed` dijalankan lagi pada DB berisi data      | Ditolak tanpa delete                            |
+| Development reset tanpa `--confirm-reset`              | Ditolak                                         |
 | Payment invoice > outstanding                          | Ditolak, saldo tidak berubah                    |
 | Vendor payment Rp10 juta sebelum Owner approval        | Ditolak                                         |
 | PM membuka project yang tidak di-assign                | Forbidden/tidak terlihat                        |
@@ -584,7 +719,7 @@ konfirmasi. Ini penjaga terhadap dokumen ganda.
 | Stock use melebihi available stock                     | Ditolak                                         |
 | Closing Menteng sebelum semua blocker selesai          | Ditolak dan blocker dijelaskan                  |
 | PM bertanya ke asisten soal proyek yang bukan miliknya | Ditolak/dibatasi tanpa membocorkan data project |
-| Purchasing atau Sales membuka tombol asisten AI        | Tombol tidak muncul                             |
+| Akun tanpa `use:ai_chat` membuka asisten               | Tombol tidak muncul / akses ditolak             |
 | Menekan Konfirmasi dua kali pada satu kartu usulan     | Hanya satu pengajuan tercatat                   |
 
 Baris terakhir dahulu hanya benar untuk penekanan **berurutan**. Dua permintaan
@@ -595,18 +730,62 @@ diserialkan oleh kunci baris percakapan, dan kasusnya dijaga regression test.
 
 ## 14. Mengulang atau mengaudit hasil
 
-Untuk kembali persis ke baseline:
+Jika ingin mengembalikan seluruh skenario ke baseline baru, hentikan server dahulu. Reset
+menghapus perubahan manual di database development terpilih.
 
-```bash
-bun run db:demo:reset --confirm-reset
+```sh
+bun run dev:stop
+bun run db:dev:reset --confirm-reset
+bun run db:dev:verify
+bun run dev:web-api
 ```
 
-Untuk membaca kesehatan database saat ini tanpa mengubahnya:
+Untuk pemeriksaan read-only saja, jalankan dari terminal lain:
 
-```bash
-bun run db:demo:verify
+```sh
+bun run db:dev:verify
 ```
 
-Verifier baseline dapat gagal setelah walkthrough yang belum selesai, karena transaksi baru belum
-diimpor/dicocokkan atau status sudah bergerak dari state awal. Selesaikan urutan walkthrough atau
-reset kembali. Jangan melakukan repair langsung lewat SQL.
+Verifier menguji baseline development dan relasi/perhitungan datanya. Jalankan segera setelah seed
+sebelum mulai mutasi. Snapshot, jumlah item, referensi dan state tertentu dapat berubah setelah
+Anda mencoba form; kegagalan setelah walkthrough tidak otomatis berarti seed awal salah.
+
+Gunakan halaman detail, ledger, category budget, stock movement dan audit untuk membandingkan
+perubahan setelah tindakan manual. Selesaikan rekonsiliasi dari bagian 10 atau reset untuk
+mengulang dari kondisi awal. Jangan melakukan repair langsung lewat SQL.
+
+### Baseline demo lama untuk suite otomatis lama
+
+`db:demo:*` tetap tersedia untuk connected demo lama. Suite walkthrough finance lama menyimpan
+expectation saldo/record profil demo, sehingga tidak dipakai pada profil development baru.
+Jika menjalankan suite tersebut, gunakan database demo disposable yang terpisah dari Neon dev:
+
+```sh
+# Gunakan URL database demo disposable yang terpisah dari Neon development.
+DATABASE_URL="<URL demo disposable>" bun run db:demo:reset --confirm-reset
+
+# Subshell menjaga terminal tetap berada di root setelah test selesai.
+(
+  cd apps/api && ATRIA_TEST_DATABASE_URL="<URL demo disposable yang sama>" \
+    bun test src/backend/lib/finance/demo-walkthrough.integration.test.ts
+)
+```
+
+Untuk eksplorasi UI pada panduan ini, tetap gunakan `db:dev:*`.
+
+## 15. Jika belum bisa masuk atau data belum terlihat
+
+| Gejala                                              | Periksa / tindakan                                                                                                                                                                                  |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEMO_DATABASE_NOT_EMPTY` ketika seed biasa         | Pilih reset development terkonfirmasi jika data lama memang ingin diganti; jangan mengulang seed biasa pada DB berisi data                                                                          |
+| Reset ditolak karena production                     | Gunakan env development yang benar; command seed development tidak berjalan pada `NODE_ENV=production`                                                                                              |
+| `relation ... does not exist` atau kolom belum ada  | Schema belum mengikuti migration repo; perbarui schema pada Neon development terlebih dahulu, menggunakan direct connection untuk migration                                                         |
+| Web menampilkan data lama                           | Pastikan seed dan API memakai `DATABASE_URL` yang sama; periksa env yang diekspor di terminal, restart preset, muat ulang dan login kembali                                                         |
+| Login/loader gagal karena bridge atau transport     | Periksa API hidup di 3001 dan `API_BRIDGE_SECRET` sama pada API/web, lalu restart preset                                                                                                            |
+| Port 3001 atau 3003 terpakai                        | Jalankan `bun run dev:stop` untuk checkout ini; listener aplikasi lain tidak dihentikan otomatis. Jika web perlu port lain: `ATRIA_DEV_WEB_PORT=3004 bun run dev:web-api`, lalu buka localhost:3004 |
+| Switcher tidak muncul                               | Aktifkan flag di env API **dan** web, lalu restart; login akun biasa tetap dapat dipakai                                                                                                            |
+| RAP/RAB Pakubuwono kosong atau RAB Cipete belum ada | Ini state gating yang disengaja; lakukan bagian 5.2/5.3, bukan mencari data yang hilang                                                                                                             |
+| Chat lama terbaca tetapi pertanyaan baru gagal      | Histori seed tidak memanggil provider; pertanyaan baru membutuhkan provider/key aktif                                                                                                               |
+
+Ringkasan port/preset ada di [development-presets](./development-presets.md); konfigurasi backend
+ada di [mobile-api-development](./mobile-api-development.md).

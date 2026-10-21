@@ -2,7 +2,7 @@
 
 ## 1. Product Overview
 
-Atria ERP is Dekoria's internal Project Finance & Material Control System for interior design and build work. The app upgrades the current workbook-informed Project Budget workflow into a structured system for project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and owner-readable AI summaries.
+Paduna Build is Dekoria's internal Project Finance & Material Control System for interior design and build work. The app upgrades the current workbook-informed Project Budget workflow into a structured system for project budget control, category expense tracking, remaining budget, gross/margin visibility, RAP material planning, inventory visibility, vendor bills, stock movement, project profitability, and owner-readable AI summaries.
 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.**
 
@@ -80,7 +80,7 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Expense: actual money spent by project and category. Material/RAP/stock links are allowed only for Material category expenses. Tukang/Subcon expenses may optionally link to their package plan. Operasional and Lain-lain stay simple.
 - Vendor Bill: payable or purchase record linked to vendor/project/material when relevant.
 - Dashboard: owner-readable summary, not a complex accounting dashboard.
-- Rekonsiliasi: finance control that matches one Atria cash record with one bank mutation. A confirmed pair remains visible in history. A documented exception remains unmatched and stores a reason, reviewer, timestamp, and audit evidence.
+- Rekonsiliasi: finance control that matches one Paduna Build cash record with one bank mutation. A confirmed pair remains visible in history. A documented exception remains unmatched and stores a reason, reviewer, timestamp, and audit evidence.
 
 ## 8. RAP / RAB Rules
 
@@ -116,6 +116,6 @@ Existing project management, users/roles, dashboard, media handling, design/proj
 - Material Inventory shows name, category, spec, brand/code/color, unit, current stock, reserved stock, available stock, minimum/buffer, average cost, last purchase price, location, and status.
 - Expense Tracker supports project, category, description, vendor, amount, quantity, unit cost, status, payment date, receipt/proof, linked material, linked RAP item, and linked stock movement.
 - AI CFO/financial briefing is deferred until the core ERP dashboard and operational flows are stable. The current Dashboard contains no AI briefing entry point or generated analysis.
-- Rekonsiliasi shows **Mutasi bank**, **Catatan Atria**, and **Riwayat** as peer views. Open cash records expose age and exception status; every history row opens the exact Atria/bank pair and reviewer evidence.
-- Bank-statement CSV import never changes balance, skips duplicate fingerprints, and only creates match suggestions. Users explicitly confirm every match. Canonical Atria CSV is supported; raw bank-specific formats require a compatible adapter or manual mapping.
+- Rekonsiliasi shows **Mutasi bank**, **Catatan Paduna Build**, and **Riwayat** as peer views. Open cash records expose age and exception status; every history row opens the exact Paduna Build/bank pair and reviewer evidence.
+- Bank-statement CSV import never changes balance, skips duplicate fingerprints, and only creates match suggestions. Users explicitly confirm every match. Canonical Paduna Build CSV is supported; raw bank-specific formats require a compatible adapter or manual mapping.
 - Project closing is blocked while a project cash transaction is neither reconciled nor documented as an exception. Documented exceptions remain visible in the closing review.

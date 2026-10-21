@@ -1,0 +1,38 @@
+# Redesign Dashboard Desktop Atria
+
+Confirmed implementation contract: redesign all six /ledger tabs at desktop >=1024px, content only. Preserve mobile/native fallback, global chrome, existing snapshot/mobile DTO, mutation semantics and workflow state owners. Atria light identity: Manrope, cool canvas, ink/terracotta, compact 16px panels and native HeroUI tables (20px); independent section stacks with 16px gaps.
+
+Ringkasan: compact header/tabs, one four-metric band (project value/internal budget/consumed/remaining with paid/usage/margin context), monthly cashflow chart beside category usage, five priority projects, then compact operational attention/activity. Period only changes chart. Empty, unavailable and zero are distinct states.
+
+All operational desktop tabs use complete scoped reads and honest total/filter/sort-before-pagination (10 default, 25/50 options). Budget includes all active project budgets; approvals retain existing detail/decision controllers; due documents and material issues retain navigation; accounts reuse the complete existing list and stable bank-account sheet/draft owner. No new bulk actions.
+
+Add independent API reads getFinanceDashboardDesktopTabData and getFinanceDashboardCashFlowTrend, shared DTO/Zod contracts and explicit compatibility operations with typed web facades. Session/permissions/global scope/instance tenant remain server authority. No database migration or development reset.
+
+Cashflow uses six/twelve Jakarta calendar months to generatedAt, current month partial, future postings excluded, effective ledger createdAt. Include archived-account and reconciled/unreconciled history. Exclude opening balances, transfer legs, correction/cash_adjustment; flag ambiguous legacy markers and disclose excluded counts/values. Use exact cents and legacy direction helpers plus time-bounded Drizzle aggregation, no raw SQL or five-row history as totals. No budget/margin formula changes.
+
+Shared UI first: extend GroupedSurface/PanelSection with opt-in desktopPanel, compose existing public controls/table/money/tooltip/overlays, add one accessible SVG grouped-bar chart primitive with textual/table equivalent. Feature consumers never import HeroUI directly.
+
+Acceptance: six/twelve/date-boundary/cents/classification tests; RBAC/tenant/full-list paging/filter/sort tests; existing decision/navigation/state invariants; desktop 1024/1280/1440 and mobile 320/360/390/430 including resize/drafts/focus/reduced motion. Use populated/empty synthetic fixtures without mutating development data. Run workspace checks, build, scoped styles/token/format checks; update design/stories/brief. Complete only when all six tabs pass acceptance and the owner can read budget/category/margin position within 30 seconds.
+
+## Implementation notes
+
+- Shared canonical project-budget projection was extracted without changing formulas; desktop complete reads reuse it and existing approval/material/due-date projections. Snapshot/mobile signatures and limits remain unchanged.
+- Desktop row reads load only the relevant source family, use instance tenant predicates and domain gates, and paginate after validated filtering/sorting. Cashflow performs calendar-bounded Drizzle aggregates with exact cents; no row history truncation or raw SQL.
+- New backend operations have declaration-only typed web facades. A read-only web GET adapter transports desktop DTOs via SuperJSON, so late read responses cannot apply Server Action Flight updates to the user's current URL. Request-key hooks discard stale responses and derive loading without synchronous effect updates.
+- Public surfaces opt into desktopPanel; chart and story use shared money/tooltip behavior. Existing form/dismissal owners remain stable.
+- New native radius token is generated alongside existing tokens; mobile styles do not opt into the desktop variant. No database reset, schema migration, new permission grant or money/stock mutation was performed.
+
+## Verification and completion
+
+- All six desktop tabs are implemented. Independent Impeccable finish review: `ship`; first viewport exposes budget, category and margin context at 1024/1280/1440. All 42 responsive captures were checked against their actual CSS viewport and selected tab; mobile widths 320/360/390/430 retain the incumbent composition. Capture matrix and PNGs are in `/tmp/atria-dashboard-review/repaired-matrix.json` and the adjacent tab/width PNGs. Earlier stale captures were replaced, not accepted as evidence.
+- Populated fixture has 27 operational rows per source, allowing sorting across pages, page-size controls, filter totals and URL recovery to be checked. Approval selection beyond the snapshot five-row preview opens the correct existing detail. Rejection reason and bank-editor draft survive desktop → mobile → desktop resize. Nested editor/unsaved-change overlays retain the existing dismissal owner; QA drafts were discarded without submission. `surface=mobile` at desktop width retains mobile navigation and composition.
+- Six/twelve-month periods, Jakarta/year boundaries, partial month, cents, legacy directions and explicit/ambiguous exclusions pass core tests. API isolated tests cover custom GLOBAL actors, denied ASSIGNED/domain access, tenant/date predicates, full-list pagination, partial-source propagation and failed aggregates. Read failure/retry in the browser retains the URL filter and never renders a healthy empty result. Real local web → API reads were also checked without changing development data.
+- Root `bun run test` passes: core 402, API 488, web 956, mobile 105, API client 14, transitional admin 27, development scripts 15; token suite also passes. Live database suites remain skipped without a disposable test database. The focused API regression was rerun after adding partial/failure assertions and passes.
+- Root `bun run build` passes for API/web/transitional admin and Expo iOS/Android exports. Web/API/mobile TypeScript, scoped HeroUI styles and generated-token checks pass. Initial root lint passed with one incumbent `accept` dependency warning in the AI material proposal card. The final lint run reports nine unused-symbol errors in three files outside this task (vendor-bill-drafts, warehouse-count-writer, warehouse-transfer-writer); the Dashboard files and web lint pass. These concurrent/unrelated errors are recorded in `/tmp/atria-dashboard-final-lint.log`. Owned-file format check passes; whole-repo format check reports incumbent/unrelated files separately in `/tmp/atria-dashboard-final-format.log`.
+- Shared chart story, DESIGN, design sidecar, architecture/HTTP adapter allowlist, this plan and Dashboard surface brief reflect the implementation. The graph is refreshed after completion.
+
+Existing limitation outside this redesign: the unchanged mobile ApprovalWorkbenchRow can overlap a long priority reason with a full amount at 320/360px. The representative synthetic fixture exposes this incumbent behavior; independent review confirmed it is not a desktop-redesign regression. No live finance/material mutations or production deployment were performed.
+
+## Follow-up: search and select alignment
+
+Removed the trailing clear button from shared desktop SearchInput; the mobile affordance is preserved. Shared HeroUI select/filter triggers now center their value and inherit trigger typography, eliminating the extra baseline space from the inline value wrapper. The reported “Semua pengajuan” and “10 baris” controls both measure 0px vertical center offset at 1242px; dropdown opening/Escape and mobile presentation at 390px remain valid. Focused shared UI/isolation tests: 23 pass; scoped lint, formatting and generated HeroUI styles pass. Preview: `/tmp/atria-search-select-fixed.png`.

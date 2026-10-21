@@ -1,4 +1,4 @@
-# Atria ERP
+# Paduna Build
 
 > **Repo ini sedang bermigrasi jadi Bun monorepo + aplikasi native Expo.**
 > Aplikasi Next.js sekarang ada di `apps/web/`, kode bersama di `packages/core/`.
@@ -8,7 +8,7 @@
 > - **Status + prompt serah-terima antar-AI-agent:** [`docs/plans/2026-08-15-expo-migration-handoff.md`](docs/plans/2026-08-15-expo-migration-handoff.md)
 >   — buka file ini kalau mau melanjutkan migrasi di Codex, Antigravity, atau sesi Claude baru.
 
-Atria ERP is Dekoria's internal Project Finance & Material Control System for interior design and build projects. It preserves the team's familiar project-budget workflow of Project Budget Setup -> Expense Tracker by Category -> Budget Control Dashboard -> Category Usage -> Remaining Budget -> Project Margin, then upgrades it with RAP material planning, inventory visibility, stock movement, vendor bill tracking, project profitability, and owner-friendly AI briefs.
+Paduna Build is Dekoria's internal Project Finance & Material Control System for interior design and build projects. It preserves the team's familiar project-budget workflow of Project Budget Setup -> Expense Tracker by Category -> Budget Control Dashboard -> Category Usage -> Remaining Budget -> Project Margin, then upgrades it with RAP material planning, inventory visibility, stock movement, vendor bill tracking, project profitability, and owner-friendly AI briefs.
 
 The product promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.** The workbook remains source material for ratios and habits, but user-facing screens should not be labeled as Excel.
 

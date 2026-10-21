@@ -2,7 +2,7 @@
 
 ## Kesimpulan
 
-Core workflow Atria sudah konsisten dengan arah PRD: Project Budget tetap menjadi kontrol utama, RAP/RAB menjadi baseline internal dan proposal client, expense masuk ke kategori canonical, vendor/client payment memengaruhi kas secara eksplisit, dan material control tetap menjadi drill-down kategori Material.
+Core workflow Paduna Build sudah konsisten dengan arah PRD: Project Budget tetap menjadi kontrol utama, RAP/RAB menjadi baseline internal dan proposal client, expense masuk ke kategori canonical, vendor/client payment memengaruhi kas secara eksplisit, dan material control tetap menjadi drill-down kategori Material.
 
 Follow-up implementation pada 16 Juli 2026 telah menutup blocker onboarding database kosong, opening inventory, material cost attribution, atomic project setup, administration, maker-checker, planning audit, serta preventive/recovery controls. Audit ini dipertahankan sebagai baseline temuan; status resolusinya diringkas di bawah.
 

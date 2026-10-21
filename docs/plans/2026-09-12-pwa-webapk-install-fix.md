@@ -36,7 +36,7 @@ Akar masalahnya ada dua lapis:
    pekerjaan ada di `development`, sehingga push tidak pernah menjadi rilis
    produksi (lihat `docs/guide/vercel-deployment.md`).
 
-Berkas PWA juga masih *untracked* di git: `git ls-files apps/web/app/manifest.ts
+Berkas PWA juga masih _untracked_ di git: `git ls-files apps/web/app/manifest.ts
 apps/web/public/icons apps/web/lib/pwa` mengembalikan kosong, dan
 `git cat-file -e HEAD:apps/web/app/manifest.ts` gagal dengan "exists on disk, but
 not in 'HEAD'". Selama berkas-berkas itu tidak di-commit dan tidak di-deploy,
@@ -86,12 +86,12 @@ sudah login (start_url `/` mengalihkan ke rute peran). Keduanya melaporkan
 Agar `[]` tidak diterima begitu saja sebagai "API-nya memang selalu kosong",
 tiga kontrol dijalankan dan ketiganya menghasilkan galat nyata:
 
-| Kontrol | Hasil |
-| --- | --- |
-| Manifest tidak dapat dijangkau | `manifest-parsing-or-network-error` |
-| `display: "browser"` tanpa ikon | `manifest-display-not-supported`, `manifest-missing-suitable-icon`, `no-acceptable-icon` |
-| `start_url` lintas origin | `manifest-parsing-or-network-error` + `start-url-not-valid` |
-| **Bentuk produksi**: gerbang auth 307 manifest + ikon + SW | enam galat sekaligus |
+| Kontrol                                                    | Hasil                                                                                    |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Manifest tidak dapat dijangkau                             | `manifest-parsing-or-network-error`                                                      |
+| `display: "browser"` tanpa ikon                            | `manifest-display-not-supported`, `manifest-missing-suitable-icon`, `no-acceptable-icon` |
+| `start_url` lintas origin                                  | `manifest-parsing-or-network-error` + `start-url-not-valid`                              |
+| **Bentuk produksi**: gerbang auth 307 manifest + ikon + SW | enam galat sekaligus                                                                     |
 
 Kontrol terakhir meniru persis bentuk produksi dan mereproduksi kegagalannya:
 `manifest.webmanifest` yang dialihkan ke `/login` membuat Chrome membaca HTML
@@ -149,20 +149,20 @@ Berdasarkan `components/webapps/browser/installable/installable_evaluator.cc`
 dan `installable_logging.cc` (Chromium), diterapkan pada build produksi lokal
 dengan `prefer_related_applications: false`:
 
-| Pemeriksaan | Hasil | Bukti |
-| --- | --- | --- |
-| Origin aman (*secure context*) | PASS | `isSecureContext: true`; produksi HTTPS |
-| Bukan jendela incognito | PASS | `Page.getInstallabilityErrors: []` (tidak ada `in-incognito`) |
-| Manifest ada dan dapat di-parse | PASS | `Page.getAppManifest.url = http://localhost:3200/manifest.webmanifest`, `errors: []` |
-| `name` / `short_name` terisi | PASS | `"Atria ERP"` / `"Atria"` |
-| `start_url` sah pada origin yang sama | PASS | `startUrl: http://localhost:3200/`, `scope` sama |
-| Mode tampilan dapat dipasang | PASS | `display: kStandalone` |
-| `id` ada dan cocok | PASS | `id: http://localhost:3200/` (dari `id: "/"`) |
-| Ikon `any` ≥ 144 px | PASS | `icon-192.png` (192²) dan `icon-512.png` (512²), keduanya HTTP 200 / `image/png` |
-| Ikon dapat diunduh dan tidak rusak | PASS | Chrome memilih ikon turunan 144×144 dari `icon-512.png` |
-| `prefer_related_applications` tidak `true` | PASS | `preferRelatedApplications: false` |
-| URL manifest tanpa kredensial/port | PASS | Produksi `https://atria-erp.vercel.app` tanpa port |
-| Tidak ada galat kelayakan | PASS | `installabilityErrors: []` |
+| Pemeriksaan                                | Hasil | Bukti                                                                                |
+| ------------------------------------------ | ----- | ------------------------------------------------------------------------------------ |
+| Origin aman (_secure context_)             | PASS  | `isSecureContext: true`; produksi HTTPS                                              |
+| Bukan jendela incognito                    | PASS  | `Page.getInstallabilityErrors: []` (tidak ada `in-incognito`)                        |
+| Manifest ada dan dapat di-parse            | PASS  | `Page.getAppManifest.url = http://localhost:3200/manifest.webmanifest`, `errors: []` |
+| `name` / `short_name` terisi               | PASS  | `"Atria ERP"` / `"Atria"`                                                            |
+| `start_url` sah pada origin yang sama      | PASS  | `startUrl: http://localhost:3200/`, `scope` sama                                     |
+| Mode tampilan dapat dipasang               | PASS  | `display: kStandalone`                                                               |
+| `id` ada dan cocok                         | PASS  | `id: http://localhost:3200/` (dari `id: "/"`)                                        |
+| Ikon `any` ≥ 144 px                        | PASS  | `icon-192.png` (192²) dan `icon-512.png` (512²), keduanya HTTP 200 / `image/png`     |
+| Ikon dapat diunduh dan tidak rusak         | PASS  | Chrome memilih ikon turunan 144×144 dari `icon-512.png`                              |
+| `prefer_related_applications` tidak `true` | PASS  | `preferRelatedApplications: false`                                                   |
+| URL manifest tanpa kredensial/port         | PASS  | Produksi `https://atria-erp.vercel.app` tanpa port                                   |
+| Tidak ada galat kelayakan                  | PASS  | `installabilityErrors: []`                                                           |
 
 Catatan: dua baris terakhir hanya berlaku untuk lintasan WebAPK di Android.
 `url-not-supported-for-webapk` dan `already-installed` tidak dapat dipicu di
@@ -200,12 +200,12 @@ mesin desktop.
 
 ## Cara membedakan WebAPK dari shortcut
 
-| | WebAPK | Shortcut biasa |
-| --- | --- | --- |
-| Ikon | Ikon aplikasi Atria, tanpa lencana | Ikon dengan lencana Chrome kecil |
-| Saat dibuka | Layar penuh, tanpa toolbar Chrome dan tanpa bilah alamat | Tab Chrome biasa; toolbar dan bilah alamat terlihat |
-| Daftar tugas | Muncul di layar "Aplikasi terbaru" sebagai aplikasi | Tidak muncul sebagai aplikasi |
-| `chrome://webapks` | Terdaftar | Kosong |
+|                    | WebAPK                                                   | Shortcut biasa                                      |
+| ------------------ | -------------------------------------------------------- | --------------------------------------------------- |
+| Ikon               | Ikon aplikasi Atria, tanpa lencana                       | Ikon dengan lencana Chrome kecil                    |
+| Saat dibuka        | Layar penuh, tanpa toolbar Chrome dan tanpa bilah alamat | Tab Chrome biasa; toolbar dan bilah alamat terlihat |
+| Daftar tugas       | Muncul di layar "Aplikasi terbaru" sebagai aplikasi      | Tidak muncul sebagai aplikasi                       |
+| `chrome://webapks` | Terdaftar                                                | Kosong                                              |
 
 Cara memastikan mode mandiri aktif: jalankan di konsol peramban atau periksa
 lewat CSS, `@media (display-mode: standalone)`. Kode Atria sudah mengandalkan
@@ -223,7 +223,7 @@ Dua hal ini harus diselesaikan oleh pemilik jalur deploy:
 1. Pastikan matcher di `apps/web/proxy.ts` yang mengecualikan
    `manifest.webmanifest`, `notification-sw.js`, `icons/`, dan `offline`
    benar-benar ikut ter-deploy.
-2. Commit berkas PWA yang masih *untracked*, lalu rilis produksi — perbaiki
+2. Commit berkas PWA yang masih _untracked_, lalu rilis produksi — perbaiki
    production branch Vercel atau deploy lewat CLI
    (`npx vercel deploy --prod --yes` dari root repo).
 

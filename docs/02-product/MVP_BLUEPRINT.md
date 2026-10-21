@@ -2,7 +2,7 @@
 
 ## 1. Core Promise
 
-MVP Atria ERP helps Dekoria control project budget, expense categories, budget usage, remaining budget, material needs, stock availability, purchase requirements, actual spending, vendor bills, and margin risk in one mobile-first internal system.
+MVP Paduna Build helps Dekoria control project budget, expense categories, budget usage, remaining budget, material needs, stock availability, purchase requirements, actual spending, vendor bills, and margin risk in one mobile-first internal system.
 
 The promise is: **Project Budget Control upgraded into a real ERP with material stock visibility.**
 

@@ -1,6 +1,6 @@
-# Stack Decision - Atria ERP
+# Stack Decision - Paduna Build
 
-Dokumen ini menjelaskan keputusan pemilihan unit teknologi (_tech stack_) yang digunakan untuk membangun Atria ERP. Pemilihan teknologi ini berfokus pada kecepatan pengembangan (_developer velocity_), ketahanan data transaksi (_data integrity_), efisiensi biaya (_cost efficiency_), serta performa aplikasi yang optimal pada perangkat seluler bagi Project Manager (PM) di lapangan.
+Dokumen ini menjelaskan keputusan pemilihan unit teknologi (_tech stack_) yang digunakan untuk membangun Paduna Build. Pemilihan teknologi ini berfokus pada kecepatan pengembangan (_developer velocity_), ketahanan data transaksi (_data integrity_), efisiensi biaya (_cost efficiency_), serta performa aplikasi yang optimal pada perangkat seluler bagi Project Manager (PM) di lapangan.
 
 ---
 
@@ -30,7 +30,7 @@ Bun digunakan sebagai JavaScript runtime, package manager, dan test runner.
 
 ### 1.3 Neon PostgreSQL
 
-Neon digunakan sebagai serverless database PostgreSQL utama untuk Atria ERP.
+Neon digunakan sebagai serverless database PostgreSQL utama untuk Paduna Build.
 
 - **Rasionil Finansial & Operasional:** Neon mengadopsi model _serverless storage_ yang memisahkan komputasi (_compute_) dan penyimpanan (_storage_). Ini memungkinkan database melakukan _scale-to-zero_ saat tidak ada aktivitas (misalnya di luar jam kerja proyek), menekan biaya operasional seminimal mungkin.
 - **Fitur Teknis Utama:**
@@ -100,7 +100,7 @@ Setiap teknologi yang dipilih membawa konsekuensi tersendiri yang harus dikelola
 
 Next.js App Router yang dideploy di Vercel Serverless Functions dapat mengalami _cold starts_ (jeda waktu saat serverless function diaktifkan kembali).
 
-- **Mitigasi:** Atria ERP menerapkan strategi prefetching pada tautan navigasi kritis (seperti tombol Ledger dan Projects) menggunakan `next/link`. Saldo bank di-cache secara relasional pada halaman read-only untuk meminimalkan durasi _cold start_.
+- **Mitigasi:** Paduna Build menerapkan strategi prefetching pada tautan navigasi kritis (seperti tombol Ledger dan Projects) menggunakan `next/link`. Saldo bank di-cache secara relasional pada halaman read-only untuk meminimalkan durasi _cold start_.
 
 ### 2.2 Drizzle ORM Developer Overhead vs Performance
 

@@ -1,24 +1,27 @@
-<title>Peluncuran Atria</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<title>Peluncuran Paduna Build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+/>
 
 <style>
   :root {
-    --ground:  #EEF0F3;
-    --surface: #FFFFFF;
-    --raised:  #F7F8FA;
-    --ink:     #12161C;
-    --muted:   #5C6673;
-    --rule:    #D6DBE2;
-    --rule-soft: #E6EAEF;
+    --ground: #eef0f3;
+    --surface: #ffffff;
+    --raised: #f7f8fa;
+    --ink: #12161c;
+    --muted: #5c6673;
+    --rule: #d6dbe2;
+    --rule-soft: #e6eaef;
 
-    --signal:  #1B4FD8;
-    --signal-wash: #1B4FD814;
-    --urgent:  #B0173F;
-    --urgent-wash: #B0173F12;
-    --done:    #137356;
-    --done-wash: #1373560F;
+    --signal: #1b4fd8;
+    --signal-wash: #1b4fd814;
+    --urgent: #b0173f;
+    --urgent-wash: #b0173f12;
+    --done: #137356;
+    --done-wash: #1373560f;
 
     --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
     --body: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
@@ -27,39 +30,41 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground:  #0D1117;
-      --surface: #151B23;
-      --raised:  #1A212B;
-      --ink:     #E4E9F0;
-      --muted:   #8B96A5;
-      --rule:    #242C36;
-      --rule-soft: #1D242D;
-      --signal:  #7A9CFF;
-      --signal-wash: #7A9CFF1A;
-      --urgent:  #FF8098;
-      --urgent-wash: #FF809916;
-      --done:    #4FBF9A;
-      --done-wash: #4FBF9A14;
+      --ground: #0d1117;
+      --surface: #151b23;
+      --raised: #1a212b;
+      --ink: #e4e9f0;
+      --muted: #8b96a5;
+      --rule: #242c36;
+      --rule-soft: #1d242d;
+      --signal: #7a9cff;
+      --signal-wash: #7a9cff1a;
+      --urgent: #ff8098;
+      --urgent-wash: #ff809916;
+      --done: #4fbf9a;
+      --done-wash: #4fbf9a14;
     }
   }
 
   :root[data-theme="dark"] {
-    --ground:  #0D1117;
-    --surface: #151B23;
-    --raised:  #1A212B;
-    --ink:     #E4E9F0;
-    --muted:   #8B96A5;
-    --rule:    #242C36;
-    --rule-soft: #1D242D;
-    --signal:  #7A9CFF;
-    --signal-wash: #7A9CFF1A;
-    --urgent:  #FF8098;
-    --urgent-wash: #FF809916;
-    --done:    #4FBF9A;
-    --done-wash: #4FBF9A14;
+    --ground: #0d1117;
+    --surface: #151b23;
+    --raised: #1a212b;
+    --ink: #e4e9f0;
+    --muted: #8b96a5;
+    --rule: #242c36;
+    --rule-soft: #1d242d;
+    --signal: #7a9cff;
+    --signal-wash: #7a9cff1a;
+    --urgent: #ff8098;
+    --urgent-wash: #ff809916;
+    --done: #4fbf9a;
+    --done-wash: #4fbf9a14;
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
 
   body {
     background: var(--ground);
@@ -72,7 +77,10 @@
     padding: 0 20px 100px;
   }
 
-  .wrap { max-width: 74ch; margin: 0 auto; }
+  .wrap {
+    max-width: 74ch;
+    margin: 0 auto;
+  }
 
   /* ---------- header ---------- */
 
@@ -108,7 +116,10 @@
     max-width: 58ch;
   }
 
-  .lede strong { color: var(--ink); font-weight: 600; }
+  .lede strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
 
   /* ---------- progress ---------- */
 
@@ -127,7 +138,10 @@
     padding-bottom: 14px;
   }
 
-  .tally b { color: var(--ink); font-weight: 500; }
+  .tally b {
+    color: var(--ink);
+    font-weight: 500;
+  }
 
   .reset-btn {
     font-family: var(--mono);
@@ -141,12 +155,20 @@
     border-radius: 2px;
     cursor: pointer;
   }
-  .reset-btn:hover { color: var(--ink); border-color: var(--muted); }
-  .reset-btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .reset-btn:hover {
+    color: var(--ink);
+    border-color: var(--muted);
+  }
+  .reset-btn:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
 
   /* ---------- sections ---------- */
 
-  section { margin-bottom: 52px; }
+  section {
+    margin-bottom: 52px;
+  }
 
   .sec-head {
     display: flex;
@@ -173,9 +195,18 @@
     padding: 3px 8px;
     border-radius: 2px;
   }
-  .when.now  { background: var(--urgent-wash); color: var(--urgent); }
-  .when.soon { background: var(--signal-wash); color: var(--signal); }
-  .when.later{ background: var(--rule-soft); color: var(--muted); }
+  .when.now {
+    background: var(--urgent-wash);
+    color: var(--urgent);
+  }
+  .when.soon {
+    background: var(--signal-wash);
+    color: var(--signal);
+  }
+  .when.later {
+    background: var(--rule-soft);
+    color: var(--muted);
+  }
 
   .sec-note {
     color: var(--muted);
@@ -201,13 +232,20 @@
     margin-bottom: 12px;
   }
 
-  .task[data-kind="decide"]   { border-left-color: var(--signal); }
-  .task[data-kind="buy"]      { border-left-color: var(--urgent); }
-  .task[data-kind="do"]       { border-left-color: var(--muted); }
+  .task[data-kind="decide"] {
+    border-left-color: var(--signal);
+  }
+  .task[data-kind="buy"] {
+    border-left-color: var(--urgent);
+  }
+  .task[data-kind="do"] {
+    border-left-color: var(--muted);
+  }
 
   .task input[type="checkbox"] {
     appearance: none;
-    width: 18px; height: 18px;
+    width: 18px;
+    height: 18px;
     margin: 3px 0 0;
     border: 1.5px solid var(--muted);
     border-radius: 3px;
@@ -222,7 +260,8 @@
   }
   .task input[type="checkbox"]:checked::after {
     content: "";
-    width: 9px; height: 5px;
+    width: 9px;
+    height: 5px;
     border-left: 2px solid var(--surface);
     border-bottom: 2px solid var(--surface);
     transform: rotate(-45deg) translate(1px, -1px);
@@ -232,8 +271,14 @@
     outline-offset: 2px;
   }
 
-  .task.is-done { background: var(--raised); }
-  .task.is-done .t-title { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .task.is-done {
+    background: var(--raised);
+  }
+  .task.is-done .t-title {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
 
   .t-head {
     display: flex;
@@ -260,12 +305,27 @@
     border-radius: 2px;
     white-space: nowrap;
   }
-  .tag.decide { background: var(--signal-wash); color: var(--signal); }
-  .tag.buy    { background: var(--urgent-wash); color: var(--urgent); }
-  .tag.do     { background: var(--rule-soft); color: var(--muted); }
+  .tag.decide {
+    background: var(--signal-wash);
+    color: var(--signal);
+  }
+  .tag.buy {
+    background: var(--urgent-wash);
+    color: var(--urgent);
+  }
+  .tag.do {
+    background: var(--rule-soft);
+    color: var(--muted);
+  }
 
-  .t-body { color: var(--muted); font-size: 15.5px; margin: 0; }
-  .t-body + .t-body { margin-top: 8px; }
+  .t-body {
+    color: var(--muted);
+    font-size: 15.5px;
+    margin: 0;
+  }
+  .t-body + .t-body {
+    margin-top: 8px;
+  }
 
   .risk {
     display: block;
@@ -306,7 +366,10 @@
     margin: 10px 0 0;
     color: var(--ink);
   }
-  pre code { background: none; padding: 0; }
+  pre code {
+    background: none;
+    padding: 0;
+  }
 
   /* ---------- legend / done ---------- */
 
@@ -321,8 +384,16 @@
     font-size: 15px;
     color: var(--muted);
   }
-  @media (min-width: 640px) { .legend { grid-template-columns: repeat(3, 1fr); } }
-  .legend div { display: flex; gap: 8px; align-items: baseline; }
+  @media (min-width: 640px) {
+    .legend {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .legend div {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
 
   .shipped {
     background: var(--done-wash);
@@ -339,10 +410,22 @@
     margin: 0 0 12px;
     font-weight: 500;
   }
-  .shipped ul { margin: 0; padding-left: 18px; font-size: 15.5px; color: var(--muted); }
-  .shipped li { margin-bottom: 5px; }
-  .shipped li:last-child { margin-bottom: 0; }
-  .shipped b { color: var(--ink); font-weight: 600; }
+  .shipped ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 15.5px;
+    color: var(--muted);
+  }
+  .shipped li {
+    margin-bottom: 5px;
+  }
+  .shipped li:last-child {
+    margin-bottom: 0;
+  }
+  .shipped b {
+    color: var(--ink);
+    font-weight: 600;
+  }
 
   footer {
     margin-top: 64px;
@@ -353,21 +436,33 @@
   }
 
   @media (max-width: 540px) {
-    body { font-size: 16px; padding: 0 16px 80px; }
-    .task { padding: 16px; grid-template-columns: 24px 1fr; gap: 0 10px; }
+    body {
+      font-size: 16px;
+      padding: 0 16px 80px;
+    }
+    .task {
+      padding: 16px;
+      grid-template-columns: 24px 1fr;
+      gap: 0 10px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 </style>
 
 <div class="wrap">
-
   <header>
     <p class="kicker">Diperbarui 30 Agustus 2026 · Polda mulai awal September</p>
-    <h1>Peluncuran Atria</h1>
-    <p class="lede">Semua yang tersisa sebelum ERP ini megang uang beneran. Yang teknis sudah selesai — <strong>yang tinggal hampir semuanya keputusan.</strong></p>
+    <h1>Peluncuran Paduna Build</h1>
+    <p class="lede">
+      Semua yang tersisa sebelum ERP ini megang uang beneran. Yang teknis sudah selesai —
+      <strong>yang tinggal hampir semuanya keputusan.</strong>
+    </p>
   </header>
 
   <div class="tally">
@@ -378,19 +473,48 @@
   <div class="shipped">
     <h3>Sudah beres — jangan dikerjakan ulang</h3>
     <ul>
-      <li><b>Perancah tenant</b> — 53 kolom, 16 constraint, migrasi 0035 terpasang di kedua branch</li>
-      <li><b>Enam invariant buku besar</b> — 24 unit test, terbukti mendeteksi, <code>bun run db:check-invariants</code></li>
+      <li>
+        <b>Perancah tenant</b> — 53 kolom, 16 constraint, migrasi 0035 terpasang di kedua branch
+      </li>
+      <li>
+        <b>Enam invariant buku besar</b> — 24 unit test, terbukti mendeteksi,
+        <code>bun run db:check-invariants</code>
+      </li>
       <li><b>Angka pengadaan RAP</b> — bug sudah beres duluan, sekarang dikunci 8 test</li>
       <li><b>Latihan restore</b> — dua uji lulus, 82 baris pulih utuh, ±2 menit</li>
-      <li><b>Branch <code>development</code> terpisah</b> dari <code>production</code>, <code>.env</code> sudah diarahkan</li>
-      <li><b><code>production</code> dikosongkan</b> — siap onboarding, cadangan di branch <code>pre-reset-2026-08-28</code></li>
-      <li><b>Migrasi bisa membangun database dari nol</b> — 0033 dulu selalu gagal di database baru, memblokir provisioning tenant, CI, dan developer baru</li>
-      <li><b>Cakupan data peran</b> — <code>/setup</code> dulu membuat Owner dengan <code>data_scope=NONE</code>: semua layar terbuka, semua daftar proyek kosong, tanpa error</li>
+      <li>
+        <b>Branch <code>development</code> terpisah</b> dari <code>production</code>,
+        <code>.env</code> sudah diarahkan
+      </li>
+      <li>
+        <b><code>production</code> dikosongkan</b> — siap onboarding, cadangan di branch
+        <code>pre-reset-2026-08-28</code>
+      </li>
+      <li>
+        <b>Migrasi bisa membangun database dari nol</b> — 0033 dulu selalu gagal di database baru,
+        memblokir provisioning tenant, CI, dan developer baru
+      </li>
+      <li>
+        <b>Cakupan data peran</b> — <code>/setup</code> dulu membuat Owner dengan
+        <code>data_scope=NONE</code>: semua layar terbuka, semua daftar proyek kosong, tanpa error
+      </li>
       <li><b>Suite loader database kosong</b> bisa dijalankan, 7 dari 7</li>
-      <li><b>234 file lo yang menggantung</b> sudah ter-commit dan ter-push — kerjaan design system dan role-permission aman</li>
-      <li><b><code>atria_uat_empty</code> diperbaiki</b> — sekarang benar-benar bisa dipakai menguji database kosong</li>
-      <li><b>Instance bisa dijual apa adanya</b> — <code>bun run db:provision</code> menyiapkan satu perusahaan baru dan menolak menimpa yang sudah berisi</li>
-      <li><b>Namanya ikut pelanggan</b> — layar dan asisten AI menyebut nama perusahaan mereka, dan sebuah test menggagalkan build kalau “Dekoria” bocor balik ke kode</li>
+      <li>
+        <b>234 file lo yang menggantung</b> sudah ter-commit dan ter-push — kerjaan design system
+        dan role-permission aman
+      </li>
+      <li>
+        <b><code>atria_uat_empty</code> diperbaiki</b> — sekarang benar-benar bisa dipakai menguji
+        database kosong
+      </li>
+      <li>
+        <b>Instance bisa dijual apa adanya</b> — <code>bun run db:provision</code> menyiapkan satu
+        perusahaan baru dan menolak menimpa yang sudah berisi
+      </li>
+      <li>
+        <b>Namanya ikut pelanggan</b> — layar dan asisten AI menyebut nama perusahaan mereka, dan
+        sebuah test menggagalkan build kalau “Dekoria” bocor balik ke kode
+      </li>
     </ul>
   </div>
 
@@ -405,73 +529,147 @@
       <h2>Sebelum Polda mulai</h2>
       <span class="when now">Minggu ini</span>
     </div>
-    <p class="sec-note">Kelimanya punya batas waktu keras. Lewat tanggal ini, biayanya naik berlipat — bukan karena teknis, tapi karena posisi tawar dan pilihan lo menyempit.</p>
+    <p class="sec-note">
+      Kelimanya punya batas waktu keras. Lewat tanggal ini, biayanya naik berlipat — bukan karena
+      teknis, tapi karena posisi tawar dan pilihan lo menyempit.
+    </p>
 
     <label class="task" data-kind="decide" data-id="t1">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Ngobrol sama bos soal kepemilikan produk</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Bawa draf satu halaman dari <em>Bekal Bisnis Atria</em>. Buka pakai pihak ketiga, bukan pakai diri sendiri: “ada vendor yang mau bayar, kita berdua belum pernah nulis apa-apa.” Sebut hak pakai Dekoria <em>duluan</em>, sebelum klausul kepemilikan — itu yang bikin dia tenang.</p>
-        <p class="t-body">Jangan pakai kata “kontrak”. Pakai “ditulis” atau “disepakati di kertas”.</p>
-        <span class="risk"><b>Kalau ditunda</b>Begitu uang vendor masuk, kalimat yang sama akan kedengeran seperti tuntutan — bukan karena lo berubah, tapi karena situasinya berubah. Dia sodara lo; yang dipertaruhkan bukan cuma produknya.</span>
+        <div class="t-head">
+          <p class="t-title">Ngobrol sama bos soal kepemilikan produk</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Bawa draf satu halaman dari <em>Bekal Bisnis Paduna Build</em>. Buka pakai pihak ketiga, bukan
+          pakai diri sendiri: “ada vendor yang mau bayar, kita berdua belum pernah nulis apa-apa.”
+          Sebut hak pakai Dekoria <em>duluan</em>, sebelum klausul kepemilikan — itu yang bikin dia
+          tenang.
+        </p>
+        <p class="t-body">
+          Jangan pakai kata “kontrak”. Pakai “ditulis” atau “disepakati di kertas”.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Begitu uang vendor masuk, kalimat yang sama akan kedengeran seperti
+          tuntutan — bukan karena lo berubah, tapi karena situasinya berubah. Dia sodara lo; yang
+          dipertaruhkan bukan cuma produknya.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="buy" data-id="t2">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Naikkan retensi Neon ke minimal 7 hari</p><span class="tag buy">Beli</span></div>
-        <p class="t-body">Sekarang 6 jam — maksimum paket Free, sudah mentok. Paket berbayar sampai 30 hari. Project <code>atria-erp</code>, org <code>Dekoria</code>.</p>
-        <span class="risk"><b>Kalau ditunda</b>Risiko sebenarnya bukan kesalahan yang ketahuan dalam hitungan menit, tapi salah catat yang baru ketahuan pas rekonsiliasi mingguan. Di jam ke-7, titik pemulihannya sudah lewat — datanya tidak bisa dikembalikan dengan cara apa pun.</span>
+        <div class="t-head">
+          <p class="t-title">Naikkan retensi Neon ke minimal 7 hari</p>
+          <span class="tag buy">Beli</span>
+        </div>
+        <p class="t-body">
+          Sekarang 6 jam — maksimum paket Free, sudah mentok. Paket berbayar sampai 30 hari. Project
+          <code>atria-erp</code>, org <code>Dekoria</code>.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Risiko sebenarnya bukan kesalahan yang ketahuan dalam hitungan menit,
+          tapi salah catat yang baru ketahuan pas rekonsiliasi mingguan. Di jam ke-7, titik
+          pemulihannya sudah lewat — datanya tidak bisa dikembalikan dengan cara apa pun.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t3">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Beresin kepemilikan akun Neon</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Pemilik <code>atria-erp</code> adalah <code>dekoria.office@gmail.com</code>. Akun <code>libran.dev7</code> cuma Editor di project lain yang isinya kosong — dan sempat hampir bikin lo ngatur retensi database yang salah.</p>
-        <span class="risk"><b>Kalau ditunda</b>Retensi, paket, dan pembuatan branch restore semuanya nempel ke project. Kalau pas darurat lo nggak pegang akses Owner, “gue nggak bisa buka project-nya” bukan kalimat yang bisa diucapkan sambil uang orang salah catat.</span>
+        <div class="t-head">
+          <p class="t-title">Beresin kepemilikan akun Neon</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Pemilik <code>atria-erp</code> adalah <code>dekoria.office@gmail.com</code>. Akun
+          <code>libran.dev7</code> cuma Editor di project lain yang isinya kosong — dan sempat
+          hampir bikin lo ngatur retensi database yang salah.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Retensi, paket, dan pembuatan branch restore semuanya nempel ke
+          project. Kalau pas darurat lo nggak pegang akses Owner, “gue nggak bisa buka project-nya”
+          bukan kalimat yang bisa diucapkan sambil uang orang salah catat.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t4">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Tulis trigger mundur, minta bos tanda tangan</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Satu paragraf, disepakati <em>sebelum</em> panik. Contoh: “kalau invariant gagal 2 hari berturut-turut, atau ada selisih kas di atas Rp 1.000.000 yang nggak bisa dijelaskan, Polda balik ke Excel dan Atria jadi read-only.”</p>
-        <span class="risk"><b>Kalau ditunda</b>Ledger-nya append-only. Salah input nggak bisa dihapus, cuma bisa dilawan pakai jurnal balik. Tanpa trigger yang disepakati di awal, keputusan mundur akan diambil pas semua orang lagi capek dan defensif — atau tidak diambil sama sekali.</span>
+        <div class="t-head">
+          <p class="t-title">Tulis trigger mundur, minta bos tanda tangan</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Satu paragraf, disepakati <em>sebelum</em> panik. Contoh: “kalau invariant gagal 2 hari
+          berturut-turut, atau ada selisih kas di atas Rp 1.000.000 yang nggak bisa dijelaskan,
+          Polda balik ke Excel dan Paduna Build jadi read-only.”
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Ledger-nya append-only. Salah input nggak bisa dihapus, cuma bisa
+          dilawan pakai jurnal balik. Tanpa trigger yang disepakati di awal, keputusan mundur akan
+          diambil pas semua orang lagi capek dan defensif — atau tidak diambil sama sekali.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t5">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Onboarding <code>production</code> dari nol</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Database sudah kosong dan terbukti bisa dipakai mulai. Buka <code>/setup</code>, bikin Owner pertama, lalu ikuti runbook bagian A0–A2. Jangan pakai data UAT sebagai titik awal.</p>
+        <div class="t-head">
+          <p class="t-title">Onboarding <code>production</code> dari nol</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Database sudah kosong dan terbukti bisa dipakai mulai. Buka <code>/setup</code>, bikin
+          Owner pertama, lalu ikuti runbook bagian A0–A2. Jangan pakai data UAT sebagai titik awal.
+        </p>
         <p class="t-body">Sesudahnya, jalankan sekali untuk memastikan angkanya bersih:</p>
         <pre><code>bun run db:check-invariants</code></pre>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t26">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Baca tiga berkas yang bakal lo butuhin justru pas panik</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Sekitar sejam, sekali duduk. Ketiganya dikomentari dengan <em>kenapa</em>, bukan cuma apa — memang ditulis untuk dibaca.</p>
+        <div class="t-head">
+          <p class="t-title">Baca tiga berkas yang bakal lo butuhin justru pas panik</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Sekitar sejam, sekali duduk. Ketiganya dikomentari dengan <em>kenapa</em>, bukan cuma apa
+          — memang ditulis untuk dibaca.
+        </p>
         <pre><code>apps/web/lib/finance/ledger-invariants.ts
 apps/web/scripts/provision-instance.ts
 docs/guide/restore-drill.md</code></pre>
-        <span class="risk"><b>Kalau dilewat</b>Kode yang lo nggak paham bukan aset — itu utang dengan pesan commit yang rapi. Pas <code>db:check-invariants</code> gagal jam 2 pagi, nggak ada yang bisa jelasin enam aturan itu selain lo.</span>
+        <span class="risk"
+          ><b>Kalau dilewat</b>Kode yang lo nggak paham bukan aset — itu utang dengan pesan commit
+          yang rapi. Pas <code>db:check-invariants</code> gagal jam 2 pagi, nggak ada yang bisa
+          jelasin enam aturan itu selain lo.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t6">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Tentukan siapa saja yang login di hari pertama</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Maksimal lima orang di minggu pertama: Owner, Finance, satu PM, satu Purchasing, satu tukang percobaan. Lo dampingi langsung dua hari pertama.</p>
-        <span class="risk"><b>Kalau ditunda</b>Full cutover dengan 15 orang yang belum dilatih bukan go-live, itu kebakaran — dan kebakarannya di project terbesar bos lo.</span>
+        <div class="t-head">
+          <p class="t-title">Tentukan siapa saja yang login di hari pertama</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Maksimal lima orang di minggu pertama: Owner, Finance, satu PM, satu Purchasing, satu
+          tukang percobaan. Lo dampingi langsung dua hari pertama.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Full cutover dengan 15 orang yang belum dilatih bukan go-live, itu
+          kebakaran — dan kebakarannya di project terbesar bos lo.</span
+        >
       </div>
     </label>
   </section>
@@ -484,39 +682,77 @@ docs/guide/restore-drill.md</code></pre>
     <p class="sec-note">Setelah data mulai masuk, bukan sebelumnya.</p>
 
     <label class="task" data-kind="do" data-id="t7">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Jadwalkan pemeriksaan invariant tiap malam</p><span class="tag do">Kerjakan</span></div>
+        <div class="t-head">
+          <p class="t-title">Jadwalkan pemeriksaan invariant tiap malam</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
         <p class="t-body">Cron, GitHub Action, apa pun. Exit code 1 berarti ada yang dilanggar.</p>
         <pre><code>bun run db:check-invariants</code></pre>
-        <p class="t-body"><strong>Jangan dijadwalkan sebelum data Polda masuk.</strong> Database kosong sengaja dihitung gagal — enam invariant yang lulus atas nol baris belum membuktikan apa pun. Kalau dipasang sekarang, lo dapat alarm merah tiap malam tanpa ada yang salah.</p>
+        <p class="t-body">
+          <strong>Jangan dijadwalkan sebelum data Polda masuk.</strong> Database kosong sengaja
+          dihitung gagal — enam invariant yang lulus atas nol baris belum membuktikan apa pun. Kalau
+          dipasang sekarang, lo dapat alarm merah tiap malam tanpa ada yang salah.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t8">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Masukkan partner kolaborasi sebagai <em>vendor</em></p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Nol perubahan kode. Scope mereka masuk RAP tahap Subcon, mereka nagih lewat vendor bill, Owner lihat komitmen / terbayar / sisa per partner. Jalur ini sudah terbukti di runbook §B5.</p>
-        <p class="t-body">Ini yang ngasih 80% dari “tiap perusahaan punya bagian keuangannya sendiri” — hari itu juga, tanpa risiko schema.</p>
+        <div class="t-head">
+          <p class="t-title">Masukkan partner kolaborasi sebagai <em>vendor</em></p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Nol perubahan kode. Scope mereka masuk RAP tahap Subcon, mereka nagih lewat vendor bill,
+          Owner lihat komitmen / terbayar / sisa per partner. Jalur ini sudah terbukti di runbook
+          §B5.
+        </p>
+        <p class="t-body">
+          Ini yang ngasih 80% dari “tiap perusahaan punya bagian keuangannya sendiri” — hari itu
+          juga, tanpa risiko schema.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t9">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Pasang plafon Rp 5.000.000 untuk proposal AI</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Keempat keluarga proposal nyala. Gerbangnya sudah benar dan idempoten, tapi jam terbangnya nol. Usulan di atas Rp 5.000.000 harus lewat jalur persetujuan Owner yang sudah ada — sama seperti aturan pembayaran di <code>CLAUDE.md</code>.</p>
-        <span class="risk"><b>Kalau dilewat</b>AI ngusulin vendor bill Rp 80.000.000, PM ngantuk klik konfirmasi, dan <code>ai_proposal_confirmation</code> akan mencatat dengan rapi bahwa itu memang disetujui.</span>
+        <div class="t-head">
+          <p class="t-title">Pasang plafon Rp 5.000.000 untuk proposal AI</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Keempat keluarga proposal nyala. Gerbangnya sudah benar dan idempoten, tapi jam terbangnya
+          nol. Usulan di atas Rp 5.000.000 harus lewat jalur persetujuan Owner yang sudah ada — sama
+          seperti aturan pembayaran di <code>CLAUDE.md</code>.
+        </p>
+        <span class="risk"
+          ><b>Kalau dilewat</b>AI ngusulin vendor bill Rp 80.000.000, PM ngantuk klik konfirmasi,
+          dan <code>ai_proposal_confirmation</code> akan mencatat dengan rapi bahwa itu memang
+          disetujui.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t27">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Pasang monitor uptime, alert masuk ke HP lo</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">UptimeRobot atau Better Stack, gratis di tier dasar. Satu URL, cek tiap 5 menit, notifikasi ke WhatsApp atau email.</p>
-        <span class="risk"><b>Kalau dilewat</b>Yang paling mahal bukan lo telat bales — tapi pelanggan tahu duluan sebelum lo. Sekali itu kejadian, semua jawaban lo sesudahnya kedengeran seperti alasan.</span>
+        <div class="t-head">
+          <p class="t-title">Pasang monitor uptime, alert masuk ke HP lo</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          UptimeRobot atau Better Stack, gratis di tier dasar. Satu URL, cek tiap 5 menit,
+          notifikasi ke WhatsApp atau email.
+        </p>
+        <span class="risk"
+          ><b>Kalau dilewat</b>Yang paling mahal bukan lo telat bales — tapi pelanggan tahu duluan
+          sebelum lo. Sekali itu kejadian, semua jawaban lo sesudahnya kedengeran seperti
+          alasan.</span
+        >
       </div>
     </label>
   </section>
@@ -529,66 +765,146 @@ docs/guide/restore-drill.md</code></pre>
     <p class="sec-note">Tak satu pun mendesak, tapi semuanya memblokir langkah berikutnya.</p>
 
     <label class="task" data-kind="do" data-id="t11">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Ulangi latihan restore setelah retensi naik</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Yang sekarang lulus secara mekanis, belum memadai secara operasional. Prosedurnya di <code>docs/guide/restore-drill.md</code> — perintah CLI yang sudah terbukti jalan, ±2 menit.</p>
+        <div class="t-head">
+          <p class="t-title">Ulangi latihan restore setelah retensi naik</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Yang sekarang lulus secara mekanis, belum memadai secara operasional. Prosedurnya di
+          <code>docs/guide/restore-drill.md</code> — perintah CLI yang sudah terbukti jalan, ±2
+          menit.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t12">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Hapus branch <code>pre-reset-2026-08-28</code></p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Cadangan 554 baris data UAT sebelum reset. Hapus setelah go-live jalan dan jelas datanya tidak diperlukan — branch copy-on-write tetap memakan kuota.</p>
+        <div class="t-head">
+          <p class="t-title">Hapus branch <code>pre-reset-2026-08-28</code></p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Cadangan 554 baris data UAT sebelum reset. Hapus setelah go-live jalan dan jelas datanya
+          tidak diperlukan — branch copy-on-write tetap memakan kuota.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t13">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Putuskan: peran global atau per tenant</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Rencana role-permission bikin peran bisa disunting, dan peran yang bisa disunting hampir pasti milik tenant. Tapi itu menambah <code>tenant_id</code> ke <code>role</code> dan <code>role_permission</code>, serta mengubah <code>ROLE_ID_TO_NAME</code> yang sekarang memetakan UUID tetap.</p>
-        <span class="risk"><b>Memblokir</b>Fase 3 (RLS). Harus diputuskan sebelum migrasi tenancy dieksekusi, karena menyentuh bentuk migrasinya.</span>
+        <div class="t-head">
+          <p class="t-title">Putuskan: peran global atau per tenant</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Rencana role-permission bikin peran bisa disunting, dan peran yang bisa disunting hampir
+          pasti milik tenant. Tapi itu menambah <code>tenant_id</code> ke <code>role</code> dan
+          <code>role_permission</code>, serta mengubah <code>ROLE_ID_TO_NAME</code> yang sekarang
+          memetakan UUID tetap.
+        </p>
+        <span class="risk"
+          ><b>Memblokir</b>Fase 3 (RLS). Harus diputuskan sebelum migrasi tenancy dieksekusi, karena
+          menyentuh bentuk migrasinya.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t29">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Lepaskan <code>getPendingApprovalDetails</code> dari sesi</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Satu fungsi, di <code>lib/finance/approval-details.ts</code>. Dia manggil <code>getServerSession()</code> cuma buat dapat dua hal — <code>currentUserId</code> dan apakah pemanggilnya Owner — padahal kedua pemanggilnya (<code>/expenses</code> dan <code>/approvals</code>) sudah megang <code>Actor</code> yang isinya persis itu. Terima <code>Actor</code> sebagai parameter, hapus pembacaan sesinya.</p>
-        <p class="t-body">Ketahuan waktu <code>bun run perf:loaders</code> nggak bisa ngukur kedua halaman itu: <code>cookies()</code> kepanggil di luar request, dan loadernya berhenti sebelum satu query pun jalan.</p>
-        <span class="risk"><b>Memblokir</b>Jalur tRPC untuk <code>apps/mobile</code>. Selama sesi dibaca sedalam itu, kedua loader nggak bisa dipakai ulang lewat tRPC tanpa bawa request scope — padahal seluruh alasan pola <code>Actor</code> ada justru supaya satu badan logika bisa dipakai dua transport.</span>
+        <div class="t-head">
+          <p class="t-title">Lepaskan <code>getPendingApprovalDetails</code> dari sesi</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Satu fungsi, di <code>lib/finance/approval-details.ts</code>. Dia manggil
+          <code>getServerSession()</code> cuma buat dapat dua hal — <code>currentUserId</code> dan
+          apakah pemanggilnya Owner — padahal kedua pemanggilnya (<code>/expenses</code> dan
+          <code>/approvals</code>) sudah megang <code>Actor</code> yang isinya persis itu. Terima
+          <code>Actor</code> sebagai parameter, hapus pembacaan sesinya.
+        </p>
+        <p class="t-body">
+          Ketahuan waktu <code>bun run perf:loaders</code> nggak bisa ngukur kedua halaman itu:
+          <code>cookies()</code> kepanggil di luar request, dan loadernya berhenti sebelum satu
+          query pun jalan.
+        </p>
+        <span class="risk"
+          ><b>Memblokir</b>Jalur tRPC untuk <code>apps/mobile</code>. Selama sesi dibaca sedalam
+          itu, kedua loader nggak bisa dipakai ulang lewat tRPC tanpa bawa request scope — padahal
+          seluruh alasan pola <code>Actor</code> ada justru supaya satu badan logika bisa dipakai
+          dua transport.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t14">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Tentukan badan usaha untuk produknya</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Data keuangan vendor akan duduk di database yang sama dengan data Dekoria — kompetitor mereka. “Data lo dipegang PT Atria” itu kalimat yang bisa diucapkan. “Data lo dipegang kompetitor lo” bukan.</p>
-        <p class="t-body">Tanyakan ke notaris: PT Perorangan atau CV untuk skala ini. Cari tahu juga bentuk Dekoria sekarang — kalau perorangan, risikonya nempel ke orang, bukan ke perusahaan.</p>
+        <div class="t-head">
+          <p class="t-title">Tentukan badan usaha untuk produknya</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Data keuangan vendor akan duduk di database yang sama dengan data Dekoria — kompetitor
+          mereka. “Data lo dipegang PT Paduna Build” itu kalimat yang bisa diucapkan. “Data lo dipegang
+          kompetitor lo” bukan.
+        </p>
+        <p class="t-body">
+          Tanyakan ke notaris: PT Perorangan atau CV untuk skala ini. Cari tahu juga bentuk Dekoria
+          sekarang — kalau perorangan, risikonya nempel ke orang, bukan ke perusahaan.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t15">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Kunci harga dan perjanjian vendor</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Flat per perusahaan per tahun, dibayar di muka. Rencana bos lo: partner Polda bayar di depan, bulan-bulan selama Polda berjalan dihitung <strong>demo</strong>, dan setahun langganannya baru mulai setelah Polda selesai.</p>
-        <p class="t-body">Itu masuk akal, dengan satu koreksi: <strong>masa demonya 1–2 bulan, bukan selama Polda.</strong> Polda bisa molor enam bulan, dan “gratis sampai selesai” berubah jadi gratis setengah tahun buat pelanggan yang sudah bayar — mereka nggak akan protes, tapi lo yang nanggung.</p>
-        <p class="t-body">Gratis itu soal angkanya nol, bukan soal tidak ada perjanjian. Draf tujuh pasalnya ada di <em>Bekal Bisnis Atria</em>. Tanggal mulai dan berakhirnya harus tertulis, bukan “nanti setelah Polda beres”.</p>
-        <span class="risk"><b>Kalau ditunda</b>Uang masuk tanpa batas tanggung jawab tertulis. Ada bug, vendor salah bayar Rp 50.000.000, dan secara teori tanggung jawabnya tidak terbatas.</span>
+        <div class="t-head">
+          <p class="t-title">Kunci harga dan perjanjian vendor</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Flat per perusahaan per tahun, dibayar di muka. Rencana bos lo: partner Polda bayar di
+          depan, bulan-bulan selama Polda berjalan dihitung <strong>demo</strong>, dan setahun
+          langganannya baru mulai setelah Polda selesai.
+        </p>
+        <p class="t-body">
+          Itu masuk akal, dengan satu koreksi:
+          <strong>masa demonya 1–2 bulan, bukan selama Polda.</strong> Polda bisa molor enam bulan,
+          dan “gratis sampai selesai” berubah jadi gratis setengah tahun buat pelanggan yang sudah
+          bayar — mereka nggak akan protes, tapi lo yang nanggung.
+        </p>
+        <p class="t-body">
+          Gratis itu soal angkanya nol, bukan soal tidak ada perjanjian. Draf tujuh pasalnya ada di
+          <em>Bekal Bisnis Paduna Build</em>. Tanggal mulai dan berakhirnya harus tertulis, bukan “nanti
+          setelah Polda beres”.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Uang masuk tanpa batas tanggung jawab tertulis. Ada bug, vendor salah
+          bayar Rp 50.000.000, dan secara teori tanggung jawabnya tidak terbatas.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t16">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Sepakati komisi bos lo sebelum dia jualan</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Usulan: 30% dari tiap langganan yang dia bawa, berulang selama pelanggannya aktif, plus Dekoria pakai gratis selamanya.</p>
-        <span class="risk"><b>Kalau ditunda</b>Dia akan berasumsi dapat semuanya, lo akan berasumsi dapat semuanya. Tidak ada yang jahat — cuma tidak ada yang pernah bertanya.</span>
+        <div class="t-head">
+          <p class="t-title">Sepakati komisi bos lo sebelum dia jualan</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Usulan: 30% dari tiap langganan yang dia bawa, berulang selama pelanggannya aktif, plus
+          Dekoria pakai gratis selamanya.
+        </p>
+        <span class="risk"
+          ><b>Kalau ditunda</b>Dia akan berasumsi dapat semuanya, lo akan berasumsi dapat semuanya.
+          Tidak ada yang jahat — cuma tidak ada yang pernah bertanya.</span
+        >
       </div>
     </label>
   </section>
@@ -598,61 +914,138 @@ docs/guide/restore-drill.md</code></pre>
       <h2>Sebelum uang pelanggan masuk</h2>
       <span class="when soon">Pemicunya transfer, bukan tanggal</span>
     </div>
-    <p class="sec-note">Pemicunya bukan bulan — tapi rupiah pertama dari perusahaan yang bukan Dekoria. Sebelum itu lo boleh berantakan; sesudahnya nggak, karena ada orang yang bisa nagih.</p>
+    <p class="sec-note">
+      Pemicunya bukan bulan — tapi rupiah pertama dari perusahaan yang bukan Dekoria. Sebelum itu lo
+      boleh berantakan; sesudahnya nggak, karena ada orang yang bisa nagih.
+    </p>
 
     <label class="task" data-kind="do" data-id="t20">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Ukur performa halaman, simpan angkanya sebagai patokan</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body"><code>apps/web/scripts/perf-loaders.ts</code> sudah ada tapi belum di-commit. Jadikan script tetap, jalankan terhadap database Polda yang sudah berisi, catat hasilnya.</p>
-        <p class="t-body">Ini gerbang yang lo sebut sendiri sebelum ngomongin SaaS. Loader yang lambat di database kosong nggak kelihatan lambat — yang bikin lambat itu data.</p>
+        <div class="t-head">
+          <p class="t-title">Ukur performa halaman, simpan angkanya sebagai patokan</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          <code>apps/web/scripts/perf-loaders.ts</code> sudah ada tapi belum di-commit. Jadikan
+          script tetap, jalankan terhadap database Polda yang sudah berisi, catat hasilnya.
+        </p>
+        <p class="t-body">
+          Ini gerbang yang lo sebut sendiri sebelum ngomongin SaaS. Loader yang lambat di database
+          kosong nggak kelihatan lambat — yang bikin lambat itu data.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t21">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Bikin masa langganan berarti sesuatu</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Ini jawaban buat “gimana cara ngeberhentiinnya setelah setahun”. <code>tenant.status</code> dan <code>tenant.subscription_ends_at</code> sudah ada di schema tapi belum dibaca siapa pun.</p>
-        <p class="t-body">Yang perlu dibangun: <code>assertPermission</code> nolak semua tulisan begitu langganan habis, app jadi <strong>read-only</strong> — data mereka tetap bisa dilihat dan diekspor, jangan disandera — plus banner sejak 30 hari sebelum jatuh tempo. Estimasi 1–2 hari.</p>
-        <span class="risk"><b>Kalau dilewat</b>“Berhenti berlangganan” artinya lo nelpon orang dan minta mereka berhenti pakai. Itu bukan sistem, itu permintaan tolong — dan permintaan tolong ke orang yang lagi sibuk selalu kalah.</span>
+        <div class="t-head">
+          <p class="t-title">Bikin masa langganan berarti sesuatu</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Ini jawaban buat “gimana cara ngeberhentiinnya setelah setahun”.
+          <code>tenant.status</code> dan <code>tenant.subscription_ends_at</code> sudah ada di
+          schema tapi belum dibaca siapa pun.
+        </p>
+        <p class="t-body">
+          Yang perlu dibangun: <code>assertPermission</code> nolak semua tulisan begitu langganan
+          habis, app jadi <strong>read-only</strong> — data mereka tetap bisa dilihat dan diekspor,
+          jangan disandera — plus banner sejak 30 hari sebelum jatuh tempo. Estimasi 1–2 hari.
+        </p>
+        <span class="risk"
+          ><b>Kalau dilewat</b>“Berhenti berlangganan” artinya lo nelpon orang dan minta mereka
+          berhenti pakai. Itu bukan sistem, itu permintaan tolong — dan permintaan tolong ke orang
+          yang lagi sibuk selalu kalah.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t22">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Putuskan cara nagih: invoice manual atau payment gateway</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Dua hal yang sering dikira satu. <strong>Penegakan</strong> (t21) yang bikin langganan punya arti — itu wajib. <strong>Penagihan</strong> (ini) cuma soal duitnya masuk lewat mana — itu bisa ditunda.</p>
-        <p class="t-body">Di bawah 10 pelanggan, invoice manual dan transfer masih waras. Payment gateway itu integrasi, rekonsiliasi, dan penanganan gagal bayar — tiga pekerjaan, bukan satu. Rekomendasi: kerjakan t21 sekarang, gateway pas pelanggan keenam.</p>
-        <span class="risk"><b>Kalau dibalik urutannya</b>Lo ngebangun mesin penagihan buat pelanggan yang belum ada, dan tetap nggak punya cara mematikan akses yang sudah lewat masa bayarnya.</span>
+        <div class="t-head">
+          <p class="t-title">Putuskan cara nagih: invoice manual atau payment gateway</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Dua hal yang sering dikira satu. <strong>Penegakan</strong> (t21) yang bikin langganan
+          punya arti — itu wajib. <strong>Penagihan</strong> (ini) cuma soal duitnya masuk lewat
+          mana — itu bisa ditunda.
+        </p>
+        <p class="t-body">
+          Di bawah 10 pelanggan, invoice manual dan transfer masih waras. Payment gateway itu
+          integrasi, rekonsiliasi, dan penanganan gagal bayar — tiga pekerjaan, bukan satu.
+          Rekomendasi: kerjakan t21 sekarang, gateway pas pelanggan keenam.
+        </p>
+        <span class="risk"
+          ><b>Kalau dibalik urutannya</b>Lo ngebangun mesin penagihan buat pelanggan yang belum ada,
+          dan tetap nggak punya cara mematikan akses yang sudah lewat masa bayarnya.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t23">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Putuskan bentuk paket</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Rencana lo: single-tenant (database sendiri) sebagai paket mahal, multi-tenant sebagai paket basic. Sadari harga sebenarnya — itu <strong>dua produk</strong>: dua jalur deploy, dua cara backup, dua tempat bug bisa muncul dengan gejala berbeda.</p>
-        <p class="t-body">Rekomendasi: jual satu bentuk dulu — single-tenant, yang sudah jalan dan sudah terbukti lewat <code>db:provision</code>. Tambah paket basic setelah ada calon pelanggan yang benar-benar mundur karena harga, bukan karena lo membayangkan mereka akan mundur.</p>
+        <div class="t-head">
+          <p class="t-title">Putuskan bentuk paket</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Rencana lo: single-tenant (database sendiri) sebagai paket mahal, multi-tenant sebagai
+          paket basic. Sadari harga sebenarnya — itu <strong>dua produk</strong>: dua jalur deploy,
+          dua cara backup, dua tempat bug bisa muncul dengan gejala berbeda.
+        </p>
+        <p class="t-body">
+          Rekomendasi: jual satu bentuk dulu — single-tenant, yang sudah jalan dan sudah terbukti
+          lewat <code>db:provision</code>. Tambah paket basic setelah ada calon pelanggan yang
+          benar-benar mundur karena harga, bukan karena lo membayangkan mereka akan mundur.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t24">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Tulis kebijakan operasi sebelum agent apa pun dinyalakan</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Daftar-boleh, bukan daftar-larang. <strong>Otonom:</strong> jawab pertanyaan “gimana caranya”, triase tiket masuk, baca log, kabarin lo kalau alert bunyi. <strong>Ajukan dulu, lo yang klik:</strong> balasan yang menyangkut angka pelanggan, restart atau rollback, provisioning instance baru. <strong>Tidak pernah:</strong> menulis ke database pelanggan, memberi refund atau diskon, menjanjikan fitur atau tanggal.</p>
-        <span class="risk"><b>Kenapa bukan “eskalasi kalau critical”</b>Karena yang menilai critical atau bukan itu si agent — dan itu persis jenis penilaian yang paling sering meleset, dengan nada yakin. Kategori “tidak bisa dibatalkan” dan “mengikat lo secara bisnis” bisa ditulis di depan; “critical” tidak bisa.</span>
+        <div class="t-head">
+          <p class="t-title">Tulis kebijakan operasi sebelum agent apa pun dinyalakan</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Daftar-boleh, bukan daftar-larang. <strong>Otonom:</strong> jawab pertanyaan “gimana
+          caranya”, triase tiket masuk, baca log, kabarin lo kalau alert bunyi.
+          <strong>Ajukan dulu, lo yang klik:</strong> balasan yang menyangkut angka pelanggan,
+          restart atau rollback, provisioning instance baru. <strong>Tidak pernah:</strong> menulis
+          ke database pelanggan, memberi refund atau diskon, menjanjikan fitur atau tanggal.
+        </p>
+        <span class="risk"
+          ><b>Kenapa bukan “eskalasi kalau critical”</b>Karena yang menilai critical atau bukan itu
+          si agent — dan itu persis jenis penilaian yang paling sering meleset, dengan nada yakin.
+          Kategori “tidak bisa dibatalkan” dan “mengikat lo secara bisnis” bisa ditulis di depan;
+          “critical” tidak bisa.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t25">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Putuskan siapa yang jaga giliran waktu lo tidur</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Satu-satunya lubang yang tidak bisa ditutup otomasi. Agent bisa ngirim notifikasi; nggak ada yang <em>bangun</em>. Dua jalan keluar yang jujur: orang kedua, atau janji layanan yang tertulis apa adanya — “respons jam kerja, bukan 24 jam”.</p>
-        <span class="risk"><b>Kalau nggak diputuskan</b>Perjanjian yang diam soal jam layanan akan dibaca pelanggan sebagai 24 jam. Dan mereka nggak salah menganggap begitu untuk sistem yang megang uang mereka.</span>
+        <div class="t-head">
+          <p class="t-title">Putuskan siapa yang jaga giliran waktu lo tidur</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Satu-satunya lubang yang tidak bisa ditutup otomasi. Agent bisa ngirim notifikasi; nggak
+          ada yang <em>bangun</em>. Dua jalan keluar yang jujur: orang kedua, atau janji layanan
+          yang tertulis apa adanya — “respons jam kerja, bukan 24 jam”.
+        </p>
+        <span class="risk"
+          ><b>Kalau nggak diputuskan</b>Perjanjian yang diam soal jam layanan akan dibaca pelanggan
+          sebagai 24 jam. Dan mereka nggak salah menganggap begitu untuk sistem yang megang uang
+          mereka.</span
+        >
       </div>
     </label>
   </section>
@@ -662,49 +1055,99 @@ docs/guide/restore-drill.md</code></pre>
       <h2>Peta jalan tenancy</h2>
       <span class="when later">Okt — Feb</span>
     </div>
-    <p class="sec-note">Urutannya A → B → C, dan C hanya ada setelah A dan B. Rinciannya di <code>docs/plans/2026-08-27-tenant-foundation.md</code>.</p>
+    <p class="sec-note">
+      Urutannya A → B → C, dan C hanya ada setelah A dan B. Rinciannya di
+      <code>docs/plans/2026-08-27-tenant-foundation.md</code>.
+    </p>
 
     <label class="task" data-kind="do" data-id="t17">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Fitur A — paket kerja per ruangan</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Polda dipecah jadi Office, Meeting Room, Kitchen; tiap paket punya lingkup, budget, dan realisasi sendiri. Masih satu tenant — ini fitur struktur project, bukan tenancy. Estimasi 2–3 minggu, dibangun sambil Polda berjalan supaya bentuknya datang dari lapangan.</p>
+        <div class="t-head">
+          <p class="t-title">Fitur A — paket kerja per ruangan</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Polda dipecah jadi Office, Meeting Room, Kitchen; tiap paket punya lingkup, budget, dan
+          realisasi sendiri. Masih satu tenant — ini fitur struktur project, bukan tenancy. Estimasi
+          2–3 minggu, dibangun sambil Polda berjalan supaya bentuknya datang dari lapangan.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t18">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Fitur B — RLS menyala, tenant kedua hidup</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Role database terbatas, <code>SET LOCAL app.tenant_id</code> di dalam transaksi, kebijakan RLS plus <code>FORCE ROW LEVEL SECURITY</code> di 53 tabel, dan test isolasi dua tenant. Estimasi 4–6 minggu.</p>
-        <p class="t-body">Provisioning tenant kedua manual, lewat tangan lo sendiri, sampai pelanggan kelima.</p>
+        <div class="t-head">
+          <p class="t-title">Fitur B — RLS menyala, tenant kedua hidup</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Role database terbatas, <code>SET LOCAL app.tenant_id</code> di dalam transaksi, kebijakan
+          RLS plus <code>FORCE ROW LEVEL SECURITY</code> di 53 tabel, dan test isolasi dua tenant.
+          Estimasi 4–6 minggu.
+        </p>
+        <p class="t-body">
+          Provisioning tenant kedua manual, lewat tangan lo sendiri, sampai pelanggan kelima.
+        </p>
       </div>
     </label>
 
     <label class="task" data-kind="do" data-id="t19">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Fitur C — ruang kolaborasi</p><span class="tag do">Kerjakan</span></div>
-        <p class="t-body">Project kolaborasi hidup di tenant Dekoria; vendor dapat grant per paket. Yang masuk ruang bersama: nilai kontrak paket, progres, tagihan diajukan, pembayaran diterima, foto, jadwal.</p>
-        <span class="risk"><b>Batas keras</b>Biaya aktual, margin, dan identitas pemasok vendor tidak pernah keluar dari tenant mereka. Itu bukan daftar “belum diimplementasikan” — itu daftar yang tidak akan pernah, dan alasannya komersial sebelum teknis.</span>
+        <div class="t-head">
+          <p class="t-title">Fitur C — ruang kolaborasi</p>
+          <span class="tag do">Kerjakan</span>
+        </div>
+        <p class="t-body">
+          Project kolaborasi hidup di tenant Dekoria; vendor dapat grant per paket. Yang masuk ruang
+          bersama: nilai kontrak paket, progres, tagihan diajukan, pembayaran diterima, foto,
+          jadwal.
+        </p>
+        <span class="risk"
+          ><b>Batas keras</b>Biaya aktual, margin, dan identitas pemasok vendor tidak pernah keluar
+          dari tenant mereka. Itu bukan daftar “belum diimplementasikan” — itu daftar yang tidak
+          akan pernah, dan alasannya komersial sebelum teknis.</span
+        >
       </div>
     </label>
 
     <label class="task" data-kind="decide" data-id="t28">
-      <input type="checkbox">
+      <input type="checkbox" />
       <div>
-        <div class="t-head"><p class="t-title">Putuskan: backend dipisah dari Next.js atau tidak</p><span class="tag decide">Putuskan</span></div>
-        <p class="t-body">Cuma ada dua alasan sah untuk memisahkan: klien native butuh transport HTTP — dan itu sudah punya jalurnya sendiri lewat rencana tRPC — atau ada tim backend terpisah yang perlu deploy sendiri. Yang kedua belum ada.</p>
-        <p class="t-body">Sebelum salah satunya benar, misahin backend berarti menggandakan deploy, auth, dan tempat bug bisa bersembunyi, tanpa nambah satu pun fitur yang dilihat pelanggan. <strong>Rekomendasi: jangan, sampai <code>apps/mobile</code> benar-benar menuntutnya.</strong></p>
+        <div class="t-head">
+          <p class="t-title">Putuskan: backend dipisah dari Next.js atau tidak</p>
+          <span class="tag decide">Putuskan</span>
+        </div>
+        <p class="t-body">
+          Cuma ada dua alasan sah untuk memisahkan: klien native butuh transport HTTP — dan itu
+          sudah punya jalurnya sendiri lewat rencana tRPC — atau ada tim backend terpisah yang perlu
+          deploy sendiri. Yang kedua belum ada.
+        </p>
+        <p class="t-body">
+          Sebelum salah satunya benar, misahin backend berarti menggandakan deploy, auth, dan tempat
+          bug bisa bersembunyi, tanpa nambah satu pun fitur yang dilihat pelanggan.
+          <strong
+            >Rekomendasi: jangan, sampai <code>apps/mobile</code> benar-benar menuntutnya.</strong
+          >
+        </p>
       </div>
     </label>
   </section>
 
   <footer>
-    <p style="margin:0 0 12px">Centang tersimpan di browser ini saja — tidak dikirim ke mana pun, dan tidak ikut kalau halaman ini dibuka di perangkat lain.</p>
-    <p style="margin:0">Dokumen pendamping: <em>Bekal Bisnis Atria</em> untuk istilah bisnis, cara mikir harga, dan draf kesepakatan. Rencana teknisnya di <code>docs/plans/2026-08-27-tenant-foundation.md</code>. Sumber kedua halaman ini ada di <code>docs/bisnis/</code> — ikut ter-commit, jadi tidak hilang bareng sesi.</p>
+    <p style="margin: 0 0 12px">
+      Centang tersimpan di browser ini saja — tidak dikirim ke mana pun, dan tidak ikut kalau
+      halaman ini dibuka di perangkat lain.
+    </p>
+    <p style="margin: 0">
+      Dokumen pendamping: <em>Bekal Bisnis Paduna Build</em> untuk istilah bisnis, cara mikir harga, dan
+      draf kesepakatan. Rencana teknisnya di
+      <code>docs/plans/2026-08-27-tenant-foundation.md</code>. Sumber kedua halaman ini ada di
+      <code>docs/bisnis/</code> — ikut ter-commit, jadi tidak hilang bareng sesi.
+    </p>
   </footer>
-
 </div>
 
 <script>
@@ -719,11 +1162,15 @@ docs/guide/restore-drill.md</code></pre>
       try {
         var raw = window.localStorage.getItem(KEY);
         return raw ? JSON.parse(raw) : {};
-      } catch (e) { return {}; }
+      } catch (e) {
+        return {};
+      }
     }
 
     function save(state) {
-      try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      try {
+        window.localStorage.setItem(KEY, JSON.stringify(state));
+      } catch (e) {}
     }
 
     var state = load();
@@ -732,8 +1179,12 @@ docs/guide/restore-drill.md</code></pre>
       var done = 0;
       tasks.forEach(function (task) {
         var box = task.querySelector("input");
-        if (box.checked) { task.classList.add("is-done"); done += 1; }
-        else { task.classList.remove("is-done"); }
+        if (box.checked) {
+          task.classList.add("is-done");
+          done += 1;
+        } else {
+          task.classList.remove("is-done");
+        }
       });
       countEl.textContent = String(done);
     }
@@ -752,7 +1203,9 @@ docs/guide/restore-drill.md</code></pre>
     document.getElementById("reset").addEventListener("click", function () {
       state = {};
       save(state);
-      tasks.forEach(function (t) { t.querySelector("input").checked = false; });
+      tasks.forEach(function (t) {
+        t.querySelector("input").checked = false;
+      });
       paint();
     });
 

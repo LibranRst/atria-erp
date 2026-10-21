@@ -34,7 +34,7 @@ pengaturan retensi database itu sendiri, dan pengaturan itu tidak ikut berpindah
 Ini satu-satunya langkah yang tidak bisa diotomatiskan; ia mengubah pengaturan
 akun.
 
-1. Buka project Atria di console Neon.
+1. Buka project Neon yang dipakai Paduna Build.
 2. Cari pengaturan **retensi riwayat** untuk project itu (Neon pernah menamainya
    _history retention_, _restore window_, atau _PITR window_ — labelnya berubah
    antar versi console, tetapi fungsinya satu: berapa jauh ke belakang restore

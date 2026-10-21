@@ -1,0 +1,32 @@
+# AI project stock: reserve, use and return
+
+## Scope and inherited direction
+
+Implement the authorized first follow-up: reserve, use and return project stock through read-only AI proposals and explicit user confirmation. Preserve manual public signatures, existing two-decimal stock/cost calculations and linked-cost attribution, operational/readiness guards, live database permissions and scoped Actor. Purchasing/NONE with create:stock_movement retains the existing domain-only warehouse access; ASSIGNED always remains project-bound. No new role grants, cash/payment operations, transfer, waste, adjustment or vendor-bill authoring.
+
+THESIS: Review the exact project/material/location quantities and consequences before any stock movement.
+OWN-WORLD: Existing Atria Manrope, cool canvas, white grouped rows, quiet utility capsules and fullDynamic money.
+STORY: Identify actual stock/RAP/source → inspect budget and availability → preview before/after → confirm → receipt.
+FIRST VIEWPORT: Project/action identity, concise stock/budget summary, contextual rows left and protected actions right on desktop; one column on mobile.
+FORM: Shared ProposalCardShell/FormSheet/ReviewCollection/ReviewItem/FactRow/ProposalDiffRow/ProposalReviewFeedback, five rows per page, natural bounded height, same focus/motion ownership; inherited approved form, no new visual world.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+
+## Backend and contracts
+
+- Extract shared transactional preparation/writer for the three current manual actions; use the same writer for AI. Read actual inventory, own reservation/net usage, same-project Material RAP/cost/bill links and cost attribution before mutation. Lock project and inventories, check quantities against own/global reservations and net usage, preserve stock_movement/audit/noncash expense sync. Existing budget allocations/cash remain unchanged; use/return may affect actual Material usage as the current backend does.
+- Pure strict core schema/DTO: one action per proposal, one operational project, up to20 unique material/location pairs, max two decimals/finite bounds, explicit note and optional validated source links/cost override. Never silently trim a batch, auto-convert units or infer material/location/source IDs.
+- Read-only paginated lookup scoped to effective domain rights; identify active materials/locations and actual eligible RAP/cost/bill/source movements. Budget summary is calculated server-side, exposed only with budget-read permission. Never imply reservation spends budget or changes physical stock; return is actual unused stock returned, not cancellation of a reservation.
+- Immutable owned assistant proposal,30-day TTL, exact before/after and context fingerprint. Fixed read/confirm operations through static registry and typed web facades. Confirmation accepts identity only, rechecks current Actor/ownership/permissions/scope/readiness and fresh locked context; write the entire batch, audits/noncash attribution and idempotent receipt atomically. Stale proposals require refresh through chat; retries return the receipt. Never reserve or use another project's quota, return beyond net usage or create a cash transaction.
+
+## Verification
+
+Meaningful core tests cover stock deltas/precision/limits/other-project reservations/net return. API/disposable PostgreSQL integration covers all actions, own reservation vs unreserved stock, source links/attribution and budget sync, custom/Purchasing/assigned/NONE scope, ownership/expiry/revocation, stale/manual races, concurrent confirmation/replay, whole-batch rollback, stock movements/audits and zero cash. DOM tests cover explicit second confirmation, pending/retry/stale/permission masking/pagination. Dev web in-app Browser only, synthetic disabled previews at320/360/390/430 and1024/1280/1440; no business mutations in development. Update AI docs/coverage and design rules, quality gates and Graft. Disposable DB only via ATRIA_TEST_DATABASE_URL; preserve unrelated dirty worktree changes.
+
+## Completed implementation and evidence — 2026-10-10
+
+- Three read-only tool proposals and two fixed backend operations are implemented. Manual reserve/use/return keep their public signatures and share the same transactional writer. Unique paid cost sources prevent double attribution; a vendor bill reference alone retains existing manual cost semantics. No migration, role grant, allocation or cash mutation was added.
+- Core stock tests: 3 passed. Registry/capability/read-only checks: 22 passed, with stock-link regression checks also passing. Disposable PostgreSQL integration: 10 passed, including the actual concurrent manual-write race, duplicate confirmation, linked paid-cost return/reuse and a later-write failure rolling back the entire batch and receipt. The guarded local preload supplies ATRIA_TEST_DATABASE_URL for the task-owned disposable database; development business data is never used by integration tests.
+- Final scoped web/DOM regressions: 5 passed. Development operator lifecycle tests: 15 passed. API typecheck and workspace API/web/admin/mobile build passed; the final web build also passed after the last comparison-label and saved-route adjustments. Scoped lint, generated tokens and HeroUI styles are checked separately.
+- In-app Browser dev app evidence: all three reviews at seven supported widths; 21 checks with no document/money overflow, at most five rows and a bounded modal. Pagination and keyboard disclosure remain stable across resize. Synthetic owned QA proposals intentionally have invalid business sources and disabled save actions. Corrected return captures show physical 500→503, available 400→403, related net use 5→2 and a noncash realization reduction. Evidence: output/ai-chat-qa/project-stock/ and viewport-matrix.json.
+- Fresh Impeccable finish review: ship after replacing two mistakenly captured usage screenshots in the return evidence. No material UI findings remain. Durable design rules are merged into the incumbent DESIGN.md and sidecar without replacing the visual world.
+- Broader workspace gates are not wholly green: concurrent Dashboard work outside this stock change has one failing desktop-risk ownership test and two synchronous-effect setState lint errors in use-desktop-dashboard-data.ts. These are recorded separately and are not repaired as part of the stock workflow.

@@ -1,0 +1,46 @@
+# AI v1 factual completion verification
+
+Status: **complete for the exercised local QA scope**, 13 October 2026. Expense statuses and bounded financial-period comparisons are implemented and exercised with the configured live model through the visible Browser. This is feature acceptance, not production-hosting certification.
+
+## Actual live Browser results
+
+The retained ordinary Owner session used `http://127.0.0.1:3004/ai`, the isolated API on port 3005 and synthetic QA records. All eight final scenarios produced the expected outcome:
+
+| Scenario                                             | Final result                                                                                                                                                                                                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proyek Operasional QA, October versus September 2026 | Verified one historical source: October recorded cost Rp400.000 / one stock-use record; inventory acquisition Rp1.000.000 excluded from consumed cost; September zero. Partial October and undefined percentage against a zero baseline stated. |
+| Current stock-use expense, natural quoted name       | Verified Rp400.000, approved, noncash; no new cash payment implied.                                                                                                                                                                             |
+| Current purchase expense, natural quoted name        | Verified Rp1.000.000, paid inventory acquisition; distinct from Material usage cost.                                                                                                                                                            |
+| Company cash, October versus September               | Verified October cash in zero, cash out Rp3.043.500, net −Rp3.043.500 across 48 tenant transactions; September zero.                                                                                                                            |
+| Rekening Operasional QA cash comparison              | Verified October outflow Rp1.000.000 / one vendor payment; September zero; not presented as a historical balance.                                                                                                                               |
+| Duplicate “Invoice asli pemasok · data sintetis”     | Partial/candidates: five actual projects shown; human selection requested, no automatic transaction choice.                                                                                                                                     |
+| Unsupported September account balance                | Explicit factual error, zero verified sources; no current balance figure/card substituted. The failed history read remains visible in activity.                                                                                                 |
+| Current statuses of today's recorded expenses        | Verified two rows on 13 October 2026 in Asia/Jakarta: Rp400.000 approved/noncash and Rp1.000.000 paid inventory acquisition. Dates describe expense records; statuses are current, not past approval snapshots.                                 |
+
+Persisted evidence is in `output/ai-chat-qa/factual-finish/browser-observation.json` and the compact `final-acceptance.json`, with exact user/assistant IDs, original questions, source provenance and published text. Across two QA threads there are 12 user and 12 assistant records, including genuine manual debugging resubmissions and corrected replays. Identified Retry after refresh reused the existing submitted user identity. No new confirmation receipt was created.
+
+Initial trials exposed an overbroad stock-history guard, quoted-identity boundaries, negated-action classification, unnecessary current readers during a historical turn, and an irrelevant current-balance card accompanying an unsupported answer. These were fixed and the affected cases replayed. Historical execution now permits only the historical reader; remembered current-bank calls cannot execute. Earlier genuine failed/waiting messages remain historical evidence rather than being relabeled successful.
+
+## Role, date and financial boundaries
+
+Current backend probes pass **28/28** using seven existing actors with their actual effective grants and scopes. Owner/Finance read eligible tenant expenses and company/account cash. Assigned PM A reads its operational project; PM B cannot read it, and reciprocal foreign-project checks deny access. PMs do not receive company cash. Purchasing and the custom “Owner” label with NONE scope cannot gain financial/project access; no-AI grants disable the catalog/service. These are current backend checks. The earlier seven-role ordinary-login Browser UAT is separately documented in [the role report](ai-final-role-uat-verification-2026-10-13.md); this new live Browser run uses Owner only.
+
+Historical expense aggregates use `projectExpenses.expenseDate`; cash uses ledger `cashTransaction.createdAt`, independently of import/reconciliation dates. Period boundaries follow Asia/Jakarta with an inclusive start, exclusive end and current-period cap at server observation time. Counts/totals cover the complete scoped period, not a recent page. Recorded expense amount, Material consumption and paid cash remain distinct. Current status is not proof of past approval status. Exact cents, ambiguity, source identity and pagination are tested.
+
+## Checks and preservation
+
+- Normal API regression: **618 pass, 559 integration skips, zero failures, 5,569 assertions**. Later focused runtime/SDK/fact checks: 52 pass.
+- Final factual SDK suite: **14 pass**, including false model amounts/dates, exact current expense fields, full-period versus paginated/stale data, wrong scopes/periods, mixed-domain completeness, original-question/attachment separation, proposal blocking, and remembered current-bank calls on unsupported history. These focused suites overlap and are not summed into a unique test total.
+- ChatMessage rendering: **14 pass**, including current-card suppression for unsupported errors, retained genuine activity errors, and unchanged waiting candidates/legacy results.
+- Disposable Postgres: **7 expense tests / 33 assertions** and **6 history tests / 19 assertions**, separately exercised on `atria_audit_role_clean`.
+- Root checks: **475 core tests / 1,724 assertions**, **1,006 web tests / 4,588 assertions**, API build passing. Scoped ESLint/format/diff checks pass; root's final type/lint checks are recorded in the handoff. The known Material Master dependency warning is unrelated.
+- Final web typecheck and workspace lint pass with zero lint errors and the one existing Material Master warning. Web production build passes. A final 48-test SDK/facts run also protects mixed current-status requests from substituting current values for an unsupported past snapshot.
+- Final `business-verification.json`: **all 27 protected collection hashes unchanged**—22 business collections plus roles, grants, memberships, users and credential rows. Cash remains 50 rows, stock movements 20, confirmation receipts 66. No business/auth writes, credential resets or production changes occurred during this factual run.
+
+The scoped architectural guard permits only the historical reader's single database-enforced READ ONLY, repeatable-read transaction. AST checks reject another file, another transaction, dynamic/read-write access mode or changed isolation; all database/transaction mutators and raw execution stay forbidden.
+
+The UI extends existing `ChatMessage` result gating and reuses `ChatBubble`, `ChatMarkdown`, `ToolTraceList`, candidate result renderers and `MoneyValue`; no new primitive, surface, token or animation was introduced. Only `error` with an empty factual source list suppresses unrelated result cards; waiting-choice candidates and actual activity errors remain visible. History and final refreshed expense-status responsive evidence cover 320/360/390/430 and 1024/1280/1440px with no document overflow (`responsive-history.json`, `final-responsive.json`). Representative screenshots include `final-preview-desktop.png`, `final-responsive-390.png`, `expense-noncash-live.png`, `expense-inventory-purchase-live.png`, `company-cash-live.png`, `account-cash-live.png`, `duplicate-expense-choice-live.png` and `unsupported-history-final.png`.
+
+## Limits
+
+This verifies stored expense/cash periods, not past balances, historic allocations, stock snapshots, prior approval states or forecasts. The Browser dataset has no transfer/opening/correction exclusions in its selected months; exclusion, backdating, timezone edges and full aggregation are covered by automated fixtures. Production deployment, private uploads/OCR/storage and hosted streaming remain release-environment checks. The read-only operator is locked to the named loopback disposable database and saves no connection credentials.

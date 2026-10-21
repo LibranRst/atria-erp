@@ -10,7 +10,7 @@ Cloudflare Account ID adalah `222cd96d186c2a56d6d502ec4f96f94f`. Pengguna menyel
 
 ## Bucket dan retensi
 
-1. Buat bucket baru **`atria-erp-backups`** dengan storage class **Standard**, default jurisdiction, dan lokasi otomatis atau petunjuk lokasi Asia-Pacific. Bucket khusus ini dipakai hanya untuk backup Atria.
+1. Buat bucket baru **`atria-erp-backups`** dengan storage class **Standard**, default jurisdiction, dan lokasi otomatis atau petunjuk lokasi Asia-Pacific. Bucket khusus ini dipakai hanya untuk backup Paduna Build.
 2. Pertahankan akses private: public `r2.dev` dan custom domain tidak diaktifkan. R2 [mengenkripsi data otomatis saat disimpan dan dikirim](https://developers.cloudflare.com/r2/reference/data-security/).
 3. Siapkan bucket lock untuk prefix `atria-erp/prod/` selama **30 hari**. Lock melindungi objek dari hapus/overwrite selama periode itu; pengelola bucket masih dapat mengubah konfigurasi lock. [Bucket locks](https://developers.cloudflare.com/r2/buckets/bucket-locks/).
 4. Siapkan lifecycle expiration **30 hari** untuk prefix yang sama, tanpa perpindahan ke Infrequent Access. Lifecycle menghapus backup lama secara permanen; sebelum menyimpan rule lewat browser, pemilik akun perlu menyetujui retensi/penghapusan ini. Lock berlaku lebih dahulu bila aturannya lebih ketat. [Object lifecycles](https://developers.cloudflare.com/r2/buckets/object-lifecycles/).

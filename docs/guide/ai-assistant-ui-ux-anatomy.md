@@ -1,12 +1,12 @@
-# Anatomi Elemen UI/UX — AI Assistant Atria ERP
+# Anatomi Elemen UI/UX — AI Assistant Paduna Build
 
-Dokumen ini adalah panduan referensi lengkap mengenai seluruh komponen antarmuka, tata letak, hierarki visual, dan alur interaksi fitur **AI Assistant** di Atria ERP.
+Dokumen ini adalah panduan referensi lengkap mengenai seluruh komponen antarmuka, tata letak, hierarki visual, dan alur interaksi fitur **AI Assistant** di Paduna Build.
 
 ---
 
 ## 1. Filosofi Desain & Prinsip Kerja
 
-Fitur AI Assistant Atria ERP dirancang dengan prinsip **Calm Modern Luxury & Human-in-the-Loop**:
+Fitur AI Assistant Paduna Build dirancang dengan prinsip **Calm Modern Luxury & Human-in-the-Loop**:
 
 1. **Transparan & Akuntabel**: Pengguna selalu melihat dari mana data diambil melalui _Tool Trace_, sehingga tidak ada angka halusinasi.
 2. **Aman & Non-Destruktif**: Model bahasa (LLM) berjalan 100% _Read-Only_. AI tidak bisa memutasi data secara mandiri; perubahan baru terjadi ketika manusia menekan tombol konfirmasi pada _Proposal Card_.
@@ -25,7 +25,7 @@ Fitur AI Assistant Atria ERP dirancang dengan prinsip **Calm Modern Luxury & Hum
 │                                                          │
 │  [2] EMPTY STATE (Jika Percakapan Masih Kosong)          │
 │  ┌────────────────────────────────────────────────────┐  │
-│  │ 🤖 Asisten Cerdas Atria                            │  │
+│  │ 🤖 Asisten Cerdas Paduna Build                            │  │
 │  │ Panduan Cepat:                                     │  │
 │  │ [ + Buat Proyek ]        [ 📝 Catat Biaya ]        │  │
 │  │ [ 💳 Bayar Vendor ]      [ 📦 Terima Stok ]        │  │
@@ -190,7 +190,7 @@ Fitur AI Assistant Atria ERP dirancang dengan prinsip **Calm Modern Luxury & Hum
 
 - **Lokasi Kode**: [`apps/web/features/ai-chat/components/chat-composer.tsx`](file:///Volumes/DekoriaSSD/App%20Projects/Websites/atria-erp/apps/web/features/ai-chat/components/chat-composer.tsx)
 - **Peran**:
-  - Input teks mandiri dengan radius penuh (_rounded-full_, min tinggi 48px sesuai standar form iOS Atria).
+  - Input teks mandiri dengan radius penuh (_rounded-full_, min tinggi 48px sesuai standar form iOS Paduna Build).
   - Tombol kirim berkapsul dengan transisi otomatis ke ikon putar _loading_ saat asisten sedang berpikir atau menjalankan stream.
 
 ---

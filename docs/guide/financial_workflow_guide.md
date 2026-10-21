@@ -1,1420 +1,863 @@
-# Walkthrough UAT Atria ERP — Dari Data Operasional Kosong sampai Project Closing
+# Panduan Paduna Build: memahami angka dan mencoba seluruh alur dari setup sampai closing
 
-Versi implementasi: **7 September 2026**
-Audit pendamping: `docs/guide/workflow_audit_2026-07-16.md`
+Diperbarui 6 Oktober 2026. Panduan ini mengikuti web Paduna Build dengan backend API terpisah dan memakai satu latihan dengan angka yang bisa dihitung ulang. Tidak perlu punya dasar akuntansi untuk memulainya.
 
-## Status Verifikasi & Ringkasan Eksekutif
+Tujuan akhirnya: kamu bisa menjawab **proyek ini menjual berapa, boleh menghabiskan berapa, sudah memakai biaya berapa, sudah membayar berapa, uang klien yang belum diterima berapa, stok yang masih ada berapa, dan margin yang tersisa berapa**.
 
-Runbook ini adalah panduan operasional dan User Acceptance Testing (UAT) resmi Atria ERP untuk Dekoria (*interior design & build*). Baseline finansial dan kontrol material dirancang untuk dieksekusi secara literal dari kondisi **database kosong**, diverifikasi pada antarmuka pengguna (UI), cross-surface agregat, serta verifikasi read-only langsung ke tabel PostgreSQL.
+## Cara memakai panduan
 
-**Prinsip Desain Panduan Ini:**
-- **Self-Contained Step Data**: Setiap langkah memuat seluruh data input (nama field, nilai input, nominal, opsi dropdown) secara langsung di tempat (*in-place*). Penguji tidak perlu scroll bolak-balik ke tabel master di bagian atas untuk menyalin data.
-- **Urutan Workflow yang Akurat**: Penyiapan data master telah diselaraskan dengan dependensi form UI riil (Vendor Master disiapkan sebelum Material Master agar dropdown *Vendor default* langsung dapat dipilih).
-- **Sinkronisasi UI Real-Time**: Seluruh label tombol, nama tab navigasi proyek (`Ringkasan`, `RAB`, `RAP`, `Stok`, `Pengeluaran`, `Pembayaran`, `Margin`), dan URL route cocok persis dengan kode aplikasi di `apps/web/`.
+Kerjakan latihan utama berurutan. Setelah setiap tahap, berhenti dan cocokkan angka pada tabel. Kalau berbeda, cari transaksi penyebabnya sebelum lanjut. Jangan menambah data di luar latihan utama sebelum checkpoint akhir; uji fitur tambahan memakai bagian terpisah agar angka pembanding tetap jelas.
 
-**Cakupan Verifikasi Dokumen:**
-- **Bagian A (A0–A5)**: Bootstrap Owner pertama (`/setup`), Onboarding Quick Start v2 (`/onboarding`), Kesiapan Operasional (`/settings?tab=readiness`), Developer Account Switcher (`/profile`), Post-Setup Consistency Check, Role Boundary Security Gate.
-- **Bagian B (B1–B12)**: Siklus hidup proyek lengkap dari penugasan PM, penyusunan Internal Plan (RAP Material, Paket Tukang, Paket Subcon), kalkulasi dan persetujuan RAB Klien (RAB Approved Rp50.000.000), penagihan Invoice DP 50% & Inflow kas BCA, pengadaan material (reservasi stok gudang, tagihan vendor bill, pembayaran, Goods Receipt), pemakaian bengkel (USE, RETURN, WASTE), upah tukang (kasbon kas kecil & transfer BCA), tagihan subcon & operasional lapangan, penagihan Termin 2, rekonsiliasi mutasi rekening koran BCA 100%, Change Order (+Rp6.000.000 dengan rescale proporsional), penagihan Termin 3 / BAST, verifikasi 10 invariant closing blocker, hingga finalisasi Project Closing di tab Margin.
-- **Bagian C**: Matriks 18 Negative Tests executable yang menguji penolakan mutasi tidak sah tanpa menimbulkan *partial write* pada database.
-- **Bagian D**: Panduan Troubleshooting dan Safe Resume State untuk pemulihan operasional tanpa reset data.
+Gunakan database latihan lokal untuk percobaan pertama. Production di [atria-dekoria-app.netlify.app](https://atria-dekoria-app.netlify.app) memakai database dan akun existing yang sama. Rilis notifikasi 6 Oktober mempertahankan data yang sudah dimasukkan; login dengan akun lama. Setup Owner pertama hanya diperlukan pada database baru/kosong. Jika nanti mengisi angka latihan di production, angka itu menjadi data sungguhan dalam instance tersebut; jangan mencampurnya dengan baseline proyek perusahaan.
 
----
+Penjelasan role dan serah-terima kerja ada di [bagian 3.4](#34-role-hak-akses-dan-cara-tim-bekerja-bersama).
 
-## 1. Arti “Mulai dari Kosong” & Prasyarat Environment
+Urutan baca:
 
-Runbook ini dimulai dari database yang telah menjalankan seluruh migration Drizzle tetapi belum memiliki data transaksi bisnis:
+1. [Menjalankan app dan memilih environment](#1-menjalankan-app-dan-memilih-environment).
+2. [Dasar finance yang dipakai Paduna Build](#2-dasar-finance-yang-dipakai-paduna-build).
+3. [Setup Owner, tim, rekening, dan master](#3-setup-owner-tim-rekening-dan-master).
+4. [RAP, RAB, budget, dan aktivasi](#4-rap-rab-budget-dan-aktivasi).
+5. [Invoice, pembayaran, stok, dan pengeluaran](#5-invoice-pembayaran-stok-dan-pengeluaran).
+6. [Memeriksa angka akhir](#6-memeriksa-angka-akhir).
+7. [Rekonsiliasi dan closing](#7-rekonsiliasi-dan-closing).
+8. [Fitur tambahan dan pengujian kesalahan](#8-fitur-tambahan-dan-pengujian-kesalahan).
+9. [Checklist pribadi](#9-checklist-pribadi).
 
-- **0 user bisnis, 0 project, 0 client, 0 vendor, 0 rekening bank, 0 item material, 0 mutasi stok, 0 invoice, 0 pengeluaran, 0 tagihan, dan 0 approval**.
-- **Tanpa seed transaksi**: Jangan menjalankan `bun run db:seed` jika ingin menguji alur instalasi baru dari awal.
-- Konfigurasi environment `.env` yang dipersyaratkan:
-  ```env
-  DATABASE_URL="postgresql://postgres:postgres@localhost:5432/atria_dev"
-  BETTER_AUTH_SECRET="rahasia-auth-development-min-32-karakter-atria-erp"
-  BETTER_AUTH_URL="http://localhost:3000"
-  ATRIA_BOOTSTRAP_SECRET="super-secret-bootstrap-key-dekoria-2026"
-  ATRIA_DEV_ACCOUNT_SWITCHER_ENABLED="true"
-  ```
-- Seluruh akun tim, rekening, saldo awal kas, vendor, material master, stok pembuka opname, dan transaksi proyek dibentuk melalui UI dan Server Action resmi.
+## 1. Menjalankan app dan memilih environment
 
-> **Pilih Mode Test:** Dokumen ini menguji instalasi baru dari database kosong. Untuk latihan atau eksplorasi data demo yang sudah terisi lengkap, gunakan [`seeded_demo_walkthrough.md`](./seeded_demo_walkthrough.md). Jangan mencampur kedua dataset dalam satu pengujian.
+### Production dan development mempunyai data berbeda
 
-### Reset Database Development ke Data Kosong
+| Environment                                  | Web                                     | API                                   | Database                  | Dipakai untuk                               |
+| -------------------------------------------- | --------------------------------------- | ------------------------------------- | ------------------------- | ------------------------------------------- |
+| Production                                   | `https://atria-dekoria-app.netlify.app` | API Railway                           | `atria_pilot`             | Penggunaan bersama boss, data dipertahankan |
+| Latihan development yang disiapkan 5 Oktober | `http://localhost:3010`                 | `http://localhost:3011`               | `atria_practice_20261005` | Percobaan pribadi dari setup kosong         |
+| Development sebelumnya                       | Konfigurasi sebelumnya disimpan privat  | API lama dapat masih berjalan di 3001 | `atria_uat_guard`         | Data development lama yang dipertahankan    |
 
-Jalankan script reset hanya ketika seluruh data pada `DATABASE_URL` development memang boleh dibersihkan:
+Web/API latihan berjalan di Mac, tetapi PostgreSQL latihan tetap berada di Neon. Kamu memerlukan internet untuk database, upload ImageKit, dan AI. Database kosong bukan berarti schema kosong: tabel/migration dan fondasi sistem tetap ada, sedangkan akun/proyek/transaksi bisnis belum dibuat.
 
-```bash
-# 1. Periksa target database tanpa mutasi (dry-run)
-bun run db:reset --dry-run
+### Dua terminal untuk web + API
 
-# 2. Eksekusi reset eksplisit
-bun run db:reset --confirm-reset
+Dari root repository, jalankan:
+
+Terminal pertama:
+
+```sh
+PORT=3011 bun run dev:api
 ```
 
-Setelah reset, buka browser pada route `/setup` dan mulai dari **A0. Bootstrap First Owner**.
+Terminal kedua:
 
----
-
-## 2. Akun, Kredensial UAT, dan Matriks Tanggung Jawab Role
-
-Gunakan empat akun peran berbeda dengan email berpola `role@dekoria.test` dan satu password seragam untuk kemudahan simulasi UAT:
-
-### Kredensial UAT
-
-| Role            | Nama Tampilan             | Email                     | Password Awal   | Akses Utama & Wewenang                                |
-| --------------- | ------------------------- | ------------------------- | --------------- | ----------------------------------------------------- |
-| Owner           | `Ronald Wijaya`           | `owner@dekoria.test`      | `Dekoria123456` | Seluruh sistem, setup, approval global, closing       |
-| Finance Admin   | `Finance UAT`             | `finance@dekoria.test`    | `Dekoria123456` | Rekening, verifikasi expense, pencairan, rekonsiliasi |
-| Project Manager | `PM UAT Budi`             | `pm@dekoria.test`         | `Dekoria123456` | Proyek yang ditugaskan, susun RAP, ajukan pengeluaran |
-| Purchasing      | `Purchasing UAT`          | `purchasing@dekoria.test` | `Dekoria123456` | Lokasi, Material Master, pergerakan stok gudang       |
-
-Password `Dekoria123456` memenuhi validasi minimal 12 karakter dengan kombinasi huruf besar, huruf kecil, dan angka. **Jangan gunakan password sederhana ini pada environment production.**
-
-### Matriks Tanggung Jawab dan Batasan Ketat
-
-| Role            | Tanggung Jawab Utama                                                                     | Batasan Ketat (Dilarang Keras / Unauthorized)                 |
-| --------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Owner           | Setup awal, default budget, persetujuan RAB, review high-risk, Change Order, closing     | Menganggap approval dokumen sebagai mutasi kas langsung       |
-| Finance Admin   | Kelola rekening, verifikasi expense, pencairan vendor/lapangan, invoice, rekonsiliasi bank | Mengubah stok tanpa aksi penerimaan/pengeluaran material riil |
-| Project Manager | Kelola proyek yang di-assign, susun RAP & paket kerja, ajukan nota/tagihan lapangan      | Melihat total kas perusahaan di `/ledger`, self-verify expense|
-| Purchasing      | Kelola master material, lokasi, penerimaan barang, reservasi/use/return/waste stok gudang| Melihat saldo rekening bank atau mengubah formula margin      |
-
-Setelah Developer Account Switcher aktif (A3), pergantian akun dapat dilakukan instan dari menu Profil (`/profile`) atau bar simulasi tanpa perlu logout-login manual.
-
----
-
-## 3. Dataset Kontrol Studi Kasus Real-World (Bassura City)
-
-Bagian ini berfungsi sebagai **Ringkasan Kontrol Global (Master Reference)** untuk memeriksa kecocokan angka akhir. Anda **tidak perlu menyalin data dari sini saat eksekusi** karena setiap langkah operasional pada Bagian A dan B telah memuat data input lengkap siap salin.
-
-### 3.1 Identitas Bisnis, Proyek, dan Rekening Bank
-- **Perusahaan**: PT Dekoria Desain Estetika
-- **Nama Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-- **Klien**: `Bpk. Hendra Gunawan` (No HP: `081122334455`, Email: `hendra.gunawan@testmail.id`)
-- **Project Manager**: `PM UAT Budi`
-- **Lokasi Gudang**: `Workshop & Gudang Cikarang`
-- **Kas Awal Perusahaan**: **Rp165.000.000** (BCA Operasional Rp150.000.000 + Kas Kecil Rp15.000.000)
-
-### 3.2 Target Finansial Kontrak Awal Rp50.000.000 (Derivasi Bersih Cara A)
-- **Nilai Kontrak / Total RAB Disetujui**: **Rp50.000.000**
-- **Pemisahan Porsi Komponen RAB**:
-  - **Porsi Produksi / Fisik**: **Rp28.070.000** (6 Item Material RAP + 1 Paket Tukang + 2 Paket Subcon)
-  - **Porsi Jasa Desain & Fee Manajemen**: **Rp21.930.000** (`SERVICE_FEE`, dialokasikan 100% ke laba kotor)
-- **Budget Internal Fisik (Cap 90% dari Porsi Fisik)**: **Rp25.265.000**
-- **Alokasi Plafon 5 Kategori Fisik (dihitung dari Budget Fisik Rp25.265.000)**:
-  - Material (38%): `Rp9.600.700` *(membungkus RAP Material Rp7.265.000 secara logis & aman)*
-  - Tukang (28%): `Rp7.074.200`
-  - Subcon (20%): `Rp5.053.000`
-  - Operasional (4%): `Rp1.010.600`
-  - Lain-lain (2%): `Rp505.300`
-  - Buffer Fleksibilitas (8%): `Rp2.021.200`
-- **Dual Target Gross Margin**:
-  - **Margin Murni Produksi (Fisik)**: **10,0%** (`Rp2.805.000`) — batas aman efisiensi belanja operasional lapangan.
-  - **Margin Total Proyek (Komersial)**: **49,5%** (`Rp24.735.000`) — akumulasi fee jasa desain (Rp21,93 jt) + margin fisik (Rp2,805 jt).
-
-### 3.3 Ringkasan Persediaan & Master Vendor
-- **Total Nilai Saldo Awal Gudang (Opname)**: **Rp4.865.000** (6 item bahan baku di Gudang Cikarang).
-- **Vendor Partner Utama**:
-  1. `PT Sumber Abadi Panel & HPL` (Bahan Baku & Fitting)
-  2. `CV Marmer Indah Sentosa` (Subcon Top Table Solid Surface)
-  3. `PT Kaca Nusantara Prima` (Subcon Cermin & Kaca)
-
----
-
-## 4. Matriks Checkpoint State Terpusat (Resume Matrix)
-
-Tabel ini menjadi acuan verifikasi cepat dan titik resume pengujian. Jika sistem terhenti di tengah jalan, periksa kondisi database dan lanjutkan ke langkah berikutnya tanpa mengulang mutasi.
-
-| Checkpoint | Deskripsi State | Prerequisite | Jangan Ulangi Jika | Expected Database / UI State | Lanjut Ke |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **CP-0** | Fresh Blank DB | Reset selesai | Ada row di `users` | 0 users, 0 bank accounts, 0 projects | **A0** |
-| **CP-A0** | Owner Bootstrapped | CP-0 | Owner sudah ada | 1 user role `OWNER`, 5 categories, 1 budget default | **A1** |
-| **CP-A1** | Quick Start Project Draft | CP-A0 | Proyek Bassura ada | 1 client, 1 project `DRAFT`, 5 category budgets | **A2** |
-| **CP-A2** | Operational Readiness 100% | CP-A1 | 4 staff, 2 banks, 3 vendors, 6 items | 4 users, 2 bank accounts (Rp165jt), 3 vendors, 6 materials (Rp4.865jt) | **A3** |
-| **CP-B1** | PM Assigned | CP-A2 | `project.project_manager_id` terisi | Proyek `DRAFT`, PM terhubung | **B2** |
-| **CP-B2** | RAP Locked | CP-B1 | `project_rap.status = 'LOCKED'` | RAP cost Rp25.265.000 terkunci | **B3** |
-| **CP-B3** | RAB Approved & Active | CP-B2 | `rab_estimate.status = 'APPROVED'` | Proyek `ACTIVE`, Budget internal Rp45jt aktif | **B4** |
-| **CP-B4** | DP Invoiced & Paid | CP-B3 | Invoice DP `PAID` | BCA: Rp175jt, Piutang: Rp0, Total Kas: Rp190jt | **B5** |
-| **CP-B5** | Procurement & GR Posted | CP-B4 | GR Posted & Bill Paid | BCA: Rp166.5jt, Mat Paid: Rp8.5jt, Stok fisik naik | **B6** |
-| **CP-B6** | Material Consumed (Workshop) | CP-B5 | Movements USE/RET/WASTE ada | Mat Actual: Rp3.000.000, Stok fisik berkurang | **B7** |
-| **CP-B7** | Tukang Wages Paid | CP-B6 | Tukang expense `PAID` | Kas kecil: Rp11jt, BCA: Rp160.5jt, Tukang Act: Rp10jt | **B8** |
-| **CP-B8** | Subcon & Ops Paid | CP-B7 | Subcon & Ops `PAID` | BCA: Rp152.5jt, Kas kecil: Rp9.6jt, Subcon: Rp8jt, Ops: Rp1.4jt | **B9** |
-| **CP-B9** | Termin 2 & Bank Reconciled | CP-B8 | 6 cash transactions reconciled | BCA: Rp170jt, 100% bank mutation reconciled | **B10** |
-| **CP-B10**| Mid-Project Audit | CP-B9 | Posisi kas dievaluasi | Biaya Actual: Rp22.4jt, Margin: 55,2% | **B11** |
-| **CP-B11**| Change Order Approved | CP-B10 | CO Approved, Inv CO Paid | Kontrak: Rp56jt, Budget: Rp50.4jt, BCA: Rp176jt | **B12** |
-| **CP-B12**| Project Closed | CP-B11 | `project.status = 'COMPLETED'` | Snapshot final terkunci di tab Margin, 10 invariant bersih | **Selesai** |
-
----
-
-## BAGIAN A — Bootstrap First Owner, Onboarding Quick Start v2, & Kesiapan Operasional
-
-```
-                           ALUR SETUP ORGANISASI BARU
- ┌────────────────────────────────────────────────────────────────────────┐
- │ A0. Bootstrap First Owner (/setup)                                     │
- │     └─ Buat akun Owner pertama dari database kosong                    │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ A1. Quick Start Owner v2 (/onboarding)                                 │
- │     ├─ Layar 1: Pengenalan (Welcome)                                   │
- │     ├─ Layar 2: Default Finansial (Review Cap 90% & 5 Kategori)        │
- │     ├─ Layar 3: Project Pertama (Studio Bassura City Rp50.000.000)     │
- │     └─ Layar 4: Sukses (Project Draft & Budget terbentuk atomik)       │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ A2. Kesiapan Operasional (/settings?tab=readiness)                     │
- │     ├─ A2.1: Akun Tim Inti (Finance Admin, PM, Purchasing)             │
- │     ├─ A2.2: Rekening Bank & Kas (BCA Rp150jt + Kas Rp15jt)            │
- │     ├─ A2.3: Vendor Master (PT Sumber Abadi, CV Marmer, PT Kaca)       │
- │     ├─ A2.4: Lokasi Gudang & 6 Material Master (dengan vendor default) │
- │     └─ A2.5: Keputusan Saldo Awal Stok (Batch Opname Rp4.865.000)      │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ A3. Developer Account Switcher (/profile)                              │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ A4. Post-Setup Consistency Check & A5. Role Boundary Smoke Test        │
- └────────────────────────────────────────────────────────────────────────┘
+```sh
+PORT=3010 bun dev
 ```
 
----
+Buka [localhost:3010/setup](http://localhost:3010/setup).
 
-### A0. Bootstrap First Owner dari Database Kosong
+**`bun dev` hanya menyalakan web.** API perlu terminal pertama. `bun run dev:web` juga merupakan perintah web. Startup tidak menjalankan reset, seed, migration, atau membuat transaksi. Ctrl-C pada masing-masing terminal menghentikan proses yang kamu jalankan.
 
-1. Buka browser pada route `/setup`.
-2. Masukkan data persis berikut pada form:
+Port 3010/3011 dipilih karena port 3000 pada Mac ini dipakai layanan lain. Jangan mematikan layanan itu untuk menjalankan Paduna Build. Jika port latihan sudah dipakai Paduna Build yang masih aktif, gunakan instance tersebut atau hentikan terminal Paduna Build milikmu terlebih dahulu; jangan membiarkan Next pindah port tanpa menyamakan origin API.
 
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Bootstrap secret** | Nilai `ATRIA_BOOTSTRAP_SECRET` dari file `.env` | Kunci otorisasi setup |
-| **Nama Owner** | `Ronald Wijaya` | Nama akun Owner pertama |
-| **Email** | `owner@dekoria.test` | Email login Owner |
-| **Password** | `Dekoria123456` | Password awal (min. 12 karakter) |
+Konfigurasi privat yang dipakai:
 
-3. Klik tombol **Buat akun Owner**.
-4. **Expected UI**: Toast sukses muncul, sistem otomatis mengarahkan ke halaman login `/login`.
-5. Login dengan email `owner@dekoria.test` dan password `Dekoria123456`.
-6. **Expected Database Verification (Read-Only)**:
-   - Tabel `users`: 1 record (`owner@dekoria.test`, role `OWNER`).
-   - Tabel `expense_category`: 5 record kanonis (`MATERIAL`, `TUKANG`, `OPERASIONAL`, `LAIN_LAIN`, `SUBCON`).
-   - Tabel `budget_allocation_setting`: 1 record default (Cap 90%, rasio 38/28/20/4/2, buffer 8%).
+- `apps/api/.env.local`: database latihan, origin web 3010, URL API 3011, serta konfigurasi provider backend.
+- `apps/web/.env.local`: `API_ORIGIN=http://localhost:3011`, URL web 3010, dan konfigurasi presentasi.
+- `API_BRIDGE_SECRET` harus cocok di web dan API. API key AI/storage serta credential database berada di backend, tidak di `NEXT_PUBLIC_*`.
 
----
+Pemeriksaan dasar: [API /health](http://localhost:3011/health) harus menunjukkan `ok`; [API /ready](http://localhost:3011/ready) harus menunjukkan `ready`. `ready` membuktikan API dapat mengakses database, belum membuktikan semua workflow.
 
-### A1. Onboarding Quick Start Owner v2
+**Status ImageKit lokal, 5 Oktober 2026:** masalah DNS jaringan Mac sudah diperbaiki melalui profil **Atria ImageKit DNS — System**, yang memakai DNS-over-HTTPS Cloudflare hanya untuk `imagekit.io` dan subdomainnya. Lookup macOS dan HTTPS dari Bun sekarang mencapai CDN yang benar; download private sintetis menghasilkan HTTP 200, PNG 37.001 byte dan checksum identik dengan file asli. Validasi TLS tetap aktif. Detail dan cara membatalkan perubahan ada di [catatan perbaikan DNS](../plans/2026-10-05-imagekit-encrypted-dns.md). OCR tetap memerlukan credential/gateway AI dan kuota yang aktif. Jangan mengganti `API_ORIGIN` ke production untuk troubleshooting lokal: seluruh aksi web akan berpindah ke database production.
 
-Setelah login pertama sebagai Owner, sistem otomatis mengarahkan ke alur `/onboarding`.
+Jangan menyalin connection string production ke environment latihan. Jangan memakai database development sebagai target integration test otomatis; test Postgres mempunyai database disposable sendiri.
 
-#### A1.1 Layar 1 — Pengenalan (Welcome)
-- **Tampilan**: Ringkasan alur Quick Start v2 (estimasi 10–15 menit, tanpa pergerakan kas atau stok).
-- **Aksi**: Klik tombol **Mulai quick start**.
+### Mengulang latihan dari nol
 
-#### A1.2 Layar 2 — Default Finansial (Financial Defaults)
+Reset menghapus akun, sesi, proyek, settings, transaksi, stok dan audit dalam database tujuan. Login sebelumnya tidak dapat dipakai lagi. Schema/migration dan tenant fondasi tetap dipertahankan; `/setup` membuat Owner dan default baru. Ini berbeda dengan demo seed yang langsung mengisi contoh data.
 
-Layar ini menentukan formula dan rasio anggaran yang otomatis diwarisi saat proyek baru dibuat:
+Untuk mengulang **database latihan saja**, periksa target dahulu dari direktori API:
 
-1. **Verifikasi Metrik Komposisi Bawaan**:
-   - Panel atas menampilkan tiga metrik utama:
-     - **Internal**: `90%` (Batas pagu biaya internal perusahaan dari nilai kontrak).
-     - **Terbagi**: `92%` (Total akumulasi alokasi 5 kategori pengeluaran).
-     - **Buffer**: `8%` (Cadangan fleksibilitas Owner non-kategori pengeluaran).
-
-2. **Menyesuaikan Komposisi Budget (Opsional / Verifikasi Mandiri)**:
-   - Jika ingin memverifikasi atau mengubah rasio, klik tombol **Sesuaikan** di samping judul *Komposisi default*.
-   - Sheet modal **Sesuaikan default budget** akan muncul. Pastikan atau ubah data form berikut:
-
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Nama Preset Formula** | `Standar Interior Dekoria` | Nama konfigurasi formula |
-| **Batas Budget Internal (%)** | `90` | Target Gross Margin otomatis 10% |
-| **Catatan Formula** (opsional) | `Default alokasi anggaran fit-out interior Dekoria.` | Catatan kebijakan anggaran |
-
-   - Pada bagian **Alokasi 5 Kategori Pengeluaran**, pastikan switch seluruh kategori dalam posisi **Aktif (ON)** dan masukkan persentase berikut:
-
-| No | Nama Kategori | Kode Kanonis | Status Switch | Input Rasio (%) | Plafon Nominal (Basis Kontrak Rp50jt / Budget Rp45jt) |
-| :- | :--- | :--- | :---: | :---: | :---: |
-| 1  | `Material` | `MATERIAL` | Aktif (ON) | `38` | `Rp17.100.000` |
-| 2  | `Tukang` | `TUKANG` | Aktif (ON) | `28` | `Rp12.600.000` |
-| 3  | `Subcon` | `SUBCON` | Aktif (ON) | `20` | `Rp9.000.000` |
-| 4  | `Operasional`| `OPERASIONAL`| Aktif (ON) | `4` | `Rp1.800.000` |
-| 5  | `Lain-lain` | `LAIN_LAIN` | Aktif (ON) | `2` | `Rp900.000` |
-|    | **Total Teralokasi** | | | **92%** | **Rp41.400.000** |
-|    | **Buffer Cadangan** | | | **8%** | **Rp3.600.000** |
-
-   - Bilah mengambang (*sticky save bar*) di bawah akan memvalidasi status: `Teralokasi 92% · Buffer 8% · 90% Cap`.
-   - Klik tombol **Simpan Perubahan Budget**. Toast sukses muncul dan sheet tertutup.
-
-3. **Lanjut ke Layar Proyek Pertama**:
-   - Klik tombol utama **Gunakan default ini** di bagian bawah layar untuk melanjutkan ke Layar 3.
-
-#### A1.3 Layar 3 — Project Pertama (First Project)
-- **Tampilan**: Form penyusunan proyek perdana.
-- **Input Data Form**:
-
-| Nama Field UI | Pilihan / Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Nama project** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Nama proyek studi kasus |
-| **Sumber data klien** | Klik tab **Klien baru** | Membuat kontak klien baru |
-| **Nama klien baru** | `Bpk. Hendra Gunawan` | Nama klien |
-| **Project Manager** | `Belum ditugaskan` | Biarkan default, akan di-assign di B1 |
-| **Nilai project** | `50000000` | Nilai kontrak Rp50.000.000 |
-| **RAB disetujui** | `50000000` | Mengikuti nilai kontrak Rp50.000.000 |
-
-- **Preview Otomatis**:
-  - Budget Internal (Cap 90%): `Rp45.000.000`
-  - Target Gross Margin (10%): `Rp5.000.000`
-  - Material (38%): `Rp17.100.000` | Tukang (28%): `Rp12.600.000` | Subcon (20%): `Rp9.000.000` | Operasional (4%): `Rp1.800.000` | Lain-lain (2%): `Rp900.000` | Buffer (8%): `Rp3.600.000`
-- **Aksi**: Klik tombol **Buat project Draft**.
-
-#### A1.4 Layar 4 — Sukses & Navigasi
-- **Tampilan**: Kartu proyek Draft berhasil terbentuk secara atomik.
-- **Aksi**: Klik tombol **Lihat kesiapan operasional** (mengarahkan ke `/settings?tab=readiness`).
-
----
-
-### A2. Kesiapan Operasional (`/settings?tab=readiness`)
-
-Eksekusi 5 langkah berikut secara berurutan agar seluruh dependensi data terpenuhi sempurna.
-
-#### A2.1 Buat Akun Tim Inti
-Buka **Pengaturan → Organisasi** (`/settings?tab=organization`), pastikan tab **Tim** (`admin=USERS`) aktif. Klik tombol **Tambah Pengguna** dan daftarkan 3 akun berikut:
-
-| No | Nama | Email | Role | Password Sementara |
-| :- | :--- | :--- | :--- | :--- |
-| 1  | `Finance UAT` | `finance@dekoria.test` | `Finance Admin` | `Dekoria123456` |
-| 2  | `PM UAT Budi` | `pm@dekoria.test` | `Project Manager` | `Dekoria123456` |
-| 3  | `Purchasing UAT` | `purchasing@dekoria.test` | `Purchasing` | `Dekoria123456` |
-
-*Expected State*: Total 4 user aktif di sistem (Owner + 3 Staff).
-
-#### A2.2 Tambah Rekening Perusahaan & Saldo Awal Kas
-Buka **Dashboard → Rekening** (`/ledger?tab=accounts`). Klik tombol **+ Tambah Rekening** dan daftarkan 2 rekening berikut:
-
-**Rekening 1 (Bank Utama Operasional):**
-- **Nama Rekening**: `BCA Operasional Dekoria`
-- **Bank**: `BCA`
-- **Nomor Rekening**: `8889991122`
-- **Nama Pemegang**: `PT Dekoria Desain Estetika`
-- **Saldo Awal**: `150000000` (Rp150.000.000)
-- **Warna / Gaya Kartu**: `BCA Night`
-
-**Rekening 2 (Kas Kecil Lapangan):**
-- **Nama Rekening**: `Kas Kecil Lapangan / Workshop`
-- **Bank**: `Kas`
-- **Nomor Rekening**: `0000000001`
-- **Nama Pemegang**: `PM UAT Budi`
-- **Saldo Awal**: `15000000` (Rp15.000.000)
-- **Warna / Gaya Kartu**: `Cash Mint`
-
-*Expected State*: Total kas tercatat **Rp165.000.000** di `/ledger`. Dua record `opening_balance` terbentuk di tabel `cash_transaction`.
-
-#### A2.3 Daftarkan Master Vendor Partner
-Buka **Pengaturan → Organisasi** (`/settings?tab=organization`), klik tab **Vendor** (`admin=VENDORS`). Klik tombol **Tambah Vendor** dan daftarkan 3 vendor berikut:
-
-| No | Nama Vendor | Telepon | Email | Alamat | Bank | No. Rekening | Pemegang Rekening |
-| :- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1  | `PT Sumber Abadi Panel & HPL` | `081288991100` | `sales@sumberabadi.co.id` | `Jl. Raya Industri No. 45, Cikarang Barat, Bekasi` | `BCA` | `8880001100` | `PT Sumber Abadi` |
-| 2  | `CV Marmer Indah Sentosa` | `081399882233` | `order@marmerindah.test` | `Sentra Marmer Blok C No. 12, Jakarta Timur` | `Mandiri` | `1220009988` | `CV Marmer Indah` |
-| 3  | `PT Kaca Nusantara Prima` | `081177663344` | `proyek@kacaprima.test` | `Kawasan Pluit Blok D No. 8, Jakarta Utara` | `BCA` | `8880002200` | `PT Kaca Nusantara` |
-
-*Expected State*: 3 vendor terdaftar dan siap dipilih pada form pengadaan dan subcon.
-
-#### A2.4 Siapkan Lokasi Gudang & 6 Material Master
-Buka **Pengaturan → Katalog** (`/settings?tab=catalog`):
-
-1. **Buat Lokasi Penyimpanan**:
-   - Klik subtab **Lokasi** (`catalog=locations`).
-   - Klik tombol **Tambah Lokasi** (atau **Buat lokasi gudang pertama**).
-   - **Nama Lokasi**: `Workshop & Gudang Cikarang`. Klik **Simpan**.
-
-2. **Daftarkan 6 Material Master**:
-   - Klik subtab **Material** (`catalog=materials`).
-   - Klik tombol **Tambah Material** untuk masing-masing baris pada tabel di bawah.
-   - Buka bagian **Detail material** (opsional) untuk memasukkan Merek, Kode, Warna, Vendor default, dan Spesifikasi:
-
-| No | Kategori | Nama Material | Satuan | Merek | Kode | Warna | Vendor Default | Spesifikasi | Lokasi | Min Stok | Harga Acuan |
-| :- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :---: | :---: |
-| 1 | `Panel Kayu` | `Multipleks Palm 18mm` | `lembar` | `Palm` | `PLY-18-PLM` | `Natural Wood` | `PT Sumber Abadi Panel & HPL` | `Panel multipleks 1220 x 2440 x 18 mm, grade interior.` | `Workshop & Gudang Cikarang` | `5` | `260000` |
-| 2 | `Finishing & Laminate` | `HPL Taco Woodgrain TH-1218FC` | `lembar` | `Taco` | `HPL-TH1218FC` | `Warm Teak` | `PT Sumber Abadi Panel & HPL` | `HPL 0.7mm tekstur woodgrain matte.` | `Workshop & Gudang Cikarang` | `3` | `195000` |
-| 3 | `Perekat & Kimia` | `Lem Kuning Aica Aibon 2.5 kg Kaleng` | `kaleng` | `Aica Aibon` | `GLU-AIB-25K` | `Kuning` | `PT Sumber Abadi Panel & HPL` | `Lem kontak solvent kaleng 2.5 kg.` | `Workshop & Gudang Cikarang` | `2` | `145000` |
-| 4 | `Finishing & Laminate` | `Edging PVC Taco 22x1mm Woodgrain (50m)` | `roll` | `Taco` | `EDG-TC-2201` | `Warm Teak` | `PT Sumber Abadi Panel & HPL` | `Edging PVC lebar 22mm tebal 1mm rol 50m.` | `Workshop & Gudang Cikarang` | `1` | `110000` |
-| 5 | `Hardware & Fitting` | `Engsel Sendok Slow-Motion Huben` | `pasang` | `Huben` | `HNG-SM-HBN` | `Nickel Chrome` | `PT Sumber Abadi Panel & HPL` | `Engsel sendok lurus soft-closing hidrolik 35mm.` | `Workshop & Gudang Cikarang` | `10` | `25000` |
-| 6 | `Hardware & Fitting` | `Rel Laci Double Extension 40cm Huben` | `set` | `Huben` | `RLL-DX-40CM` | `Hitam` | `PT Sumber Abadi Panel & HPL` | `Rel laci ball bearing double extension 40cm max 30kg.` | `Workshop & Gudang Cikarang` | `4` | `55000` |
-
-#### A2.5 Keputusan Saldo Awal Stok Fisik (Maker-Checker Flow)
-Buka **Pengaturan → Kesiapan** lalu klik kartu **Saldo awal stok** (`/settings?tab=readiness&flow=initial-stock`):
-
-1. **Maker (Owner atau Purchasing UAT)**:
-   - Klik kartu opsi: **Ada stok lama** (membuka sheet modal *Catat saldo awal stok lama*).
-   - Pastikan tab metode yang aktif adalah **Isi manual**.
-   - Lengkapi bagian **Sumber saldo**:
-
-| Nama Field UI | Tipe Kontrol | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Tanggal saldo awal** | Date Picker | Pilih tanggal `2026-08-15` (atau tanggal hari ini) | **Wajib diisi** (dasar cutover) |
-| **Dokumen referensi** | Text Input | `BA-OPNAME-CKR-2026-08` | Opsional (nomor berita acara) |
-| **Catatan sumber data**| Textarea | `Hasil hitung fisik opname gudang Cikarang per 15 Agustus 2026.` | **Wajib diisi** (minimal 10 karakter) |
-
-   - Pada bagian **Daftar item stok fisik**, form awal menyediakan 1 baris (*Item stok 1*). Klik tombol **+ Tambah item stok lainnya** (atau tombol **Tambah item** di kanan atas) untuk menambahkan baris hingga terdapat 6 item.
-   - Isi masing-masing baris item dengan data persis berikut:
-
-| Baris Form | Field: Material & lokasi | Field: Jumlah fisik | Field: Harga pokok unit | Subtotal Otomatis |
-| :--- | :--- | :---: | :---: | :---: |
-| **Item stok 1** | `Multipleks Palm 18mm` · `Workshop & Gudang Cikarang` | `10` | `260000` | Rp2.600.000 |
-| **Item stok 2** | `HPL Taco Woodgrain TH-1218FC` · `Workshop & Gudang Cikarang` | `4` | `195000` | Rp780.000 |
-| **Item stok 3** | `Lem Kuning Aica Aibon 2.5 kg Kaleng` · `Workshop & Gudang Cikarang`| `3` | `145000` | Rp435.000 |
-| **Item stok 4** | `Edging PVC Taco 22x1mm Woodgrain (50m)` · `Workshop & Gudang Cikarang` | `2` | `110000` | Rp220.000 |
-| **Item stok 5** | `Engsel Sendok Slow-Motion Huben` · `Workshop & Gudang Cikarang` | `20` | `25000` | Rp500.000 |
-| **Item stok 6** | `Rel Laci Double Extension 40cm Huben` · `Workshop & Gudang Cikarang` | `6` | `55000` | Rp330.000 |
-| | **Total Saldo Awal (6 item siap diajukan)** | | | **Rp4.865.000** |
-
-   - Periksa kartu ringkasan bawah: Total tertera **Rp4.865.000** (6 item siap diajukan).
-   - Klik tombol utama: **Ajukan saldo awal**. Sheet tertutup, batch tercatat dengan status `PENDING_APPROVAL`.
-
-2. **Checker (Finance Admin Review & Posting)**:
-   - **Opsi A (Shortcut Cepat)**: Pada kartu batch `BA-OPNAME-CKR-2026-08` yang baru terbentuk di halaman Kesiapan, klik tombol **Simulasikan Finance Admin**.
-   - **Opsi B (Manual Switcher)**: Buka `/profile`, pilih `Finance UAT`, klik **Mulai simulasi**, lalu buka URL `/onboarding/review`.
-   - Pada form review batch, masukkan input wajib berikut:
-
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Alasan keputusan** | `Hasil hitung fisik gudang dan bukti opname telah diverifikasi.` | **Wajib diisi** (minimal 10 karakter) |
-
-   - Klik tombol **Setujui & posting**.
-   - Klik tombol **Kembali** pada banner simulasi developer di atas layar untuk kembali ke peran `Owner`.
-
-*Expected State*:
-- Stok fisik di `Workshop & Gudang Cikarang` terisi 6 material dengan total nilai inventory **Rp4.865.000**.
-- Saldo rekening kas dan bank tetap utuh **Rp165.000.000** (pembentukan persediaan awal non-kas).
-- Seluruh 4 fondasi kesiapan di `/settings?tab=readiness` kini berstatus **Siap**.
-
----
-
-### A3. Developer Account Switcher (`/profile`)
-
-1. Login sebagai `Owner`, buka menu **Profil** (`/profile`).
-2. Pada kartu **Simulasi developer**, pilih salah satu staf:
-   - `PM UAT Budi` (untuk menyusun RAP dan mengajukan nota operasional/kasbon).
-   - `Finance UAT` (untuk verifikasi expense, jadwal bayar, pencairan kas, dan rekonsiliasi).
-   - `Purchasing UAT` (untuk reservasi material, catat use/return/waste, dan penerimaan barang).
-3. Klik tombol **Mulai simulasi**. Sistem langsung beralih peran tanpa perlu logout manual.
-4. Klik tombol **Kembali** pada banner mengambang di atas layar untuk kembali ke peran Owner.
-
----
-
-### A4. Post-Setup Consistency Check
-
-Lakukan verifikasi cross-surface sebelum memulai operasional proyek:
-1. **Dashboard `/ledger`**: Total kas tepat **Rp165.000.000**, Piutang = Rp0, Hutang = Rp0, Pending Approval = Rp0.
-2. **Proyek `/projects`**: Proyek `Fit-Out Interior Studio Bassura City — Unit 18B` berstatus **DRAFT** (Kontrak Rp50jt, Budget Internal Rp45jt).
-3. **Material `/materials`**: Total nilai inventory **Rp4.865.000** di `Workshop & Gudang Cikarang`.
-4. **Pengaturan `/settings?tab=readiness`**: Keempat fondasi wajib berstatus **Siap**.
-
----
-
-### A5. Role Boundary Smoke Test (Security Gate)
-
-1. **PM Scoping Guard**: Switch ke `PM UAT Budi`, buka `/ledger`. Akses **wajib ditolak** (HTTP 403 / redirect ke `/projects`).
-2. **Purchasing Boundary Guard**: Switch ke `Purchasing UAT`, buka `/expenses`. Saldo bank dan nama rekening disembunyikan. Buka `/settings/budget` → akses ditolak.
-3. **Finance Admin Boundary Guard**: Switch ke `Finance UAT`, buka `/settings`. Tab manajemen tim disembunyikan.
-
----
-
-## BAGIAN B — Eksekusi Proyek, Kontrol Material, Arus Kas & Closing
-
-```
-                        SIKLUS HIDUP PROYEK LENGKAP
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B1. Scoping & Assign PM (PM UAT Budi ditugaskan ke Proyek)             │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B2. Penyusunan Internal Plan di Tab RAP (Material, Tukang, Subcon)     │
- │     └─ Finalisasi RAP oleh Owner (Status RAP: LOCKED)                  │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B3. Persetujuan RAB Klien di Tab RAB (RAB APPROVED -> Proyek ACTIVE)   │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B4. Penagihan DP Klien di Tab Pembayaran (Invoice DP 50% -> Kas BCA)   │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B5. Pengadaan Material (Reservasi Gudang + Bill Vendor + Disburse + GR)│
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B6. Pemakaian Bahan Baku di Workshop (USE, RETURN, WASTE)              │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B7. Upah & Kasbon Lapangan Tukang (Dicairkan dari Kas Kecil & BCA)     │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B8. Tagihan Subcon & Biaya Operasional (Solid Surface, Kaca, Pickup)   │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B9. Penagihan Termin 2 & Rekonsiliasi Bank BCA (/reconciliation)       │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B10. Audit Posisi Finansial Tengah Proyek                              │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B11. Change Order di Tab RAB (Add-on Meja Kerja +Rp6jt -> Rescale)     │
- └──────────────────────────────────┬─────────────────────────────────────┘
-                                    ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │ B12. Serah Terima (BAST), Pelunasan & Project Closing di Tab Margin    │
- └────────────────────────────────────────────────────────────────────────┘
+```sh
+cd apps/api
+bun scripts/reset-database.ts --dry-run
 ```
 
----
-
-### B1. Assign Project Manager & Lengkapi Detail Proyek
-
-1. Login / switch sebagai `Owner`, buka menu **Proyek** (`/projects`) lalu pilih `Fit-Out Interior Studio Bassura City — Unit 18B`.
-2. Klik pill **+ Tugaskan PM** (atau buka menu **Edit Proyek**), masukkan data berikut:
-
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Project Manager** | `PM UAT Budi` | PM penanggung jawab |
-| **Area** | `Kitchenette, Bedroom, Wardrobe` | Ruang lingkup kerja |
-| **Tipe Proyek** | `Interior Fit-Out Apartemen` | Klasifikasi proyek |
-| **Lokasi Proyek** | `Tower Cattleya Lt. 18 Unit 18B, Apartemen Bassura City, Jakarta Timur` | Alamat fisik site |
-
-3. Klik tombol **Simpan**.
-4. *Expected State*: Proyek tetap `DRAFT`. Switch ke `PM UAT Budi`, proyek Bassura City sekarang tampil di daftar proyek yang ditugaskan kepada PM.
-
----
-
-### B2. Penyusunan Internal Plan (RAP) oleh Project Manager
-
-Switch ke peran `PM UAT Budi`, buka proyek Bassura City lalu klik tab **RAP** (`/projects/[id]?tab=rap`). Klik tombol **Mulai Susun RAP**.
-
-#### B2.1 Tahap 1 — Rencana Material RAP (6 Item)
-Klik tombol **Tambah Material RAP** untuk masing-masing baris berikut:
-
-| No | Material Master Dipilih | Area / Ruangan | Satuan | Nama Material | Jml Dibutuhkan | Buffer | Biaya per Satuan | Sumber Pemenuhan | Catatan Internal |
-| :- | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
-| 1  | `Multipleks Palm 18mm` | `Kitchenette & Wardrobe` | `lembar` | `Multipleks Palm 18mm` | `14` | `2` | `260000` | `STOCK_AND_PURCHASE` | `Bahan bodi kabinet atas & bawah` |
-| 2  | `HPL Taco Woodgrain TH-1218FC` | `Finishing Luar Kabinet` | `lembar` | `HPL Taco Woodgrain TH-1218FC` | `6` | `1` | `195000` | `STOCK_AND_PURCHASE` | `Finishing pintu dan ambalan` |
-| 3  | `Lem Kuning Aica Aibon 2.5 kg Kaleng` | `Laminasi HPL` | `kaleng` | `Lem Kuning Aica Aibon 2.5 kg` | `4` | `0` | `145000` | `PURCHASE` | `Pengeleman HPL ke multipleks` |
-| 4  | `Edging PVC Taco 22x1mm Woodgrain (50m)` | `Edging Pintu Kabinet` | `roll` | `Edging PVC Taco 22x1mm` | `3` | `0` | `110000` | `PURCHASE` | `Edging pinggiran pintu & laci` |
-| 5  | `Engsel Sendok Slow-Motion Huben` | `Fitting & Hardware` | `pasang` | `Engsel Slow-Motion Huben` | `20` | `0` | `25000` | `STOCK` | `Engsel pintu kabinet kitchen & lemari` |
-| 6  | `Rel Laci Double Extension 40cm Huben` | `Fitting & Hardware` | `set` | `Rel Laci 40cm Huben` | `6` | `0` | `55000` | `STOCK` | `Rel laci kitchen set & nakas` |
-
-*Subtotal Material RAP*: **Rp7.265.000** (Total qty multipleks: 16 lbr, HPL: 7 lbr).
-
-#### B2.2 Tahap 2 — Rencana Paket Tukang (1 Paket)
-Klik tombol **Lanjut ke Tukang**, lalu klik **Tambah Paket Kerja**:
-
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Kategori Budget** | `Tukang` | Kategori penyerapan |
-| **Area / Lingkup** | `Workshop & Site Bassura` | Lokasi kerja |
-| **Nama Paket** | `Paket Pembuatan & Perakitan Interior Studio` | Nama lingkup upah |
-| **Lingkup Pekerjaan** | `Pemotongan bahan, perakitan kabinet, pengeleman HPL, dan instalasi di site.` | Detail deskripsi |
-| **Jumlah** | `1` | Satuan paket |
-| **Satuan** | `paket` | Satuan pengukuran |
-| **Biaya per Satuan** | `10000000` (Rp10.000.000) | Biaya total upah |
-| **Catatan Internal** | `Mandor Bpk. Slamet (5 tukang kayu & 2 tukang finishing).` | Info tim lapangan |
-
-*Subtotal Tukang RAP*: **Rp10.000.000**.
-
-#### B2.3 Tahap 3 — Rencana Paket Subcon (2 Paket)
-Klik tombol **Lanjut ke Subcon**, lalu daftarkan 2 paket vendor spesialis berikut:
-
-**Paket Subcon 1 (Top Table Solid Surface):**
-- **Kategori Budget**: `Subcon`
-- **Area / Lingkup**: `Kitchenette`
-- **Vendor**: `CV Marmer Indah Sentosa`
-- **Nama Paket**: `Paket Top Table Solid Surface`
-- **Lingkup Pekerjaan**: `Fabrikasi & pasang top table solid surface 1.8m + sink cut-out.`
-- **Jumlah / Satuan**: `1` / `paket`
-- **Biaya per Satuan**: `5500000` (Rp5.500.000)
-
-**Paket Subcon 2 (Cermin Grey Mirror & Backsplash):**
-- **Kategori Budget**: `Subcon`
-- **Area / Lingkup**: `Wardrobe & Kitchenette`
-- **Vendor**: `PT Kaca Nusantara Prima`
-- **Nama Paket**: `Paket Cermin Grey Mirror & Backsplash`
-- **Lingkup Pekerjaan**: `Pasang cermin grey mirror wardrobe & backsplash tempered 5mm.`
-- **Jumlah / Satuan**: `1` / `paket`
-- **Biaya per Satuan**: `2500000` (Rp2.500.000)
-
-*Subtotal Subcon RAP*: **Rp8.000.000**.  
-*Total Rencana Biaya RAP (Cost Baseline)*: Rp7.265.000 + Rp10.000.000 + Rp8.000.000 = **Rp25.265.000**.
-
-#### B2.4 Finalisasi RAP oleh Owner
-1. Switch peran ke `Owner`, buka proyek Bassura City → tab **RAP** (`/projects/[id]?tab=rap`).
-2. Klik tombol **Finalisasi RAP**.
-3. *Expected State*: Status RAP berubah menjadi `LOCKED` (`project_rap.status = 'LOCKED'`). Item RAP tidak dapat diubah tanpa revisi resmi.
-
----
-
-### B3. Persetujuan RAB Klien & Aktivasi Baseline Finansial
-
-1. Masih sebagai `Owner`, buka tab **RAB** pada proyek Bassura City (`/projects/[id]?tab=rab`).
-2. Klik tombol **Pilih Sumber RAB** (atau **Generate dari RAP**).
-3. Centang seluruh item sumber: 6 item Material RAP, 1 Paket Tukang, dan 2 Paket Subcon (Porsi Produksi Fisik = **Rp28.070.000**).
-4. Aktifkan switch **Tambah baris manual untuk klien**, lalu masukkan data komersial berikut untuk menggenapkan total penawaran klien menjadi tepat Rp50.000.000:
-
-| Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- |
-| **Sifat Komponen** | `Jasa Desain & Manajemen Fee` (`SERVICE_FEE`) | **PENTING (Cara A)**: Menjaga agar fee desain tidak memotong/menggelembungkan plafon fisik lapangan |
-| **Nama baris manual** | `Jasa Desain 3D, Shop Drawing, Supervisi & Manajemen Proyek` | Baris jasa komersial |
-| **Deskripsi untuk klien**| `Perencanaan desain 3D photorealistic, gambar kerja workshop, supervisi lapangan, dan manajemen proyek interior.` | Deskripsi proposal |
-| **Jumlah** | `1` | Unit paket |
-| **Satuan** | `ls` | Satuan lumpsum |
-| **Harga satuan klien** | `21930000` (Rp21.930.000) | Penyeimbang ke Rp50jt (Porsi Jasa & Fee) |
-
-5. Klik tombol **Buat**. Total nilai draft penawaran RAB Klien bernilai tepat **Rp50.000.000**.
-6. Pada panel ringkasan atas, perhatikan indikator pemisahan visual:
-   - Kartu rincian: `Porsi Fisik/Produksi: Rp 28,07 jt` dan `Jasa Desain & Fee: Rp 21,93 jt`.
-   - Indikator dual margin: `Margin Fisik: 10.0%` dan `Margin Total: 49.5%`.
-   - Baris item manual memiliki badge ungu `Jasa & Fee` dan icon `design_services`.
-7. Pada panel aksi draft RAB di bawah, klik tombol **Tinjau & Setujui RAB**.
-
-*Expected Atomic Changes (Derivasi Bersih Cara A)*:
-- `rab_estimate.status` = `APPROVED` (Approved Value: Rp50.000.000).
-- `project.status` = `ACTIVE`.
-- `project_budgets.internal_budget` terkunci pada **Rp25.265.000** (Cap 90% hanya atas porsi produksi fisik Rp28.070.000, bukan Rp45.000.000).
-- `project_budgets.target_gross_amount` = **Rp24.735.000** (Target Gross Margin 49,47% ~ 49,5%).
-- Plafon kategori fisik aktif: Material Rp9.600.700, Tukang Rp7.074.200, Subcon Rp5.053.000, Operasional Rp1.010.600, Lain-lain Rp505.300, Buffer Rp2.021.200.
-- Tidak ada mutasi kas riil pada tahap ini.
-
-*Visualisasi Verifikasi di Tab Ikhtisar (`?tab=overview`)*:
-- **Hero Card "Sisa Budget Internal"**:
-  - Format angka `fullDynamic` 2 baris terpisah:
-    - **Baris 1 (2 Kolom)**: `Nilai proyek: Rp 50.000.000` dan `Budget: Rp 25.265.000`.
-    - **Baris 2 (Full Width)**: `Realisasi: Rp 0`.
-  - **Dual Margin View**:
-    - `Margin Murni Produksi`: **Rp 2.805.000** (dengan angka `10,0%` subtle di bawah nominal).
-    - `Margin Total Proyek`: **Rp 24.735.000** (dengan angka `49,5%` subtle di bawah nominal).
-
----
-
-### B4. Penagihan DP Klien (Termin 1) & Penerimaan Kas
-
-#### B4.1 Buat Invoice DP 50% (Smart Auto-Generated)
-Switch ke `Finance UAT`, buka proyek Bassura City → tab **Pembayaran** (`/projects/[id]?tab=payments`) → klik tombol **+ Invoice**.
-
-Form pembuatan invoice dilengkapi **Smart Auto-Fill (Opsi 1)** yang otomatis membaca konteks proyek:
-1. **Konteks Kontrak Proyek**: Panel atas menampilkan ringkasan langsung: `BSR` · Kontrak Rp 50 jt · Sudah Ditagih Rp 0 · Sisa Rp 50 jt.
-2. **Saran Isian Otomatis (Prefill)**:
-   - **Nomor Invoice**: Terisi otomatis kanonis `INV/2026/09/BSR-001` (dapat diedit manual jika diperlukan).
-   - **Tahap Tagihan**: Otomatis terpilih `Uang Muka` (`DP`).
-   - **Nominal Tagihan**: Otomatis terisi `25000000` (Rp25.000.000, tepat 50% dari nilai kontrak Rp50jt).
-   - **Pilihan Termin Cepat**: Chip `[50% DP]` aktif. Tombol `[30% Progress]`, `[20% Pelunasan]`, dan `[Sisa Tagihan]` tersedia untuk mengubah termin dan kalkulasi instan dengan satu klik.
-   - **Jatuh Tempo**: Otomatis terisi tanggal 7 hari ke depan.
-   - **Catatan Invoice**: Otomatis terisi `Pembayaran Uang Muka (DP 50%) pekerjaan fit-out interior.`
-
-3. Klik tombol **Tinjau** $\rightarrow$ periksa ringkasan invoice $\rightarrow$ klik **Buat**.
-4. Status invoice menjadi `UNPAID` (Piutang proyek = Rp25.000.000, Kas belum bertambah).
-
-#### B4.2 Catat Pembayaran DP Masuk ke Rekening BCA
-Buka invoice `INV/2026/09/BSR-001` tersebut lalu klik tombol **Catat Pembayaran** pada footer detail (atau klik langsung tombol **Catat bayar** pada kartu invoice di daftar). Sheet drawer **Penerimaan kas termin** akan terbuka:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Dana masuk** | **Rekening Penerima Dana (DEBIT)** | `BCA - BCA Operasional Dekoria` | Rekening tujuan dana (saldo bertambah) |
-| | **Nominal Diterima** | `25000000` (Rp25.000.000) | Pelunasan penuh nilai DP 50% |
-| **Referensi transaksi** | **Nomor Referensi Bukti Transfer** | `TRF-BCA-HENDRA-DP` | Bukti mutasi transfer klien |
-| | **Tanggal Transaksi Diterima** | `<hari ini>` | Tanggal mutasi bank |
-
-Klik tombol **Tinjau** → layar berganti ke mode **Tinjau penerimaan klien** → periksa kartu dampak saldo rekening (`Rp 150.000.000 → Rp 175.000.000`) → klik tombol **Catat**.
-
-*Expected Finansial & Invariant*:
-- Status invoice: `PAID` (Piutang proyek kembali ke Rp0).
-- Saldo `BCA Operasional Dekoria`: **Rp150.000.000 → Rp175.000.000**.
-- Total Kas Perusahaan: **Rp190.000.000** (BCA Rp175jt + Kas Kecil Rp15jt).
-- Record `cash_transaction` (`INFLOW`, Rp25.000.000, `reconciled = false`).
-
----
-
-### B5. Pengadaan Material: Reservasi Gudang, Tagihan Vendor & Goods Receipt
-
-#### B5.1 Reservasi Stok Gudang yang Sudah Tersedia
-Login / Switch ke `Purchasing UAT` (`purchasing@dekoria.test` / `Dekoria123456`), lalu buka modul **Material** (`/materials`):
-
-> **Catatan Operasional Purchasing:** Sebagai fungsi terpusat (*Shared Services*), Purchasing mengelola stok gudang lintas proyek dari modul `/materials` tanpa perlu membuka halaman proyek. Pemilihan proyek dilakukan langsung di dalam formulir transaksi material.
-
-1. **Reservasi Item 1 (Multipleks Palm 18mm)**:
-   - Klik tombol **+** (FAB) di pojok kanan bawah layar → pilih **Reservasi Material** (atau akses URL `/materials?action=RESERVE`).
-   - Lengkapi formulir reservasi:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Proyek dan material** | **Proyek** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Proyek alokasi |
-| | **RAP material** | `Multipleks Palm 18mm · Kitchenette & Wardrobe` | Kebutuhan RAP Bassura |
-| | **Lokasi inventori** | `Workshop & Gudang Cikarang` | Gudang asal stok |
-| **Jumlah dan catatan** | **Jumlah (lembar)** | `8` | 8 lembar |
-| | **Catatan reservasi** | `Disiapkan untuk kabinet interior studio Bassura Unit 18B.` | Minimal 3 karakter |
-
-   - Klik **Tinjau** → periksa ringkasan dampak stok pada kartu preview → klik **Catat**.
-   - *Status item di gudang*: Stok fisik 10, tereservasi 8, tersedia bebas 2 lembar.
-
-2. **Reservasi Item 2 (HPL Taco Woodgrain TH-1218FC)**:
-   - Klik kembali tombol **+** (FAB) di pojok kanan bawah → pilih **Reservasi Material**.
-   - Lengkapi formulir reservasi:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Proyek dan material** | **Proyek** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Proyek alokasi |
-| | **RAP material** | `HPL Taco Woodgrain TH-1218FC · Finishing Luar Kabinet` | Kebutuhan RAP Bassura |
-| | **Lokasi inventori** | `Workshop & Gudang Cikarang` | Gudang asal stok |
-| **Jumlah dan catatan** | **Jumlah (lembar)** | `3` | 3 lembar |
-| | **Catatan reservasi** | `Disiapkan untuk laminasi kabinet studio Bassura Unit 18B.` | Minimal 3 karakter |
-
-   - Klik **Tinjau** → klik **Catat**.
-   - *Status item di gudang*: Stok fisik 4, tereservasi 3, tersedia bebas 1 lembar.
-
-*Expected Invariant*: Stok fisik tetap di rak gudang Cikarang. Stok tereservasi bertambah. Kas dan Material Actual tetap Rp0.
-
-#### B5.2 Buat Tagihan Vendor Pengadaan Material Tambahan
-Switch ke `PM UAT Budi`, buka modul **Pengeluaran** (`/expenses`) → klik tab **Tagihan Vendor** (`?view=vendor-bills`) → klik tombol **+ Buat Tagihan** (atau FAB **Tagihan Vendor**, URL `/expenses?new-vendor-bill=true`). Sheet **Tagihan vendor baru** akan terbuka:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Vendor dan proyek** | **Vendor** | `PT Sumber Abadi Panel & HPL` | Pemasok panel & laminate |
-| | **Proyek** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Pembebanan proyek |
-| | **Kategori Budget** | `Material` | Kategori pagu budget |
-| **Dokumen tagihan** | **Nomor Tagihan** | `INV-SA-2026-8891` | No faktur fisik dari vendor |
-| | **Nominal Tagihan** | `8500000` (Rp8.500.000) | Multipleks 8 lbr, HPL 4 lbr, lem & hardware |
-| | **Tanggal Jatuh Tempo** | `<hari ini + 14 hari>` | Tempo pembayaran |
-| | **Catatan** | `Pengadaan multipleks 8 lbr, HPL 4 lbr, lem & hardware fitting.` | Uraian pesanan |
-
-Klik tombol **Tinjau** di bawah sheet → periksa rincian pada sheet **Tinjau tagihan vendor** (notice: *"Menjadi nilai persediaan"* menunjukkan pembelian material menambah persediaan dan hutang vendor, bukan pemakaian langsung proyek) → klik tombol **Buat**.
-
-Status tagihan: `UNPAID` (Hutang vendor = Rp8.500.000, Kas belum berkurang).
-
-#### B5.3 Penjadwalan Bayar, Approval High-Risk & Pencairan Dana
-1. Switch ke `Finance UAT`, buka modul `/expenses` tab **Tagihan Vendor** (`?view=vendor-bills`):
-   - Klik kartu tagihan `INV-SA-2026-8891` → pada drawer detail klik tombol **Jadwalkan Bayar**.
-   - Sheet **Jadwalkan pembayaran vendor** terbuka:
-     - **Rekening Rencana**: Pilih `BCA - BCA Operasional Dekoria`
-     - **Tanggal Pembayaran**: `<hari ini>`
-     - **Nominal Pembayaran**: `8500000` (Rp8.500.000)
-   - Klik tombol **Tinjau** → periksa notice: *"Memerlukan persetujuan Owner"* (karena nominal Rp8.500.000 >= ambang persetujuan Owner Rp5.000.000) → klik tombol **Jadwalkan**.
-   - Status pembayaran di subtab **Rencana Bayar** menjadi **Menunggu Owner** (`approvalStatus: PENDING`).
-2. Switch ke `Owner`, buka menu **Persetujuan** (`/approvals`):
-   - Temukan pengajuan pembayaran tagihan `PT Sumber Abadi Panel & HPL` sebesar Rp8.500.000.
-   - Klik tombol **Setujui**. Status approval berubah menjadi `APPROVED`.
-3. Switch kembali ke `Finance UAT`, buka `/expenses` tab **Tagihan Vendor** → subtab **Rencana Bayar**:
-   - Status kartu pembayaran PT Sumber Abadi kini berubah menjadi **Siap Cair**.
-   - Klik kartu pembayaran tersebut → pada drawer detail klik tombol **Cairkan**.
-   - Sheet **Cairkan pembayaran vendor** terbuka:
-     - **Rekening Sumber Dana**: Pilih `BCA - BCA Operasional Dekoria`
-     - **Nomor Referensi Bukti Transfer**: Ketik `TRF-BCA-VND-SA01`
-   - Klik tombol **Tinjau** → layar menampilkan rincian dampak kas (`Rp 175.000.000 → Rp 166.500.000`) dan notice *"Transaksi kas final"* → klik tombol **Bayar**.
-
-*Expected Finansial*:
-- Saldo `BCA Operasional Dekoria`: **Rp175.000.000 → Rp166.500.000**.
-- Saldo `Kas Kecil Lapangan / Workshop`: **Rp15.000.000** (belum terpakai).
-- Total **Kas Tersedia** (Hero Dashboard Finansial): **Rp181.500.000** (Rp166.500.000 BCA + Rp15.000.000 Kas Kecil).
-- Material Paid bertambah **Rp8.500.000**.
-- Tagihan vendor: `PAID` (Hutang = Rp0).
-- **Material Actual tetap Rp0** (pembelian material adalah persediaan, bukan realisasi biaya konsumsi proyek).
-
-#### B5.4 Catat Penerimaan Barang Fisik (Goods Receipt)
-Barang fisik pesanan tiba di gudang. Switch ke `Purchasing UAT`, buka modul **Material** (`/materials`):
-1. Di pojok kanan bawah, klik tombol **+** (FAB) → pilih menu **Terima Barang** (atau akses langsung URL `/materials?action=RECEIVE`). Sheet drawer **Penerimaan Barang** akan terbuka.
-2. Lengkapi data pada bagian **Sumber & Lokasi**:
-   - **Tagihan vendor**: Pilih opsi `INV-SA-2026-8891` (menampilkan label `INV-SA-2026-8891` · `PT Sumber Abadi Panel & HPL · Rp 8.500.000` dengan badge `Lunas` di bawah grup proyek Bassura).
-   - **Project**: Otomatis terisi `Fit-Out Interior Studio Bassura City — Unit 18B` dari tagihan vendor terpilih.
-   - **Lokasi inventori**: Pastikan terpilih `Workshop & Gudang Cikarang`.
-   > **Notifikasi Prefill Sistem**: Di bawah section Sumber & Lokasi akan muncul banner konteks bernada peringatan (amber):
-   > *"Project, nominal, dan catatan sudah diprefill. Pilih material yang benar sebelum posting."*
-   > Kartu akordion pertama (`Material 1`) pada bagian *Material diterima* otomatis dibuka dengan status awal `Lengkapi` (ikon kotak inventori oranye).
-3. Bagian **Dokumen Penerimaan**:
-   - **Nomor penerimaan**: Input teks (sistem otomatis menyediakan default nomor acak seperti `GR/2026/...`, biarkan atau ubah/salin: `GR-CKR-2026-001`).
-   - **Tanggal diterima**: Tanggal hari ini (`<hari ini>`).
-   - **Catatan penerimaan**: Terisi otomatis dari tagihan vendor: `Tagihan INV-SA-2026-8891 · Pengadaan multipleks 8 lbr, HPL 4 lbr, lem & hardware fitting.` (dapat disesuaikan jika perlu).
-4. Bagian **Material diterima**:
-   Form ini menggunakan daftar kartu akordion per item dengan indikator status real-time (`Lengkapi` / `Lengkap`) dan subtotal otomatis. Di dalam setiap kartu yang terbuka tersedia tombol kontrol **Duplikat** dan **Hapus** (aktif bila item > 1). Gunakan tombol **Tambah Material** di bawah daftar untuk menambahkan baris item baru:
-
-   - **Item 1** (Kartu akordion `Material 1` yang sedang terbuka):
-     - **Material**: Pilih `Multipleks Palm 18mm` (Satuan lembar).
-     - **Tautan RAP**: Pilih `Multipleks Palm 18mm · Kitchenette & Wardrobe`. (Perhatian: Memilih tautan RAP otomatis mengisikan kuota total RAP 16 lembar dan harga estimasi Rp260.000 ke dalam form).
-     - **Jumlah (lembar)**: Gunakan stepper atau ketik langsung, ubah nilai `16` menjadi `8` (karena dari 16 lembar total kebutuhan RAP, 8 lembar dipenuhi oleh pengadaan baru ini, dan 8 lembar sisanya telah direservasi dari stok lama gudang di B5.1).
-     - **Harga per unit**: Pastikan bernilai `260000` (Rp260.000).
-     - **Catatan item** (opsional): Kosongkan atau beri catatan spesifik.
-     - Subtotal kartu menjadi **Rp2.080.000** dan status kartu berubah menjadi `Lengkap` (ikon centang hijau).
-
-   - Klik tombol **Tambah Material** di bawah daftar untuk membuka **Item 2**:
-     - **Material**: Pilih `HPL Taco Woodgrain TH-1218FC` (Satuan lembar).
-     - **Tautan RAP**: Pilih `HPL Taco Woodgrain TH-1218FC · Finishing Luar Kabinet`. (Kuota RAP 7 lembar terisi otomatis).
-     - **Jumlah (lembar)**: Ubah nilai `7` menjadi `4` (karena 3 lembar sudah direservasi di B5.1, dan 4 lembar dipenuhi dari penerimaan fisik ini).
-     - **Harga per unit**: `195000` (Rp195.000).
-     - Subtotal kartu: **Rp780.000** (status kartu berubah menjadi `Lengkap`).
-
-   - Klik tombol **Tambah Material** untuk membuka **Item 3**:
-     - **Material**: Pilih `Lem Kuning Aica Aibon 2.5 kg Kaleng` (Satuan kaleng).
-     - **Tautan RAP**: Pilih `Lem Kuning Aica Aibon 2.5 kg · Laminasi HPL`. (Kuota RAP 4 kaleng terisi otomatis).
-     - **Jumlah (kaleng)**: Ubah nilai `4` menjadi `2` (pengadaan tagihan ini untuk 2 kaleng, 3 kaleng sudah tersedia di gudang).
-     - **Harga per unit**: `145000` (Rp145.000).
-     - Subtotal kartu: **Rp290.000** (status kartu berubah menjadi `Lengkap`).
-
-   - Klik tombol **Tambah Material** untuk membuka **Item 4**:
-     - **Material**: Pilih `Edging PVC Taco 22x1mm Woodgrain (50m)` (Satuan roll).
-     - **Tautan RAP**: Pilih `Edging PVC Taco 22x1mm · Edging Pintu Kabinet`. (Kuota RAP 3 roll terisi otomatis).
-     - **Jumlah (roll)**: Ubah nilai `3` menjadi `2`.
-     - **Harga per unit**: `110000` (Rp110.000).
-     - Subtotal kartu: **Rp220.000** (status kartu berubah menjadi `Lengkap`).
-
-   - Ringkasan total *Material diterima* di kanan atas: **Rp3.370.000**.
-5. Klik tombol **Tinjau** di bawah sheet:
-   - Layar berganti ke mode **Tinjau Penerimaan Barang**.
-   - Periksa ringkasan proyek, gudang, nomor dokumen, tagihan vendor referensi, total Rp3.370.000, dan 4 kartu dampak perubahan stok (*Stock Impact Rows*):
-     - Multipleks Palm 18mm: Fisik sebelum 10 + 8 = 18 lembar (reservasi 8).
-     - HPL Taco Woodgrain: Fisik sebelum 4 + 4 = 8 lembar (reservasi 3).
-     - Lem Kuning Aica: Fisik sebelum 3 + 2 = 5 kaleng.
-     - Edging PVC Taco: Fisik sebelum 2 + 2 = 4 roll.
-   - Banner risiko muncul: *"Posting mengubah stok — Harga rata-rata bergerak dan stok fisik langsung bertambah."*
-6. Klik tombol **Posting**.
-   - Sistem memvalidasi atomik dan menampilkan dialog sukses: *"Penerimaan barang berhasil — Stok, harga rata-rata, movement, dan audit trail telah diperbarui dalam satu transaksi."*
-   - Klik **Tutup** (atau di luar modal).
-
-*Expected Inventori & Invariant*:
-- Stok fisik Multipleks di Cikarang bertambah dari 10 → 18 lembar.
-- Stok fisik HPL bertambah dari 4 → 8 lembar.
-- Seluruh kebutuhan pengadaan proyek (*Need to Buy*) terpenuhi 100%.
-- **Saldo kas tidak berubah** (Goods Receipt adalah mutasi fisik inventori non-kas).
-
----
-
-### B6. Pemakaian Bahan Baku di Workshop: Use, Return, dan Waste
-
-Seluruh aksi pergerakan fisik ini dicatat oleh peran `Purchasing UAT` melalui modul **Material** (`/materials`). Drawer operasi menggunakan alur 2 tahap: pengisian form → klik **Tinjau** → periksa dampak stok → klik **Catat**.
-
-#### B6.1 Catat Pemakaian Bahan Baku (Use Material)
-Tukang merakit kabinet di workshop. Buka `/materials`, lalu catat pemakaian 4 item melalui tombol **+** (FAB) → **Pakai Material** (atau akses URL `/materials?action=USE`). Drawer **Pakai Material** akan terbuka:
-
-1. **Multipleks Palm 18mm**:
-   - Bagian *Proyek dan material*:
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **RAP material**: `Multipleks Palm 18mm · Kitchenette & Wardrobe`
-     - **Lokasi inventori**: `Workshop & Gudang Cikarang`
-   - Bagian *Jumlah dan catatan*:
-     - **Jumlah (lembar)**: `8` (mengonsumsi kuota reservasi proyek)
-     - **Catatan pemakaian**: `Pemotongan badan kabinet dan ambalan utama.` (minimal 3 karakter)
-   - Klik **Tinjau** → periksa kartu dampak stok (fisik 18 → 10 lembar, reservasi 8 → 0) → klik **Catat**.
-
-2. **HPL Taco Woodgrain TH-1218FC**:
-   - Bagian *Proyek dan material*:
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **RAP material**: `HPL Taco Woodgrain TH-1218FC · Finishing Luar Kabinet`
-     - **Lokasi inventori**: `Workshop & Gudang Cikarang`
-   - Bagian *Jumlah dan catatan*:
-     - **Jumlah (lembar)**: `3` (mengonsumsi kuota reservasi proyek)
-     - **Catatan pemakaian**: `Laminasi permukaan kabinet dan pintu.`
-   - Klik **Tinjau** → periksa dampak stok (fisik 8 → 5 lembar, reservasi 3 → 0) → klik **Catat**.
-
-3. **Lem Kuning Aica Aibon 2.5 kg Kaleng**:
-   - Bagian *Proyek dan material*:
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **RAP material**: `Lem Kuning Aica Aibon 2.5 kg · Laminasi HPL`
-     - **Lokasi inventori**: `Workshop & Gudang Cikarang`
-   - Bagian *Jumlah dan catatan*:
-     - **Jumlah (kaleng)**: `2`
-     - **Catatan pemakaian**: `Pengeleman HPL kabinet studio.`
-   - Klik **Tinjau** → periksa dampak stok (fisik 5 → 3 kaleng) → klik **Catat**.
-
-4. **Edging PVC Taco 22x1mm Woodgrain (50m)**:
-   - Bagian *Proyek dan material*:
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **RAP material**: `Edging PVC Taco 22x1mm · Edging Pintu Kabinet`
-     - **Lokasi inventori**: `Workshop & Gudang Cikarang`
-   - Bagian *Jumlah dan catatan*:
-     - **Jumlah (roll)**: `1`
-     - **Catatan pemakaian**: `Pemasangan edging pinggiran panel kabinet.`
-   - Klik **Tinjau** → periksa dampak stok (fisik 4 → 3 roll) → klik **Catat**.
-
-*Expected State*:
-- Stok fisik di rak gudang terpotong secara akurat.
-- **Biaya Material Aktual (Actual Cost)** terakui secara non-kas: (8 × 260rb) + (3 × 195rb) + (2 × 145rb) + (1 × 110rb) = **Rp3.065.000**.
-- Saldo kas bank BCA tidak berubah.
-
-#### B6.2 Pengembalian Bahan Sisa Utuh (Return Material)
-Terdapat 1 lembar multipleks utuh yang tidak jadi dipotong. Dari `/materials`, klik tombol **+** (FAB) → pilih **Kembalikan Sisa** (atau URL `/materials?action=RETURN`). Drawer **Kembalikan Sisa** akan terbuka:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Proyek dan material** | **Proyek** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Proyek asal bahan |
-| | **RAP material** | `Multipleks Palm 18mm · Kitchenette & Wardrobe` | Item yang dikembalikan |
-| | **Lokasi inventori** | `Workshop & Gudang Cikarang` | Gudang penerima fisik |
-| **Jumlah dan catatan** | **Jumlah (lembar)** | `1` | Qty fisik kembali (1 lembar) |
-| | **Catatan pengembalian** | `Sisa 1 lembar utuh dikembalikan ke rak persediaan bebas gudang.` | Wajib minimal 3 karakter |
-
-Klik **Tinjau** → periksa penambahan stok fisik (10 → 11 lembar) → klik **Catat**.
-
-*Expected State*: Stok fisik bertambah 1 lembar. Biaya Material Actual berkurang **-Rp260.000** menjadi **Rp2.805.000**.
-
-#### B6.3 Pencatatan Bahan Rusak / Terbuang (Waste Material)
-1 lembar HPL retak saat pemotongan pola lengkung. Dari `/materials`, klik tombol **+** (FAB) → pilih **Material Terbuang** (icon segitiga peringatan `report_problem`, atau URL `/materials?action=WASTE`). Drawer **Material Terbuang** akan terbuka:
-
-| Bagian Form | Nama Field UI | Nilai Input Siap Salin | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Proyek dan material** | **Proyek** | `Fit-Out Interior Studio Bassura City — Unit 18B` | Proyek pembebanan waste |
-| | **RAP material** | `HPL Taco Woodgrain TH-1218FC · Finishing Luar Kabinet` | Item rusak |
-| | **Lokasi inventori** | `Workshop & Gudang Cikarang` | Gudang terdampak |
-| **Jumlah dan catatan** | **Jumlah (lembar)** | `1` | Qty rusak (1 lembar) |
-| | **Alasan material terbuang** | `Pecah di sudut saat proses pemotongan tepi meja rias.` | Wajib minimal 10 karakter |
-
-Klik **Tinjau** → periksa notice risiko *Material terbuang tercatat permanen* → klik tombol merah **Catat**.
-
-*Expected State*: Stok fisik terpotong 1 lembar (5 → 4 lembar). Biaya Material Actual bertambah **+Rp195.000** menjadi tepat **Rp3.000.000**. Sisa reservasi aktif = 0.
-
----
-
-### B7. Upah & Kasbon Lapangan Tukang
-
-#### B7.1 Pengajuan Kasbon Mingguan Tukang
-Switch ke `PM UAT Budi`, buka modul **Pengeluaran** (`/expenses`):
-1. Klik tombol **+** (FAB) di kanan bawah → pilih **Expense Lapangan** (atau URL `/expenses?new-expense=true`). Drawer **Tambah Pengeluaran** akan terbuka.
-2. Bagian **Proyek**:
-   - **Proyek**: Pilih `Fit-Out Interior Studio Bassura City — Unit 18B`.
-3. Bagian **Nota (opsional)**: Lewati (nota fisik opsional).
-4. Bagian **Rincian item**:
-   - Klik kartu `Item 1` (badge `Belum lengkap`) untuk membuka sheet **Rincian item 1**:
-     - Bagian **Informasi item**:
-       - **Kategori Pengeluaran**: Pilih `Tukang`.
-       - **Keterangan**: `Kasbon upah tukang minggu ke-1 (5 tukang kayu di workshop)` (minimal 5 karakter).
-       - **Jumlah**: `1`
-       - **Harga Satuan**: `4000000` (Rp4.000.000)
-     - Bagian **Paket Tukang**:
-       - **Paket Tukang**: Pilih `Workshop & Site Bassura · Paket Pembuatan & Perakitan Interior Studio`.
-     - Klik tombol **Simpan** di bawah sheet item.
-5. Kartu item kini berstatus `Lengkap` dengan subtotal Rp4.000.000.
-6. Klik tombol **Tinjau** di bawah drawer → di layar **Tinjau Pengeluaran** periksa rincian biaya dan sisa budget → klik tombol **Ajukan**. Status pengeluaran berubah menjadi `SUBMITTED`.
-
-#### B7.2 Verifikasi & Pencairan Kasbon dari Kas Kecil
-1. Switch ke `Finance UAT`, buka `/expenses` tab **Pengeluaran Lapangan** (`?view=field-expenses`).
-2. Pada baris pengajuan kasbon Rp4.000.000 tadi, klik tombol **Verifikasi** (Status berubah menjadi `APPROVED`).
-3. Klik tombol **Cairkan**. Sheet drawer **Pencairan dana** akan terbuka:
-   - Bagian **Rincian Pengeluaran**: Menampilkan informasi biaya, proyek, dan pengaju PM Budi.
-   - Bagian **Pencairan Pengeluaran**:
-     - **Rekening Sumber Dana**: Pilih `KAS - Kas Kecil Lapangan / Workshop`.
-     - **Nomor Referensi Bukti Transfer**: Ketik `KAS-OUT-TKG-01`.
-   - Klik tombol **Tinjau** → layar menampilkan rincian dampak kas (`Rp 15.000.000 → Rp 11.000.000`) dan notice *"Pencairan final"*.
-   - Klik tombol merah **Cairkan**.
-
-*Expected Finansial*:
-- Saldo `Kas Kecil Lapangan / Workshop`: **Rp15.000.000 → Rp11.000.000**.
-- Realisasi Biaya Tukang Actual & Paid: **Rp4.000.000**.
-
-#### B7.3 Pelunasan Sisa Upah Tukang via Transfer BCA
-Setelah pekerjaan kayu terpasang di site:
-1. `PM UAT Budi` mengajukan sisa upah via FAB **Expense Lapangan**:
-   - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-   - Buka editor kartu `Item 1`:
-     - **Kategori Pengeluaran**: `Tukang`
-     - **Keterangan**: `Pelunasan upah tukang setelah finishing & instalasi selesai di site.`
-     - **Jumlah**: `1`
-     - **Harga Satuan**: `6000000` (Rp6.000.000)
-     - **Paket Tukang**: `Workshop & Site Bassura · Paket Pembuatan & Perakitan Interior Studio`
-     - Klik **Simpan** → klik **Tinjau** → klik **Ajukan**.
-2. `Finance UAT` memverifikasi dan mencairkan dari rekening bank:
-   - Buka `/expenses` tab **Pengeluaran Lapangan**, klik **Verifikasi** pada pengeluaran Rp6.000.000 tersebut.
-   - Klik **Cairkan**:
-     - **Rekening Sumber Dana**: Pilih `BCA - BCA Operasional Dekoria`.
-     - **Nomor Referensi Bukti Transfer**: Ketik `TRF-BCA-TKG-FINAL`.
-     - Klik **Tinjau** → periksa perubahan saldo (`Rp 166.500.000 → Rp 160.500.000`) → klik tombol merah **Cairkan**.
-
-*Expected Finansial*:
-- Saldo `BCA Operasional Dekoria`: **Rp166.500.000 → Rp160.500.000**.
-- Total Biaya Tukang Actual & Paid: **Rp10.000.000** (dari pagu budget internal Rp7.074.200, overrun terverifikasi sah).
-
----
-
-### B8. Tagihan Subcon & Biaya Operasional Lapangan
-
-#### B8.1 Tagihan & Pembayaran 2 Vendor Subcon
-Switch ke `PM UAT Budi` (atau `Finance UAT`), buka `/expenses` → tab **Tagihan Vendor** (`?view=vendor-bills`):
-
-**Tagihan Subcon 1 (CV Marmer Indah Sentosa):**
-1. Klik tombol **+ Buat Tagihan** (atau FAB **Tagihan Vendor**):
-   - Bagian **Vendor dan proyek**:
-     - **Vendor**: `CV Marmer Indah Sentosa`
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **Kategori Budget**: `Subcon`
-     - **Paket Subkon**: `Kitchenette · Paket Top Table Solid Surface`
-   - Bagian **Dokumen tagihan**:
-     - **Nomor Tagihan**: `INV-MARMER-089`
-     - **Nominal Tagihan**: `5500000` (Rp5.500.000)
-     - **Tanggal Jatuh Tempo**: `<hari ini + 7 hari>`
-     - **Catatan**: `Pelunasan pekerjaan top table solid surface 1.8m.`
-   - Klik **Tinjau** → pada sheet review klik **Buat**. Status tagihan: `UNPAID`.
-2. *Jadwalkan Pembayaran oleh Finance*:
-   - Switch ke `Finance UAT`, temukan kartu tagihan `INV-MARMER-089` di tab **Tagihan Vendor** → klik kartu → pada drawer detail klik **Jadwalkan Bayar**.
-   - Sheet **Jadwalkan pembayaran vendor** terbuka:
-     - **Rekening Rencana**: `BCA - BCA Operasional Dekoria`
-     - **Tanggal Pembayaran**: `<hari ini>`
-     - **Nominal Pembayaran**: `5500000`
-     - Klik **Tinjau** → klik **Jadwalkan**.
-   - Notice: *"Memerlukan persetujuan Owner"* muncul karena nominal Rp5.500.000 >= threshold Rp5.000.000. Status pembayaran di subtab **Rencana Bayar** adalah **Menunggu Owner** (`approvalStatus: PENDING`).
-3. *Persetujuan Owner*:
-   - Switch ke `Owner`, buka `/approvals` → temukan pembayaran `CV Marmer Indah Sentosa` Rp5.500.000 → klik **Setujui**.
-4. *Pencairan Pembayaran oleh Finance*:
-   - Switch kembali ke `Finance UAT`, buka `/expenses` tab **Tagihan Vendor** → subtab **Rencana Bayar**.
-   - Status kartu pembayaran CV Marmer kini berubah menjadi **Siap Cair**.
-   - Klik kartu pembayaran tersebut → klik tombol **Cairkan**.
-   - Sheet **Cairkan pembayaran vendor** terbuka:
-     - **Rekening Sumber Dana**: `BCA - BCA Operasional Dekoria`
-     - **Nomor Referensi Bukti Transfer**: `TRF-BCA-SUB-MARMER`
-     - Klik **Tinjau** → periksa dampak kas (`Rp 160.500.000 → Rp 155.000.000`) → klik tombol **Bayar**.
-
-**Tagihan Subcon 2 (PT Kaca Nusantara Prima):**
-1. Masih di `/expenses` tab **Tagihan Vendor**, klik **+ Buat Tagihan**:
-   - Bagian **Vendor dan proyek**:
-     - **Vendor**: `PT Kaca Nusantara Prima`
-     - **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-     - **Kategori Budget**: `Subcon`
-     - **Paket Subkon**: `Wardrobe & Kitchenette · Paket Cermin Grey Mirror & Backsplash`
-   - Bagian **Dokumen tagihan**:
-     - **Nomor Tagihan**: `INV-KACA-441`
-     - **Nominal Tagihan**: `2500000` (Rp2.500.000)
-     - **Tanggal Jatuh Tempo**: `<hari ini + 7 hari>`
-     - **Catatan**: `Pelunasan pasang cermin grey mirror & backsplash.`
-   - Klik **Tinjau** → klik **Buat**. Status: `UNPAID`.
-2. *Jadwalkan Bayar (Wajib)*:
-   - Klik kartu tagihan `INV-KACA-441` → klik **Jadwalkan Bayar**.
-   - Sheet **Jadwalkan pembayaran vendor** terbuka:
-     - **Rekening Rencana**: `BCA - BCA Operasional Dekoria`
-     - **Tanggal Pembayaran**: `<hari ini>`
-     - **Nominal Pembayaran**: `2500000`
-     - Klik **Tinjau** → klik **Jadwalkan**.
-   - *Otomasi Ambang Batas*: Karena nominal Rp2.500.000 < threshold persetujuan Owner (Rp5.000.000) dan budget Subcon tidak overrun, jadwal pembayaran ini langsung disetujui sistem tanpa approval Owner. Di subtab **Rencana Bayar**, status pembayaran langsung **Siap Cair**.
-3. *Pencairan Pembayaran oleh Finance*:
-   - Buka subtab **Rencana Bayar**, klik kartu pembayaran PT Kaca Nusantara Prima → klik **Cairkan**.
-   - Sheet **Cairkan pembayaran vendor** terbuka:
-     - **Rekening Sumber Dana**: `BCA - BCA Operasional Dekoria`
-     - **Nomor Referensi Bukti Transfer**: `TRF-BCA-SUB-KACA`
-     - Klik **Tinjau** → klik **Bayar**.
-
-*Expected Finansial*:
-- Saldo `BCA Operasional Dekoria`: **Rp160.500.000 → Rp152.500.000**.
-- Realisasi Subcon Actual & Paid: **Rp8.000.000** (Rp5.5jt Marmer + Rp2.5jt Kaca).
-
-#### B8.2 Tiga Nota Operasional Lapangan (Petty Cash)
-`PM UAT Budi` mengajukan 3 nota operasional melalui FAB **Expense Lapangan** di `/expenses`:
-- **Proyek**: `Fit-Out Interior Studio Bassura City — Unit 18B`
-
-| No | Kategori Pengeluaran | Keterangan | Nominal | No. Referensi Kas Kecil |
-| :- | :--- | :--- | :---: | :--- |
-| 1  | `Operasional` | `Sewa Pickup & BBM Pengiriman Workshop ke Site Bassura` | `650000` (Rp650.000) | `KAS-OPS-BSR-01` |
-| 2  | `Operasional` | `Izin Fit-Out & Deposit Kerja Pengelola Apartemen` | `500000` (Rp500.000) | `KAS-OPS-BSR-02` |
-| 3  | `Operasional` | `Konsumsi Lembur Tukang saat Instalasi Malam` | `250000` (Rp250.000) | `KAS-OPS-BSR-03` |
-|    | **Total Pengeluaran Operasional** | | **Rp1.400.000** | |
-
-Untuk setiap nota:
-1. `PM UAT Budi` mengisi form editor item (Kategori Pengeluaran: `Operasional`, Keterangan, Jumlah: `1`, Harga Satuan), klik **Simpan** → klik **Tinjau** → klik **Ajukan**.
-
-> 💡 **Invarian Finansial — Mengapa Butuh Persetujuan Owner padahal Nominal < Rp5 Juta?**
-> Di Atria ERP, aturan persetujuan Owner dipicu oleh **salah satu dari 2 kondisi**:
-> 1. Nominal $\ge$ Rp5.000.000 (*Ambang Persetujuan*), **ATAU**
-> 2. **Budget Overrun**: Total pengeluaran melebihi sisa alokasi kategori budget proyek.
->
-> Pada proyek Bassura, alokasi kategori `Operasional` adalah **4% dari budget internal**, yaitu **Rp1.010.600**.
-> - **Nota 1 (Rp650.000)**: Rp650.000 $\le$ Rp1.010.600 (di dalam plafon). Saat Finance klik **Verifikasi**, statusnya **langsung `APPROVED`** dan tombol **Cairkan** langsung aktif! (Nota ini **tidak masuk** ke antrean `/approvals` Owner karena sudah otomatis lolos).
-> - **Nota 2 (Rp500.000)**: Komitmen belanja menjadi $650.000 + 500.000 = \text{Rp1.150.000} > \text{Rp1.010.600}$ (**Overrun Rp139.400**).
-> - **Nota 3 (Rp250.000)**: Komitmen belanja menjadi $1.150.000 + 250.000 = \text{Rp1.400.000} > \text{Rp1.010.600}$ (**Overrun Rp389.400**).
-> - Akibatnya, Nota 2 dan Nota 3 berstatus `VERIFIED` (*Menunggu persetujuan*) dan **hanya 2 nota inilah yang dikirim ke modul `/approvals` milik Owner**!
-
-2. **Verifikasi oleh Finance (`Finance UAT`)**:
-   - Buka modul **Pengeluaran** (`/expenses`) → tab **Pengeluaran Lapangan**.
-   - Pada baris Nota 1 (`Sewa Pickup`), klik **Verifikasi** → Status langsung berubah menjadi `APPROVED` (ikon centang hijau, siap dicairkan).
-   - Pada baris Nota 2 (`Izin Fit-Out`), klik **Verifikasi** → Status berubah menjadi `VERIFIED` (*Menunggu persetujuan*, ada indikator merah *Melebihi budget*).
-   - Pada baris Nota 3 (`Konsumsi Lembur`), klik **Verifikasi** → Status berubah menjadi `VERIFIED` (*Menunggu persetujuan*, ada indikator merah *Melebihi budget*).
-
-3. **Persetujuan Overrun oleh Owner (`Owner UAT`)**:
-   - Switch role ke `Owner UAT`, lalu buka modul **Persetujuan** (`/approvals`).
-   - Anda akan melihat **tepat 2 kartu pengajuan** (Nota 2 Rp500.000 dan Nota 3 Rp250.000 dengan badge *Perhatian / Melebihi budget*).
-   - Klik kartu **Izin Fit-Out & Deposit Kerja** → klik tombol **Setujui** → konfirmasi persetujuan.
-   - Klik kartu **Konsumsi Lembur Tukang** → klik tombol **Setujui** → konfirmasi persetujuan.
-   - Antrean persetujuan kini bersih (0 antrean).
-
-4. **Pencairan oleh Finance (`Finance UAT`)**:
-   - Switch kembali ke role `Finance UAT`, buka kembali `/expenses` tab **Pengeluaran Lapangan**.
-   - Ketiga nota kini telah berstatus `APPROVED` (hijau) dan menampilkan tombol **Cairkan**.
-   - Klik tombol **Cairkan** pada masing-masing nota secara bergantian:
-     - **Nota 1 (`Sewa Pickup & BBM`)**:
-       - Rekening Sumber Dana: `KAS - Kas Kecil Lapangan / Workshop`
-       - Nomor Referensi Bukti Transfer: `KAS-OPS-BSR-01`
-       - Klik **Tinjau** → klik **Cairkan**.
-     - **Nota 2 (`Izin Fit-Out & Deposit`)**:
-       - Rekening Sumber Dana: `KAS - Kas Kecil Lapangan / Workshop`
-       - Nomor Referensi Bukti Transfer: `KAS-OPS-BSR-02`
-       - Klik **Tinjau** → klik **Cairkan**.
-     - **Nota 3 (`Konsumsi Lembur`)**:
-       - Rekening Sumber Dana: `KAS - Kas Kecil Lapangan / Workshop`
-       - Nomor Referensi Bukti Transfer: `KAS-OPS-BSR-03`
-       - Klik **Tinjau** → klik **Cairkan**.
-
-*Expected Finansial*:
-- Saldo `Kas Kecil Lapangan / Workshop`: **Rp11.000.000 → Rp9.600.000**.
-- Realisasi Operasional Actual & Paid: **Rp1.400.000**.
-
----
-
-### B9. Penagihan Termin 2 & Rekonsiliasi Bank BCA (`/reconciliation`)
-
-#### B9.1 Terbitkan Invoice Termin 2 (Progress 35%)
-Switch ke `Finance UAT`, buka proyek Bassura City → tab **Pembayaran** (`/projects/[id]?tab=payments`):
-1. Klik tombol **+ Invoice** di header panel. Sheet **Buat invoice klien** terbuka:
-   - Bagian **Identitas invoice**:
-     - **Nomor Invoice**: `INV/2026/09/BSR-002` (terisi otomatis atau ketik)
-     - **Tahap Tagihan**: Pilih `Termin Progress 1` (value: `PROGRESS_1`)
-   - Bagian **Nilai dan tenggat**:
-     - Klik tombol preset cepat **`35% Progress`** (otomatis mengisi nominal `17500000` dan tahap `PROGRESS_1`) atau ketik manual pada **Nominal Tagihan**: `17500000`
-     - **Tanggal Jatuh Tempo**: `<hari ini + 3 hari>`
-     - **Catatan**: `Penagihan termin progress lapangan 35% sesuai kesepakatan kontrak.`
-   - Klik tombol **Tinjau** → pada sheet review **Tinjau invoice klien** periksa ringkasan invoice → klik tombol **Buat**.
-2. Pada kartu invoice `INV/2026/09/BSR-002` yang baru dibuat, klik tombol **Catat bayar** (atau klik invoice → tombol **Catat Pembayaran** di footer):
-   - Sheet drawer **Penerimaan kas termin** terbuka:
-     - Bagian **Dana masuk**:
-       - **Rekening Penerima Dana (DEBIT)**: Pilih `BCA - BCA Operasional Dekoria`.
-       - **Nominal Diterima**: `17500000` (Rp17.500.000).
-     - Bagian **Referensi transaksi**:
-       - **Nomor Referensi Bukti Transfer**: Ketik `TRF-BCA-HENDRA-TRM2`.
-       - **Tanggal Transaksi Diterima**: `<hari ini>`.
-     - Klik tombol **Tinjau** → layar menampilkan mode **Tinjau penerimaan klien** dengan dampak saldo rekening (`Rp 152.500.000 → Rp 170.000.000`) → klik tombol **Catat**.
-
-*Expected State*: Saldo `BCA Operasional Dekoria` bertambah: **Rp152.500.000 → Rp170.000.000**. Invoice berstatus `PAID`.
-
-#### B9.2 Rekonsiliasi Mutasi Rekening Koran Bank BCA
-Buka modul **Rekonsiliasi** (`/reconciliation`):
-
-1. Pada tab **Mutasi bank** (`?view=statement`), klik tombol **Impor CSV**:
-   - Sheet **Impor rekening koran** terbuka.
-   - **Rekening**: Pilih `BCA Operasional Dekoria`.
-   - Klik **Pilih file**, lalu unggah file CSV rekening koran (misal `mutasi-bca-bassura.csv`) berisi 6 transaksi mutasi berikut:
+Lanjut hanya jika output tujuan adalah `atria_practice_20261005`, bukan `atria_pilot` atau `atria_uat_guard`:
+
+```sh
+bun scripts/reset-database.ts --confirm-reset
+```
+
+Kembali ke root sebelum menjalankan web/API. Jangan memakai `db:demo:reset` untuk walkthrough dari kosong: perintah itu memasukkan akun dan transaksi demo. Jangan menjalankan `db:provision` terhadap database yang sudah direset; provisioning khusus database baru yang benar-benar belum berisi fondasi.
+
+## 2. Dasar finance yang dipakai Paduna Build
+
+### Lima pertanyaan yang berbeda
+
+| Pertanyaan                                          | Angka di app                                 | Artinya                                               |
+| --------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| Klien menyetujui harga berapa?                      | Nilai kontrak / nilai proyek / RAB disetujui | Harga jual pekerjaan; belum berarti uang diterima     |
+| Maksimal biaya internal yang direncanakan berapa?   | Budget internal / cap                        | Batas biaya untuk mengendalikan margin                |
+| Biaya proyek yang sudah diakui berapa?              | Terpakai / actual / consumed                 | Biaya yang telah masuk perhitungan kategori           |
+| Uang yang benar-benar dicatat sudah dibayar berapa? | Dibayar / paid                               | Realisasi kas keluar lewat pembayaran proyek          |
+| Uang yang masih ada di bank/kas berapa?             | Saldo rekening / total kas                   | Saldo awal ditambah dana masuk, dikurangi dana keluar |
+
+Jangan menyamakan kelima angka ini. Persetujuan dokumen, invoice, pembayaran, dan pemakaian stok adalah peristiwa berbeda.
+
+### Kosakata dasar
+
+| Istilah      | Bahasa sederhana                                 | Contoh                                                                         |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Kas          | Uang pada rekening atau kas tunai                | BCA Rp100 juta, Kas Kecil Rp10 juta                                            |
+| Piutang      | Tagihan kepada klien yang belum dibayar          | Invoice Rp30 juta, klien baru membayar Rp10 juta → piutang Rp20 juta           |
+| Utang vendor | Tagihan vendor yang belum dilunasi               | Bill Rp20 juta, sudah dibayar Rp8 juta → utang Rp12 juta                       |
+| Persediaan   | Barang yang masih dimiliki, dinilai dengan biaya | Empat unit tersisa × Rp2 juta = Rp8 juta                                       |
+| Biaya        | Nilai yang dibebankan pada proyek                | Tukang, operasional, material dipakai/terbuang                                 |
+| Arus kas     | Perubahan uang masuk/keluar                      | Penerimaan klien menaikkan bank; membayar vendor menurunkannya                 |
+| Rekonsiliasi | Mencocokkan catatan app dengan bukti mutasi bank | Pembayaran Rp8 juta pada Paduna Build cocok dengan debit Rp8 juta pada rekening koran |
+| Audit        | Jejak siapa melakukan apa dan kapan              | Pengajuan, approval, pembayaran, perubahan stok                                |
+
+Persediaan yang masih disimpan adalah aset. Pengeluaran uang untuk membelinya tidak otomatis sama dengan biaya yang sudah terpakai. Pemisahan persediaan dan pengakuan biaya merupakan konsep akuntansi dasar; [IAS 2 dari IFRS Foundation](https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/) menjelaskan prinsip tersebut. Waktu pengakuan pada walkthrough ini mengikuti aturan proyek Paduna Build yang dijelaskan di bawah.
+
+### Kapan angka berubah di Paduna Build?
+
+| Tindakan                                           | Biaya terpakai                              | Kas                                           | Stok                         |
+| -------------------------------------------------- | ------------------------------------------- | --------------------------------------------- | ---------------------------- |
+| Membuat/menyetujui RAP atau RAB                    | Belum menjadi actual                        | Tetap                                         | Tetap                        |
+| Membuat invoice klien                              | Tetap; piutang bertambah                    | Tetap                                         | Tetap                        |
+| Mencatat penerimaan pembayaran klien               | Tetap; piutang turun                        | Naik                                          | Tetap                        |
+| Mengajukan/verifikasi pengeluaran yang perlu Owner | Masuk menunggu review                       | Tetap                                         | Tetap                        |
+| Pengeluaran disetujui                              | Actual naik                                 | Tetap sampai dibayar                          | Tetap                        |
+| Membayar pengeluaran                               | Actual tidak dihitung dua kali              | Turun                                         | Tetap                        |
+| Membuat bill vendor non-material                   | Actual naik; utang muncul                   | Tetap sampai dibayar                          | Tetap                        |
+| Membuat bill Material untuk persediaan             | Belum menjadi biaya pemakaian; utang muncul | Tetap                                         | Tetap sampai barang diterima |
+| Membayar bill Material                             | Paid naik, actual pemakaian belum naik      | Turun                                         | Tetap                        |
+| Posting penerimaan barang                          | Tidak mencatat pembayaran baru              | Tetap                                         | Naik                         |
+| Reservasi material                                 | Tetap                                       | Tetap                                         | Fisik tetap; tersedia turun  |
+| Pemakaian / material terbuang untuk proyek         | Actual Material naik                        | Tetap                                         | Turun                        |
+| Return sisa material proyek                        | Actual Material turun sesuai biaya tindakan | Tetap                                         | Naik                         |
+| Import/matching mutasi bank                        | Tetap                                       | Tetap                                         | Tetap                        |
+| Transfer antara rekening perusahaan                | Tidak menjadi biaya proyek                  | Rekening asal turun, tujuan naik; total tetap | Tetap                        |
+
+Pengeluaran yang diajukan atau diverifikasi tetapi belum disetujui berada pada **menunggu review**, bukan consumed. Pengeluaran disetujui dan dibayar masuk consumed. Bill Material untuk persediaan dipisahkan dari actual pemakaian; paid pembelian tetap terlihat.
+
+**Pembayaran dalam app adalah pencatatan realisasi. Paduna Build tidak memindahkan uang melalui bank.** Dalam penggunaan nyata, Finance melakukan transfer pada layanan bank lalu mencatatnya dan melampirkan bukti. Pada latihan, cukup mencatat transaksi sintetis di database latihan.
+
+### Budget, sisa, dan margin
+
+Latihan memakai kontrak Rp100 juta tanpa baris Fee/Jasa terpisah:
+
+```text
+Cap internal = Rp100 juta × 90% = Rp90 juta
+Target gross = Rp100 juta − Rp90 juta = Rp10 juta
+Target margin = Rp10 juta ÷ Rp100 juta = 10%
+Sisa cap = cap − biaya terpakai
+Sisa kategori = alokasi kategori − biaya terpakai kategori
+Persentase terpakai = biaya terpakai ÷ alokasi × 100%
+```
+
+Cap bukan saldo bank dan bukan janji bahwa semua Rp90 juta akan dibelanjakan. Alokasi kategori membagi cap, bukan membagi saldo rekening.
+
+Ada dua angka margin yang perlu dibaca berbeda:
+
+- **Proyeksi margin saat berjalan** memakai kontrak dikurangi angka lebih besar antara actual dan cap. Dengan actual Rp30 juta tetapi cap Rp90 juta, proyeksi tetap Rp10 juta/10%; sistem masih mencadangkan kemungkinan biaya sampai cap.
+- **Margin realisasi saat closing** memakai kontrak dikurangi actual final. Kontrak Rp100 juta dan actual Rp30 juta menghasilkan Rp70 juta/70% pada snapshot proyek.
+
+Margin proyek belum otomatis menjadi laba bersih perusahaan: app ini tidak menyusun seluruh pajak, overhead perusahaan, penyusutan, payroll, dan jurnal akuntansi formal.
+
+RAB yang mempunyai komponen **Fee/Jasa** terpisah memakai basis budget dari **scope produksi**, bukan seluruh total kontrak. Contoh total Rp100 juta terdiri dari produksi Rp80 juta + fee Rp20 juta: cap 90% menjadi Rp72 juta. Karena itu latihan inti sengaja tidak memakai komponen fee. Harga jual baris Tukang/Subcon pada latihan tetap scope produksi.
+
+### Rencana, actual, paid: tiga lapisan
+
+**RAP** menjawab rencana eksekusi/biaya internal. **RAB** menjawab harga dan scope untuk klien. **Actual** mengikuti kejadian operasional yang dicatat. **Paid** mengikuti pembayaran. Mengubah harga jual RAB tidak mengubah harga pokok RAP, stok fisik, atau saldo bank.
+
+Margin dan markup juga berbeda. Biaya Rp100, harga jual Rp110 berarti markup 10% terhadap biaya, tetapi margin sekitar 9,09% terhadap penjualan. Untuk target margin 10%, harga jualnya Rp100 ÷ 0,9 ≈ Rp111,11. Ini contoh membaca rasio, bukan rekomendasi harga bisnis.
+
+## 3. Setup Owner, tim, rekening, dan master
+
+### 3.1 Owner pertama
+
+1. Buka `/setup` pada environment yang dipilih.
+2. Masukkan bootstrap secret **milik environment itu**. Secret lokal berada pada konfigurasi privat API; secret production berbeda. Jangan menaruh nilainya di guide, screenshot publik, atau chat.
+3. Isi nama Owner, email, dan password sendiri. Gunakan password sesuai validasi form, minimal 12 karakter dengan huruf besar/kecil dan angka. Tidak ada password bersama yang perlu disalin dari panduan.
+4. Selesaikan setup lalu login. Ikuti layar pengenalan/Quick Start.
+
+Judul form “Setup Production” juga dapat muncul di development; environment ditentukan oleh URL web/API dan database, bukan judul form.
+
+Hasil: satu akun Owner, role sistem dan izinnya, lima kategori, serta default budget tersedia. Belum ada uang klien, pembayaran vendor, ataupun stock movement. `/setup` kemudian tidak lagi menerima bootstrap pertama.
+
+Untuk production, buat akun boss sebagai akun individual. Akun pribadi staf dibuat terpisah; tidak perlu berbagi akun Owner.
+
+### 3.2 Default budget untuk latihan
+
+Pada tahap **Default Finansial**, gunakan **Sesuaikan** pada **Komposisi default**. Simpan preset latihan:
+
+| Pengaturan            |              Nilai |
+| --------------------- | -----------------: |
+| Nama preset           | Latihan End-to-End |
+| Batas budget internal |                90% |
+| Material              |                50% |
+| Tukang                |                25% |
+| Operasional           |                10% |
+| Lain-lain             |                 5% |
+| Subcon                |                10% |
+| Total kategori        |      100% dari cap |
+| Buffer tidak terbagi  |                 0% |
+
+Semua kategori aktif. Ini **preset latihan**, bukan komposisi wajib untuk proyek Dekoria. Default bawaan app bisa berbeda. Mengubah default Settings tidak menghitung ulang proyek lama secara diam-diam; proyek menyimpan alokasinya sendiri.
+
+Atur/periksa threshold approval Rp5.000.000 untuk latihan. Nominal **≥ threshold** atau kondisi overbudget membutuhkan review Owner. Keputusan approval pengeluaran disimpan ketika diajukan; mengubah setting sesudahnya tidak berarti boleh melompati keputusan yang sudah tersimpan.
+
+### 3.3 Proyek pertama
+
+Isi form Quick Start:
+
+| Field         | Nilai latihan          |
+| ------------- | ---------------------- |
+| Nama proyek   | Latihan Interior Paduna Build |
+| Klien baru    | Klien Latihan          |
+| Nilai proyek  | Rp100.000.000          |
+| RAB disetujui | Rp100.000.000          |
+
+Jika belum ada PM, buat akun tim pada tahap kesiapan lalu assign PM pada proyek sebelum aktivasi. Nilai RAB awal pada form budget **belum sama dengan persetujuan dokumen RAB resmi**. Proyek tetap Draft sampai perencanaan dan aktivasi selesai.
+
+Hasil angka awal:
+
+| Kategori    |          Alokasi |
+| ----------- | ---------------: |
+| Material    |     Rp45.000.000 |
+| Tukang      |     Rp22.500.000 |
+| Operasional |      Rp9.000.000 |
+| Lain-lain   |      Rp4.500.000 |
+| Subcon      |      Rp9.000.000 |
+| Total cap   | **Rp90.000.000** |
+
+Actual dan paid masih Rp0; sisa cap Rp90 juta. Lihat angka di detail proyek. Dashboard agregat proyek berjalan baru memasukkan proyek sesudah status Aktif.
+
+### 3.4 Role, hak akses, dan cara tim bekerja bersama
+
+Buka **Pengaturan → Kesiapan** untuk membuat akun tim. **Owner** mengelola akun dan role. Gunakan satu akun per orang agar pengajuan, approval, pembayaran dan perubahan stok mempunyai pelaku yang dapat ditelusuri.
+
+Penjelasan berikut adalah **hak bawaan empat role sistem saat setup baru**, bukan kewajiban bahwa satu orang harus mengerjakan semuanya. Permission yang tersimpan, scope data, status dokumen dan guard bisnis tetap diperiksa pada setiap aksi. Owner dapat menyesuaikan role selain role Owner yang dilindungi, atau membuat custom role. Karena itu, nama jabatan saja tidak menjamin tombol tertentu tersedia.
+
+#### 3.4.1 Cara membaca batas akses
+
+Ada tiga pertanyaan sebelum seseorang melakukan tindakan:
+
+1. **Punya izin tindakan?** Misalnya boleh melihat invoice belum tentu boleh mencatat penerimaan pembayaran.
+2. **Punya akses ke data yang dimaksud?** PM dapat bekerja pada proyek yang ditugaskan kepadanya. Izin membuat budget tidak membukakan proyek lain.
+3. **Dokumen sudah boleh diproses?** Rencana terkunci, pembayaran belum disetujui, stok tidak cukup, atau proyek sudah selesai tetap dapat membuat tindakan ditolak walaupun permission ada.
+
+| Role                 | Cakupan utama                                                                       | Pertanyaan yang harus bisa dijawab                                                            |
+| -------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Owner                | Finance dan proyek perusahaan secara keseluruhan; pengaturan akses/risiko           | Apakah harga, biaya, kas dan margin proyek masih terkendali?                                  |
+| Finance Admin        | Finance dan proyek perusahaan secara keseluruhan; administrasi/verifikasi/realisasi | Apakah setiap biaya, pembayaran, invoice dan mutasi mempunyai catatan serta bukti yang benar? |
+| Project Manager / PM | Pekerjaan finance/perencanaan pada proyek yang ditugaskan                           | Apa yang dibutuhkan lapangan, berapa biaya yang diajukan, dan apakah sesuai scope/budget?     |
+| Purchasing           | Gudang, material dan konteks pengadaan lintas proyek                                | Barang yang dibutuhkan sudah tersedia, dijatah, diterima dan dipakai dengan benar atau belum? |
+
+Gudang adalah persediaan bersama. PM juga dapat membaca stock/material dan kebutuhan gudang yang disediakan modul material; jangan menganggap setiap angka inventory merupakan data proyek PM saja. Sebaliknya, akses material lintas proyek milik Purchasing tidak berarti boleh masuk seluruh detail finance proyek.
+
+#### 3.4.2 Owner: menetapkan kebijakan dan mengambil keputusan risiko
+
+**Tujuan kerja:** menjaga kontrol bisnis serta memastikan tim mempunyai akses yang tepat. Owner biasanya membaca ringkasan dan membuat keputusan, sementara pencatatan rutin dibagi ke tim.
+
+Hak bawaan Owner mencakup:
+
+- Membuat akun tim, mengelola role/custom role, dan mengatur siapa dapat melakukan apa.
+- Menetapkan threshold approval, default budget/alokasi kategori, kategori pengeluaran, library harga, vendor, dan material settings.
+- Membuat rekening, mengubah metadata, serta menonaktifkan/mengaktifkan rekening sesuai guard yang tersedia.
+- Membuat proyek, menugaskan PM, menyusun/mengubah/menyetujui budget, menyiapkan/mengunci RAP, membuat/mengubah/menyetujui RAB dan CO.
+- Membuat/verifikasi pengeluaran, mengambil keputusan approval biaya/jadwal vendor yang memerlukan Owner, mencatat pembayaran, invoice/penerimaan klien, kas umum/transfer dan rekonsiliasi.
+- Mengelola dan menjalankan operasi material; mengajukan/menyetujui opening, opname dan reversal sesuai syarat. Penyesuaian stok darurat dan reversal opening merupakan hak bawaan Owner.
+- Mengaktifkan serta closing proyek setelah checklist terpenuhi; membaca dashboard, margin dan riwayat dalam cakupan perusahaan.
+- Menggunakan chat AI sesuai permission dan kebijakan provider.
+
+**Yang dilihat setiap hari:** kontrak, cap, actual, sisa per kategori, pengeluaran menunggu keputusan, paid/receipt, saldo rekening, utang/piutang jatuh tempo, shortage/reservasi dan risiko margin. Approval bukan tanda uang sudah berpindah: cek paid dan bukti realisasi sesudah Finance membayar.
+
+**Batas yang tetap berlaku:** Owner tidak boleh mengedit catatan kas yang sudah direkonsiliasi secara langsung, melompati stok/balance guard, atau menganggap AI sebagai approver. Self-approval tertentu membutuhkan override darurat yang eksplisit dan alasan; opening stock sendiri tetap harus disetujui orang lain tanpa pengecualian Owner.
+
+**Hasil kerja yang diserahkan:** keputusan approve/reject beserta alasan, baseline budget/RAB yang jelas, penugasan PM, dan keputusan closing. Walaupun Owner boleh membayar sendiri, pembagian normal yang dianjurkan adalah Owner mengambil keputusan dan Finance mencatat realisasi.
+
+#### 3.4.3 Finance Admin: menjaga catatan dan realisasi uang
+
+**Tujuan kerja:** memastikan catatan proyek dapat dipertanggungjawabkan dan kas cocok dengan bukti nyata.
+
+Hak bawaan Finance mencakup:
+
+- Membaca finance/proyek perusahaan, membuat proyek dan menugaskan PM, membuat/mengubah/menyetujui budget.
+- Menyiapkan/mengubah/mengunci RAP; membuat/mengubah/menyetujui RAB; memproses revisi/CO dan konfirmasi klien sesuai tahap dokumen.
+- Memeriksa bukti/kategori dan memverifikasi pengeluaran yang diajukan, lalu mencatat pembayaran setelah syarat terpenuhi. Hak verifikasi tidak sama dengan hak mengedit draft milik pengaju.
+- Membuat/mengubah vendor bill, menjadwalkan pembayaran, dan mencatat realisasinya.
+- Membuat/mengubah invoice, mencatat receipt klien, dana masuk/keluar umum dan transfer internal.
+- Melihat rekening serta mengubah metadata rekening; import/matching mutasi dan mencatat pengecualian rekonsiliasi yang dapat dibuktikan.
+- Mengelola default budget, kategori pengeluaran, item/price library, vendor dan material settings; meninjau kesiapan operasional.
+- Mencatat receipt/reserve/use/return material, mengajukan opening, serta menyetujui opening/opname/reversal receipt jika pelaku dan dokumennya memenuhi syarat.
+- Mengaktifkan/closing proyek dengan checklist yang bersih; membaca margin dan menggunakan chat AI sesuai akses.
+
+**Yang tidak diberikan secara bawaan:** membuat akun/role, mengubah threshold approval, membuat atau menonaktifkan/mengaktifkan rekening, membuat pengeluaran lapangan baru, mengambil keputusan Owner pada approval biaya/jadwal vendor berisiko, waste/transfer/opname baru, penyesuaian darurat, atau meminta reversal receipt. Hak mengajukan dan hak menyetujui opname memang berbeda: Finance dapat menjadi checker meskipun bukan pembuatnya.
+
+**Yang dilihat setiap hari:** biaya pending vs approved vs paid, sisa tagihan vendor, invoice belum tertagih, rekening sumber pembayaran, kelengkapan nota/bukti bayar, mutasi belum cocok dan pengecualian. Bedakan uang pembelian stok dengan biaya material yang sudah terpakai.
+
+**Hasil kerja yang diserahkan:** hasil verifikasi untuk Owner bila perlu, jadwal pembayaran yang jelas, payment/receipt yang tercatat satu kali, serta rekonsiliasi dan checklist closing yang dapat diperiksa. Finance bisa menyetujui budget/RAB, tetapi tidak otomatis bisa menyetujui semua jenis approval.
+
+#### 3.4.4 Project Manager: menjelaskan kebutuhan dan kejadian lapangan
+
+**Tujuan kerja:** menjaga pekerjaan proyek sesuai scope serta menyampaikan kebutuhan dan biaya lapangan dengan bukti.
+
+Hak bawaan PM pada proyek yang ditugaskan mencakup:
+
+- Membaca/memperbarui data proyek yang dibolehkan, menyusun/mengubah budget dan RAP, menyiapkan paket Tukang/Subcon, menandai paket siap dan menyusun revisi rencana sesuai tahap.
+- Membuat dan memperbaiki draft pengeluaran sendiri sebelum dikirim, beserta kategori, deskripsi, nota dan tautan paket/material yang sesuai. Setelah dikirim, ikuti status/aksi yang tersedia; hak update tidak berarti boleh mengedit pengeluaran yang sudah disetujui/dibayar.
+- Membuat vendor bill pada proyeknya; Finance kemudian memeriksa dan memproses pembayaran. PM tidak memiliki hak bawaan memperbarui bill yang sudah dibuat.
+- Membaca RAB dan invoice proyek; membaca material/inventory serta konteks kebutuhan gudang yang tersedia.
+- Menggunakan chat AI dalam cakupan aksesnya. Jawaban/proposal AI tidak memperluas scope PM.
+
+**Yang tidak diberikan secara bawaan:** membuat proyek baru, approve budget, finalisasi/kunci RAP, membuat/mengedit/approve RAB atau CO, verifikasi/approve/pay expense, pembayaran vendor/penerimaan klien, mutasi rekening/rekonsiliasi, stock movement, Settings, aktivasi atau closing.
+
+**Yang dilihat setiap hari:** alokasi/actual/sisa kategori proyek, pengajuan yang masih pending/revisi, kebutuhan material, stok tersedia/reserved, RAP/paket kerja dan status pekerjaan. PM berkomunikasi dengan Purchasing untuk pemakaian fisik; membaca stok tidak berarti boleh menekan tombol Pakai/Return.
+
+**Hasil kerja yang diserahkan:** kebutuhan material yang jelas, RAP/paket siap ditinjau, pengeluaran dengan bukti, dan laporan pemakaian/sisa/rusak yang dapat dicatat Purchasing. Saat ada perubahan scope, PM memperbarui rencana yang boleh diedit lalu menyerahkan kebutuhan revisi RAB/CO ke Finance/Owner.
+
+Penugasan awal ditangani Owner/Finance. Form edit proyek yang sudah menjadi scope PM saat ini juga dapat memuat pilihan PM; koordinasikan perubahan pengelola karena PM lama dapat kehilangan akses setelah penugasan berpindah.
+
+Scope penugasan saat ini mengikuti user yang dipilih sebagai PM/pengelola proyek. Memiliki role bercakupan ditugaskan tanpa dipilih pada proyek belum memberi akses finance proyek tersebut.
+
+#### 3.4.5 Purchasing: menjaga barang dan jejak stok
+
+**Tujuan kerja:** mengetahui material tersedia, kekurangan yang perlu dibeli, dan perpindahan fisik barang. Biaya/kas dan stok harus dapat dibandingkan tanpa dianggap peristiwa yang sama.
+
+Hak operasional bawaan Purchasing mencakup:
+
+- Membaca material, inventory, shortage/kebutuhan RAP dalam konteks gudang, dan konteks bill/status pengadaan yang diberikan app.
+- Membuat/mengubah Material Master, kategori material, lokasi dan material settings.
+- Mengajukan opening stock; mencatat penerimaan barang, reservasi, pemakaian, return, waste dan transfer stok dengan alasan/bukti yang sesuai.
+- Membuat/mengirim stock opname dan meminta reversal receipt. Persetujuannya dilakukan checker yang berhak.
+
+**Batas penting:** Purchasing tidak memperoleh akses umum daftar/detail finance proyek, saldo rekening, receipt klien, pembayaran, rekonsiliasi, margin perusahaan, user/role, threshold approval, formula budget atau library harga umum. Purchasing juga tidak memiliki chat AI bawaan, membuat/kunci RAP, RAB/CO, aktivasi/closing, approval opening/opname/reversal, atau penyesuaian darurat.
+
+Pada permission bawaan ada akses budget/vendor bill/RAP untuk konteks pengadaan. Namun **scope proyek umum tetap tidak tersedia**: melihat bill/kebutuhan pada inbox/modul material tidak berarti jalur finance untuk submit/update bill atau edit RAP proyek akan lolos. Pada workflow latihan, Purchasing menyiapkan data barang/vendor/nota dan menyerahkan ke Finance atau PM yang berhak untuk membuat bill; jangan mengandalkan nama permission saja sebagai bukti boleh memproses seluruh dokumen.
+
+**Yang dilihat setiap hari:** fisik, reserved, available, average cost, receipt yang belum/baru diposting, kebutuhan proyek, sisa dan barang rusak. Reserve tidak menambah biaya/kas; use/return/waste dapat mengubah actual Material tanpa pembayaran baru. Return juga bukan tombol melepas reservasi yang belum dipakai.
+
+**Hasil kerja yang diserahkan:** data pengadaan lengkap untuk bill, receipt yang sesuai barang datang, catatan reserve/use/return/waste yang sesuai laporan lapangan, serta opening/opname/reversal yang siap diperiksa checker.
+
+#### 3.4.6 Peta hak penting untuk latihan
+
+“Bisa” berarti ada hak bawaan, **tetap mengikuti scope dan status dokumen**. Pembagian kerja yang dianjurkan dijelaskan pada alur berikutnya.
+
+| Tindakan                                                    | Owner              | Finance            | PM                              | Purchasing                               |
+| ----------------------------------------------------------- | ------------------ | ------------------ | ------------------------------- | ---------------------------------------- |
+| Buat proyek / aktifkan / closing                            | Bisa               | Bisa               | Tidak                           | Tidak                                    |
+| Susun atau ubah budget/RAP/paket                            | Bisa               | Bisa               | Proyek ditugaskan               | Konteks material; bukan edit proyek umum |
+| Approve budget / kunci RAP / buat-edit-approve RAB          | Bisa               | Bisa               | RAB dibaca; tanpa approve/kunci | Tidak                                    |
+| Ajukan pengeluaran lapangan baru                            | Bisa               | Tidak bawaan       | Proyek ditugaskan               | Tidak                                    |
+| Verifikasi pengeluaran lapangan                             | Bisa               | Bisa               | Tidak                           | Tidak                                    |
+| Keputusan biaya/jadwal vendor yang perlu Owner              | Bisa               | Tidak              | Tidak                           | Tidak                                    |
+| Bayar expense/bill / invoice / receipt klien / rekonsiliasi | Bisa               | Bisa               | Invoice dibaca; tanpa realisasi | Konteks pengadaan; tanpa realisasi       |
+| Buat rekening / kelola akun dan role / threshold approval   | Bisa               | Tidak              | Tidak                           | Tidak                                    |
+| Default budget, kategori biaya, library umum, vendor        | Bisa               | Bisa               | Tidak                           | Material settings saja                   |
+| Material Master, receipt, reserve, use, return              | Bisa               | Bisa               | Baca stok                       | Bisa                                     |
+| Waste / transfer / membuat opname / minta reversal receipt  | Bisa               | Tidak bawaan       | Tidak                           | Bisa                                     |
+| Approve opening / opname / reversal receipt                 | Bisa, dengan guard | Bisa, dengan guard | Tidak                           | Tidak                                    |
+| Penyesuaian darurat / reversal opening                      | Bisa, dengan guard | Tidak              | Tidak                           | Tidak                                    |
+| Chat AI                                                     | Bisa               | Bisa               | Scope aksesnya                  | Tidak bawaan                             |
+| Workspace desktop admin                                     | Bawaan             | Bawaan             | Perlu grant tambahan            | Perlu grant tambahan                     |
+
+Desktop adalah cara menyajikan pekerjaan, bukan kenaikan jabatan. Memberi akses desktop kepada PM/Purchasing/custom role tidak otomatis menambah hak bayar, approval atau scope proyek.
+
+#### 3.4.7 Workflow serah-terima antarrole
+
+**A. Setup dan perencanaan**
+
+1. Owner membuat akun, role/threshold dan rekening. Owner/Finance menyiapkan default budget serta vendor.
+2. Owner/Finance membuat proyek dan memilih PM. Purchasing menyiapkan master/lokasi serta informasi stok/harga material.
+3. PM menyusun RAP dan paket Tukang/Subcon pada proyeknya. Purchasing memberi informasi ketersediaan/shortage, bukan otomatis mengedit RAP umum.
+4. Owner/Finance memeriksa dan mengunci RAP, membuat RAB client-safe, lalu menyetujui budget/RAB. Untuk pembagian bisnis, Owner sebaiknya meninjau harga/scope yang akan dijanjikan ke klien; Finance juga mempunyai hak approval budget/RAB.
+5. Owner/Finance mengaktifkan proyek secara terpisah setelah PM dan dokumen siap.
+
+Serah-terima yang diperiksa: rencana/scope → RAP terkunci → RAB disetujui → proyek aktif. Tidak ada saldo bank berubah hanya karena tahap ini.
+
+**B. Pengeluaran lapangan**
+
+```text
+PM mengajukan + nota/kategori
+        ↓
+Finance memverifikasi
+        ├─ Normal: menjadi disetujui → Finance mencatat pembayaran
+        └─ Perlu Owner: menunggu keputusan Owner → Finance membayar jika disetujui
+```
+
+Normal berarti nominal di bawah threshold dan total actual + pending lain + pengajuan tidak melampaui alokasi; latihan memakai threshold Rp5 juta. Pengeluaran ≥ threshold atau kondisi actual + pending lain + pengajuan baru melampaui alokasi memerlukan Owner. Pengaju memperbaiki draft/bukti sebelum mengirim bila belum lengkap; untuk keputusan yang memerlukan Owner dan sudah masuk antrean, Owner approve atau reject dengan alasan sesuai aksi yang tersedia. Finance memverifikasi, bukan otomatis memiliki tombol penolakan atau revisi semua pengajuan. Sesudah pembayaran, PM dapat melihat statusnya tanpa mencatat dana keluar lagi.
+
+Serah-terima yang diperiksa: bukti/pengajuan → hasil verifikasi → keputusan jika perlu → paid/bukti bayar. Actual naik ketika disetujui; saldo turun ketika pembayaran dicatat.
+
+**C. Pembelian vendor dan kedatangan barang**
+
+```text
+PM/Purchasing menyiapkan kebutuhan dan dokumen pengadaan
+        ↓
+Finance atau PM berhak membuat bill pada scope yang diizinkan
+        ↓
+Finance menjadwalkan → Owner memutuskan bila jadwal membutuhkan approval
+        ↓
+Finance mencatat pembayaran dan bukti realisasi
+
+Barang datang → Purchasing meninjau dan posting receipt
+```
+
+Pembayaran dan penerimaan barang dapat terjadi dalam urutan berbeda. Finance menelusuri utang/paid, Purchasing menelusuri jumlah/biaya receipt, dan keduanya memastikan link proyek/bill/material sesuai. Bill Material untuk persediaan belum sama dengan actual pemakaian; jangan membuat biaya pembelian yang sama lagi sebagai expense.
+
+**D. Material dipakai di lapangan**
+
+PM menyampaikan kebutuhan/pemakaian/sisa/rusak → Purchasing mencatat reserve/use/return/waste sesuai kejadian → Finance memeriksa dampak actual kategori dan paid → Owner meninjau shortage/margin risk. PM tidak mencatat stock movement sendiri dengan hak bawaan. Perubahan stok tidak otomatis menjadi pembayaran.
+
+**E. Opening, opname, dan pembatalan receipt**
+
+Purchasing mengajukan data/hitungan/alasan → Finance atau Owner yang berhak memeriksa → checker menyetujui/posting sesuai guard. Persetujuan harus melihat dokumen sumber dan kondisi stok saat itu. Transfer/waste biasa langsung dicatat oleh pelaku berhak; tidak ada tahap approval kedua yang boleh diasumsikan untuk semua stock movement.
+
+**F. Penagihan klien dan closing**
+
+Finance membuat invoice sesuai kontrak → klien membayar di luar Paduna Build → Finance mencatat receipt serta bukti → Finance mencocokkan mutasi/pengecualian → PM/Purchasing memastikan biaya/material/reservasi selesai → Owner/Finance memeriksa checklist dan closing. Invoice belum berarti kas masuk, dan closing belum boleh dilakukan hanya karena pekerjaan fisik kelihatan selesai.
+
+**G. Perubahan scope**
+
+PM melaporkan perubahan dan menyiapkan revisi rencana → Finance/Owner membuat revisi RAB/CO serta mencatat tanggal/referensi konfirmasi klien → approver berhak yang berbeda menyetujui CO → tim melihat kontrak/budget/penagihan yang baru. PM bawaan tidak membuat/approve RAB atau CO. Jangan melewati konfirmasi klien sebelum approval CO.
+
+#### 3.4.8 Kapan wajib orang kedua?
+
+Guard maker/checker membandingkan **akun/user ID**, bukan sekadar nama role. Dua akun dengan role yang sama dapat menjadi pembuat dan checker bila masing-masing mempunyai izin. Mengganti tampilan/role pada akun yang sama tetap tidak mengubah user ID. Pada operasional nyata gunakan akun individual milik orang yang berbeda; pada latihan pribadi kamu dapat mensimulasikan empat pelaku dengan empat akun terpisah.
+
+| Keputusan                                                     | Aturan app                                                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Approve biaya/jadwal vendor yang diajukan/dijadwalkan sendiri | Biasanya ditolak; Owner dapat memakai override darurat yang berizin, eksplisit dan beralasan minimal 10 karakter |
+| Approve opening stock sendiri                                 | Selalu ditolak, termasuk Owner; tidak ada emergency override                                                     |
+| Approve opname atau reversal receipt sendiri                  | Perlu user berbeda; Owner mempunyai jalur override darurat eksplisit dengan alasan                               |
+| Approve CO sendiri                                            | Perlu user berbeda; Owner mempunyai jalur override darurat eksplisit dengan alasan                               |
+| Approve budget atau RAB awal                                  | Tidak mempunyai guard maker/checker yang sama; Owner/Finance tetap sebaiknya saling review sesuai kebijakan tim  |
+
+Hak darurat bukan jalan normal agar latihan cepat selesai. Untuk latihan, gunakan PM/Purchasing sebagai pengaju, Finance sebagai verifier/checker/realisasi, dan Owner sebagai pengambil keputusan berisiko. App tidak mempunyai satu aturan bahwa semua approval pasti harus beda orang, atau bahwa hanya Owner yang boleh menekan semua tombol Setujui.
+
+#### 3.4.9 Custom role, Designer, dan cara mencoba sendiri
+
+Setup baru mempunyai **empat role sistem** di atas. Nama **Designer** dapat muncul pada data/label lama, tetapi bukan role kelima dengan paket izin bawaan pada setup sekarang. Bila dibutuhkan, Owner membuat custom role dan memilih izin serta scope sesuai pekerjaan. Scope ditugaskan tetap harus mengikuti penugasan user di proyek; memberi nama Designer saja tidak menjadikannya anggota semua proyek.
+
+Cara latihan tanpa berbagi akun:
+
+1. Buat empat akun individual, lalu logout/login atau gunakan profil browser terpisah untuk berpindah pelaku. Password sementara staf diganti oleh pemilik akun.
+2. Sebagai PM, buat satu pengeluaran proyek; catat bahwa saldo belum berkurang.
+3. Sebagai Finance, verifikasi; pastikan normal/high-risk menghasilkan jalur yang benar dan tombol buat pengeluaran lapangan tidak diasumsikan tersedia.
+4. Sebagai Owner, selesaikan keputusan yang memang membutuhkan Owner. Sebagai Finance, bayar satu kali dan cocokkan saldo/paid.
+5. Sebagai Purchasing, catat aksi stok yang nyata; bandingkan dengan tampilan PM yang membaca stok tanpa memindahkannya.
+6. Coba scope proyek lain dan perubahan grant custom role; request berikutnya harus mengikuti hak yang tersimpan. Jangan mengubah role agar bisa melewati penolakan transaksi tanpa memahami sebabnya.
+
+Developer Account Switcher adalah bantuan development opsional, tidak tersedia di production dan bukan pengganti pembagian akun nyata. Semua role tetap login sebagai manusia; AI membantu analisis/prefill dan konfirmasi tetap memerlukan permission pengguna serta keputusan manusia.
+
+### 3.5 Rekening
+
+Sebagai Owner, buat dua rekening pada area rekening Dashboard. Finance dapat melihat rekening, mengubah metadata dan mencatat transaksi, tetapi tidak mempunyai hak bawaan membuat rekening baru:
+
+| Nama rekening     | Nama bank | Nomor rekening | Pemegang        |    Saldo awal |
+| ----------------- | --------- | -------------- | --------------- | ------------: |
+| BCA Latihan       | BCA       | 100000001      | Dekoria Latihan | Rp100.000.000 |
+| Kas Kecil Latihan | Kas Tunai | KAS001         | Dekoria Latihan |  Rp10.000.000 |
+
+Isian di atas adalah identitas sintetis. “Kas Tunai” menjelaskan penggunaan rekening Kas Kecil; tidak ada selector tipe bank/kas yang perlu dicari pada form ini. Catat tanggal cutoff saldo awal pada catatan latihanmu.
+
+Hasil: total kas perusahaan **Rp110 juta**. Saldo awal membuat catatan pembukaan ledger, tetapi **bukan pembayaran klien, omzet, ataupun actual proyek**. Opening rekening tidak dihitung sebagai cash-in proyek.
+
+### 3.6 Vendor, lokasi, dan material
+
+Sebagai Owner/Finance, siapkan vendor **Vendor Material Latihan** dan **Vendor Subcon Latihan**. Purchasing menyiapkan Material Master/lokasi setelah vendor tersedia. Pada **Pengaturan → Katalog**, gunakan subtab Material/Library/Lokasi untuk master yang diperlukan.
+
+Buat lokasi **Gudang A Latihan**, lalu Material Master:
+
+| Field             | Nilai                                         |
+| ----------------- | --------------------------------------------- |
+| Nama              | Panel Latihan                                 |
+| Satuan            | unit                                          |
+| Vendor default    | Vendor Material Latihan                       |
+| Lokasi            | Gudang A Latihan                              |
+| Harga acuan       | Rp2.000.000                                   |
+| Kategori material | Panel (buat kategori material bila belum ada) |
+
+Kategori material adalah pengelompokan barang di master, berbeda dari kategori biaya **Material** pada budget.
+
+Hasil inventory master baru: fisik 0, reserved 0, available 0, average cost 0. **Harga acuan bukan bukti barang sudah ada** dan tidak langsung menjadi average cost inventory.
+
+Untuk latihan inti, pilih keputusan **Tidak ada stok lama** pada Kesiapan. Keputusan ini tidak menambah stok atau kas. Bila kamu menjalankan latihan opening stock tambahan, baca bagian 8.3 dan catat nilai persediaan tambahan secara terpisah.
+
+## 4. RAP, RAB, budget, dan aktivasi
+
+Navigasi detail proyek saat ini dikelompokkan: **Ringkasan**, **Perencanaan → RAP/RAB**, **Operasional → Stok/Pengeluaran**, dan **Keuangan → Pembayaran/Margin**. Desktop dan shell mobile berbagi data/aturan yang sama; letak kontrol dapat berbeda.
+
+### 4.1 RAP: rencana internal
+
+Sebagai PM proyek yang ditugaskan, buat RAP. Setup berjalan berurutan **Material → Tukang → Subcon → Review**.
+
+1. Material: **Tambah Material**. Bila menggunakan Library, pilih **Isi manual**, lalu tetap pilih Material Master **Panel Latihan** supaya stock link terbentuk.
+2. Isi jumlah 10 unit, buffer/cadangan 0, biaya per satuan Rp2 juta. Biaya rencana material Rp20 juta.
+3. **Lanjut ke Tukang**; buat paket **Pemasangan Latihan**, jumlah 1 paket, biaya internal Rp10 juta. Buka detail lalu **Tandai Siap**.
+4. **Lanjut ke Subcon**; buat paket **Subcon Latihan**, jumlah 1 paket, biaya internal Rp5 juta, vendor Subcon Latihan. **Tandai Siap**.
+5. **Lanjut ke Review**; periksa total rencana internal Rp35 juta. Login **Owner/Finance** untuk **Finalisasi Internal Plan**, yang mengunci RAP. PM bawaan menyiapkan rencana, tetapi tidak mempunyai izin finalisasi atau membuat/mengedit RAB.
+
+Untuk scope yang sungguh tidak ada, tersedia keputusan **Tidak Digunakan**. Pada latihan ini kedua paket digunakan. RAP yang dikunci adalah baseline rencana; actual masih 0 dan tidak ada uang keluar.
+
+### 4.2 RAB: harga jual yang aman untuk klien
+
+Sebagai **Owner/Finance**, pada RAB generate dari **satu material RAP + dua paket** di atas. Jangan menambah manual line atau bundle pada latihan utama. Harga usulan otomatis belum tentu tepat Rp100 juta, jadi edit dan **Simpan** tiga item:
+
+| Item RAB           |  Jumlah | Harga satuan klien | Total untuk klien |
+| ------------------ | ------: | -----------------: | ----------------: |
+| Panel Latihan      | 10 unit |        Rp6.000.000 |      Rp60.000.000 |
+| Pemasangan Latihan | 1 paket |       Rp25.000.000 |      Rp25.000.000 |
+| Subcon Latihan     | 1 paket |       Rp15.000.000 |      Rp15.000.000 |
+| Total RAB          |         |                    | **Rp100.000.000** |
+
+Ketiganya adalah scope produksi, tanpa komponen Fee/Jasa terpisah. Harga jual ini sengaja mudah dihitung; bukan contoh pricing wajib. RAP tetap Rp35 juta internal, sedangkan RAB Rp100 juta untuk klien.
+
+Sebagai Owner, periksa preview dan setujui RAB. Periksa nilai kontrak Rp100 juta, cap Rp90 juta, serta alokasi pada 3.3. Budget menjadi disetujui dan sumber rencana dikunci. **Persetujuan RAB belum mengubah status proyek menjadi Aktif.**
+
+Gunakan **Export Dokumen** untuk mencoba **Cetak/PDF**, Excel `.xlsx`, dan PNG. Periksa total Rp100 juta, deskripsi/jumlah/harga klien, serta pastikan biaya internal Rp35 juta, margin/markup, vendor note, dan internal note tidak tampil pada dokumen klien. Export tidak mengubah kas atau stok. Share/WhatsApp adalah tindakan kirim; pilih sendiri penerima bila memang ingin mengirim.
+
+### 4.3 Aktivasi terpisah
+
+Periksa PM sudah ditugaskan, budget disetujui, RAB disetujui, dan RAP sumber terkunci. Buka tindakan aktivasi proyek lalu **Aktifkan**.
+
+Hasil: proyek Aktif dan boleh menjalankan operasional. Dashboard mulai memasukkan proyek ini. Actual 0, paid 0, sisa cap Rp90 juta, target/proyeksi margin Rp10 juta/10%, bank tetap Rp100 juta + Rp10 juta.
+
+## 5. Invoice, pembayaran, stok, dan pengeluaran
+
+Gunakan tanggal latihan yang konsisten. Catat nomor dokumen pada catatanmu; jangan mengulang submit yang sudah sukses ketika halaman masih loading. Semua angka berikut dalam rupiah; tabel checkpoint menggunakan **juta rupiah** agar mudah dibaca.
+
+### 5.1 Buat invoice klien dan terima DP
+
+Sebagai Finance, pada **Keuangan → Pembayaran**, buat jadwal invoice bawaan:
+
+| Termin     | Persentase |           Invoice |
+| ---------- | ---------: | ----------------: |
+| DP         |        30% |      Rp30.000.000 |
+| Progress 1 |        35% |      Rp35.000.000 |
+| Progress 2 |        25% |      Rp25.000.000 |
+| Pelunasan  |        10% |      Rp10.000.000 |
+| Total      |       100% | **Rp100.000.000** |
+
+Setelah invoice dibuat, piutang Rp100 juta dan BCA tetap Rp100 juta. Invoice adalah permintaan bayar, belum penerimaan uang.
+
+Catat penerimaan DP Rp30 juta ke BCA Latihan dengan referensi `DP-LATIHAN`. Setelah berhasil: BCA Rp130 juta, Kas Kecil Rp10 juta, piutang Rp70 juta, actual/paid proyek tetap 0. Jika ingin menguji receipt parsial, bagi DP menjadi dua penerimaan yang totalnya Rp30 juta; checkpoint sama, tetapi CSV bank pada 7.1 perlu disesuaikan menjadi dua baris.
+
+### 5.2 Bill Material dan pembayaran parsial
+
+Sebagai Finance, buat bill `MAT-LATIHAN-01`, proyek Latihan Interior Paduna Build, vendor Material, kategori Material, jumlah Rp20 juta. Catat bahwa bill membeli 10 unit Panel Latihan @Rp2 juta; form bill tidak memilih material/RAP. Link material/RAP dibuat pada penerimaan barang di 5.3. Ini pembelian **persediaan** 10 unit × Rp2 juta. Jangan membuat pengeluaran Material tambahan untuk pembelian yang sama.
+
+Jadwalkan Rp8 juta dari BCA; karena nominal melewati threshold, login Owner untuk approval jadwal, lalu Finance mencatat pembayaran. Ulangi sisa Rp12 juta dengan jadwal/approval baru. Scheduling dan approval tidak mengubah bank; pembayaran selesai yang mengubahnya.
+
+| Checkpoint                             | Actual | Paid proyek | Sisa cap | BCA | Utang vendor |
+| -------------------------------------- | -----: | ----------: | -------: | --: | -----------: |
+| Bill Rp20 juta dibuat                  |      0 |           0 |       90 | 130 |           20 |
+| Jadwal Rp8 juta disetujui, belum bayar |      0 |           0 |       90 | 130 |           20 |
+| Rp8 juta dibayar                       |      0 |           8 |       90 | 122 |           12 |
+| Sisa Rp12 juta dibayar                 |      0 |          20 |       90 | 110 |            0 |
+
+**Paid Rp20 juta dengan actual Rp0 adalah hasil yang benar** pada tahap ini. Barang belum dipakai; persediaan/cost consumption berbeda dari kas. Pembayaran vendor juga tidak otomatis menambah stok fisik.
+
+### 5.3 Posting penerimaan barang
+
+Sebagai Purchasing, buka Material → **Terima Barang**. Isi receipt `GR-LATIHAN-01`, proyek aktif, Gudang A, vendor/bill Material tadi, link RAP Panel Latihan, jumlah 10, unit cost Rp2 juta. **Tinjau → Posting**.
+
+Hasil: fisik 10, reserved 0, available 10, average cost Rp2 juta, nilai inventory Rp20 juta. Actual masih 0, paid tetap Rp20 juta, bank tetap Rp110 juta + Rp10 juta. Receipt membuktikan barang datang, bukan bukti uang baru dibayar.
+
+Receipt bisa dilakukan sebelum pembayaran pada bisnis nyata. Dalam latihan ini urutannya dibayar dahulu agar dua peristiwa terlihat jelas. Nomor receipt unik; total penerimaan terkait bill dan RAP dibatasi nilai/quantity dokumen tersebut.
+
+### 5.4 Reserve, use, return, waste
+
+Di **Operasional → Stok** proyek, pilih material/RAP/lokasi yang sama. Lakukan berurutan:
+
+| Tindakan         | Fisik | Reserved | Available | Actual Material | Paid Material |
+| ---------------- | ----: | -------: | --------: | --------------: | ------------: |
+| Setelah receipt  |    10 |        0 |        10 |             Rp0 |     Rp20 juta |
+| **Reservasi 7**  |    10 |        7 |         3 |             Rp0 |     Rp20 juta |
+| **Pakai 6**      |     4 |        1 |         3 |       Rp12 juta |     Rp20 juta |
+| **Kembalikan 1** |     5 |        1 |         4 |       Rp10 juta |     Rp20 juta |
+| **Terbuang 1**   |     4 |        0 |         4 |   **Rp12 juta** | **Rp20 juta** |
+
+Tulis alasan waste, misalnya `Satu panel rusak dalam simulasi pemasangan latihan`. Semua tindakan memakai **Tinjau → Catat** dan harus punya jejak aktivitas/audit. Tidak ada cash transaction baru dari keempat aksi ini.
+
+Maknanya: reserve menjatah barang, use mengakui pemakaian, return mengembalikan sisa ke stok bebas, waste mengakui kerugian material. Available = fisik − reserved. Pemakaian melindungi jatah proyek lain; app tidak mewajibkan reserve dahulu, tetapi reserve membantu koordinasi tim.
+
+Harga tindakan pada UI memakai average cost inventory saat itu. Return tidak selalu mengambil harga historis pemakaian lama. Angka latihan tepat karena tidak ada pembelian lain yang mengubah average cost di tengah.
+
+Pada proyeksi RAP, angka bisa berbeda dari stok perusahaan. Fixture ini menghasilkan pemakaian net 5 unit, dibeli 10, sisa proyek 3, secured 8, dan perlu beli 2 terhadap rencana 10. Return masuk stok bebas, tidak otomatis menjadi jatah RAP. Rencana sengaja lebih besar dari pemakaian aktual untuk mengajarkan perbedaan tersebut; angka perlu beli bukan perintah transfer uang otomatis.
+
+Tidak ada tombol publik untuk melepas seluruh reservasi secara umum. **Jangan mencatat pemakaian fiktif hanya untuk menghabiskan reservasi saat closing.** Latihan memakai reserve 7 sehingga langkah nyata use/return/waste berakhir reserved 0.
+
+### 5.5 Pengeluaran Tukang: pengajuan sampai pembayaran
+
+Sebagai PM, ajukan pengeluaran `Upah pemasangan latihan`, kategori Tukang, Rp10 juta, tautkan paket Tukang bila tersedia. Isi deskripsi/nota yang relevan.
+
+Finance memverifikasi. Karena ≥ threshold Rp5 juta, Owner melakukan approval. Finance kemudian membayar dari BCA. Gunakan akun berbeda untuk requester dan approver; Owner yang membuat pengeluaran sendiri juga terkena maker/checker, kecuali override darurat yang secara eksplisit diizinkan dan diberi alasan.
+
+| Tahap                        | Actual total | Menunggu review | Paid total | Sisa cap | BCA |
+| ---------------------------- | -----------: | --------------: | ---------: | -------: | --: |
+| Tukang diajukan/diverifikasi |           12 |              10 |         20 |       78 | 110 |
+| Owner menyetujui             |           22 |               0 |         20 |       68 | 110 |
+| Finance membayar             |           22 |               0 |         30 |       68 | 100 |
+
+Actual naik saat disetujui, bukan dua kali ketika dibayar. Nota dan approval membenarkan biaya; payment dan bukti bayar membenarkan realisasi kas.
+
+### 5.6 Operasional dan Lain-lain tetap sederhana
+
+Sebagai PM, buat dua pengeluaran tanpa RAP/material/package:
+
+| Pengeluaran                    | Kategori    |     Nominal | Rekening pembayaran |
+| ------------------------------ | ----------- | ----------: | ------------------- |
+| Transport dan konsumsi latihan | Operasional | Rp2.000.000 | Kas Kecil           |
+| Biaya kecil latihan            | Lain-lain   | Rp1.000.000 | Kas Kecil           |
+
+Finance memverifikasi. Dengan threshold Rp5 juta, keduanya di bawah alokasi dan tidak overbudget: hasil verifikasi dapat langsung disetujui, sehingga tidak perlu review Owner tambahan. Finance mencatat kedua pembayaran.
+
+Hasil: actual total Rp25 juta, paid Rp33 juta, sisa cap Rp65 juta, BCA Rp100 juta, Kas Kecil Rp7 juta. Jangan mengurangi rekening lagi melalui menu dana keluar manual.
+
+### 5.7 Bill Subcon
+
+Sebagai Finance, buat `SUB-LATIHAN-01`, vendor Subcon, kategori Subcon, jumlah Rp5 juta dan tautkan paket Subcon. Jangan mengulangnya sebagai pengeluaran lapangan.
+
+Bill non-material masuk actual ketika dibuat: actual menjadi Rp30 juta, paid masih Rp33 juta, utang vendor Rp5 juta. Jadwalkan pembayaran BCA → Owner approve karena tepat threshold Rp5 juta → Finance bayar.
+
+Hasil sesudah pembayaran: actual Rp30 juta, paid Rp38 juta, sisa cap Rp60 juta, BCA Rp95 juta, Kas Kecil Rp7 juta, utang vendor Rp0.
+
+### 5.8 Terima tiga termin klien yang tersisa
+
+Catat ke BCA dengan invoice yang tepat:
+
+| Penerimaan           | BCA sesudahnya | Piutang tersisa |
+| -------------------- | -------------: | --------------: |
+| Progress 1 Rp35 juta |     Rp130 juta |       Rp35 juta |
+| Progress 2 Rp25 juta |     Rp155 juta |       Rp10 juta |
+| Pelunasan Rp10 juta  | **Rp165 juta** |         **Rp0** |
+
+Actual dan paid tetap Rp30 juta/Rp38 juta. Total kas perusahaan menjadi Rp165 juta + Rp7 juta = **Rp172 juta**.
+
+## 6. Memeriksa angka akhir
+
+Sebelum closing, periksa detail proyek dan Dashboard. Persentase pada app dapat dibulatkan; tabel berikut memakai dua desimal, sedangkan nominal rupiah harus cocok. Refresh/reload dan pastikan angka tetap sama; angka tidak boleh hanya benar pada toast atau state optimistis.
+
+| Nilai yang diperiksa                   |                 Hasil latihan inti | Tujuannya                                                   |
+| -------------------------------------- | ---------------------------------: | ----------------------------------------------------------- |
+| Kontrak/RAB disetujui                  |                      Rp100.000.000 | Harga jual yang menjadi acuan invoice                       |
+| RAP rencana internal                   |                       Rp35.000.000 | Baseline rencana pekerjaan, bukan total pembayaran          |
+| Cap internal                           |                       Rp90.000.000 | Batas biaya yang masih dipakai proyeksi konservatif         |
+| Actual/consumed                        |                       Rp30.000.000 | Biaya yang sudah dibebankan pada proyek                     |
+| Menunggu review                        |                                Rp0 | Tidak ada pengeluaran yang belum selesai diperiksa          |
+| Paid proyek                            |                       Rp38.000.000 | Kas keluar yang telah dicatat untuk proyek                  |
+| Sisa cap                               |                       Rp60.000.000 | Rp90 juta − Rp30 juta                                       |
+| Budget terpakai total                  |                             33,33% | Rp30 juta ÷ Rp90 juta                                       |
+| Proyeksi margin berjalan               |                 Rp10.000.000 / 10% | Kontrak − max(actual, cap)                                  |
+| Pembayaran klien diterima              |                      Rp100.000.000 | Cash-in proyek                                              |
+| Piutang/utang vendor                   |                          Rp0 / Rp0 | Semua invoice/bill inti selesai                             |
+| Posisi kas proyek                      |                       Rp62.000.000 | Receipt Rp100 juta − paid Rp38 juta                         |
+| Bank/Kas Kecil/Total kas               | Rp165 juta / Rp7 juta / Rp172 juta | Saldo awal Rp110 juta + receipt Rp100 juta − paid Rp38 juta |
+| Panel Latihan fisik/reserved/available |                     4 / 0 / 4 unit | Stok sisa yang belum dijatah                                |
+| Nilai Panel Latihan                    |                        Rp8.000.000 | Empat unit × average cost Rp2 juta                          |
+
+Detail kategori:
+
+| Kategori    |       Alokasi |        Actual |          Paid |          Sisa |                Terpakai |
+| ----------- | ------------: | ------------: | ------------: | ------------: | ----------------------: |
+| Material    |     Rp45 juta |     Rp12 juta |     Rp20 juta |     Rp33 juta |                  26,67% |
+| Tukang      |   Rp22,5 juta |     Rp10 juta |     Rp10 juta |   Rp12,5 juta |                  44,44% |
+| Operasional |      Rp9 juta |      Rp2 juta |      Rp2 juta |      Rp7 juta |                  22,22% |
+| Lain-lain   |    Rp4,5 juta |      Rp1 juta |      Rp1 juta |    Rp3,5 juta |                  22,22% |
+| Subcon      |      Rp9 juta |      Rp5 juta |      Rp5 juta |      Rp4 juta |                  55,56% |
+| Total       | **Rp90 juta** | **Rp30 juta** | **Rp38 juta** | **Rp60 juta** | **33,33% terhadap cap** |
+
+Total paid lebih besar dari actual sebesar Rp8 juta karena masih ada persediaan utama senilai Rp8 juta. Sesudah closing, margin realisasi Rp70 juta berbeda dari posisi kas proyek Rp62 juta dengan selisih yang sama. Pada fixture ini selisihnya terjelaskan; pada bisnis nyata, periksa juga piutang, utang, saldo awal dan transaksi di luar proyek sebelum menyimpulkan penyebabnya.
+
+Cara Owner membaca app dalam 30 detik: **kontrak → cap → actual → sisa → kategori berisiko → paid/receipt/utang/piutang → stok/shortage → margin**. Sisa budget besar tidak otomatis berarti bank punya uang yang cukup. Bank bisa penuh karena DP, walaupun biaya atau kewajiban proyek masih akan terjadi.
+
+## 7. Rekonsiliasi dan closing
+
+### 7.1 Mutasi bank BCA
+
+Unduh [bca-latihan.csv](./fixtures/financial-workflow/bca-latihan.csv). File berisi delapan mutasi skenario inti, bukan saldo awal: dana masuk Rp100 juta, keluar Rp35 juta, net Rp65 juta. Dengan opening BCA Rp100 juta, saldo akhirnya Rp165 juta.
+
+Header yang diterima:
 
 ```csv
 tanggal,deskripsi,dana_masuk,dana_keluar
-2026-08-20,TRF CR BCA HENDRA GUNAWAN DP 50%,25000000,
-2026-08-22,TRF DB PT SUMBER ABADI MATERIAL,,8500000
-2026-08-28,TRF DB SLAMET UPAH TUKANG FINISHING,,6000000
-2026-08-29,TRF DB CV MARMER INDAH SOLID SURFACE,,5500000
-2026-08-29,TRF DB PT KACA NUSANTARA CERMIN,,2500000
-2026-09-01,TRF CR BCA HENDRA GUNAWAN PROGRESS 35%,17500000,
 ```
 
-2. Klik tombol **Impor**. Sistem menampilkan notifikasi: *"6 mutasi berhasil diimpor."*
-3. **Pencocokan Transaksi Mutasi**:
-   - Sistem mendeteksi 6 transaksi kas proyek yang cocok sempurna nilai dan arah mutasinya (berstatus *"Pasangan ditemukan"*).
-   - Klik baris mutasi bank yang memiliki pasangan → sheet **Cocokkan transaksi** terbuka dengan pasangan dari Catatan Atria terhubung otomatis.
-   - Klik tombol **Cocokkan**.
-   - Ulangi untuk keenam transaksi tersebut. Status transaksi di buku besar berubah menjadi **Cocok** (`reconciled = true`).
-4. **Catat Pengecualian Saldo Pembukaan Kas**:
-   - Saldo pembukaan awal kas (Rp150jt di BCA dan Rp15jt di Kas Kecil) terjadi sebelum periode rekening koran.
-   - Buka tab **Catatan Atria** (`?view=cash`).
-   - Klik baris transaksi *Saldo Pembukaan* BCA → sheet **Cocokkan transaksi** terbuka.
-   - Klik tombol sekunder **Catat pengecualian**. Sheet **Catat pengecualian** terbuka:
-     - **Alasan** (wajib minimal 10 karakter): `Saldo pembukaan kas awal sebelum sistem go-live.`
-     - Klik tombol **Simpan alasan**.
-   - Ulangi langkah di atas untuk mutasi saldo pembukaan pada rekening `Kas Kecil Lapangan / Workshop`.
+Tanggal fixture 2026-10-05. Jika latihan dilakukan pada tanggal lain atau nominal dipecah, sesuaikan file dengan tanggal/transaksi latihanmu. Tiap baris harus berisi salah satu dana masuk atau keluar; pakai nominal angka tanpa `Rp`/pemisah ribuan.
 
----
+Sebagai Finance:
 
-### B10. Audit Posisi Finansial Tengah Proyek
+1. Buka **Rekonsiliasi → Mutasi Bank** dan pilih BCA Latihan.
+2. Import CSV lalu review delapan baris sebelum menyimpan. Import tidak menambah/mengurangi saldo dan tidak mencatat pembayaran kedua.
+3. Pada **Catatan Paduna Build**, cocokkan setiap transaksi proyek dengan mutasi yang benar: rekening sama, arah sama, nominal tepat sama. Matching manual yang tersedia adalah satu catatan ke satu mutasi.
+4. Periksa delapan match pada riwayat. Import file yang sama lagi untuk menguji deduplication: tidak boleh menjadi delapan mutasi baru.
 
-Periksa ringkasan posisi anggaran dan kas sebelum Change Order:
+Jika receipt DP atau pembayaran dibagi berbeda dari latihan, jangan memaksa match satu baris statement ke beberapa catatan dengan nominal berbeda. Siapkan statement yang mencerminkan transaksi terpisah dan cocokkan satu per satu. Mutasi yang tidak mempunyai catatan Paduna Build perlu ditelusuri, bukan langsung dianggap biaya proyek.
 
-| Kategori    | Plafon Anggaran (Cara A) | Realisasi Aktual (Actual) | Kas Keluar (Paid) | Sisa Anggaran | % Terpakai | Status Kategori |
-| ----------- | -----------------------: | ------------------------: | ----------------: | ------------: | ---------: | :-------------: |
-| Material    |             Rp9.600.700 |               Rp3.000.000 |       Rp8.500.000 |   Rp6.600.700 |     31,25% | Aman            |
-| Tukang      |             Rp7.074.200 |              Rp10.000.000 |      Rp10.000.000 |  -Rp2.925.800 |    141,36% | Perlu Pantau    |
-| Subcon      |             Rp5.053.000 |               Rp8.000.000 |       Rp8.000.000 |  -Rp2.947.000 |    158,32% | Perlu Pantau    |
-| Operasional |             Rp1.010.600 |               Rp1.400.000 |       Rp1.400.000 |     -Rp389.400 |   138,53% | Perlu Pantau    |
-| Lain-lain   |               Rp505.300 |                       Rp0 |               Rp0 |     Rp505.300 |      0,00% | Aman            |
-| **Buffer**  |             Rp2.021.200 |                       —   |               —   |   Rp2.021.200 |        —   | Utuh            |
+### 7.2 Kas Kecil dengan pengecualian terdokumentasi
 
-- **Total Budget Internal Fisik**: `Rp25.265.000` (Porsi Fisik Rp28.070.000 × 90%)
-- **Total Biaya Diakui (Actual)**: `Rp22.400.000` (88,66% dari total budget internal, proyek secara agregat fisik tetap **Terkendali**)
-- **Total Penerimaan Kas Klien**: `Rp42.500.000` (DP 50% + Progress 35%)
-- **Total Kas Proyek Keluar (Paid)**: `Rp8.5jt + Rp10jt + Rp8jt + Rp1.4jt = Rp27.900.000`
-- **Posisi Kas Proyek Bersih**: `Rp42.500.000 − Rp27.900.000 = Rp14.600.000`
-- **Margin Realisasi Sementara**: `Rp50.000.000 − Rp22.400.000 = Rp27.600.000` (55,2%)
+Pembayaran tunai Rp2 juta dan Rp1 juta tidak muncul pada rekening koran BCA. Buka **Catatan Paduna Build**, pilih masing-masing transaksi Kas Kecil → sheet **Cocokkan transaksi** → **Catat pengecualian** → field **Alasan** → **Simpan alasan**.
 
----
+Gunakan alasan yang dapat diperiksa:
 
-### B11. Simulasi Change Order (Add-on Meja Kerja & LED Strip)
+- Operasional: `Pembayaran tunai Operasional dari Kas Kecil dalam skenario latihan; didukung nota dan pemeriksaan kas, bukan mutasi rekening BCA.`
+- Lain-lain: `Pembayaran tunai Lain-lain dari Kas Kecil dalam skenario latihan; didukung nota dan pemeriksaan kas, bukan mutasi rekening BCA.`
 
-Klien meminta penambahan pekerjaan fisik: **Meja Kerja Floating & Ambalan LED Strip** senilai **Rp6.000.000**.
+Alasan wajib 10–1.000 karakter. Pada penggunaan nyata harus ada bukti/opname kas yang sesuai; jangan memakai pengecualian untuk menyembunyikan selisih bank.
 
-1. Switch ke peran `Owner`, buka proyek Bassura City → klik tab **RAB** (`/projects/[id]?tab=rab`).
-2. Pada kartu ringkasan RAB berstatus disetujui, klik tombol **Buat revisi RAB**. Sheet **Buat Revisi RAB** terbuka.
-3. Seluruh sumber dari baseline RAB otomatis terpilih sebagai snapshot (mencakup **Material RAP**, **Paket kerja**, serta bagian **Item manual & jasa** seperti *Jasa Desain 3D, Shop Drawing, Supervisi & Manajemen Proyek*). Klik tombol **Revisi** di bawah sheet.
-4. Sistem membuat draft revisi RAB baru (status `DRAFT`).
-5. Pada panel **Item RAB**, klik tombol bulat **+** di bagian header panel (kanan atas) untuk membuka sheet **Tambah Item Manual**:
-   - Bagian **Tampilan untuk klien**:
-     - **Nama item**: `Meja Kerja Floating & Ambalan LED Strip`
-     - **Deskripsi untuk klien**: `Meja kerja ambalan gantung finish HPL dengan concealed warm white LED strip.`
-   - Bagian **Jumlah & harga**:
-     - **Jumlah**: `1`
-     - **Satuan**: `ls`
-     - **Harga satuan klien**: `6000000` (Rp6.000.000)
-   - Bagian **Sifat komponen biaya**:
-     - Pilih opsi: **Pekerjaan Fisik Tambahan** (default)
-   - Klik tombol **Tambah**.
-6. Draft revisi RAB kini memiliki total penawaran **Rp56.000.000** (+Rp6.000.000).
-7. Scroll ke panel **Keputusan draf** di bawah, klik tombol **Proses change order**. Sheet **Proses Change Order** terbuka:
-   - Section **2 · Alasan & lingkup**:
-     - **Alasan perubahan** (minimal 10 karakter): `Klien meminta penambahan meja kerja floating dan ambalan dengan concealed LED strip.`
-     - **Ringkasan lingkup lama ke baru**: `Penambahan lingkup dari interior studio standar mencakup meja kerja floating dan ambalan dekoratif.`
-   - Section **3 · Bukti persetujuan klien**:
-     - **Referensi persetujuan klien**: `WA Approval Bpk. Hendra tgl 01 Sept 2026`
-     - **Tanggal persetujuan klien**: Pilih tanggal `2026-09-01`
-   - Klik tombol **Tinjau**.
-8. Dialog konfirmasi muncul (*"Setujui Change Order?"*). Klik tombol **Setujui Perubahan**.
+Hasil: dua **Pengecualian dicatat**, tetap berbeda dari status direkonsiliasi. Checklist closing proyek dapat menunjukkan unresolved 0 dan documented exceptions 2. Dua catatan saldo awal rekening masih dapat terlihat pada antrean global; jangan menganggap seluruh antrean perusahaan otomatis kosong.
 
-*Expected Atomic Rescaling (Derivasi Bersih Cara A)*:
-- Nilai Kontrak Baru: **Rp56.000.000**.
-- Porsi Produksi Fisik Baru: **Rp34.070.000** (Rp28.070.000 fisik awal + Rp6.000.000 add-on fisik).
-- Porsi Jasa Desain & Fee: tetap **Rp21.930.000**.
-- Plafon Budget Internal Baru (Cap 90% dari Porsi Fisik): **Rp30.663.000** (+Rp5.400.000).
-- Target Laba Kotor Baru: **Rp25.337.000** (+Rp600.000 / 45,24%).
-- Kategori ter-rescale otomatis secara proporsional atas plafon fisik baru:
-  - Material (38%): `Rp11.651.940`
-  - Tukang (28%): `Rp8.585.640`
-  - Subcon (20%): `Rp6.132.600`
-  - Operasional (4%): `Rp1.226.520`
-  - Lain-lain (2%): `Rp613.260`
-  - Buffer (8%): `Rp2.453.040`
-- RAB versi lama berstatus `SUPERSEDED`, RAB baru berstatus `APPROVED`.
+### 7.3 Closing proyek
 
-9. **Tagihkan Invoice Change Order**:
-   - Switch ke `Finance UAT`, buka tab **Pembayaran**, klik **+ Invoice**:
-     - Sheet **Buat invoice klien**:
-       - **Nomor Invoice**: `INV/2026/09/BSR-CO1`
-       - **Tahap Tagihan**: `Pekerjaan Tambah / Kurang` (value: `AD_HOC`)
-       - **Nominal Tagihan**: `6000000` (Rp6.000.000)
-       - **Tanggal Jatuh Tempo**: `<hari ini + 3 hari>`
-       - Klik **Tinjau** → Klik **Buat**.
-   - Pada invoice tersebut, klik **Catat bayar**:
-     - Sheet **Penerimaan kas termin**:
-       - **Rekening Penerima Dana (DEBIT)**: `BCA - BCA Operasional Dekoria`
-       - **Nominal Diterima**: `6000000`
-       - **Nomor Referensi Bukti Transfer**: `TRF-BCA-HENDRA-CO`
-       - **Tanggal Transaksi Diterima**: `<hari ini>`
-       - Klik **Tinjau** → Klik **Catat**.
-   - Saldo BCA bertambah: **Rp170.000.000 → Rp176.000.000**.
+Sebagai Owner, buka closing/checklist proyek. Sebelum finalisasi, pastikan:
 
----
+- Total invoice sama dengan kontrak dan semua invoice selesai/void secara sah.
+- Semua bill selesai/void dan tidak ada jadwal pembayaran yang masih tertunda.
+- Pengeluaran selesai dibayar atau ditolak; tidak ada pengajuan/verifikasi/pembayaran yang belum tuntas.
+- Budget disetujui; tepat satu baseline RAB disetujui; tidak ada draft RAB atau Change Order terbuka.
+- Reservasi proyek habis melalui tindakan nyata, bukan use fiktif.
+- Cash transaction proyek cocok dengan mutasi bank atau punya pengecualian terdokumentasi yang diterima checklist.
 
-### B12. Serah Terima (BAST), Pelunasan Akhir, & Project Closing
+Jumlah pemeriksaan mengikuti checklist app; jangan mengandalkan janji jumlah invariant tetap. Bila salah satu blocker muncul, selesaikan dokumen sumber lalu periksa lagi. Barang sisa bebas tetap boleh ada di gudang; barang yang masih direservasi proyek menjadi blocker.
 
-#### B12.1 Penagihan Termin 3 (Pelunasan Akhir 15%)
-1. Masih sebagai `Finance UAT`, di tab **Pembayaran**, buat invoice pelunasan:
-   - Klik **+ Invoice**:
-     - Sheet **Buat invoice klien**:
-       - **Nomor Invoice**: `INV/2026/09/BSR-003`
-       - **Tahap Tagihan**: `Pelunasan Akhir` (value: `FINAL_PAYMENT`)
-       - **Nominal Tagihan**: `7500000` (Rp7.500.000 — 15% dari kontrak dasar Rp50jt)
-       - **Tanggal Jatuh Tempo**: `<hari ini + 3 hari>`
-       - Klik **Tinjau** → Klik **Buat**.
-2. Klik **Catat bayar** pada invoice pelunasan tersebut:
-   - Sheet **Penerimaan kas termin**:
-     - **Rekening Penerima Dana (DEBIT)**: `BCA - BCA Operasional Dekoria`
-     - **Nominal Diterima**: `7500000` (Rp7.500.000)
-     - **Nomor Referensi Bukti Transfer**: `TRF-BCA-HENDRA-PELUNASAN`
-     - **Tanggal Transaksi Diterima**: `<hari ini>`
-     - Klik **Tinjau** → Klik **Catat**.
-3. Buka `/reconciliation`, impor/catat mutasi rekening koran untuk 2 transaksi kas masuk baru (CO Rp6jt & Pelunasan Rp7.5jt), lalu cocokkan keduanya di tab **Mutasi bank**.
+Finalisasi menghasilkan snapshot final dan proyek Selesai. Hasil utama:
 
-*Expected Finansial Akhir*:
-- Total Dana Diterima dari Klien: **Rp56.000.000** (100% lunas dari seluruh invoice).
-- Saldo Akhir `BCA Operasional Dekoria`: **Rp183.500.000**.
-- Saldo Akhir `Kas Kecil Lapangan / Workshop`: **Rp9.600.000**.
-- Total Kas Perusahaan: **Rp193.100.000** (Saldo awal Rp165jt + Kas bersih proyek Rp28.1jt).
+| Snapshot                      |               Nilai |
+| ----------------------------- | ------------------: |
+| Kontrak                       |          Rp100 juta |
+| Actual final                  |           Rp30 juta |
+| Margin realisasi              | **Rp70 juta / 70%** |
+| Posisi kas proyek             |           Rp62 juta |
+| Sisa persediaan Panel Latihan |   4 unit / Rp8 juta |
 
-#### B12.2 Evaluasi 10 Invariant Closing Guard di Tab Margin
-1. Switch ke peran `Owner`, buka proyek Bassura City lalu klik tab **Margin** (`/projects/[id]?tab=profitability`).
-2. Scroll ke kartu **Penutupan finansial**, klik tombol **Periksa kesiapan closing**.
-3. Sistem memvalidasi 10 guard berikut secara atomik:
-   - `invoicedValue === contractValue` (Rp56.000.000 = Rp56.000.000) → **Lolos**.
-   - Seluruh invoice client berstatus `PAID` / VOID (Piutang = Rp0) → **Lolos**.
-   - Seluruh vendor bill berstatus `PAID` / VOID (Hutang = Rp0) → **Lolos**.
-   - Seluruh vendor payment final (`COMPLETED`) → **Lolos**.
-   - Seluruh expense request lapangan final (`PAID` / `REJECTED`) → **Lolos**.
-   - Tidak ada pengeluaran berstatus `SUBMITTED` / `VERIFIED` → **Lolos**.
-   - Seluruh cash expense telah lunas dibayar → **Lolos**.
-   - Tepat satu current `APPROVED` RAB dan 0 draft revision → **Lolos**.
-   - Tidak ada Change Order berstatus terbuka → **Lolos**.
-   - `calculateOutstandingProjectReservations === 0` dan seluruh cash transaction `reconciled = true` (atau memiliki exception sah) → **Lolos**.
+Sesudah closing, app menolak operasional/pembayaran baru yang mensyaratkan proyek aktif. Dashboard budget mengagregasi proyek **Aktif**: bila ini satu-satunya proyek dan sudah selesai, agregat aktif dapat turun menjadi 0. Data/snapshot proyek tetap ada dan saldo perusahaan tetap Rp172 juta. Itu bukan kehilangan data.
 
-#### B12.3 Finalisasi Penutupan Proyek
-1. Setelah seluruh guard lolos, form closing terbuka di bawah kartu:
-   - **Catatan closing final** (wajib minimal 10 karakter):
-     `Pekerjaan interior studio Bassura City unit 18B selesai 100%, BAST ditandatangani klien, dan seluruh kewajiban finansial/stok telah direkonsiliasi sempurna.`
-2. Klik tombol **Selesaikan proyek dan simpan ringkasan akhir**.
+## 8. Fitur tambahan dan pengujian kesalahan
 
-*Expected State & Snapshot Profitabilitas*:
-- `project.status` berubah menjadi `COMPLETED`.
-- Record baru tersimpan di tabel `project_profitability_snapshot` dengan tipe `FINAL`:
-  - `contract_value`: `56000000.00`
-  - `internal_budget`: `50400000.00`
-  - `actual_cost`: `22400000.00`
-  - `realized_margin_amount`: `33600000.00` (Rp56.000.000 − Rp22.400.000)
-  - `realized_margin_percentage`: `60.0000%`
-  - `cash_position`: `28100000.00` (Rp56.000.000 − Rp27.900.000)
-  - `risk_status`: `SAFE`
-- Proyek terkunci permanen dari mutasi pengeluaran, pergerakan stok, dan penerbitan tagihan baru.
+Bagian berikut menguji fitur lain. Jangan mengubah fixture utama tanpa mencatat dampaknya. Lakukan aksi yang membutuhkan proyek aktif **sebelum closing** atau gunakan proyek latihan tambahan.
 
----
+### 8.1 Chat AI, OCR, dan lampiran
 
-## BAGIAN C — Matriks 18 Negative Tests & Invariant Guards
+Latihan lokal memakai **9Router, Gemini 3.8 Flash** (`ag/gemini-3.8-flash-high`). Model membantu analisis/prefill, tetapi keputusan keuangan/material tetap milik pengguna.
 
-Seluruh skenario pengujian negatif di bawah ini dapat dieksekusi langsung untuk memverifikasi bahwa mutasi tidak sah ditolak pada boundary validasi dan transaksi database di-rollback tanpa meninggalkan *partial write*.
+Untuk menguji OCR tanpa mengubah checkpoint utama, gunakan nota sintetis pengeluaran Operasional Rp2 juta pada 5.6 sebagai jalur input pengeluaran itu, **bukan pengeluaran kedua**. Periksa proyek, kategori, tanggal, total, item, lampiran dan deskripsi sebelum submit. Nota bisa berupa gambar/PDF yang sesuai batas UI; jangan memakai dokumen perusahaan pada latihan sintetis.
 
-| No | Nama Negative Test | Role Aktif | Route / Action Target | Input / Skenario Pengujian | Hasil Rejection (Expected Error) | Bukti Database Bebas Partial Write |
-| :- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | Project Scoping Guard | PM Lain | `/projects/<id-bassura>` | PM yang tidak di-assign mencoba membuka URL proyek Bassura | HTTP 403 / Redirect | Data proyek tidak dikirim dalam RSC payload |
-| **2** | Global Finance Guard | PM | `/ledger` | PM mencoba mengakses dashboard arus kas global perusahaan | HTTP 403 / Unauthorized route | Session dicegat di middleware & layout |
-| **3** | Sensitive Balance Guard | Purchasing | `/expenses` | Purchasing membuka daftar tagihan pengadaan material | UI menyembunyikan saldo | Payload server menghapus saldo & nama bank |
-| **4** | Self-Verification Guard | PM Pembuat | `verifyExpenseRequest` | PM mencoba memverifikasi nota pengeluaran yang diajukan sendiri | `FORBIDDEN: Pembuat pengeluaran tidak boleh memverifikasi` | Status pengeluaran tetap `SUBMITTED` |
-| **5** | Budget Settings Guard | Purchasing | `updateBudgetAllocationSetting` | Purchasing mencoba mengubah rasio default budget di `/settings` | `FORBIDDEN: Memerlukan izin update:budget_setting` | Record `budget_allocation_setting` tidak berubah |
-| **6** | Approved RAP Immutability | PM | `updateProjectRapItem` | PM mencoba mengedit quantity material saat status RAP `LOCKED` | `RAP_LOCKED: RAP yang sudah difinalisasi tidak dapat diedit` | Item RAP di database tetap utuh |
-| **7** | Over-Reserve Guard | Purchasing | `reserveMaterialStock` | Reservasi 50 lembar Multipleks (stok tersedia gudang hanya 2 lbr) | `INSUFFICIENT_STOCK: Jumlah melebihi stok tersedia` | Row `stock_movement` tidak dibuat, stok tetap |
-| **8** | Cross-Project Reserve | Proyek B | `useMaterialStock` | Proyek B mencoba mengonsumsi stok yang direservasi Proyek A | `RESERVATION_MISMATCH: Stok terikat untuk proyek lain` | Stok proyek A tidak terpotong |
-| **9** | Excess Return Guard | Purchasing | `returnMaterialStock` | Mencatat Return 5 lembar padahal pemakaian bersih (*net use*) hanya 1 lembar | `EXCESS_RETURN: Jumlah return melebihi pemakaian bersih` | Row return ditolak, nilai actual tidak minus |
-| **10**| Short Audit Note Guard | Purchasing | `recordMaterialWaste` | Mencatat Waste material dengan catatan `"rusak"` (< 10 karakter) | `VALIDATION_ERROR: Catatan minimal 10 karakter` | Mutasi waste ditolak, audit log tidak terbentuk |
-| **11**| Reserved Reversal Guard | Finance | `requestGoodsReceiptReversal` | Reversal Goods Receipt saat sisa stok gudang lebih kecil dari reservasi | `REVERSAL_BLOCKED: Akan menyebabkan available stock minus` | Status GR tetap `POSTED`, stok tidak ditarik |
-| **12**| Vendor Over-Schedule | Finance | `scheduleVendorBillPayment` | Menjadwalkan bayar Rp10.000.000 pada tagihan bersisa Rp8.500.000 | `OVERPAYMENT_NOT_ALLOWED: Melebihi sisa tagihan` | Jadwal bayar tidak tercatat di `vendor_payment` |
-| **13**| Early Vendor Pay Guard | Finance | `disburseVendorPayment` | Mencairkan pembayaran tagihan > Rp5jt sebelum disetujui Owner | `APPROVAL_REQUIRED: Pembayaran high-risk belum disetujui` | Saldo bank tidak terpotong, payment tetap `SCHEDULED` |
-| **14**| Rejected Payment Guard | Finance | `disburseVendorPayment` | Mencoba mencairkan transaksi yang berstatus `FAILED` | `INVALID_STATUS: Hanya payment SCHEDULED yang dapat dicairkan` | Tidak ada mutasi kas keluar |
-| **15**| Client Overpay Guard | Finance | `recordClientPayment` | Mencatat pembayaran Rp30.000.000 pada invoice bernilai Rp25.000.000 | `OVERPAYMENT: Jumlah bayar melebihi sisa tagihan invoice` | Transaksi kas masuk di-rollback |
-| **16**| Archived Account Guard | Finance | `createCashTransaction` | Mencatat transaksi kas pada rekening bank berstatus `ARCHIVED` | `ACCOUNT_INACTIVE: Rekening bank tidak aktif` | Saldo rekening tidak berubah |
-| **17**| Direct Second RAB Guard | Owner | `approveRabEstimate` | Menyetujui revisi RAB kedua langsung tanpa melalui Change Order | `CHANGE_ORDER_REQUIRED: Baseline aktif harus via Change Order` | Status RAB tetap `DRAFT`, kontrak tidak berubah |
-| **18**| Premature Closing Guard | Owner | `completeProject` | Menutup proyek saat masih ada transaksi kas yang belum direkonsiliasi | `FORBIDDEN: Transaksi kas proyek belum cocok dengan mutasi bank` | `project.status` tetap `ACTIVE`, snapshot tidak dibuat |
+Untuk chat, minta: `Jelaskan posisi budget, actual, paid, piutang, dan stok proyek Latihan Interior Paduna Build. Jangan membuat transaksi.` Cocokkan jawaban dengan bagian 6; jawaban AI tidak menggantikan data app.
 
----
+Uji proposal pada proyek tambahan: minta prefill pengeluaran kecil, pastikan belum ada pengeluaran/ledger sebelum tombol konfirmasi manusia. Batalkan satu proposal, konfirmasi proposal lain satu kali, lalu lihat pengeluaran dan audit. Proposal pengeluaran belum otomatis berarti sudah approved/paid.
 
-## BAGIAN D — Panduan Troubleshooting & Safe Resume State
+Lampiran finansial dikirim lewat referensi storage yang terotorisasi. Uji buka/download dengan akun berhak lalu akun tanpa izin. File yang ditolak/terlalu besar tidak boleh menghasilkan transaksi setengah jadi. File PDF/gambar bank yang dianalisis AI harus direview sebelum import; CSV pada latihan utama memberikan hasil deterministik.
 
-Ketika terjadi kendala operasional atau simulasi terhenti di tengah jalan, gunakan panduan berikut untuk mendiagnosis dan memulihkan sistem secara aman tanpa melakukan reset database.
+Chat/OCR memerlukan API aktif, credential/provider yang benar, internet dan kuota. Pesan gagal tidak membuktikan transaksi gagal bila pembayaran sudah terlanjur tercatat; periksa status/audit sebelum mencoba ulang. Production data-policy provider dan backup byte lampiran merupakan pemeriksaan operasional tersendiri; dump database tidak menyertakan file ImageKit.
 
-### 1. Membedakan Duplicate Transaction vs Pending Approval
+### 8.2 Dana masuk/keluar manual dan transfer rekening
 
-- **Gejala**: Pengeluaran lapangan atau jadwal pembayaran vendor tidak dapat disimpan kembali dan muncul error konflik.
-- **Langkah Diagnostik (Read-Only)**:
-  ```sql
-  -- Periksa status tagihan vendor dan jadwal bayar
-  SELECT id, bill_number, status, total_amount FROM vendor_bill WHERE project_id = '<project_id>';
-  SELECT id, vendor_bill_id, amount, status FROM vendor_payment WHERE vendor_bill_id = '<vendor_bill_id>';
-  ```
-- **Aksi Pemulihan**:
-  - Jika `vendor_payment` berstatus `SCHEDULED` (menunggu persetujuan): Buka menu **Persetujuan** (`/approvals`) sebagai Owner untuk menyetujui, lalu cairkan sebagai Finance Admin. Jangan membuat tagihan baru.
-  - Jika transaksi duplicate terbentuk: Buka detail tagihan, batalkan jadwal bayar yang keliru sebelum membuat jadwal baru.
+Jalankan setelah mencatat checkpoint utama, atau gunakan rekening terpisah:
 
-### 2. Unmatched Bank Statement & Rekonsiliasi Blocker
+1. Catat dana masuk umum Rp500 ribu ke Kas Kecil dengan alasan latihan. Saldo naik Rp500 ribu, tetapi bukan receipt invoice/actual proyek.
+2. Catat dana keluar umum Rp500 ribu dari Kas Kecil. Saldo kembali Rp7 juta; bukan pengeluaran proyek yang sudah dibuat pada 5.6.
+3. Transfer internal Rp1 juta dari BCA ke Kas Kecil. Hasil BCA Rp164 juta, Kas Kecil Rp8 juta, total tetap Rp172 juta. Ledger mempunyai dua sisi transfer yang saling terkait.
+4. Bila ingin kembali ke checkpoint bank awal, transfer Rp1 juta kembali: BCA Rp165 juta, Kas Kecil Rp7 juta. Tetap ada riwayat dua transfer; jangan menghapus jejak agar seolah tidak pernah terjadi.
 
-- **Gejala**: Checklist closing B12 terblokir dengan pesan `X transaksi kas proyek belum cocok dengan mutasi bank`.
-- **Langkah Diagnostik (Read-Only)**:
-  ```sql
-  -- Cari transaksi kas proyek yang belum direkonsiliasi
-  SELECT id, transaction_type, amount, reconciled, reconciliation_exception_at
-  FROM cash_transaction
-  WHERE id IN (
-    SELECT cash_transaction_id FROM client_payment WHERE invoice_id IN (SELECT id FROM client_invoice WHERE project_id = '<project_id>')
-    UNION
-    SELECT cash_transaction_id FROM vendor_payment WHERE vendor_bill_id IN (SELECT id FROM vendor_bill WHERE project_id = '<project_id>')
-    UNION
-    SELECT cash_transaction_id FROM project_cost WHERE project_id = '<project_id>'
-  ) AND reconciled = false AND reconciliation_exception_at IS NULL;
-  ```
-- **Aksi Pemulihan**:
-  1. Buka route `/reconciliation` sebagai `Finance UAT`.
-  2. Jika transaksi memiliki pasangan mutasi di bank: Impor CSV mutasi koran dan klik **Cocokkan**.
-  3. Jika transaksi adalah kas kecil lapangan atau mutasi internal non-bank: Buka tab **Catatan Atria**, klik **Catat Pengecualian**, masukkan alasan yang sah (misal: `Pengeluaran kas kecil operasional lapangan diverifikasi dengan nota fisik.`).
+Transaksi umum ini berada di luar proyek. Sesuaikan rekonsiliasi perusahaan untuk mutasi baru; CSV delapan baris inti tidak mencakupnya. Jangan memakai dana keluar manual untuk membayar ulang expense/bill yang sudah dibayar melalui workflow khusus.
 
-### 3. Reserved Stock Conflict
+### 8.3 Opening, transfer stok, opname, adjustment, dan receipt reversal
 
-- **Gejala**: Purchasing tidak dapat mencatat Use Material atau pesan error `INSUFFICIENT_STOCK` muncul.
-- **Langkah Diagnostik (Read-Only)**:
-  ```sql
-  -- Periksa riwayat pergerakan stok untuk proyek
-  SELECT id, movement_type, material_id, quantity, project_id, created_at
-  FROM stock_movement
-  WHERE project_id = '<project_id>'
-  ORDER BY created_at ASC;
-  ```
-- **Aksi Pemulihan**:
-  - Pastikan reservasi material sudah dilakukan sebelum aksi USE.
-  - Jika material belum tiba di gudang, pastikan Goods Receipt sudah di-posting melalui menu `/materials`.
+Buat Material Master lain **Material Gudang Tambahan**, satuan unit, cost Rp100 ribu, di Gudang A **terlebih dahulu**. Setelah itu buat lokasi baru **Gudang B Latihan**; pembuatan lokasi menyiapkan inventory kosong bagi material aktif sehingga transfer dummy mempunyai baris tujuan. Ini tidak mengubah actual/paid proyek utama, tetapi menambah nilai persediaan perusahaan.
 
-### 4. Closing Invariant Failure Recovery
+Siapkan opening pada inventory dummy yang belum pernah mempunyai saldo/reservasi/movement, sebaiknya pada fase setup awal. Purchasing membuat batch 5 unit @Rp100 ribu di Gudang A, lalu **Finance/Owner yang berbeda** menyetujuinya. Pengajuan belum mengubah stok; approval menghasilkan A=5, nilai Rp500 ribu. Tidak ada emergency self-approval untuk opening. Buka `/settings?tab=readiness&flow=initial-stock` lalu **Ada stok lama**. Bila sudah ada opening yang diposting, gunakan **Catat saldo awal lainnya**. Composer masih dapat dipakai setelah keputusan tanpa stok lama untuk inventory dummy yang memenuhi syarat; jangan mengubah saldo barang yang sudah berjalan seolah masih opening.
 
-- **Gejala**: Tombol **Periksa kesiapan closing** di tab Margin menampilkan blocker merah.
-- **Matriks Resolusi Blocker**:
-  - *Total invoice belum sama dengan nilai kontrak*: Terbitkan invoice sisa termin atau invoice Change Order di tab **Pembayaran**.
-  - *Masih ada vendor bill outstanding*: Lunasi seluruh tagihan vendor yang belum `PAID` di modul `/expenses`.
-  - *Reservasi stock proyek belum diselesaikan*: Catat aksi USE untuk seluruh sisa reservasi material proyek di modul `/materials`.
-  - *Masih ada Change Order terbuka*: Setujui atau batalkan Change Order yang masih berstatus `DRAFT` di tab **RAB**.
+Lanjutkan ketika proyek utama aktif:
 
----
+| Tindakan                                 | Dummy A | Dummy B |    Nilai dummy |
+| ---------------------------------------- | ------: | ------: | -------------: |
+| Opening disetujui                        |       5 |       0 |     Rp500 ribu |
+| Transfer 2 A → B, alasan jelas           |       3 |       2 |     Rp500 ribu |
+| Stock Opname B dihitung 3, baru dikirim  |       3 |       2 |     Rp500 ribu |
+| Finance/Owner berbeda: Setujui & Posting |       3 |       3 |     Rp600 ribu |
+| Owner: Penyesuaian Darurat +1 A          |       4 |       3 |     Rp700 ribu |
+| Receipt tambahan 1 @Rp100 ribu di B      |       4 |       4 |     Rp800 ribu |
+| Purchasing meminta reversal receipt      |       4 |       4 |     Rp800 ribu |
+| Approver berbeda menyetujui reversal     |       4 |       3 | **Rp700 ribu** |
 
-## Kriteria Kelulusan UAT (Acceptance Criteria)
+Receipt tambahan memilih proyek aktif, **Tanpa tagihan vendor** dan **Tanpa tautan RAP**. Catat nomor baru dan lakukan reversal sebelum movement lain menghabiskan unit tersebut. Request reversal hanya meminta keputusan; approval yang mengurangi stok. Reversal tidak refund vendor payment, tidak void bill, dan bukan reset database.
 
-### Status PASS
+Opname membandingkan angka app dengan hitungan fisik. Draft/pengajuan tidak mengubah stok; approval menerapkan selisih. Jika stok berubah sejak snapshot opname, hitung ulang. Jumlah terhitung tidak boleh lebih kecil dari reserved. Opname/adjustment bukan biaya proyek atau uang keluar. Tulis alasan minimal 10 karakter pada transfer/adjustment yang mewajibkannya.
 
-- Seluruh positive path menghasilkan state dan angka expected sesuai alur kerja.
-- Seluruh 18 negative test ditolak pada boundary validasi tanpa partial write di database.
-- Setiap mutasi kas memiliki pencatatan `cash_transaction`, saldo rekening ter-update akurat, reference ID unik, dan entry `audit_log`.
-- Setiap mutasi material tercatat di `stock_movement`, delta stok fisik/reservasi konsisten, dan tercatat di `audit_log`.
-- Role-based scoping terisolasi penuh: PM tidak dapat mengakses proyek lain atau melakukan self-approval.
-- Halaman Dashboard Finansial, Detail Proyek, Pengeluaran, dan Material menunjukkan konsistensi data 100%.
+Opening reversal hanya dapat diuji pada inventory bersih **sebelum movement berikutnya**. Pakai material dummy lain bila ingin membalik opening, bukan opening yang sudah ditransfer/opname di tabel.
 
-### Status FAIL
+Sesudah appendix ini, Panel Latihan utama tetap 4 unit/Rp8 juta dan actual/paid proyek Rp30 juta/Rp38 juta. **Total inventory perusahaan menjadi Rp8,7 juta**, karena dummy menambah Rp700 ribu. Jangan membandingkan agregat semua material dengan checkpoint Rp8 juta material utama saja.
 
-- Saldo bank atau kas kecil berubah tanpa transaksi di `cash_transaction`.
-- Stok fisik atau tereservasi berubah tanpa record di `stock_movement`.
-- Pengakuan actual terhitung ganda (*double-counting*) untuk satu pengadaan yang sama.
-- Terjadi overpayment pada invoice klien atau tagihan vendor melebihi sisa tagihan.
-- Transaksi berstatus pending atau rejected dapat dicairkan.
-- Stok fisik di rak gudang bernilai negatif atau lebih kecil dari reservasi aktif (`current_stock < reserved_stock`).
-- Closing proyek berhasil dieksekusi saat masih ada blocker invariant yang belum terpenuhi.
+### 8.4 Revisi RAB dan Change Order
 
-### Catatan Khusus Cost Attribution Stock
+CO adalah perubahan scope/harga yang disetujui setelah baseline; bukan cara mengedit invoice lama diam-diam. Uji sebelum closing atau pada proyek tambahan. Sebagai Finance, buat revisi RAB/CO produksi tambahan Rp10 juta sehingga harga kontrak usulan Rp110 juta. Review delta/dokumen klien lalu catat konfirmasi klien beserta tanggal dan referensi bukti sampai status **Menunggu Persetujuan**. Owner yang berbeda dari pembuat CO kemudian review dan approve. Hindari draft/CO yang menggantung ketika ingin closing.
 
-Model sistem adalah *inventory-funded cost*:
-- **Opening Inventory & Goods Receipt**: Membentuk saldo kuantitas dan nilai persediaan fisik di gudang.
-- **Tagihan Vendor Material**: Membentuk kewajiban hutang (*payable*) dan bukti kas keluar (*paid*), **bukan biaya aktual langsung proyek** (*Material Actual tetap Rp0*).
-- **Pemakaian (USE) & Terbuang (WASTE)**: Mengakui realisasi biaya proyek (*Budget Actual*) berbasis harga rata-rata bergerak persediaan (*moving average cost*).
-- **Pengembalian (RETURN)**: Mengembalikan fisik ke persediaan bebas gudang dan membalik (*credit*) biaya aktual proyek secara proporsional.
-- **Pengeluaran Lapangan Non-Material**: Langsung membebankan biaya aktual ke proyek terkait.
+Bila dilakukan pada fixture utama sebelum closing, kontrak menjadi Rp110 juta dan cap Rp99 juta. Kategori yang bukan override manual mengikuti rasio otomatis: Rp49,5 juta / Rp24,75 juta / Rp9,9 juta / Rp4,95 juta / Rp9,9 juta. Actual tetap Rp30 juta selama belum ada biaya baru, sisa cap Rp69 juta, proyeksi Rp11 juta/10%.
 
----
+Tambah invoice dan penerimaan Rp10 juta sesuai scope baru. BCA menjadi Rp175 juta, Kas Kecil Rp7 juta, posisi kas proyek Rp72 juta. Closing realized menjadi Rp80 juta/72,73%. **Ini cabang berbeda dari checkpoint Rp100 juta**; gunakan angka cabang ini bila benar-benar menyimpan CO. Tidak ada pilihan KEEP/SCALE yang perlu dicari pada approval saat ini.
 
-## Ringkasan Perubahan Nilai per Aksi Sistem
+### 8.5 Penolakan dan batas akses
 
-| Aksi Sistem / Mutasi             |                 Budget Actual |   Budget Paid |          Kas |                 Stok Fisik |             Stok Reservasi | Hutang / Piutang |
-| -------------------------------- | ----------------------------: | ------------: | -----------: | -------------------------: | -------------------------: | :--------------- |
-| **Buat Proyek / RAP / Draf RAB** |                             — |             — |            — |                          — |                          — | —                |
-| **Setujui RAB / Change Order**   |      Porsi alokasi bertambah  |             — |            — |                          — |                          — | —                |
-| **Ajukan Pengeluaran Lapangan**  |                  Pending naik |             — |            — |                          — |                          — | —                |
-| **Verifikasi Pengeluaran**       |                   Actual naik |             — |            — |                          — |                          — | —                |
-| **Cairkan Pengeluaran Kas**      |                             — |     Paid naik |        Turun |                          — |                          — | —                |
-| **Buat Tagihan Vendor Material** | Tetap (masuk aset persediaan) |             — |            — |                          — |                          — | Hutang naik      |
-| **Buat Tagihan Vendor Subcon**   |                   Actual naik |             — |            — |                          — |                          — | Hutang naik      |
-| **Jadwalkan Bayar Tagihan**      |                             — |             — |            — |                          — |                          — | Tetap            |
-| **Cairkan Pembayaran Tagihan**   |                             — |     Paid naik |        Turun |                          — |                          — | Hutang turun     |
-| **Goods Receipt (Terima Fisik)** |                             — |             — |            — |                       Naik |                      Tetap | Tetap            |
-| **Reservasi Material Gudang**    |                             — |             — |            — |                      Tetap |                       Naik | —                |
-| **Pakai Material (USE)**         |          Actual non-kas naik  |         Tetap |        Tetap |                      Turun | Turun kuota reservasi      | —                |
-| **Kembalikan Sisa (RETURN)**     |         Actual non-kas turun  |         Tetap |        Tetap |                       Naik |                      Tetap | —                |
-| **Bahan Rusak (WASTE)**          |          Actual non-kas naik  |         Tetap |        Tetap |                      Turun | Turun kuota reservasi      | —                |
-| **Terbitkan Invoice Klien**      |                             — |             — |            — |                          — |                          — | Piutang naik     |
-| **Catat Pembayaran Klien**       |                             — |             — |         Naik |                          — |                          — | Piutang turun    |
-| **Penutupan Proyek (Closing)**   |                Final snapshot | Final snapshot| Tidak berubah|              Tidak berubah | Harus 0 reservasi aktif    | Seluruhnya final |
+Gunakan percobaan yang dibatalkan/ditolak untuk memastikan kontrol bekerja. Setelah penolakan, pastikan saldo/stok/actual/audit mutasi finansial tidak berubah.
 
+| Percobaan                                                                     | Hasil yang dicari                                                        |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| PM membuka proyek lain yang tidak ditugaskan                                  | Data/aksi ditolak atau tidak ditampilkan                                 |
+| Purchasing membuka pengaturan formula budget                                  | Tidak memperoleh hak edit formula                                        |
+| Permission custom role dicabut saat masih login                               | Request berikutnya mengikuti izin terbaru                                |
+| Pembayaran expense sebelum approval                                           | Ditolak                                                                  |
+| Approver sama dengan requester/scheduler yang diwajibkan maker/checker        | Ditolak; override darurat hanya jika benar-benar diizinkan dan beralasan |
+| Pembayaran bill melebihi outstanding                                          | Ditolak                                                                  |
+| Penerimaan klien melebihi sisa invoice                                        | Ditolak                                                                  |
+| Double-click pembayaran yang sama                                             | Tepat satu realisasi kas; lihat status, bukan jumlah toast               |
+| Use/reserve melebihi stok yang tersedia atau jatah proyek lain                | Ditolak                                                                  |
+| Return melebihi net pemakaian yang sesuai proyek/material/lokasi/RAP          | Ditolak                                                                  |
+| Approval reversal ketika stok receipt tidak lagi cukup/reserved terlindungi   | Ditolak pada approval; request saja belum memeriksa semuanya             |
+| Mengedit/menghapus catatan kas yang sudah direkonsiliasi                      | Ditolak; koreksi lewat tindakan kompensasi yang sah                      |
+| Closing saat ada invoice/bill/approval/CO/reservasi/rekonsiliasi belum tuntas | Checklist menunjukkan blocker                                            |
+| Upload terlalu besar atau file tanpa izin                                     | Ditolak tanpa mutasi bisnis separuh                                      |
+
+Jangan memaksakan uji overbudget dengan biaya palsu ke fixture utama. Pada proyek tambahan, coba biaya yang melampaui alokasi, lihat pending/Owner review dan alasannya, lalu tolak agar tidak menjadi actual. Status penolakan harus tetap mempunyai jejak yang sesuai.
+
+### 8.6 Notifikasi, profil, audit, dan pemulihan
+
+- Periksa notifikasi in-app setelah pengajuan/approval; buka tujuan dan cocokkan dokumennya. Browser push memerlukan VAPID dan izin perangkat, sehingga belum otomatis aktif hanya karena notifikasi in-app muncul.
+- Uji profil/password/logout dengan akunmu. Setelah logout, halaman terproteksi meminta login. Jangan berbagi password sementara dalam dokumen latihan.
+- Pada riwayat/audit, periksa pelaku, nominal, waktu, sumber dokumen, dan status. Request yang sukses harus memiliki satu mutasi yang tepat; retry tidak boleh mengubah saldo/stok dua kali.
+- Putuskan koneksi sesaat lalu pulihkan. Bedakan data yang belum dimuat dari transaksi gagal. Jangan mengulang aksi uang otomatis; setelah koneksi pulih, baca status dan refresh sebelum retry eksplisit.
+- Backup database dan backup lampiran berbeda. Restore harus menuju database terpisah, lalu dibandingkan counts/angka/checksum. Jangan menjalankan restore di production untuk mencoba fitur.
+
+## 9. Checklist pribadi
+
+Tulis tanggal, akun yang dipakai, nomor dokumen, expected, actual, dan screenshot bila perlu. Centang setelah melihat data tersimpan, bukan hanya toast sukses.
+
+- [ ] Environment/DB yang dipakai jelas; web dan API hidup; `/ready` lulus.
+- [ ] Setup Owner sendiri, default budget, akun Finance/PM/Purchasing dan password sementara diuji.
+- [ ] PM ditugaskan; scope asing dan custom grant/revoke diuji.
+- [ ] Rekening opening total Rp110 juta tanpa dianggap receipt proyek.
+- [ ] Master vendor/material/lokasi dan keputusan stok awal selesai.
+- [ ] RAP Material/Tukang/Subcon siap dan terkunci; internal plan Rp35 juta.
+- [ ] RAB Rp100 juta, client-safe PDF/Excel/PNG benar; approval dan aktivasi dilakukan terpisah.
+- [ ] Empat invoice total Rp100 juta; DP dan tiga termin dicatat, piutang akhir 0.
+- [ ] Bill Material Rp20 juta dibayar parsial 8 + 12, utang akhir 0, tidak dibuat expense ganda.
+- [ ] Receipt10 → reserve7 → use6 → return1 → waste1, hasil stok4/reserved0/actualMaterial12/paidMaterial20.
+- [ ] Tukang10/Ops2/Lain1 selesai sesuai approval dan rekening; Subcon5 lewat bill, tidak diduplikasi.
+- [ ] Actual30/paid38/sisa60; BCA165/KasKecil7; semua kategori cocok.
+- [ ] OCR/chat/lampiran diuji dengan data sintetis; proposal AI memerlukan konfirmasi manusia.
+- [ ] Delapan mutasi BCA diimport/matched, import ulang tidak menggandakan; dua pengecualian kas terdokumentasi.
+- [ ] Fitur cash umum/transfer dan gudang tambahan dicoba dengan perubahan angka terpisah yang dicatat.
+- [ ] Revisi/CO diuji pada cabang/proyek tambahan; checkpoint disesuaikan bila CO disimpan.
+- [ ] Negative checks, notifikasi, audit, refresh/logout/koneksi pulih diperiksa.
+- [ ] Closing tanpa blocker: snapshot actual30/margin70/posisiKas62 untuk skenario inti; data proyek tetap dapat dibaca setelah selesai.
+
+Jika angka berbeda, telusuri **sumber dan tahap**: invoice belum diterima, approval belum dibayar, bill inventory dibanding actual pemakaian, transaksi ganda lewat menu kas umum, scope fee mengubah cap, perubahan average cost, proyek belum aktif/sudah closed, atau appendix yang ikut masuk agregat. Catat selisih yang belum terjelaskan dan hentikan langkah berikutnya sampai penyebabnya jelas.
+
+## Referensi untuk pemeriksa teknis
+
+Aturan walkthrough dicocokkan dengan implementasi: `budget-sync.ts` (actual/pending/paid), `excel-budget.ts` (derivasi cap), `vendor-bill-write.ts`, `inventory-project-movements.ts`, `project-material-projection.ts`, `rap-rab-approval.ts`, `activation-readiness.ts`, `reconcile-cash-transaction.ts`, dan `project/closing.ts`. Hak role dicocokkan dengan default `packages/core/src/auth/permissions.ts` / `role-constants.ts`, otoritas runtime pada `lib/auth/permissions.ts` / `scoping.ts`, serta guard tindakan finance/material. Pembagian kerja pada panduan tidak menambah atau mencabut izin app.
+
+Semua backend business code berada di `apps/api/src/backend/`; shared calculation berada di `packages/core/`.
+
+Lihat juga [arsitektur](../06-technical/ARCHITECTURE.md), [mobile/API development](./mobile-api-development.md), [evidence hosted](../plans/2026-10-05-hosted-workflow-verification.md), [rencana setup bersih](../plans/2026-10-05-self-guided-workflow-and-clean-setup.md), dan [demo yang sudah terisi](./seeded_demo_walkthrough.md). Demo terisi bukan dataset latihan kosong pada panduan ini.

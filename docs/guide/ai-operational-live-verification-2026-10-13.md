@@ -1,0 +1,42 @@
+# AI operational live verification
+
+One synthetic project completed the operational flow through the visible Browser, configured live NINEROUTER model `ag/gemini-3.8-flash-high`, and actual Owner QA session. Web3004/API3005 use the named disposable database `atria_audit_reconciliation` on loopback32774. No assistant messages, proposals or confirmations were injected. Fixture preparation created reference master rows, zero inventory and one isolated Rp2.000.000 opening account only.
+
+## Completed flow
+
+| Stage             | Verified stored outcome                                                                                                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project           | One `Proyek Operasional QA`, selected client/PM, contract Rp20.000.000. Settings cap90%, internal budget Rp18.000.000, five category shares10% each.                                                                                                           |
+| RAP               | One Material row,10 panels, zero buffer, Rp100.000/unit; Rp1.000.000 plan. Explicit unused Tukang/Subcon decisions, every adjacent stage reviewed, RAP locked.                                                                                                 |
+| RAB               | One approved `Penawaran Operasional QA`,10 panels at the explicitly supplied synthetic selling price Rp2.000.000/unit; Rp20.000.000. Client labels/descriptions contain no internal sentinel. Title/notes were corrected through review and Apply before Save. |
+| Activation        | Readiness checked and project activated after approved RAB/budget and locked RAP.                                                                                                                                                                              |
+| Vendor bill       | One owned draft submitted as OPQA-BILL-1013, Rp1.000.000, matching Material/category/RAP/vendor references; no cash or stock movement at submit.                                                                                                               |
+| Receipt           | One OPQA-GR-1013,10 panels into the selected warehouse, same bill/RAP links; physical stock10, average/last cost Rp100.000. No cash or project realization.                                                                                                    |
+| Reservation/use   | Reserve10, then use4; physical6, reserved6, available0. One noncash STOCK_USAGE expense Rp400.000; purchase remains INVENTORY_ASSET.                                                                                                                           |
+| Schedule/payment  | One ordinary payment schedule requiring no additional checker under current threshold. Explicit payment OPQA-PAY-1013 records Rp1.000.000 outflow, account Rp2.000.000→Rp1.000.000 and bill PAID. Stock and Rp400.000 realization unchanged.                   |
+| Bank import/match | One reviewed pasted CSV row, then one exact same-account/date/direction/amount match to that existing payment ledger. Both statement and cash row marked reconciled; no second cash movement.                                                                  |
+| Fresh model read  | The model subsequently read current matched records, account balance, Material budget and warehouse stock and correctly reported the stored figures without another proposal/write.                                                                            |
+
+Final Material budget: allocation Rp1.800.000, pending0, realization Rp400.000, cash paid Rp1.000.000, remaining Rp1.400.000, usage22.2222%. The other four category realizations/payments remain0. Synthetic Settings allocate50% of the internal cap; Rp9.000.000 remains unallocated. This is existing QA policy, not an inferred company default or a budget mismatch.
+
+## Retry and invariants
+
+Captured actual ordinary authenticated Browser confirmation requests were replayed after real UI Saves. Project/RAP creation, finalization, RAB draft/approval, activation, vendor draft/submit, receipt, reservation/use, schedule/payment and import/match returned the same result with `alreadyConfirmed:true`. Payment and matching were also replayed in simultaneous pairs. Complete before/after domain snapshots match for five retry groups. History switching and reload are checked independently of domain writes.
+
+Twenty-six invariant checks pass. Net new records:1 project,1 cash outflow,3 stock movements,1 goods receipt,1 statement import/row,15 owned confirmation receipts and22 business audit records. Baseline records changed only for the isolated QA bank account and inventory row; pre-existing projects/budgets, expenses, cash, stock, confirmations and Settings are unchanged. Receipt, reservation, usage, payment and reconciliation each have their expected audit evidence.
+
+## Repaired live defects
+
+1. The gateway model described seeing only the first object-union branch, omitted scope/stage fields and failed RAP finalization. A NINEROUTER-only model-facing schema adapter exposes all object branch fields/discriminator choices. Original SDK/Zod validators remain authoritative, preserving required branch fields, strict extras, refinements, defaults and transforms. Other providers retain original schemas. The natural live retry produced the correct six-step sequence. Deterministic regression initially failed, then passed.
+2. RAB workflow context parsed a calculated selling price with fractional cents (Rp100.000 /0.9) against the two-decimal schema. Source-refresh prices now use the same two-decimal precision as persisted draft prices. The real Postgres regression initially failed; context and initial approval now pass without refreshing or replacing the reviewed client selling price. RAP/package linked-source tests and full RAB suites pass.
+3. Balance result rows keyed by bank/name collided when synthetic accounts shared names. Current results carry account IDs; saved legacy messages use their immutable row position as fallback. Existing ResultShell/ResultRow/MoneyValue composition remains unchanged.
+
+## Evidence and limits
+
+`output/ai-chat-qa/operational/` contains snapshots, `invariant-summary.json`, `retry-results.json`, actual provider/tool observations, source CSV and screenshots. The receipt confirmation was inspected at320/360/390/430/1024/1280/1440px without horizontal overflow; RAB review/Apply/Save was exercised on mobile and retained its state across resize. Existing ProposalCardShell/inline review, FormSheet, SheetFooterActions, ReviewCollection/ReviewItem, FormDisclosure, MoneyValue and ConfirmationDialog remain the shared interaction owners.
+
+CSV attachment upload on this QA API returned400 (`Storage privat belum dikonfigurasi`). The scenario therefore used the same CSV contents provided in chat and explicitly reviewed import rows. Upload/analyzer storage integration is not certified by this run. No storage credentials or auth policy were changed to bypass it.
+
+The original failed turns and45-second deadline interruptions remain in history as evidence. A new conversation continued from actual stored project/RAB data after the pricing fix;19 live assistant responses span two conversations,14 have positive provider input/output usage metadata. This certifies one complete synthetic operational path with this model/role, not every possible action/permission/provider combination, nor external banking. No deployment or real bank transfer occurred.
+
+Automated validation:71 disposable integration cases across RAB drafts/workflow, vendor payments, warehouse intake, project stock and bank reconciliation pass (384 assertions). Tool schema/cancellation/read-only and23 tool-result tests pass. Final normal workspace tests:2143 pass,0 fail,541 integration skips; the named runs above execute their71 cases independently. API/web/mobile typechecks, workspace lint, API/web builds, scoped formatting and git diff checks pass. The existing Material Master effect-dependency warning remains. An initial unrelated desktop popover DOM timeout passed its isolated rerun and the final normal suite.

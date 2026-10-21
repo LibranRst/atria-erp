@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "date": "2026-10-17",
+  "parent": {
+    "name": "Atria",
+    "role": "Umbrella brand for business operations software",
+    "descriptor": "Software untuk operasional bisnis",
+    "essence": "Kejelasan yang memberi kendali",
+    "tagline": null
+  },
+  "identity": {
+    "symbol": "Temu",
+    "symbolStatus": "approved-by-user",
+    "colors": {
+      "ink": "#181817",
+      "terracotta": "#B84B2C",
+      "white": "#FFFFFF"
+    },
+    "parentWordmark": "Manrope 700 outlined",
+    "productSuffix": "Manrope 500 outlined, cap height 176 vs Atria 232",
+    "symbolUnchanged": true
+  },
+  "products": {
+    "build": {
+      "name": "Atria Build",
+      "nameStatus": "approved-by-user",
+      "stage": "current-product-in-this-repository",
+      "descriptor": "Kendali biaya dan material proyek",
+      "audience": "Interior and design/build project businesses",
+      "scope": "Project budgets, category expenses, payments, material/RAP, inventory and margin visibility",
+      "meaningOfProduction": "Project execution costs; not a full manufacturing/production-planning ERP",
+      "candidateTagline": "Proyek terkendali. Kerja lebih tenang.",
+      "taglineStatus": "candidate",
+      "iconBackground": "#B84B2C"
+    },
+    "office": {
+      "name": "Atria Office",
+      "nameStatus": "user-selected",
+      "stage": "separate-planned-product",
+      "descriptor": "ERP untuk operasional perusahaan",
+      "initialDiscovery": "Prospective cable-business customer",
+      "modules": "to be validated; HR and other broader operations remain prospective",
+      "tagline": null,
+      "iconBackground": "#181817"
+    }
+  },
+  "architecture": {
+    "now": "Separate products and releases",
+    "future": "Possible phased integration; no combined platform implemented",
+    "codebaseOrDatabase": "Not determined by branding"
+  },
+  "rollout": "Identity assets and documentation updated; live app metadata and business behavior are not changed by this package",
+  "buildScopeGuardrail": [
+    "HR and payroll remain out of Build scope",
+    "Full manufacturing/production planning remains out of Build scope",
+    "Category-based project budget and margin workflow remains primary"
+  ],
+  "guide": "output/pdf/atria-brand-guide-v2.pdf",
+  "canonicalSvg": "docs/brand/atria/svg/",
+  "replacesForCurrentBrandUse": "output/branding/atria-brand-kit-2026-10-17 (v1 historical single-product guide)"
+}

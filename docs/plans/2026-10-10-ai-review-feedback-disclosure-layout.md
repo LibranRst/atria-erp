@@ -1,0 +1,24 @@
+# AI review feedback and disclosure placement
+
+## Authorized adjustment
+
+Preserve Atria's approved grouped review surfaces, two desktop panels, five-row pagination and mobile reading order. The user wants access/error feedback to have a clear placement and wants row-detail controls to stop competing with identity and amounts across all modal reviews.
+
+## Implementation
+
+- Shared ReviewItem keeps identity, selection and amount in its header. Read-only Rincian/Ringkas becomes a subordinate, start-aligned control after the row's visible summary/changes, directly before the revealed fields. Editable Edit remains attached to identity. Keep the same controlled expansion, shared ContentReveal, stable/inert inputs, button touch/focus semantics and resize owner.
+- Compose a reusable feature feedback block from existing GroupedSurface, InlineStateRow and Button. Preserve exact server messages. Put blocking/validation feedback early in the main review content, after identity and before reviewed rows, on desktop and mobile. Recovery stays with that feedback; business actions stay in the protected action area.
+- Apply consistent feedback placement to RAP draft/change/setup/lifecycle, Tukang/Subcon package review and RAB draft/workflow review. Preserve row-local validation and domain permissions/confirmation/retry behavior. Material Master already has its own contextual selection/analysis status flow; audit without rewriting it.
+- Extend existing meaningful DOM checks for detail position/expansion, error outside action area, disabled confirmation and recovery. Use dev web through in-app Browser, synthetic previews and no business mutations, at320/360/390/430 and1024/1280/1440. Inspect bounded desktop/mobile batch, fix actual findings once and confirm. Run web tests/typecheck/lint/build, shared styles/scoped formatting and refresh Graft. Update durable design rule/sidecar to match the result.
+
+## Completed verification
+
+- Shared read-only details now follows summary/comparisons at the start edge, immediately before static revealed fields. Identity/amount header retains only its relevant data; editable Edit stays attached to identity. The same controlled expansion, stable/inert editor DOM, shared motion and keyboard semantics remain intact for all eight AI modal review families.
+- Seven RAP/RAB review cards now place their common blocking/validation feedback after identity in main content. Exact server messages remain unchanged. Recovery accompanies the feedback via shared InlineStateRow: trailing on desktop, below the description on mobile. Optional actionPlacement preserves the existing trailing default elsewhere. Protected action areas no longer show detached error/retry text. Material Master retains its existing contextual selection/analysis status.
+- `bun test` from apps/web: **953 pass, 0 fail**, including shared DOM expansion/placement, field-node retention, live failure recovery and disabled business-confirmation checks. Web typecheck, lint, production build and scoped formatting pass. Lint retains the pre-existing Material Master `accept` dependency warning. Layout detector before/after reports no findings; no token or overlay owner added.
+- In-app Browser on dev web only: **21 checks** for correction/approval/bundle at320/360/390/430/1024/1280/1440, with no document/money overflow, viewport-fitting modal and at most5 rows. Existing page6–10 and expansion persist; Enter expands/collapses the bundle details; Periksa lagi preserves the exact access error for deliberately invalid synthetic sources. Business buttons stay disabled and no business mutation was triggered. Evidence lives in `output/ai-chat-qa/review-feedback-layout/`.
+- Bounded inspection showed the first full-width recovery footer was too prominent. One correction composes its quiet recovery into the existing inline status row; desktop/mobile confirmation shows a compact single owner with a clear heading, message and recovery. Rincian keeps amount space clear and follows its reviewed content. DESIGN.md and sidecar record both durable layout rules, preserving existing tokens and unrelated design guidance. Graft refreshed after changes.
+
+### Follow-up: collapse icon alias
+
+The user caught a question icon on Ringkas. `ReviewItem` passes `expand_less` when expanded; AppIcon lacked that alias and deterministically chose QuestionIcon. The existing AppIcon regression seam went red because expanded SVG equaled the unknown-name fallback. Added the direct Phosphor CaretUp import/mapping, keeping expand_more as CaretDown. The icon regression and real shared-review DOM tests now pass (3/3); live dev Browser verifies distinct down/up SVGs through collapse/reopen on desktop and mobile. Mapping and call-site evidence fully isolate this pure lookup failure, so broader hypotheses/instrumentation and database/build loops were unnecessary. Existing layout, motion, state and permission behavior remain unchanged.

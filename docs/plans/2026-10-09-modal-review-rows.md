@@ -1,0 +1,22 @@
+# Contextual grouped rows for AI modal reviews
+
+Confirmed design replaces desktop HeroUI table presentation in seven modal review collections with one white grouped surface, divided contextual rows and complete right-aligned primary amounts. Page-content tables retain HeroUI. The Atria palette, type, sheet composition, financial facts and protected actions remain authoritative.
+
+- Material Master and RAB inclusion use a small square checkbox, visually distinct from status. Immutable whole-batch RAP/package/readiness/lifecycle proposals acquire no selection or editing semantics.
+- Editable rows begin with readable identity and labelled quantity/unit/buffer/price context plus a primary subtotal. One inline editor is active at a time. Keep controlled edits/selection, stable source keys, five-row pagination, applied revisions and shared dirty/conflict/save guards. Material's existing correction form stays under the same sheet owner and appears inline on desktop.
+- Read-only changes expose essential Before → After pairs immediately, followed by contextual detail. Decisions/revisions remain decision rows rather than fake editable forms. Saved RAB content is the actual saved subset and offers readable details.
+- Reuse GroupedSurface, shared form fields, MoneyValue, ProposalDiffRow, ChoiceRow, FormSheet/WorkflowFormSheet and the existing size/motion coordinator. Add only a shared review-row/reveal composition and a square visual option for ChoiceRow because the existing table and editable-row APIs cannot represent persistent inline editors. Preserve ordinary ChoiceRow/radio behavior and mobile presentation; editors retain their DOM/state during responsive changes.
+
+Scope: MaterialReviewList/MaterialMasterProposalCard, RapDraftProposalCard, RabDraftProposalCard, RapChangeProposalCard, CategoryPlanProposalCard, RapSetupProposalCard and RapLifecycleProposalCard. Business operations, permissions, receipts, source/privacy contracts and page tables are unchanged.
+
+Verify existing Apply/Save/confirmation tests plus meaningful shared reveal/selection/resize tests. Use the dev in-app Browser at 320/360/390/430 and 1024/1280/1440 for each review family; never save synthetic business previews. Complete type/lint/build/format checks, finish review/documentation and graph refresh.
+
+## Implementation and verification
+
+- Added public `ReviewCollection`/`ReviewItem`, composing `GroupedSurface`, shared buttons, fields, `MoneyValue` and the existing sheet owner. Supporting row actions use the explicit shared `quiet` button variant; primary sheet commits retain their hierarchy. Page-content HeroUI tables are preserved.
+- Extracted the shared intrinsic-height `ContentReveal` from `FormDisclosure`. Inline editors stay mounted and inert when collapsed; the existing sheet size coordinator and reduced-motion behavior remain. Added an inner `FormSection.contentClassName` layout slot and a square visual option for actual checkbox inclusion without changing radios.
+- Material corrections retain unsaved values across row switches and apply changed rows through one metadata patch. Business Save remains separate. Read-only proposals show essential changes directly, and saved RAB reviews contain the actual saved subset.
+- Dev in-app Browser evidence covers all seven review families at 320/360/390/430 and 1024/1280/1440 px. The 50-check matrix reports no review tables, document overflow, modal fit failures or clipped money values. The Material editor retained its input node, value and focus across resize. Supporting actions and lifecycle estimates were recaptured after the final fixes.
+- Workspace tests: 1,986 passed, zero failed. Final focused shared-control, editor, RAB and lifecycle tests: 23 passed. Workspace lint, web/API declaration typecheck, web production build, scoped formatting and HeroUI generated-style check passed. The existing Material `accept` hook warning and unrelated workspace formatting baseline remain outside this UI change.
+- `DESIGN.md` and `.impeccable/design.json` document the shared review contract with exact parity across 18 named rules. Screenshot and viewport evidence live under `output/ai-chat-qa/modal-review-rows/`. QA used synthetic chat previews; no Material Master, RAP/RAB business record, inventory or cash transaction was saved.
+- Independent finish review resolved the lifecycle estimate, supporting-action hierarchy and documentation findings; final disposition: ship. Refreshed the Graft context graph and restored the Browser viewport, leaving the dev preview open.

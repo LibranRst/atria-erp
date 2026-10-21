@@ -1,5 +1,7 @@
 # Deploy ke Vercel
 
+> Historical deployment record: this guide describes the full-stack Vercel instance before backend extraction on 1 October 2026. Do not use its environment/cron instructions for the independent API. Current web owns only the API origin/bridge and public client settings; database/auth/AI/storage/job secrets and scheduling belong to the API. For the agreed free Netlify + Render pilot, use [free boss pilot](free-boss-pilot.md); for local development use [independent API development](mobile-api-development.md). No deployment was performed during extraction.
+
 **Diperbarui:** 2026-09-29
 **Terkait:** `docs/guide/notifications.md`, `docs/guide/provision-instance.md`
 
@@ -124,7 +126,7 @@ Paket Hobby hanya mengizinkan cron Vercel sekali sehari, dan Vercel menolak depl
 yang memuat jadwal lebih sering. Karena itu:
 
 - `apps/web/vercel.json` menjalankan `task=all` sekali sehari sebagai jaring pengaman.
-- `apps/web/workers/notification-scheduler` (Cloudflare Worker, cron `*/5 * * * *`)
+- `apps/api/workers/notification-scheduler` (Cloudflare Worker, cron `*/30 * * * *`)
   menangani jadwal 5 menit. Lihat `docs/guide/notifications.md`.
 
 Setelah pindah ke paket Pro, kembalikan `crons` di `apps/web/vercel.json` ke jadwal

@@ -1,0 +1,14 @@
+# AI vendor payment verification — 11 October 2026
+
+The dev web app was exercised through the Codex in-app Browser at `/ai`, using the existing Owner session. Only chat/proposal metadata was created. No schedule, approval decision or cash payment was saved in the dev database.
+
+- Scoped discovery found the paid Sudirman bill and correctly described that it had no pending payment. The next request found the two unpaid Menteng bills and their current schedules.
+- A live request prepared three separate owned previews: an additional Rp1,000,000 schedule for BILL-2026-092 on 30 October from BCA Operasional; approval of its existing Rp10,000,000 schedule with an explicitly QA-only reason; and recording the existing Rp4,000,000 payment of BILL-2026-091 using the supplied QA reference.
+- The first preview stream was interrupted by a development API watch restart while implementation was still being edited. After the restart finished, the ordinary Retry action recovered all three proposals and their enabled actions. No provider configuration or fallback was changed.
+- Approval and payment confirmation dialogs were opened and cancelled. Each explains its exact effect; approval does not pay and payment records the ERP ledger without issuing a real bank transfer.
+- Reload restored all three owned previews with their actions enabled; no proposal or business record was resubmitted.
+- The seven viewport checks cover 320/360/390/430 and 1024/1280/1440 px. All three cards have no horizontal overflow. Mobile and desktop screenshot evidence is under `output/ai-chat-qa/vendor-payment-workflow/`.
+
+Disposable PostgreSQL integration uses `ATRIA_TEST_DATABASE_URL` via the local TCP test preload. Nine tests pass: separate noncash schedule/decision stages and one partial outflow; replay/double-click; current Settings/overrun rules; maker/checker; rejection and rescheduling; AI/manual outstanding races including PROCESSING commitments; ownership/assignment/NONE/revoked grants; foreign tenant/inactive accounts/stale data; expiry/tampered identity; insufficient funds/duplicate references; and rollback after actual ledger writes. Role cases use database grants and Actors rather than fixed role names.
+
+2,069 workspace tests, type checks and build pass. Lint has no errors and retains the preexisting Material Master effect-dependency warning. Tokens and scoped HeroUI style guards pass. Scoped formatting passes; global formatting reports 107 unrelated existing files. The coverage matrix now marks vendor scheduling, approval/rejection and payment as supported while keeping the remaining business gaps explicit. The fresh Impeccable finish review returned `ship` with no material fixes; rejection/saved/stale recovery states were reviewed in source, while schedule/approval/payment and cancelled confirmation states have Browser captures.

@@ -1,12 +1,12 @@
-# Dokumen Bisnis Atria
+# Dokumen Bisnis Paduna Build
 
 Dua halaman HTML mandiri. Buka langsung di browser — tidak butuh server, tidak
 butuh build.
 
-| Berkas | Isinya |
-| --- | --- |
-| `peluncuran-atria.html` | Semua tugas dan keputusan yang tersisa, dikelompokkan per pemicu waktu. Centangnya tersimpan di browser. |
-| `bekal-bisnis-atria.html` | Kamus istilah, cara menetapkan harga, draf kesepakatan dengan bos, draf perjanjian vendor. |
+| Berkas                    | Isinya                                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `peluncuran-atria.html`   | Semua tugas dan keputusan yang tersisa, dikelompokkan per pemicu waktu. Centangnya tersimpan di browser. |
+| `bekal-bisnis-atria.html` | Kamus istilah, cara menetapkan harga, draf kesepakatan dengan bos, draf perjanjian vendor.               |
 
 Keduanya juga diterbitkan sebagai halaman yang bisa dibuka dari HP:
 
